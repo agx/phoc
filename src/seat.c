@@ -1332,9 +1332,12 @@ void roots_seat_set_focus(struct roots_seat *seat, struct roots_view *view) {
 	bool unfullscreen = true;
 
 #ifdef PHOC_XWAYLAND
-	if (view && view->type == ROOTS_XWAYLAND_VIEW &&
-			view->xwayland_surface->override_redirect) {
-		unfullscreen = false;
+	if (view && view->type == ROOTS_XWAYLAND_VIEW) {
+		struct roots_xwayland_surface *xwayland_surface =
+			roots_xwayland_surface_from_view(view);
+		if (xwayland_surface->xwayland_surface->override_redirect) {
+			unfullscreen = false;
+		}
 	}
 #endif
 
@@ -1361,10 +1364,13 @@ void roots_seat_set_focus(struct roots_seat *seat, struct roots_view *view) {
 	}
 
 #ifdef PHOC_XWAYLAND
-	if (view && view->type == ROOTS_XWAYLAND_VIEW &&
-			!wlr_xwayland_or_surface_wants_focus(
-				view->xwayland_surface)) {
-		return;
+	if (view && view->type == ROOTS_XWAYLAND_VIEW) {
+		struct roots_xwayland_surface *xwayland_surface =
+			roots_xwayland_surface_from_view(view);
+		if (!wlr_xwayland_or_surface_wants_focus(
+				xwayland_surface->xwayland_surface)) {
+			return;
+		}
 	}
 #endif
 	struct roots_seat_view *seat_view = NULL;
