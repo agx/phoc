@@ -1,0 +1,28 @@
+Source: phoc
+Priority: optional
+Maintainer: Guido Günther <agx@sigxcpu.org>
+Build-Depends:
+ debhelper (>= 12),
+ libglib2.0-dev,
+ libinput-dev,
+ libpixman-1-dev,
+ libwayland-dev,
+ libxkbcommon-dev,
+ meson (>= 0.47.0),
+ pkg-config,
+ wayland-protocols,
+Standards-Version: 4.1.3
+Section: libs
+Homepage: https://source.puri.sm/librem5/phoc
+
+Package: phoc
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Recommends: phosh
+Description: Wayland compositor for mobile phones
+ Tiny wayland compositor based on wlroots for use on mobile phones like the
+ Librem 5.
+ . 
+ You likely want to use Phosh (the phone shell) with it.

@@ -1,0 +1,37 @@
+variables:
+  DEPS: build-essential git
+  # We build wlroots as a subproject
+  WLROOTS_DEPS: >
+        libcap-dev libdrm-dev libegl1-mesa-dev libgbm-dev
+        libgles2-mesa-dev libinput-dev libpixman-1-dev libpng-dev libsystemd-dev
+        libwayland-dev libxcb1-dev libxcb-composite0-dev libxcb-icccm4-dev
+        libxcb-image0-dev libxcb-render0-dev libxcb-xfixes0-dev
+        libxkbcommon-dev meson pkg-config wayland-protocols
+
+before_script:
+ - apt-get -y update
+ - apt-get -y install $DEPS $WLROOTS_DEPS
+ - apt-get -y build-dep .
+
+build-with-xwayland:
+  stage: build
+  tags:
+    - librem5
+  script:
+    - export LC_ALL=C.UTF-8
+    - git submodule update --init
+    - meson . _build -Dxwayland=enabled
+    - ninja -C _build
+    - ninja -C _build install
+
+build-without-xwayland:
+  stage: build
+  tags:
+    - librem5
+  script:
+    - export LC_ALL=C.UTF-8
+    - git submodule update --init
+    - meson . _build -Dxwayland=disabled
+    - ninja -C _build
+    - ninja -C _build install
+

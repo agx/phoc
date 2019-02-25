@@ -1,0 +1,149 @@
+project('phoc', 'c',
+          version: '0.0.0',
+          license: 'GPLv3+',
+    meson_version: '>= 0.47.0',
+  default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
+)
+
+add_project_arguments([
+  '-DWLR_USE_UNSTABLE',
+  '-I' + meson.build_root(),
+], language: 'c')
+
+root_inc = include_directories('.')
+src_inc = include_directories('src')
+
+cc = meson.get_compiler('c')
+
+glib           = dependency('glib-2.0', version: '>=2.50.0')
+gobject        = dependency('gobject-2.0', version: '>=2.50.0')
+input          = dependency('libinput')
+pixman         = dependency('pixman-1')
+wayland_client = dependency('wayland-client')
+wayland_protos = dependency('wayland-protocols', version: '>=1.15')
+wayland_server = dependency('wayland-server')
+xkbcommon      = dependency('xkbcommon')
+math           = cc.find_library('m')
+
+# Try first to find wlroots as a subproject, then as a system dependency
+wlroots_proj = subproject(
+        'wlroots',
+        default_options: ['rootston=false', 'examples=false'],
+        required: false,
+)
+if wlroots_proj.found()
+        wlroots = wlroots_proj.get_variable('wlroots')
+        wlroots_conf = wlroots_proj.get_variable('conf_data')
+        wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
+else
+        wlroots = dependency('wlroots')
+        wlroots_has_xwayland = cc.get_define('WLR_HAS_XWAYLAND', prefix: '#include <wlr/config.h>', dependencies: wlroots) == '1'
+endif
+
+if get_option('xwayland').enabled() and not wlroots_has_xwayland
+        error('Cannot enable Xwayland in phoc: wlroots has been built without Xwayland support')
+endif
+have_xwayland = get_option('xwayland').enabled()
+
+config_h = configuration_data()
+config_h.set_quoted('PHOC_VERSION', meson.project_version())
+config_h.set('PHOC_XWAYLAND', have_xwayland)
+
+configure_file(
+  input: 'config.h.in',
+  output: 'config.h',
+  configuration: config_h,
+)
+
+global_c_args = []
+test_c_args = [
+  '-Wcast-align',
+  '-Wdate-time',
+  ['-Werror=format-security', '-Werror=format=2'],
+  '-Wendif-labels',
+  '-Werror=incompatible-pointer-types',
+  '-Werror=missing-declarations',
+  '-Werror=overflow',
+  '-Werror=return-type',
+  '-Werror=shift-count-overflow',
+  '-Werror=shift-overflow=2',
+  '-Werror=implicit-fallthrough=3',
+  '-Wformat-nonliteral',
+  '-Wformat-security',
+  '-Winit-self',
+  '-Wmaybe-uninitialized',
+  '-Wmissing-field-initializers',
+  '-Wmissing-include-dirs',
+  '-Wmissing-noreturn',
+  '-Wnested-externs',
+  '-Wno-missing-field-initializers',
+  '-Wno-sign-compare',
+  '-Wno-strict-aliasing',
+  '-Wno-unused-parameter',
+  '-Wold-style-definition',
+  '-Wpointer-arith',
+  '-Wredundant-decls',
+  '-Wstrict-prototypes',
+  '-Wtype-limits',
+  '-Wundef',
+  '-Wunused-function',
+]
+
+# TODO:
+#  '-Wfloat-equal',
+#  '-Wshadow',
+#  '-Wswitch-default',
+#  '-Wswitch-enum',
+
+if get_option('buildtype') != 'plain'
+  test_c_args += '-fstack-protector-strong'
+endif
+
+add_project_arguments(
+  cc.get_supported_arguments(test_c_args),
+  language: 'c'
+)
+
+subdir('protocols')
+subdir('src')
+
+summary = [
+        '',
+        '--------------------------',
+        'phoc @0@'.format(meson.project_version()),
+        '',
+        '           xwayland: @0@'.format(have_xwayland),
+        ' wlroots subproject: @0@'.format(wlroots_proj.found()),
+        '--------------------------',
+        ''
+]
+message('\n'.join(summary))
+
+git = find_program('git', required: false)
+if git.found()
+	all_files = run_command(
+		git,
+		['--git-dir=@0@/.git'.format(meson.current_source_dir()),
+		 'ls-files',
+		 ':/*.[ch]'])
+	all_files = files(all_files.stdout().split())
+
+	etags = find_program('etags', required: false)
+	if etags.found() and all_files.length() > 0
+		custom_target('phoc_etags',
+			build_by_default: true,
+			input: all_files,
+			output: 'TAGS',
+			command: [etags.path(), '-o', 'TAGS'] + all_files)
+	endif
+
+	ctags = find_program('ctags', required: false)
+	if ctags.found() and all_files.length() > 0
+		custom_target('phoc_ctags',
+			build_by_default: true,
+			input: all_files,
+			output: 'tags',
+			command: [ctags.path(), '-o', 'tags'] + all_files)
+	endif
+endif
+

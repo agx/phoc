@@ -1,0 +1,40 @@
+sources = [
+  'bindings.c',
+  'settings.c',
+  'cursor.c',
+  'desktop.c',
+  'ini.c',
+  'input.c',
+  'keyboard.c',
+  'layer_shell.c',
+  'main.c',
+  'output.c',
+  'seat.c',
+  'switch.c',
+  'text_input.c',
+  'virtual_keyboard.c',
+  'wl_shell.c',
+  'xdg_shell.c',
+  'xdg_shell_v6.c',
+]
+
+if have_xwayland
+  sources += 'xwayland.c'
+endif
+
+phoc_deps = [
+  input,
+  math,
+  pixman,
+  wayland_server,
+  wlroots,
+  server_protos,
+  xkbcommon,
+]
+
+executable(
+  'phoc',
+  sources,
+  dependencies: phoc_deps,
+  install: true,
+)
