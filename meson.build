@@ -15,6 +15,7 @@ src_inc = include_directories('src')
 
 cc = meson.get_compiler('c')
 
+gio            = dependency('gio-2.0', version: '>=2.50.0')
 glib           = dependency('glib-2.0', version: '>=2.50.0')
 gobject        = dependency('gobject-2.0', version: '>=2.50.0')
 input          = dependency('libinput')

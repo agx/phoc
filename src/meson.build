@@ -24,6 +24,7 @@ endif
 
 phoc_deps = [
   input,
+  gio,
   math,
   pixman,
   wayland_server,
