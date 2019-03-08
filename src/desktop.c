@@ -305,6 +305,27 @@ auto_maximize_changed_cb (GSettings *settings,
   self->maximize = max;
 }
 
+
+static void handle_output_manager_apply(struct wl_listener *listener,
+		void *data) {
+	struct roots_desktop *desktop =
+		wl_container_of(listener, desktop, output_manager_apply);
+	struct wlr_output_configuration_v1 *config = data;
+	(void)config;
+	wlr_log(WLR_DEBUG, "APPLY"); // TODO
+}
+
+static void handle_output_manager_test(struct wl_listener *listener,
+		void *data) {
+	struct roots_desktop *desktop =
+		wl_container_of(listener, desktop, output_manager_test);
+	struct wlr_output_configuration_v1 *config = data;
+
+	// TODO: implement test-only mode
+	wlr_output_configuration_v1_send_succeeded(config);
+	wlr_output_configuration_v1_destroy(config);
+}
+
 struct roots_desktop *desktop_create(struct phoc_server *server,
 		struct roots_config *config) {
 	wlr_log(WLR_DEBUG, "Initializing phoc %s", PHOC_VERSION);
@@ -468,6 +489,15 @@ struct roots_desktop *desktop_create(struct phoc_server *server,
 		wlr_relative_pointer_manager_v1_create(server->wl_display);
 	desktop->pointer_gestures =
 		wlr_pointer_gestures_v1_create(server->wl_display);
+
+	desktop->output_manager_v1 =
+		wlr_output_manager_v1_create(server->wl_display);
+	desktop->output_manager_apply.notify = handle_output_manager_apply;
+	wl_signal_add(&desktop->output_manager_v1->events.apply,
+		&desktop->output_manager_apply);
+	desktop->output_manager_test.notify = handle_output_manager_test;
+	wl_signal_add(&desktop->output_manager_v1->events.test,
+		&desktop->output_manager_test);
 
 	wlr_data_control_manager_v1_create(server->wl_display);
 
