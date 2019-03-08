@@ -82,7 +82,7 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
 	}
 }
 
-struct roots_input *input_create(struct roots_server *server,
+struct roots_input *input_create(struct phoc_server *server,
 		struct roots_config *config) {
 	wlr_log(WLR_DEBUG, "Initializing roots input");
 	assert(server->desktop);

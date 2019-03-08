@@ -16,7 +16,7 @@
 #include "settings.h"
 #include "server.h"
 
-struct roots_server server = { 0 };
+struct phoc_server server = { 0 };
 
 typedef struct {
   GSource source;
@@ -73,7 +73,7 @@ wayland_event_source_new (struct wl_display *display)
 }
 
 static void
-phoc_wayland_init (struct roots_server *server)
+phoc_wayland_init (struct phoc_server *server)
 {
   GSource *wayland_event_source;
 

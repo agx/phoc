@@ -1,5 +1,4 @@
-#ifndef _ROOTSTON_SERVER_H
-#define _ROOTSTON_SERVER_H
+#pragma once
 
 #include <wayland-server.h>
 #include <wlr/backend.h>
@@ -14,23 +13,21 @@
 #include "desktop.h"
 #include "input.h"
 
-struct roots_server {
-	/* Rootston resources */
-	struct roots_config *config;
-	struct roots_desktop *desktop;
-	struct roots_input *input;
+struct phoc_server {
+  /* Phoc resources */
+  struct roots_config *config;
+  struct roots_desktop *desktop;
+  struct roots_input *input;
 
-	/* Wayland resources */
-	struct wl_display *wl_display;
+  /* Wayland resources */
+  struct wl_display *wl_display;
 
-	/* WLR tools */
-	struct wlr_backend *backend;
-	struct wlr_renderer *renderer;
+  /* WLR tools */
+  struct wlr_backend *backend;
+  struct wlr_renderer *renderer;
 
-	/* Global resources */
-	struct wlr_data_device_manager *data_device_manager;
+  /* Global resources */
+  struct wlr_data_device_manager *data_device_manager;
 };
 
-extern struct roots_server server;
-
-#endif
+extern struct phoc_server server;
