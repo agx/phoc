@@ -306,26 +306,6 @@ auto_maximize_changed_cb (GSettings *settings,
 }
 
 
-static void handle_output_manager_apply(struct wl_listener *listener,
-		void *data) {
-	struct roots_desktop *desktop =
-		wl_container_of(listener, desktop, output_manager_apply);
-	struct wlr_output_configuration_v1 *config = data;
-	(void)config;
-	wlr_log(WLR_DEBUG, "APPLY"); // TODO
-}
-
-static void handle_output_manager_test(struct wl_listener *listener,
-		void *data) {
-	struct roots_desktop *desktop =
-		wl_container_of(listener, desktop, output_manager_test);
-	struct wlr_output_configuration_v1 *config = data;
-
-	// TODO: implement test-only mode
-	wlr_output_configuration_v1_send_succeeded(config);
-	wlr_output_configuration_v1_destroy(config);
-}
-
 struct roots_desktop *desktop_create(struct phoc_server *server,
 		struct roots_config *config) {
 	wlr_log(WLR_DEBUG, "Initializing phoc %s", PHOC_VERSION);
