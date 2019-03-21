@@ -247,7 +247,7 @@ static void set_fullscreen(struct roots_view *view, bool fullscreen) {
 	wlr_xdg_toplevel_set_fullscreen(xdg_surface, fullscreen);
 }
 
-static void close(struct roots_view *view) {
+static void _close(struct roots_view *view) {
 	struct wlr_xdg_surface *xdg_surface =
 		roots_xdg_surface_from_view(view)->xdg_surface;
 	struct wlr_xdg_popup *popup = NULL;
@@ -288,7 +288,7 @@ static const struct roots_view_interface view_impl = {
 	.move_resize = move_resize,
 	.maximize = maximize,
 	.set_fullscreen = set_fullscreen,
-	.close = close,
+	.close = _close,
 	.for_each_surface = for_each_surface,
 	.destroy = destroy,
 };

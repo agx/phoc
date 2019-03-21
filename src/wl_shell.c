@@ -75,7 +75,7 @@ static void resize(struct roots_view *view, uint32_t width, uint32_t height) {
 		height);
 }
 
-static void close(struct roots_view *view) {
+static void _close(struct roots_view *view) {
 	struct wlr_wl_shell_surface *surf =
 		roots_wl_shell_surface_from_view(view)->wl_shell_surface;
 	wl_client_destroy(surf->client);
@@ -105,7 +105,7 @@ static void destroy(struct roots_view *view) {
 
 static const struct roots_view_interface view_impl = {
 	.resize = resize,
-	.close = close,
+	.close = _close,
 	.for_each_surface = for_each_surface,
 	.destroy = destroy,
 };

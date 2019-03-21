@@ -92,7 +92,7 @@ static void move_resize(struct roots_view *view, double x, double y,
 		constrained_height);
 }
 
-static void close(struct roots_view *view) {
+static void _close(struct roots_view *view) {
 	struct wlr_xwayland_surface *xwayland_surface =
 		roots_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_close(xwayland_surface);
@@ -132,7 +132,7 @@ static const struct roots_view_interface view_impl = {
 	.move_resize = move_resize,
 	.maximize = maximize,
 	.set_fullscreen = set_fullscreen,
-	.close = close,
+	.close = _close,
 	.destroy = destroy,
 };
 
