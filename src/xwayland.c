@@ -91,7 +91,7 @@ static void move_resize(struct roots_view *view, double x, double y,
 		constrained_height);
 }
 
-static void close(struct roots_view *view) {
+static void _close(struct roots_view *view) {
 	assert(view->type == ROOTS_XWAYLAND_VIEW);
 	wlr_xwayland_surface_close(view->xwayland_surface);
 }
@@ -347,7 +347,7 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 	view->move_resize = move_resize;
 	view->maximize = maximize;
 	view->set_fullscreen = set_fullscreen;
-	view->close = close;
+	view->close = _close;
 	view->destroy = destroy;
 	roots_surface->view = view;
 }
