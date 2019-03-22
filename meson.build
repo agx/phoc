@@ -123,6 +123,14 @@ summary = [
 ]
 message('\n'.join(summary))
 
+run_data = configuration_data()
+run_data.set('ABS_BUILDDIR', meson.current_build_dir())
+run_data.set('ABS_SRCDIR', meson.current_source_dir())
+configure_file(
+  input: 'run.in',
+  output: 'run',
+  configuration: run_data)
+
 git = find_program('git', required: false)
 if git.found()
 	all_files = run_command(

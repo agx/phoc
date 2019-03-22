@@ -23,4 +23,10 @@ and/or want to build from source run:
 
 This will fetch a matching version of wlroots and build that as well.
 
+## Running
+
+To run from the source tree use
+
+    _build/run
+
 [1]: https://github.com/swaywm/wlroots
