@@ -73,7 +73,7 @@ static void resize(struct roots_view *view, uint32_t width, uint32_t height) {
 		height);
 }
 
-static void _close(struct roots_view *view) {
+static void close(struct roots_view *view) {
 	assert(view->type == ROOTS_WL_SHELL_VIEW);
 	struct wlr_wl_shell_surface *surf = view->wl_shell_surface;
 	wl_client_destroy(surf->client);
@@ -264,7 +264,7 @@ void handle_wl_shell_surface(struct wl_listener *listener, void *data) {
 	view->wl_shell_surface = surface;
 	view->roots_wl_shell_surface = roots_surface;
 	view->resize = resize;
-	view->close = _close;
+	view->close = close;
 	view->destroy = destroy;
 	roots_surface->view = view;
 
