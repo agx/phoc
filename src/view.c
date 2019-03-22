@@ -539,6 +539,8 @@ void view_initial_focus(struct roots_view *view) {
  */
 static bool
 want_maximize(struct roots_view *view) {
+  struct roots_xdg_surface_v6 *xdg_surface_v6;
+  struct roots_xdg_surface *xdg_surface;
   bool maximize = false;
 
   if (!view->desktop->maximize)
@@ -550,13 +552,17 @@ want_maximize(struct roots_view *view) {
      * but Don't maximize child surfaces like dialogs.
      */
   case ROOTS_XDG_SHELL_V6_VIEW:
-    if (!view->xdg_surface_v6->toplevel ||
-	!view->xdg_surface_v6->toplevel->parent)
+    xdg_surface_v6 = roots_xdg_surface_v6_from_view(view);
+
+    if (!xdg_surface_v6->xdg_surface_v6->toplevel ||
+	!xdg_surface_v6->xdg_surface_v6->toplevel->parent)
       maximize = true;
     break;
   case ROOTS_XDG_SHELL_VIEW:
-    if (!view->xdg_surface->toplevel ||
-	!view->xdg_surface->toplevel->parent)
+    xdg_surface = roots_xdg_surface_from_view(view);
+
+    if (!xdg_surface->xdg_surface->toplevel ||
+	!xdg_surface->xdg_surface->toplevel->parent)
       maximize = true;
     break;
     /* Never maximize these */
