@@ -28,6 +28,9 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell_v6.h>
 #include <wlr/types/wlr_xdg_shell.h>
+
+#include <gio/gio.h>
+
 #include "settings.h"
 #include "output.h"
 #include "view.h"
@@ -86,6 +89,9 @@ struct roots_desktop {
 	struct wlr_xwayland *xwayland;
 	struct wl_listener xwayland_surface;
 #endif
+
+	GSettings *settings;
+	gboolean maximize;
 };
 
 struct phoc_server;
