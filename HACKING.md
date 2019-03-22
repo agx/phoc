@@ -25,7 +25,7 @@ Coding Style
 The code base currently uses two coding styles
 
 1. the one followed in [libhandy][1]
-2. the wlroots one (for files taken from wlroots)
+2. the [wlroots][2] one (for files taken from wlroots)
 
 New files should use [libhandy][1] style. For other files use the style
 prevalent in that file. It's also o.k. to use [libhandy][1] style for
@@ -35,3 +35,4 @@ indentation within a single function or struct.
 New public functions and structs should have a `phoc_` prefix.
 
 [1]: https://source.puri.sm/Librem5/libhandy/blob/master/HACKING.md
+[2]: https://github.com/swaywm/wlroots/blob/master/CONTRIBUTING.md
