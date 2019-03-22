@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+export GSETTINGS_SCHEMA_DIR=_build/data/
+
+case "$1" in
+	on|1|ON)
+	val=true
+	;;
+	*)
+	val=false
+	;;
+esac
+
+gsettings set sm.puri.phoc auto-maximize "${val}"
+
+echo -n "Auto-maximize is now "
+G_MESSAGES_DEBUG= gsettings get sm.puri.phoc auto-maximize
