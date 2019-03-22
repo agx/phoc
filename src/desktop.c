@@ -564,7 +564,6 @@ void view_initial_focus(struct roots_view *view) {
 	}
 }
 
-
 /*
  * Check if a view needs to be maximized
  */
