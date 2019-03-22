@@ -954,7 +954,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 	}
 }
 
-struct roots_desktop *desktop_create(struct roots_server *server,
+struct roots_desktop *desktop_create(struct phoc_server *server,
 		struct roots_config *config) {
 	wlr_log(WLR_DEBUG, "Initializing phoc %s", PHOC_VERSION);
 

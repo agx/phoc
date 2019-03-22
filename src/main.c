@@ -2,6 +2,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include <gio/gio.h>
+
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/backend/headless.h>
@@ -13,14 +16,79 @@
 #include "settings.h"
 #include "server.h"
 
-struct roots_server server = { 0 };
+struct phoc_server server = { 0 };
+
+typedef struct {
+  GSource source;
+  struct wl_display *display;
+} WaylandEventSource;
+
+static gboolean
+wayland_event_source_prepare (GSource *base,
+                              int     *timeout)
+{
+  WaylandEventSource *source = (WaylandEventSource *)base;
+
+  *timeout = -1;
+
+  wl_display_flush_clients (source->display);
+
+  return FALSE;
+}
+
+static gboolean
+wayland_event_source_dispatch (GSource     *base,
+                               GSourceFunc callback,
+                               void        *data)
+{
+  WaylandEventSource *source = (WaylandEventSource *)base;
+  struct wl_event_loop *loop = wl_display_get_event_loop (source->display);
+
+  wl_event_loop_dispatch (loop, 0);
+
+  return TRUE;
+}
+
+static GSourceFuncs wayland_event_source_funcs = {
+  wayland_event_source_prepare,
+  NULL,
+  wayland_event_source_dispatch,
+  NULL
+};
+
+static GSource *
+wayland_event_source_new (struct wl_display *display)
+{
+  WaylandEventSource *source;
+  struct wl_event_loop *loop = wl_display_get_event_loop (display);
+
+  source = (WaylandEventSource *) g_source_new (&wayland_event_source_funcs,
+                                                sizeof (WaylandEventSource));
+  source->display = display;
+  g_source_add_unix_fd (&source->source,
+                        wl_event_loop_get_fd (loop),
+                        G_IO_IN | G_IO_ERR);
+
+  return &source->source;
+}
+
+static void
+phoc_wayland_init (struct phoc_server *server)
+{
+  GSource *wayland_event_source;
+
+  wayland_event_source = wayland_event_source_new (server->wl_display);
+  g_source_attach (wayland_event_source, NULL);
+
+}
 
 int main(int argc, char **argv) {
+	GMainLoop *loop;
+
 	wlr_log_init(WLR_DEBUG, NULL);
 	server.config = roots_config_create_from_args(argc, argv);
 	server.wl_display = wl_display_create();
-	server.wl_event_loop = wl_display_get_event_loop(server.wl_display);
-	assert(server.config && server.wl_display && server.wl_event_loop);
+	assert(server.config && server.wl_display);
 
 	server.backend = wlr_backend_autocreate(server.wl_display, NULL);
 	if (server.backend == NULL) {
@@ -72,7 +140,10 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	wl_display_run(server.wl_display);
+	phoc_wayland_init (&server);
+	loop = g_main_loop_new (NULL, FALSE);
+	g_main_loop_run (loop);
+	g_main_loop_unref (loop);
 #ifdef PHOC_XWAYLAND
 	// We need to shutdown Xwayland before disconnecting all clients, otherwise
 	// wlroots will restart it automatically.

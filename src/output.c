@@ -154,7 +154,7 @@ static void output_for_each_surface(struct roots_output *output,
 		void *user_data) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	struct roots_desktop *desktop = output->desktop;
-	struct roots_server *server = desktop->server;
+	struct phoc_server *server = desktop->server;
 
 	const struct wlr_box *output_box =
 		wlr_output_layout_get_box(desktop->layout, wlr_output);
@@ -409,7 +409,7 @@ static void surface_send_frame_done(struct wlr_surface *surface, int sx, int sy,
 static void render_output(struct roots_output *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	struct roots_desktop *desktop = output->desktop;
-	struct roots_server *server = desktop->server;
+	struct phoc_server *server = desktop->server;
 	struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
 	assert(renderer);
 

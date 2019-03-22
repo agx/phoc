@@ -101,7 +101,7 @@ static bool keyboard_execute_compositor_binding(struct roots_keyboard *keyboard,
 		xkb_keysym_t keysym) {
 	if (keysym >= XKB_KEY_XF86Switch_VT_1 &&
 			keysym <= XKB_KEY_XF86Switch_VT_12) {
-		struct roots_server *server = keyboard->input->server;
+		struct phoc_server *server = keyboard->input->server;
 
 		struct wlr_session *session = wlr_backend_get_session(server->backend);
 		if (session) {

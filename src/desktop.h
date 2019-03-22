@@ -38,7 +38,7 @@ struct roots_desktop {
 	struct wl_list outputs; // roots_output::link
 	struct timespec last_frame;
 
-	struct roots_server *server;
+	struct phoc_server *server;
 	struct roots_config *config;
 
 	struct wlr_output_layout *layout;
@@ -88,9 +88,9 @@ struct roots_desktop {
 #endif
 };
 
-struct roots_server;
+struct phoc_server;
 
-struct roots_desktop *desktop_create(struct roots_server *server,
+struct roots_desktop *desktop_create(struct phoc_server *server,
 	struct roots_config *config);
 void desktop_destroy(struct roots_desktop *desktop);
 struct roots_output *desktop_output_from_wlr_output(

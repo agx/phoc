@@ -244,7 +244,7 @@ static void set_fullscreen(struct roots_view *view, bool fullscreen) {
 	wlr_xdg_toplevel_v6_set_fullscreen(surface, fullscreen);
 }
 
-static void close(struct roots_view *view) {
+static void _close(struct roots_view *view) {
 	assert(view->type == ROOTS_XDG_SHELL_V6_VIEW);
 	struct wlr_xdg_surface_v6 *surface = view->xdg_surface_v6;
 	struct wlr_xdg_popup_v6 *popup = NULL;
@@ -483,7 +483,7 @@ void handle_xdg_shell_v6_surface(struct wl_listener *listener, void *data) {
 	view->move_resize = move_resize;
 	view->maximize = maximize;
 	view->set_fullscreen = set_fullscreen;
-	view->close = close;
+	view->close = _close;
 	view->destroy = destroy;
 	roots_surface->view = view;
 
