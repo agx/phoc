@@ -85,6 +85,10 @@ phoc_wayland_init (struct phoc_server *server)
 int main(int argc, char **argv) {
 	GMainLoop *loop;
 
+	/* wlroots uses this to talk to xwayland, block it before
+	   we spawn other threads */
+	signal(SIGUSR1, SIG_IGN);
+
 	wlr_log_init(WLR_DEBUG, NULL);
 	server.config = roots_config_create_from_args(argc, argv);
 	server.wl_display = wl_display_create();
