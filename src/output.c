@@ -137,7 +137,7 @@ void output_view_for_each_surface(struct roots_output *output,
 	view_for_each_surface(view, output_for_each_surface_iterator, &data);
 }
 
-#if WLR_HAS_XWAYLAND
+#ifdef PHOC_XWAYLAND
 void output_xwayland_children_for_each_surface(
 		struct roots_output *output, struct wlr_xwayland_surface *surface,
 		roots_surface_iterator_func_t iterator, void *user_data) {
@@ -194,7 +194,7 @@ void output_for_each_surface(struct roots_output *output,
 
 		output_view_for_each_surface(output, view, iterator, user_data);
 
-#if WLR_HAS_XWAYLAND
+#ifdef PHOC_XWAYLAND
 		if (view->type == ROOTS_XWAYLAND_VIEW) {
 			struct roots_xwayland_surface *xwayland_surface =
 				roots_xwayland_surface_from_view(view);
