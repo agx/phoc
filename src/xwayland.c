@@ -8,7 +8,6 @@
 #include <wlr/util/log.h>
 #include <wlr/xwayland.h>
 #include "config.h"
-#include "config.h"
 #include "server.h"
 #include "view.h"
 
