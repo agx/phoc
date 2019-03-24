@@ -9,6 +9,7 @@ sources = [
   'layer_shell.c',
   'main.c',
   'output.c',
+  'phosh.c',
   'render.c',
   'seat.c',
   'switch.c',

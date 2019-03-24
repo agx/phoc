@@ -35,6 +35,7 @@
 #include "settings.h"
 #include "output.h"
 #include "view.h"
+#include "phosh.h"
 
 struct roots_desktop {
 	struct wl_list views; // roots_view::link
@@ -93,6 +94,8 @@ struct roots_desktop {
 
 	GSettings *settings;
 	gboolean maximize;
+
+	struct phosh_private *phosh;
 };
 
 struct phoc_server;
