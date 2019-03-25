@@ -564,9 +564,51 @@ void view_initial_focus(struct roots_view *view) {
 	}
 }
 
+
+/*
+ * Check if a view needs to be maximized
+ */
+static bool
+want_maximize(struct roots_view *view) {
+	bool maximize = false;
+
+  if (!view->desktop->maximize)
+    return false;
+
+  switch (view->type) {
+    /*
+     * phosh: Maximize xdg shell surfaces by default
+     * but Don't maximize child surfaces like dialogs.
+     */
+  case ROOTS_XDG_SHELL_V6_VIEW:
+    if (!view->xdg_surface_v6->toplevel ||
+	!view->xdg_surface_v6->toplevel->parent)
+      maximize = true;
+    break;
+  case ROOTS_XDG_SHELL_VIEW:
+    if (!view->xdg_surface->toplevel ||
+	!view->xdg_surface->toplevel->parent)
+      maximize = true;
+    break;
+    /* Never maximize these */
+  case ROOTS_WL_SHELL_VIEW:
+#ifdef PHOC_XWAYLAND
+  case ROOTS_XWAYLAND_VIEW:
+#endif
+    break;
+  }
+  return maximize;
+}
+
+
 void view_setup(struct roots_view *view) {
+	bool maximize;
+
 	view_initial_focus(view);
 
+	maximize = want_maximize(view);
+	if (maximize)
+		view_maximize(view, true);
 	if (view->fullscreen_output == NULL && !view->maximized) {
 		view_center(view);
 	}
@@ -954,6 +996,17 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 	}
 }
 
+static void
+auto_maximize_changed_cb (GSettings *settings,
+			  const gchar *key,
+			  struct roots_desktop *self)
+{
+  gboolean max = g_settings_get_boolean (settings, key);
+
+  wlr_log(WLR_DEBUG, "auto-maximize: %d", max);
+  self->maximize = max;
+}
+
 struct roots_desktop *desktop_create(struct phoc_server *server,
 		struct roots_config *config) {
 	wlr_log(WLR_DEBUG, "Initializing phoc %s", PHOC_VERSION);
@@ -1116,6 +1169,11 @@ struct roots_desktop *desktop_create(struct phoc_server *server,
 		wlr_pointer_gestures_v1_create(server->wl_display);
 
 	wlr_data_control_manager_v1_create(server->wl_display);
+
+	desktop->settings = g_settings_new ("sm.puri.phoc");
+	g_signal_connect(desktop->settings, "changed::auto-maximize",
+			 G_CALLBACK (auto_maximize_changed_cb), desktop);
+	auto_maximize_changed_cb(desktop->settings, "auto-maximize", desktop);
 
 	return desktop;
 }

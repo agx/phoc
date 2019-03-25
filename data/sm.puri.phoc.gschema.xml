@@ -1,0 +1,13 @@
+<schemalist>
+  <schema id="sm.puri.phoc"
+          path="/sm/puri/phoc/">
+    <key name="auto-maximize" type="b">
+      <default>true</default>
+      <summary>Auto maximize applications</summary>
+      <description>
+        Whether to maximize application windows. This only affects
+	Wayland applications and only their main window.
+      </description>
+    </key>
+  </schema>
+</schemalist>
