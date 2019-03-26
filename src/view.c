@@ -363,6 +363,8 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		output_damage_whole(view->fullscreen_output);
 		view->fullscreen_output->fullscreen_view = NULL;
 		view->fullscreen_output = NULL;
+
+		maybe_maximize(view);
 	}
 }
 
