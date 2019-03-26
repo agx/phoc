@@ -259,6 +259,47 @@ void view_maximize(struct roots_view *view, bool maximized) {
 	}
 }
 
+/*
+ * Check if a view needs to be maximized
+ */
+static bool
+want_maximize(struct roots_view *view) {
+  struct roots_xdg_surface_v6 *xdg_surface_v6;
+  struct roots_xdg_surface *xdg_surface;
+  bool maximize = false;
+
+  if (!view->desktop->maximize)
+    return false;
+
+  switch (view->type) {
+    /*
+     * phosh: Maximize xdg shell surfaces by default
+     * but Don't maximize child surfaces like dialogs.
+     */
+  case ROOTS_XDG_SHELL_V6_VIEW:
+    xdg_surface_v6 = roots_xdg_surface_v6_from_view(view);
+
+    if (!xdg_surface_v6->xdg_surface_v6->toplevel ||
+	!xdg_surface_v6->xdg_surface_v6->toplevel->parent)
+      maximize = true;
+    break;
+  case ROOTS_XDG_SHELL_VIEW:
+    xdg_surface = roots_xdg_surface_from_view(view);
+
+    if (!xdg_surface->xdg_surface->toplevel ||
+	!xdg_surface->xdg_surface->toplevel->parent)
+      maximize = true;
+    break;
+    /* Never maximize these */
+  case ROOTS_WL_SHELL_VIEW:
+#ifdef PHOC_XWAYLAND
+  case ROOTS_XWAYLAND_VIEW:
+#endif
+    break;
+  }
+  return maximize;
+}
+
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		struct wlr_output *output) {
 	bool was_fullscreen = view->fullscreen_output != NULL;
@@ -532,47 +573,6 @@ void view_initial_focus(struct roots_view *view) {
 	wl_list_for_each(seat, &input->seats, link) {
 		roots_seat_set_focus(seat, view);
 	}
-}
-
-/*
- * Check if a view needs to be maximized
- */
-static bool
-want_maximize(struct roots_view *view) {
-  struct roots_xdg_surface_v6 *xdg_surface_v6;
-  struct roots_xdg_surface *xdg_surface;
-  bool maximize = false;
-
-  if (!view->desktop->maximize)
-    return false;
-
-  switch (view->type) {
-    /*
-     * phosh: Maximize xdg shell surfaces by default
-     * but Don't maximize child surfaces like dialogs.
-     */
-  case ROOTS_XDG_SHELL_V6_VIEW:
-    xdg_surface_v6 = roots_xdg_surface_v6_from_view(view);
-
-    if (!xdg_surface_v6->xdg_surface_v6->toplevel ||
-	!xdg_surface_v6->xdg_surface_v6->toplevel->parent)
-      maximize = true;
-    break;
-  case ROOTS_XDG_SHELL_VIEW:
-    xdg_surface = roots_xdg_surface_from_view(view);
-
-    if (!xdg_surface->xdg_surface->toplevel ||
-	!xdg_surface->xdg_surface->toplevel->parent)
-      maximize = true;
-    break;
-    /* Never maximize these */
-  case ROOTS_WL_SHELL_VIEW:
-#ifdef PHOC_XWAYLAND
-  case ROOTS_XWAYLAND_VIEW:
-#endif
-    break;
-  }
-  return maximize;
 }
 
 
