@@ -300,6 +300,17 @@ want_maximize(struct roots_view *view) {
   return maximize;
 }
 
+/*
+ * Maximize view if in auto-maximize mode otherwise do nothing.
+ */
+static void
+maybe_maximize(struct roots_view *view)
+{
+  if (want_maximize(view))
+    view_maximize (view, true);
+}
+
+
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		struct wlr_output *output) {
 	bool was_fullscreen = view->fullscreen_output != NULL;
@@ -577,13 +588,9 @@ void view_initial_focus(struct roots_view *view) {
 
 
 void view_setup(struct roots_view *view) {
-	bool maximize;
-
 	view_initial_focus(view);
 
-	maximize = want_maximize(view);
-	if (maximize)
-		view_maximize(view, true);
+	maybe_maximize(view);
 	if (view->fullscreen_output == NULL && !view->maximized) {
 		view_center(view);
 	}
