@@ -259,6 +259,58 @@ void view_maximize(struct roots_view *view, bool maximized) {
 	}
 }
 
+/*
+ * Check if a view needs to be maximized
+ */
+static bool
+want_maximize(struct roots_view *view) {
+  struct roots_xdg_surface_v6 *xdg_surface_v6;
+  struct roots_xdg_surface *xdg_surface;
+  bool maximize = false;
+
+  if (!view->desktop->maximize)
+    return false;
+
+  switch (view->type) {
+    /*
+     * phosh: Maximize xdg shell surfaces by default
+     * but Don't maximize child surfaces like dialogs.
+     */
+  case ROOTS_XDG_SHELL_V6_VIEW:
+    xdg_surface_v6 = roots_xdg_surface_v6_from_view(view);
+
+    if (!xdg_surface_v6->xdg_surface_v6->toplevel ||
+	!xdg_surface_v6->xdg_surface_v6->toplevel->parent)
+      maximize = true;
+    break;
+  case ROOTS_XDG_SHELL_VIEW:
+    xdg_surface = roots_xdg_surface_from_view(view);
+
+    if (!xdg_surface->xdg_surface->toplevel ||
+	!xdg_surface->xdg_surface->toplevel->parent)
+      maximize = true;
+    break;
+    /* Never maximize these */
+  case ROOTS_WL_SHELL_VIEW:
+#ifdef PHOC_XWAYLAND
+  case ROOTS_XWAYLAND_VIEW:
+#endif
+    break;
+  }
+  return maximize;
+}
+
+/*
+ * Maximize view if in auto-maximize mode otherwise do nothing.
+ */
+static void
+maybe_maximize(struct roots_view *view)
+{
+  if (want_maximize(view))
+    view_maximize (view, true);
+}
+
+
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		struct wlr_output *output) {
 	bool was_fullscreen = view->fullscreen_output != NULL;
@@ -311,6 +363,8 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		output_damage_whole(view->fullscreen_output);
 		view->fullscreen_output->fullscreen_view = NULL;
 		view->fullscreen_output = NULL;
+
+		maybe_maximize(view);
 	}
 }
 
@@ -534,56 +588,11 @@ void view_initial_focus(struct roots_view *view) {
 	}
 }
 
-/*
- * Check if a view needs to be maximized
- */
-static bool
-want_maximize(struct roots_view *view) {
-  struct roots_xdg_surface_v6 *xdg_surface_v6;
-  struct roots_xdg_surface *xdg_surface;
-  bool maximize = false;
-
-  if (!view->desktop->maximize)
-    return false;
-
-  switch (view->type) {
-    /*
-     * phosh: Maximize xdg shell surfaces by default
-     * but Don't maximize child surfaces like dialogs.
-     */
-  case ROOTS_XDG_SHELL_V6_VIEW:
-    xdg_surface_v6 = roots_xdg_surface_v6_from_view(view);
-
-    if (!xdg_surface_v6->xdg_surface_v6->toplevel ||
-	!xdg_surface_v6->xdg_surface_v6->toplevel->parent)
-      maximize = true;
-    break;
-  case ROOTS_XDG_SHELL_VIEW:
-    xdg_surface = roots_xdg_surface_from_view(view);
-
-    if (!xdg_surface->xdg_surface->toplevel ||
-	!xdg_surface->xdg_surface->toplevel->parent)
-      maximize = true;
-    break;
-    /* Never maximize these */
-  case ROOTS_WL_SHELL_VIEW:
-#ifdef PHOC_XWAYLAND
-  case ROOTS_XWAYLAND_VIEW:
-#endif
-    break;
-  }
-  return maximize;
-}
-
 
 void view_setup(struct roots_view *view) {
-	bool maximize;
-
 	view_initial_focus(view);
 
-	maximize = want_maximize(view);
-	if (maximize)
-		view_maximize(view, true);
+	maybe_maximize(view);
 	if (view->fullscreen_output == NULL && !view->maximized) {
 		view_center(view);
 	}
