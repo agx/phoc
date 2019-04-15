@@ -425,6 +425,74 @@ static void set_mode(struct wlr_output *output,
 	}
 }
 
+static void update_output_manager_config(struct roots_desktop *desktop) {
+	struct wlr_output_configuration_v1 *config =
+		wlr_output_configuration_v1_create();
+
+	struct roots_output *output;
+	wl_list_for_each(output, &desktop->outputs, link) {
+		wlr_output_configuration_head_v1_create(config, output->wlr_output);
+	}
+
+	wlr_output_manager_v1_set_configuration(desktop->output_manager_v1, config);
+}
+
+void handle_output_manager_apply(struct wl_listener *listener, void *data) {
+	struct roots_desktop *desktop =
+		wl_container_of(listener, desktop, output_manager_apply);
+	struct wlr_output_configuration_v1 *config = data;
+
+	bool ok = true;
+	struct wlr_output_configuration_head_v1 *config_head;
+	// First disable outputs we need to disable
+	wl_list_for_each(config_head, &config->heads, link) {
+		struct wlr_output *wlr_output = config_head->state.output;
+		if (!config_head->state.enabled) {
+			ok &= wlr_output_enable(wlr_output, false);
+		}
+	}
+
+	// Then enable outputs that need to
+	wl_list_for_each(config_head, &config->heads, link) {
+		struct wlr_output *wlr_output = config_head->state.output;
+		if (!config_head->state.enabled) {
+			continue;
+		}
+		ok &= wlr_output_enable(wlr_output, true);
+		if (config_head->state.mode != NULL) {
+			ok &= wlr_output_set_mode(wlr_output, config_head->state.mode);
+		} else {
+			ok &= wlr_output_set_custom_mode(wlr_output,
+				config_head->state.custom_mode.width,
+				config_head->state.custom_mode.height,
+				config_head->state.custom_mode.refresh);
+		}
+		wlr_output_layout_add(desktop->layout, wlr_output,
+			config_head->state.x, config_head->state.y);
+		wlr_output_set_transform(wlr_output, config_head->state.transform);
+		wlr_output_set_scale(wlr_output, config_head->state.scale);
+	}
+
+	if (ok) {
+		wlr_output_configuration_v1_send_succeeded(config);
+	} else {
+		wlr_output_configuration_v1_send_failed(config);
+	}
+	wlr_output_configuration_v1_destroy(config);
+
+	update_output_manager_config(desktop);
+}
+
+void handle_output_manager_test(struct wl_listener *listener, void *data) {
+	struct roots_desktop *desktop =
+		wl_container_of(listener, desktop, output_manager_test);
+	struct wlr_output_configuration_v1 *config = data;
+
+	// TODO: implement test-only mode
+	wlr_output_configuration_v1_send_succeeded(config);
+	wlr_output_configuration_v1_destroy(config);
+}
+
 static void output_destroy(struct roots_output *output) {
 	// TODO: cursor
 	//example_config_configure_cursor(sample->config, sample->cursor,
@@ -432,6 +500,7 @@ static void output_destroy(struct roots_output *output) {
 
 	wl_list_remove(&output->link);
 	wl_list_remove(&output->destroy.link);
+	wl_list_remove(&output->enable.link);
 	wl_list_remove(&output->mode.link);
 	wl_list_remove(&output->transform.link);
 	wl_list_remove(&output->present.link);
@@ -442,7 +511,14 @@ static void output_destroy(struct roots_output *output) {
 
 static void output_handle_destroy(struct wl_listener *listener, void *data) {
 	struct roots_output *output = wl_container_of(listener, output, destroy);
+	struct roots_desktop *desktop = output->desktop;
 	output_destroy(output);
+	update_output_manager_config(desktop);
+}
+
+static void output_handle_enable(struct wl_listener *listener, void *data) {
+	struct roots_output *output = wl_container_of(listener, output, enable);
+	update_output_manager_config(output->desktop);
 }
 
 static void output_damage_handle_frame(struct wl_listener *listener,
@@ -463,6 +539,7 @@ static void output_handle_mode(struct wl_listener *listener, void *data) {
 	struct roots_output *output =
 		wl_container_of(listener, output, mode);
 	arrange_layers(output);
+	update_output_manager_config(output->desktop);
 }
 
 static void output_handle_transform(struct wl_listener *listener, void *data) {
@@ -520,6 +597,8 @@ void handle_new_output(struct wl_listener *listener, void *data) {
 
 	output->destroy.notify = output_handle_destroy;
 	wl_signal_add(&wlr_output->events.destroy, &output->destroy);
+	output->enable.notify = output_handle_enable;
+	wl_signal_add(&wlr_output->events.enable, &output->enable);
 	output->mode.notify = output_handle_mode;
 	wl_signal_add(&wlr_output->events.mode, &output->mode);
 	output->transform.notify = output_handle_transform;
@@ -580,4 +659,6 @@ void handle_new_output(struct wl_listener *listener, void *data) {
 
 	arrange_layers(output);
 	output_damage_whole(output);
+
+	update_output_manager_config(desktop);
 }
