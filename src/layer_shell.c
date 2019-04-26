@@ -351,9 +351,11 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 	struct roots_layer_surface *layer = wl_container_of(
 			listener, layer, unmap);
 	struct wlr_output *wlr_output = layer->layer_surface->output;
-	struct roots_output *output = wlr_output->data;
 	unmap(layer->layer_surface);
-	input_update_cursor_focus(output->desktop->server->input);
+	if (wlr_output) {
+		struct roots_output *output = wlr_output->data;
+		input_update_cursor_focus(output->desktop->server->input);
+	}
 }
 
 static void popup_handle_map(struct wl_listener *listener, void *data) {
