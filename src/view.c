@@ -291,7 +291,6 @@ want_maximize(struct roots_view *view) {
       maximize = true;
     break;
     /* Never maximize these */
-  case ROOTS_WL_SHELL_VIEW:
 #ifdef PHOC_XWAYLAND
   case ROOTS_XWAYLAND_VIEW:
 #endif
