@@ -291,7 +291,6 @@ want_maximize(struct roots_view *view) {
       maximize = true;
     break;
     /* Never maximize these */
-  case ROOTS_WL_SHELL_VIEW:
 #ifdef PHOC_XWAYLAND
   case ROOTS_XWAYLAND_VIEW:
 #endif
@@ -323,6 +322,11 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 
 	if (view->impl->set_fullscreen) {
 		view->impl->set_fullscreen(view, fullscreen);
+	}
+
+	if (view->toplevel_handle) {
+		wlr_foreign_toplevel_handle_v1_set_fullscreen(view->toplevel_handle,
+				fullscreen);
 	}
 
 	if (!was_fullscreen && fullscreen) {
@@ -697,6 +701,14 @@ static void handle_toplevel_handle_request_activate(struct wl_listener *listener
 	}
 }
 
+static void handle_toplevel_handle_request_fullscreen(struct wl_listener *listener,
+		void *data)  {
+	struct roots_view *view =
+		wl_container_of(listener, view, toplevel_handle_request_fullscreen);
+	struct wlr_foreign_toplevel_handle_v1_fullscreen_event *event = data;
+	view_set_fullscreen(view, event->fullscreen, event->output);
+}
+
 static void handle_toplevel_handle_request_close(struct wl_listener *listener,
 		void *data) {
 	struct roots_view *view =
@@ -717,6 +729,10 @@ void view_create_foreign_toplevel_handle(struct roots_view *view) {
 		handle_toplevel_handle_request_activate;
 	wl_signal_add(&view->toplevel_handle->events.request_activate,
 			&view->toplevel_handle_request_activate);
+	view->toplevel_handle_request_fullscreen.notify =
+		handle_toplevel_handle_request_fullscreen;
+	wl_signal_add(&view->toplevel_handle->events.request_fullscreen,
+			&view->toplevel_handle_request_fullscreen);
 	view->toplevel_handle_request_close.notify =
 		handle_toplevel_handle_request_close;
 	wl_signal_add(&view->toplevel_handle->events.request_close,
