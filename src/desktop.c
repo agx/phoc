@@ -475,7 +475,6 @@ phoc_desktop_constructed (GObject *object)
   self->gamma_control_manager = wlr_gamma_control_manager_create(server->wl_display);
 #endif
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create(server->wl_display);
-  self->screenshooter = wlr_screenshooter_create(server->wl_display);
   self->export_dmabuf_manager_v1 =
     wlr_export_dmabuf_manager_v1_create(server->wl_display);
   self->server_decoration_manager =

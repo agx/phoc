@@ -25,7 +25,6 @@
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
-#include <wlr/types/wlr_screenshooter.h>
 #include <wlr/types/wlr_text_input_v3.h>
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
 #include <wlr/types/wlr_xcursor_manager.h>
@@ -69,7 +68,6 @@ struct _PhocDesktop {
 	struct wlr_gamma_control_manager *gamma_control_manager;
 #endif
 	struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
-	struct wlr_screenshooter *screenshooter;
 	struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;
 	struct wlr_server_decoration_manager *server_decoration_manager;
 	struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
