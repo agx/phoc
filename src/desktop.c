@@ -14,7 +14,6 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_gamma_control.h>
 #include <wlr/types/wlr_gtk_primary_selection.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle.h>
@@ -469,7 +468,6 @@ phoc_desktop_constructed (GObject *object)
   }
 #endif
 
-  self->gamma_control_manager = wlr_gamma_control_manager_create(server->wl_display);
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create(server->wl_display);
   self->export_dmabuf_manager_v1 =
     wlr_export_dmabuf_manager_v1_create(server->wl_display);
