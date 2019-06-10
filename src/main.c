@@ -79,7 +79,34 @@ phoc_wayland_init (struct phoc_server *server)
 
   wayland_event_source = wayland_event_source_new (server->wl_display);
   g_source_attach (wayland_event_source, NULL);
+}
 
+
+static gboolean
+phoc_startup_cmd_in_idle(struct phoc_server *server)
+{
+  const char *cmd = server->config->startup_cmd;
+  pid_t pid = fork();
+
+  g_return_val_if_fail (cmd, FALSE);
+
+  if (pid < 0) {
+    wlr_log(WLR_ERROR, "cannot execute binding command: fork() failed");
+  } else if (pid == 0) {
+    execl("/bin/sh", "/bin/sh", "-c", cmd, (void *)NULL);
+  }
+
+  return FALSE;
+}
+
+
+static void
+phoc_startup_cmd (struct phoc_server *server)
+{
+  gint id;
+
+  id = g_idle_add ((GSourceFunc) phoc_startup_cmd_in_idle, server);
+  g_source_set_name_by_id (id, "[phoc] phoc_startup_cmd");
 }
 
 
@@ -137,17 +164,10 @@ main(int argc, char **argv)
   }
 #endif
 
-  if (server.config->startup_cmd != NULL) {
-    const char *cmd = server.config->startup_cmd;
-    pid_t pid = fork();
-    if (pid < 0) {
-      wlr_log(WLR_ERROR, "cannot execute binding command: fork() failed");
-    } else if (pid == 0) {
-      execl("/bin/sh", "/bin/sh", "-c", cmd, (void *)NULL);
-    }
-  }
-
   phoc_wayland_init (&server);
+  if (server.config->startup_cmd)
+    phoc_startup_cmd (&server);
+
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
   g_main_loop_unref (loop);
