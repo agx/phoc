@@ -1,3 +1,7 @@
+stages:
+ - build
+ - package
+
 variables:
   DEPS: build-essential git
   # We build wlroots as a subproject
@@ -8,6 +12,10 @@ variables:
         libxcb-image0-dev libxcb-render0-dev libxcb-xfixes0-dev
         libxkbcommon-dev meson pkg-config wayland-protocols
 
+.tags: &tags
+  tags:
+    - librem5
+
 before_script:
  - apt-get -y update
  - apt-get -y install $DEPS $WLROOTS_DEPS
@@ -15,8 +23,7 @@ before_script:
 
 build-with-xwayland:
   stage: build
-  tags:
-    - librem5
+  <<: *tags
   script:
     - export LC_ALL=C.UTF-8
     - git submodule update --init
@@ -26,8 +33,7 @@ build-with-xwayland:
 
 build-without-xwayland:
   stage: build
-  tags:
-    - librem5
+  <<: *tags
   script:
     - export LC_ALL=C.UTF-8
     - git submodule update --init
@@ -35,3 +41,13 @@ build-without-xwayland:
     - ninja -C _build
     - ninja -C _build install
 
+package-deb-with-wlroots:
+  <<: *tags
+  stage: package
+  script:
+    - git submodule update --init
+    - dpkg-buildpackage -uc -us
+    - cp ../*.deb .
+  artifacts:
+    paths:
+      - "*.deb"
