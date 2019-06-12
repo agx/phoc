@@ -297,6 +297,11 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 	struct roots_input *input = view->desktop->server->input;
 	struct wlr_xdg_toplevel_v6_move_event *e = data;
 	struct roots_seat *seat = input_seat_from_wlr_seat(input, e->seat->seat);
+
+	if (view->desktop->maximize) {
+		return;
+	}
+
 	// TODO verify event serial
 	if (!seat || seat->cursor->mode != ROOTS_CURSOR_PASSTHROUGH) {
 		return;
