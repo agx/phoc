@@ -110,14 +110,25 @@ phoc_startup_cmd (struct phoc_server *server)
 }
 
 
+static void
+setup_signals (void)
+{
+  sigset_t mask;
+
+  /* wlroots uses this to talk to xwayland, block it before
+     we spawn other threads */
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGUSR1);
+  sigprocmask(SIG_BLOCK, &mask, NULL);
+}
+
+
 int
 main(int argc, char **argv)
 {
   GMainLoop *loop;
 
-  /* wlroots uses this to talk to xwayland, block it before
-     we spawn other threads */
-  signal(SIGUSR1, SIG_IGN);
+  setup_signals();
 
   wlr_log_init(WLR_DEBUG, NULL);
   server.config = roots_config_create_from_args(argc, argv);
