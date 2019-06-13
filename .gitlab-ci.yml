@@ -46,3 +46,24 @@ package-deb-with-wlroots:
   artifacts:
     paths:
       - "*.deb"
+
+package-deb-without-wlroots:
+  <<: *tags
+  stage: package
+  before_script:
+    - echo "deb http://deb.debian.org/debian/ experimental main" > /etc/apt/sources.list.d/experimental.list
+    - apt-get -y update
+    - apt-get -y install $DEPS
+    # This pulls in wlroots build-deps and so avoids pulling in e.g. mesa from
+    # experimental due to  pulling wlroots from experimental
+    # Once we have wlroots in our archive we can drop the build profile
+    - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots apt-get -y build-dep .
+    - apt-get -y -t experimental install libwlroots-dev
+  script:
+    - dpkg-buildpackage -uc -us
+    # Must be dynamically linked against wlroots
+    - ldd debian/phoc/usr/bin/phoc | grep -qs libwlroots
+    - cp ../*.deb .
+  artifacts:
+    paths:
+      - "*.deb"
