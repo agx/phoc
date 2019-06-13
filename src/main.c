@@ -123,6 +123,28 @@ setup_signals (void)
 }
 
 
+static void
+log_glib(enum wlr_log_importance verbosity, const char *fmt, va_list args) {
+  int level;
+
+  switch (verbosity) {
+  case WLR_ERROR:
+    level = G_LOG_LEVEL_CRITICAL;
+    break;
+  case WLR_INFO:
+    level = G_LOG_LEVEL_INFO;
+    break;
+  case WLR_DEBUG:
+    level = G_LOG_LEVEL_DEBUG;
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  g_logv("phoc", level, fmt, args);
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -130,7 +152,7 @@ main(int argc, char **argv)
 
   setup_signals();
 
-  wlr_log_init(WLR_DEBUG, NULL);
+  wlr_log_init(WLR_DEBUG, log_glib);
   server.config = roots_config_create_from_args(argc, argv);
   server.wl_display = wl_display_create();
   assert(server.config && server.wl_display);
