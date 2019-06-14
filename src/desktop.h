@@ -109,13 +109,10 @@ struct _PhocDesktop {
 	struct phosh_private *phosh;
 };
 
-PhocDesktop *phoc_desktop_new (void);
+PhocDesktop *phoc_desktop_new (struct phoc_server *server, struct roots_config *config);
 
 struct phoc_server;
 
-PhocDesktop *desktop_create(struct phoc_server *server,
-			    struct roots_config *config);
-void desktop_destroy(PhocDesktop *desktop);
 struct roots_output *desktop_output_from_wlr_output(
 	PhocDesktop *desktop, struct wlr_output *output);
 

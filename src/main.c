@@ -168,7 +168,7 @@ main(int argc, char **argv)
   server.data_device_manager =
     wlr_data_device_manager_create(server.wl_display);
   wlr_renderer_init_wl_display(server.renderer, server.wl_display);
-  server.desktop = desktop_create(&server, server.config);
+  server.desktop = phoc_desktop_new (&server, server.config);
   server.input = input_create(&server, server.config);
 
   const char *socket = wl_display_add_socket_auto(server.wl_display);
@@ -211,5 +211,6 @@ main(int argc, char **argv)
 #endif
   wl_display_destroy_clients(server.wl_display);
   wl_display_destroy(server.wl_display);
+  g_object_unref (server.desktop);
   return 0;
 }
