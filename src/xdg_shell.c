@@ -454,7 +454,7 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 		return;
 	}
 
-	struct roots_desktop *desktop =
+	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, xdg_shell_surface);
 
 	wlr_log(WLR_DEBUG, "new xdg toplevel: title=%s, app_id=%s",

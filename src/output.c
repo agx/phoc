@@ -220,7 +220,7 @@ void output_drag_icons_for_each_surface(struct roots_output *output,
 
 void output_for_each_surface(struct roots_output *output,
 		roots_surface_iterator_func_t iterator, void *user_data) {
-	struct roots_desktop *desktop = output->desktop;
+	PhocDesktop *desktop = output->desktop;
 
 	if (output->fullscreen_view != NULL) {
 		struct roots_view *view = output->fullscreen_view;
@@ -441,7 +441,7 @@ static void set_mode(struct wlr_output *output,
 	}
 }
 
-static void update_output_manager_config(struct roots_desktop *desktop) {
+static void update_output_manager_config(PhocDesktop *desktop) {
 	struct wlr_output_configuration_v1 *config =
 		wlr_output_configuration_v1_create();
 
@@ -461,7 +461,7 @@ static void update_output_manager_config(struct roots_desktop *desktop) {
 }
 
 void handle_output_manager_apply(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop =
+	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, output_manager_apply);
 	struct wlr_output_configuration_v1 *config = data;
 
@@ -508,7 +508,7 @@ void handle_output_manager_apply(struct wl_listener *listener, void *data) {
 }
 
 void handle_output_manager_test(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop =
+	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, output_manager_test);
 	struct wlr_output_configuration_v1 *config = data;
 
@@ -535,7 +535,7 @@ static void output_destroy(struct roots_output *output) {
 
 static void output_handle_destroy(struct wl_listener *listener, void *data) {
 	struct roots_output *output = wl_container_of(listener, output, destroy);
-	struct roots_desktop *desktop = output->desktop;
+	PhocDesktop *desktop = output->desktop;
 	output_destroy(output);
 	update_output_manager_config(desktop);
 }
@@ -599,7 +599,7 @@ static void output_handle_present(struct wl_listener *listener, void *data) {
 }
 
 void handle_new_output(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop = wl_container_of(listener, desktop,
+	PhocDesktop *desktop = wl_container_of(listener, desktop,
 		new_output);
 	struct wlr_output *wlr_output = data;
 	struct roots_input *input = desktop->server->input;

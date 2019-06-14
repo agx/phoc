@@ -7,7 +7,7 @@
 #include "seat.h"
 
 void handle_virtual_keyboard(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop =
+	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, virtual_keyboard_new);
 	struct wlr_virtual_keyboard_v1 *keyboard = data;
 

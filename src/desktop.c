@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-desktop"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <math.h>
@@ -34,6 +36,10 @@
 #include "virtual_keyboard.h"
 #include "xcursor.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
+
+
+G_DEFINE_TYPE(PhocDesktop, phoc_desktop, G_TYPE_OBJECT)
+
 
 static bool view_at(struct roots_view *view, double lx, double ly,
 		struct wlr_surface **surface, double *sx, double *sy) {
@@ -85,7 +91,7 @@ static bool view_at(struct roots_view *view, double lx, double ly,
 	return false;
 }
 
-static struct roots_view *desktop_view_at(struct roots_desktop *desktop,
+static struct roots_view *desktop_view_at(PhocDesktop *desktop,
 		double lx, double ly, struct wlr_surface **surface,
 		double *sx, double *sy) {
 	struct roots_view *view;
@@ -115,7 +121,7 @@ static struct wlr_surface *layer_surface_at(struct roots_output *output,
 	return NULL;
 }
 
-struct wlr_surface *desktop_surface_at(struct roots_desktop *desktop,
+struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
 		struct roots_view **view) {
 	struct wlr_surface *surface = NULL;
@@ -178,7 +184,7 @@ struct wlr_surface *desktop_surface_at(struct roots_desktop *desktop,
 }
 
 static void handle_layout_change(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop =
+	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, layout_change);
 
 	struct wlr_output *center_output =
@@ -206,7 +212,7 @@ static void handle_layout_change(struct wl_listener *listener, void *data) {
 }
 
 static void input_inhibit_activate(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop = wl_container_of(
+	PhocDesktop *desktop = wl_container_of(
 			listener, desktop, input_inhibit_activate);
 	struct roots_seat *seat;
 	wl_list_for_each(seat, &desktop->server->input->seats, link) {
@@ -216,7 +222,7 @@ static void input_inhibit_activate(struct wl_listener *listener, void *data) {
 }
 
 static void input_inhibit_deactivate(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop = wl_container_of(
+	PhocDesktop *desktop = wl_container_of(
 			listener, desktop, input_inhibit_deactivate);
 	struct roots_seat *seat;
 	wl_list_for_each(seat, &desktop->server->input->seats, link) {
@@ -283,7 +289,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 static void
 auto_maximize_changed_cb (GSettings *settings,
 			  const gchar *key,
-			  struct roots_desktop *self)
+			  PhocDesktop *self)
 {
   gboolean max = g_settings_get_boolean (settings, key);
 
@@ -292,14 +298,30 @@ auto_maximize_changed_cb (GSettings *settings,
 }
 
 
-struct roots_desktop *desktop_create(struct phoc_server *server,
+static void
+phoc_desktop_class_init (PhocDesktopClass *klass)
+{
+}
+
+
+static void
+phoc_desktop_init (PhocDesktop *self)
+{
+}
+
+
+PhocDesktop *
+phoc_desktop_new (void)
+{
+  return g_object_new (PHOC_TYPE_DESKTOP, NULL);
+}
+
+
+PhocDesktop *desktop_create(struct phoc_server *server,
 		struct roots_config *config) {
 	wlr_log(WLR_DEBUG, "Initializing phoc %s", PHOC_VERSION);
 
-	struct roots_desktop *desktop = calloc(1, sizeof(struct roots_desktop));
-	if (desktop == NULL) {
-		return NULL;
-	}
+	PhocDesktop *desktop = phoc_desktop_new ();
 
 	wl_list_init(&desktop->views);
 	wl_list_init(&desktop->outputs);
@@ -470,13 +492,15 @@ struct roots_desktop *desktop_create(struct phoc_server *server,
 	return desktop;
 }
 
-void desktop_destroy(struct roots_desktop *desktop) {
+void desktop_destroy(PhocDesktop *desktop) {
 	phosh_destroy(desktop->phosh);
 	desktop->phosh = NULL;
+
+	g_object_unref (desktop);
 }
 
 struct roots_output *desktop_output_from_wlr_output(
-		struct roots_desktop *desktop, struct wlr_output *wlr_output) {
+		PhocDesktop *desktop, struct wlr_output *wlr_output) {
 	struct roots_output *output;
 	wl_list_for_each(output, &desktop->outputs, link) {
 		if (output->wlr_output == wlr_output) {

@@ -26,7 +26,7 @@
 static void handle_keyboard_key(struct wl_listener *listener, void *data) {
 	struct roots_keyboard *keyboard =
 		wl_container_of(listener, keyboard, keyboard_key);
-	struct roots_desktop *desktop = keyboard->input->server->desktop;
+	PhocDesktop *desktop = keyboard->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, keyboard->seat->seat);
 	struct wlr_event_keyboard_key *event = data;
 	roots_keyboard_handle_key(keyboard, event);
@@ -36,7 +36,7 @@ static void handle_keyboard_modifiers(struct wl_listener *listener,
 		void *data) {
 	struct roots_keyboard *keyboard =
 		wl_container_of(listener, keyboard, keyboard_modifiers);
-	struct roots_desktop *desktop = keyboard->input->server->desktop;
+	PhocDesktop *desktop = keyboard->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, keyboard->seat->seat);
 	roots_keyboard_handle_modifiers(keyboard);
 }
@@ -44,7 +44,7 @@ static void handle_keyboard_modifiers(struct wl_listener *listener,
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, motion);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_motion *event = data;
 	roots_cursor_handle_motion(cursor, event);
@@ -54,7 +54,7 @@ static void handle_cursor_motion_absolute(struct wl_listener *listener,
 		void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, motion_absolute);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_motion_absolute *event = data;
 	roots_cursor_handle_motion_absolute(cursor, event);
@@ -63,7 +63,7 @@ static void handle_cursor_motion_absolute(struct wl_listener *listener,
 static void handle_cursor_button(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, button);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_button *event = data;
 	roots_cursor_handle_button(cursor, event);
@@ -72,7 +72,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 static void handle_cursor_axis(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, axis);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_axis *event = data;
 	roots_cursor_handle_axis(cursor, event);
@@ -81,7 +81,7 @@ static void handle_cursor_axis(struct wl_listener *listener, void *data) {
 static void handle_cursor_frame(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, frame);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	roots_cursor_handle_frame(cursor);
 }
@@ -150,7 +150,7 @@ static void handle_pinch_end(struct wl_listener *listener, void *data) {
 static void handle_switch_toggle(struct wl_listener *listener, void *data) {
 	struct roots_switch *switch_device =
 		wl_container_of(listener, switch_device, toggle);
-	struct roots_desktop *desktop = switch_device->seat->input->server->desktop;
+	PhocDesktop *desktop = switch_device->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, switch_device->seat->seat);
 	struct wlr_event_switch_toggle *event = data;
 	roots_switch_handle_toggle(switch_device, event);
@@ -159,7 +159,7 @@ static void handle_switch_toggle(struct wl_listener *listener, void *data) {
 static void handle_touch_down(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, touch_down);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_touch_down *event = data;
 	roots_cursor_handle_touch_down(cursor, event);
@@ -168,7 +168,7 @@ static void handle_touch_down(struct wl_listener *listener, void *data) {
 static void handle_touch_up(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, touch_up);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_touch_up *event = data;
 	roots_cursor_handle_touch_up(cursor, event);
@@ -177,7 +177,7 @@ static void handle_touch_up(struct wl_listener *listener, void *data) {
 static void handle_touch_motion(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, touch_motion);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_touch_motion *event = data;
 	roots_cursor_handle_touch_motion(cursor, event);
@@ -205,7 +205,7 @@ static void handle_tablet_tool_position(struct roots_cursor *cursor,
 	double sx, sy;
 	struct roots_view *view = NULL;
 	struct roots_seat *seat = cursor->seat;
-	struct roots_desktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = seat->input->server->desktop;
 	struct wlr_surface *surface = desktop_surface_at(desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, &view);
 	struct roots_tablet_tool *roots_tool = tool->data;
@@ -231,7 +231,7 @@ static void handle_tablet_tool_position(struct roots_cursor *cursor,
 static void handle_tool_axis(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, tool_axis);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_axis *event = data;
 	struct roots_tablet_tool *roots_tool = event->tool->data;
@@ -293,7 +293,7 @@ static void handle_tool_axis(struct wl_listener *listener, void *data) {
 static void handle_tool_tip(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, tool_tip);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_tip *event = data;
 	struct roots_tablet_tool *roots_tool = event->tool->data;
@@ -322,7 +322,7 @@ static void handle_tablet_tool_destroy(struct wl_listener *listener, void *data)
 static void handle_tool_button(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, tool_button);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_button *event = data;
 	struct roots_tablet_tool *roots_tool = event->tool->data;
@@ -352,7 +352,7 @@ static void handle_tablet_tool_set_cursor(struct wl_listener *listener, void *da
 static void handle_tool_proximity(struct wl_listener *listener, void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, tool_proximity);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_proximity *event = data;
 
@@ -390,7 +390,7 @@ static void handle_request_set_cursor(struct wl_listener *listener,
 		void *data) {
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, request_set_cursor);
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_seat_pointer_request_set_cursor_event *event = data;
 	roots_cursor_handle_request_set_cursor(cursor, event);
@@ -438,7 +438,7 @@ static void seat_set_device_output_mappings(struct roots_seat *seat,
 
 void roots_seat_configure_cursor(struct roots_seat *seat) {
 	struct roots_config *config = seat->input->config;
-	struct roots_desktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = seat->input->server->desktop;
 	struct wlr_cursor *cursor = seat->cursor->cursor;
 
 	struct roots_pointer *pointer;
@@ -493,7 +493,7 @@ static void roots_seat_init_cursor(struct roots_seat *seat) {
 	}
 	seat->cursor->seat = seat;
 	struct wlr_cursor *wlr_cursor = seat->cursor->cursor;
-	struct roots_desktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = seat->input->server->desktop;
 	wlr_cursor_attach_output_layout(wlr_cursor, desktop->layout);
 
 	roots_seat_configure_cursor(seat);
@@ -1058,7 +1058,7 @@ static void seat_add_tablet_pad(struct roots_seat *seat,
 
 	wl_list_init(&tablet_pad->tablet_destroy.link);
 
-	struct roots_desktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = seat->input->server->desktop;
 	tablet_pad->tablet_v2_pad =
 		wlr_tablet_pad_create(desktop->tablet_v2, seat->seat, device);
 
@@ -1120,7 +1120,7 @@ static void seat_add_tablet_tool(struct roots_seat *seat,
 	wlr_cursor_attach_input_device(seat->cursor->cursor, device);
 	roots_seat_configure_cursor(seat);
 
-	struct roots_desktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = seat->input->server->desktop;
 
 	tablet->tablet_v2 =
 		wlr_tablet_create(desktop->tablet_v2, seat->seat, device);
@@ -1342,7 +1342,7 @@ void roots_seat_set_focus(struct roots_seat *seat, struct roots_view *view) {
 #endif
 
 	if (view && unfullscreen) {
-		struct roots_desktop *desktop = view->desktop;
+		PhocDesktop *desktop = view->desktop;
 		struct roots_output *output;
 		struct wlr_box box;
 		view_get_box(view, &box);

@@ -184,7 +184,7 @@ static void surface_send_frame_done_iterator(struct roots_output *output,
 
 void output_render(struct roots_output *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
-	struct roots_desktop *desktop = output->desktop;
+	PhocDesktop *desktop = output->desktop;
 	struct phoc_server *server = desktop->server;
 	struct wlr_renderer *renderer =
 		wlr_backend_get_renderer(wlr_output->backend);

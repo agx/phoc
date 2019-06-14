@@ -16,7 +16,7 @@
 struct phoc_server {
   /* Phoc resources */
   struct roots_config *config;
-  struct roots_desktop *desktop;
+  PhocDesktop *desktop;
   struct roots_input *input;
 
   /* Wayland resources */

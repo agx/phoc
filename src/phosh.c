@@ -27,7 +27,7 @@ xdg_switcher_handle_list_xdg_surfaces(struct wl_client *client,
   struct phosh_private_xdg_switcher *xdg_switcher =
     phosh_private_xdg_switcher_from_resource(resource);
   struct phosh_private *phosh = xdg_switcher->phosh;
-  struct roots_desktop *desktop = phosh->desktop;
+  PhocDesktop *desktop = phosh->desktop;
   struct roots_view *view;
 
   wl_list_for_each(view, &desktop->views, link) {
@@ -78,7 +78,7 @@ xdg_switcher_handle_raise_xdg_surfaces(struct wl_client *client,
   struct phosh_private_xdg_switcher *xdg_switcher =
     phosh_private_xdg_switcher_from_resource(resource);
   struct phosh_private *phosh = xdg_switcher->phosh;
-  struct roots_desktop *desktop = phosh->desktop;
+  PhocDesktop *desktop = phosh->desktop;
   struct roots_view *view, *found_view = NULL;
   struct roots_input *input = desktop->server->input;
   struct roots_seat *seat = input_last_active_seat(input);
@@ -301,7 +301,7 @@ phosh_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 
 
 struct phosh_private*
-phosh_create(struct roots_desktop *desktop, struct wl_display *display)
+phosh_create(PhocDesktop *desktop, struct wl_display *display)
 {
   struct phosh_private *phosh = calloc(1, sizeof (struct phosh_private));
   if (!phosh)

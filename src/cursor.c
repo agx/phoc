@@ -106,7 +106,7 @@ static void roots_passthrough_cursor(struct roots_cursor *cursor,
 	double sx, sy;
 	struct roots_view *view = NULL;
 	struct roots_seat *seat = cursor->seat;
-	struct roots_desktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = seat->input->server->desktop;
 	struct wlr_surface *surface = desktop_surface_at(desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, &view);
 
@@ -239,7 +239,7 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 		struct wlr_input_device *device, uint32_t time, uint32_t button,
 		uint32_t state, double lx, double ly) {
 	struct roots_seat *seat = cursor->seat;
-	struct roots_desktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = seat->input->server->desktop;
 
 	bool is_touch = device->type == WLR_INPUT_DEVICE_TOUCH;
 
@@ -395,7 +395,7 @@ void roots_cursor_handle_frame(struct roots_cursor *cursor) {
 
 void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 		struct wlr_event_touch_down *event) {
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	double lx, ly;
 	wlr_cursor_absolute_to_layout_coords(cursor->cursor, event->device,
 		event->x, event->y, &lx, &ly);
@@ -438,7 +438,7 @@ void roots_cursor_handle_touch_up(struct roots_cursor *cursor,
 
 void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 		struct wlr_event_touch_motion *event) {
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 	struct wlr_touch_point *point =
 		wlr_seat_touch_get_point(cursor->seat->seat, event->touch_id);
 	if (!point) {
@@ -548,7 +548,7 @@ void roots_cursor_handle_focus_change(struct roots_cursor *cursor,
 }
 
 void roots_cursor_handle_constraint_commit(struct roots_cursor *cursor) {
-	struct roots_desktop *desktop = cursor->seat->input->server->desktop;
+	PhocDesktop *desktop = cursor->seat->input->server->desktop;
 
 	struct roots_view *view;
 	double sx, sy;

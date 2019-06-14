@@ -9,7 +9,7 @@
 #include "view.h"
 
 void view_init(struct roots_view *view, const struct roots_view_interface *impl,
-		enum roots_view_type type, struct roots_desktop *desktop) {
+		enum roots_view_type type, PhocDesktop *desktop) {
 	assert(impl->destroy);
 	view->impl = impl;
 	view->type = type;
@@ -98,7 +98,7 @@ enum roots_deco_part view_get_deco_part(struct roots_view *view, double sx,
 
 static void view_update_output(const struct roots_view *view,
 		const struct wlr_box *before) {
-	struct roots_desktop *desktop = view->desktop;
+	PhocDesktop *desktop = view->desktop;
 
 	if (view->wlr_surface == NULL) {
 		return;
@@ -401,7 +401,7 @@ bool view_center(struct roots_view *view) {
 	struct wlr_box box;
 	view_get_box(view, &box);
 
-	struct roots_desktop *desktop = view->desktop;
+	PhocDesktop *desktop = view->desktop;
 	struct roots_input *input = desktop->server->input;
 	struct roots_seat *seat = input_last_active_seat(input);
 	if (!seat) {

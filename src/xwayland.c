@@ -304,7 +304,7 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 }
 
 void handle_xwayland_surface(struct wl_listener *listener, void *data) {
-	struct roots_desktop *desktop =
+	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, xwayland_surface);
 
 	struct wlr_xwayland_surface *surface = data;

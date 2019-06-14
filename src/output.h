@@ -1,15 +1,16 @@
 #ifndef ROOTSTON_OUTPUT_H
 #define ROOTSTON_OUTPUT_H
+
+#include "desktop.h"
+
 #include <pixman.h>
 #include <time.h>
 #include <wayland-server.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_output_damage.h>
 
-struct roots_desktop;
-
 struct roots_output {
-	struct roots_desktop *desktop;
+	PhocDesktop *desktop;
 	struct wlr_output *wlr_output;
 	struct wl_list link; // roots_desktop:outputs
 

@@ -1,5 +1,5 @@
-#ifndef ROOTSTON_DESKTOP_H
-#define ROOTSTON_DESKTOP_H
+#pragma once
+
 #include <time.h>
 #include <wayland-server.h>
 #include <wlr/config.h>
@@ -31,13 +31,23 @@
 
 #include <gio/gio.h>
 
-#include "config.h"
 #include "settings.h"
+#include "config.h"
+
+#define PHOC_TYPE_DESKTOP (phoc_desktop_get_type())
+
+G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
+
+/* These need to know about PhocDesktop so we have them after the type definition.
+ * This will fix itself once output / view / phosh are gobjects and have their
+ * most of their members made non-public */
 #include "output.h"
 #include "view.h"
 #include "phosh.h"
 
-struct roots_desktop {
+struct _PhocDesktop {
+	GObject parent;
+
 	struct wl_list views; // roots_view::link
 
 	struct wl_list outputs; // roots_output::link
@@ -99,15 +109,17 @@ struct roots_desktop {
 	struct phosh_private *phosh;
 };
 
+PhocDesktop *phoc_desktop_new (void);
+
 struct phoc_server;
 
-struct roots_desktop *desktop_create(struct phoc_server *server,
-	struct roots_config *config);
-void desktop_destroy(struct roots_desktop *desktop);
+PhocDesktop *desktop_create(struct phoc_server *server,
+			    struct roots_config *config);
+void desktop_destroy(PhocDesktop *desktop);
 struct roots_output *desktop_output_from_wlr_output(
-	struct roots_desktop *desktop, struct wlr_output *output);
+	PhocDesktop *desktop, struct wlr_output *output);
 
-struct wlr_surface *desktop_surface_at(struct roots_desktop *desktop,
+struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
 		struct roots_view **view);
 
@@ -116,5 +128,3 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data);
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data);
 void handle_layer_shell_surface(struct wl_listener *listener, void *data);
 void handle_xwayland_surface(struct wl_listener *listener, void *data);
-
-#endif

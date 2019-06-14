@@ -1,5 +1,8 @@
 #ifndef ROOTSTON_VIEW_H
 #define ROOTSTON_VIEW_H
+
+#include "desktop.h"
+
 #include <stdbool.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_box.h>
@@ -36,7 +39,7 @@ enum roots_view_type {
 struct roots_view {
 	enum roots_view_type type;
 	const struct roots_view_interface *impl;
-	struct roots_desktop *desktop;
+	PhocDesktop *desktop;
 	struct wl_list link; // roots_desktop::views
 
 	struct wlr_box box;
@@ -196,7 +199,7 @@ struct roots_xdg_toplevel_decoration {
 };
 
 void view_init(struct roots_view *view, const struct roots_view_interface *impl,
-	enum roots_view_type type, struct roots_desktop *desktop);
+	enum roots_view_type type, PhocDesktop *desktop);
 void view_destroy(struct roots_view *view);
 void view_activate(struct roots_view *view, bool activate);
 void view_apply_damage(struct roots_view *view);
