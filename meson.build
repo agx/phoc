@@ -35,13 +35,20 @@ wayland_server = dependency('wayland-server')
 xkbcommon      = dependency('xkbcommon')
 math           = cc.find_library('m')
 
+embed_wlroots = get_option('embed-wlroots')
+
 # Try first to find wlroots as a subproject, then as a system dependency
 wlroots_proj = subproject(
         'wlroots',
         default_options: ['rootston=false', 'examples=false'],
         required: false,
 )
-if wlroots_proj.found()
+
+if embed_wlroots.enabled() and not wlroots_proj.found()
+   error('Wlroots subproject not found but enabled')
+endif
+
+if wlroots_proj.found() and not embed_wlroots.disabled()
         wlroots = wlroots_proj.get_variable('wlroots')
         wlroots_conf = wlroots_proj.get_variable('conf_data')
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1

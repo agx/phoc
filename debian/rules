@@ -1,5 +1,16 @@
 #!/usr/bin/make -f
 
+ifneq ($(filter pkg.phoc.embedwlroots,$(DEB_BUILD_PROFILES)),)
+    MESON_OPTS += -Dembed-wlroots=enabled
+else
+    MESON_OPTS += -Dembed-wlroots=disabled
+endif
+
 %:
 	dh $@
 
+override_dh_auto_configure:
+	dh_auto_configure -- $(MESON_OPTS)
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/tmp

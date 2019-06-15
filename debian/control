@@ -11,6 +11,27 @@ Build-Depends:
  meson (>= 0.47.0),
  pkg-config,
  wayland-protocols,
+ libwlroots-dev (>= 0.6.0) <!pkg.phoc.embedwlroots>,
+ libwlroots-dev (<< 0.7.0) <!pkg.phoc.embedwlroots>,
+# For wlroots subproject build
+ libcap-dev <pkg.phoc.embedwlroots>,
+ libdrm-dev <pkg.phoc.embedwlroots>,
+ libegl1-mesa-dev <pkg.phoc.embedwlroots>,
+ libgbm-dev <pkg.phoc.embedwlroots>,
+ libgles2-mesa-dev <pkg.phoc.embedwlroots>,
+ libinput-dev <pkg.phoc.embedwlroots>,
+ libpixman-1-dev <pkg.phoc.embedwlroots>,
+ libpng-dev <pkg.phoc.embedwlroots>,
+ libsystemd-dev <pkg.phoc.embedwlroots>,
+ libwayland-dev <pkg.phoc.embedwlroots>,
+ libxcb1-dev <pkg.phoc.embedwlroots>,
+ libxcb-composite0-dev <pkg.phoc.embedwlroots>,
+ libxcb-icccm4-dev <pkg.phoc.embedwlroots>,
+ libxcb-image0-dev <pkg.phoc.embedwlroots>,
+ libxcb-render0-dev <pkg.phoc.embedwlroots>,
+ libxcb-xfixes0-dev <pkg.phoc.embedwlroots>,
+ libxkbcommon-dev <pkg.phoc.embedwlroots>,
+ wayland-protocols <pkg.phoc.embedwlroots>,
 Standards-Version: 4.1.3
 Section: libs
 Homepage: https://source.puri.sm/librem5/phoc
