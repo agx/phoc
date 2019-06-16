@@ -340,11 +340,14 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 }
 
 static void
-auto_maximize_changed_cb (GSettings *settings,
+auto_maximize_changed_cb (PhocDesktop *self,
 			  const gchar *key,
-			  PhocDesktop *self)
+			  GSettings   *settings)
 {
   gboolean max = g_settings_get_boolean (settings, key);
+
+  g_return_if_fail (PHOC_IS_DESKTOP (self));
+  g_return_if_fail (G_IS_SETTINGS (self));
 
   wlr_log(WLR_DEBUG, "auto-maximize: %d", max);
   self->maximize = max;
@@ -511,9 +514,9 @@ phoc_desktop_constructed (GObject *object)
   wlr_data_control_manager_v1_create(server->wl_display);
 
   self->settings = g_settings_new ("sm.puri.phoc");
-  g_signal_connect(self->settings, "changed::auto-maximize",
-		   G_CALLBACK (auto_maximize_changed_cb), self);
-  auto_maximize_changed_cb(self->settings, "auto-maximize", self);
+  g_signal_connect_swapped(self->settings, "changed::auto-maximize",
+			   G_CALLBACK (auto_maximize_changed_cb), self);
+  auto_maximize_changed_cb(self, "auto-maximize", self->settings);
 }
 
 
