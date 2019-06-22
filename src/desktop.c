@@ -347,9 +347,9 @@ auto_maximize_changed_cb (PhocDesktop *self,
   gboolean max = g_settings_get_boolean (settings, key);
 
   g_return_if_fail (PHOC_IS_DESKTOP (self));
-  g_return_if_fail (G_IS_SETTINGS (self));
+  g_return_if_fail (G_IS_SETTINGS (settings));
 
-  wlr_log(WLR_DEBUG, "auto-maximize: %d", max);
+  g_debug ("auto-maximize: %d", max);
   self->maximize = max;
 }
 
