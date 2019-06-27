@@ -1649,3 +1649,17 @@ void roots_seat_maybe_set_cursor(struct roots_seat *self, const char *name) {
 			name, self->cursor->cursor);
 	}
 }
+
+/**
+ * roots_seat_get_cursor:
+ *
+ * Get the curent cursor
+ * @self: a struct roots_seat
+ *
+ * Returns: (transfer none): The current cursor
+ */
+struct roots_cursor *roots_seat_get_cursor(struct roots_seat *self) {
+	g_return_val_if_fail (self, NULL);
+
+	return self->cursor;
+}

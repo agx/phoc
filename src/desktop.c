@@ -289,27 +289,28 @@ static void handle_constraint_destroy(struct wl_listener *listener,
 		wl_container_of(listener, constraint, destroy);
 	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
 	struct roots_seat *seat = wlr_constraint->seat->data;
+	struct roots_cursor *cursor = roots_seat_get_cursor (seat);
 
 	wl_list_remove(&constraint->destroy.link);
 
-	if (seat->cursor->active_constraint == wlr_constraint) {
-		wl_list_remove(&seat->cursor->constraint_commit.link);
-		wl_list_init(&seat->cursor->constraint_commit.link);
-		seat->cursor->active_constraint = NULL;
+	if (cursor->active_constraint == wlr_constraint) {
+		wl_list_remove(&cursor->constraint_commit.link);
+		wl_list_init(&cursor->constraint_commit.link);
+		cursor->active_constraint = NULL;
 
 		if (wlr_constraint->current.committed &
 				WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT &&
-				seat->cursor->pointer_view) {
+				cursor->pointer_view) {
 			double sx = wlr_constraint->current.cursor_hint.x;
 			double sy = wlr_constraint->current.cursor_hint.y;
 
-			struct roots_view *view = seat->cursor->pointer_view->view;
+			struct roots_view *view = cursor->pointer_view->view;
 			rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height,
 				view->rotation);
 			double lx = view->box.x + sx;
 			double ly = view->box.y + sy;
 
-			wlr_cursor_warp(seat->cursor->cursor, NULL, lx, ly);
+			wlr_cursor_warp(cursor->cursor, NULL, lx, ly);
 		}
 	}
 
@@ -320,6 +321,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 		void *data) {
 	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
 	struct roots_seat *seat = wlr_constraint->seat->data;
+	struct roots_cursor *cursor = roots_seat_get_cursor (seat);
 
 	struct roots_pointer_constraint *constraint =
 		calloc(1, sizeof(struct roots_pointer_constraint));
@@ -331,11 +333,11 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 	double sx, sy;
 	struct wlr_surface *surface = desktop_surface_at(
 		seat->input->server->desktop,
-		seat->cursor->cursor->x, seat->cursor->cursor->y, &sx, &sy, NULL);
+		cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
 	if (surface == wlr_constraint->surface) {
-		assert(!seat->cursor->active_constraint);
-		roots_cursor_constrain(seat->cursor, wlr_constraint, sx, sy);
+		assert(!cursor->active_constraint);
+		roots_cursor_constrain(cursor, wlr_constraint, sx, sy);
 	}
 }
 

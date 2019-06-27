@@ -144,6 +144,7 @@ void input_update_cursor_focus(struct roots_input *input) {
 
 	struct roots_seat *seat;
 	wl_list_for_each(seat, &input->seats, link) {
-		roots_cursor_update_position(seat->cursor, timespec_to_msec(&now));
+		roots_cursor_update_position(roots_seat_get_cursor (seat),
+					     timespec_to_msec(&now));
 	}
 }

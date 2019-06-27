@@ -423,12 +423,15 @@ bool view_center(struct roots_view *view) {
 	PhocDesktop *desktop = view->desktop;
 	struct roots_input *input = desktop->server->input;
 	struct roots_seat *seat = input_last_active_seat(input);
+	struct roots_cursor *cursor;
+
 	if (!seat) {
 		return false;
 	}
+	cursor = roots_seat_get_cursor (seat);
 
 	struct wlr_output *output = wlr_output_layout_output_at(desktop->layout,
-		seat->cursor->cursor->x, seat->cursor->cursor->y);
+		cursor->cursor->x, cursor->cursor->y);
 	if (!output) {
 		// empty layout
 		return false;

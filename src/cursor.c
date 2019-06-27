@@ -36,7 +36,7 @@ void roots_cursor_destroy(struct roots_cursor *cursor) {
 
 static void seat_view_deco_motion(struct roots_seat_view *view,
 		double deco_sx, double deco_sy) {
-	struct roots_cursor *cursor = view->seat->cursor;
+	struct roots_cursor *cursor = roots_seat_get_cursor (view->seat);
 
 	double sx = deco_sx;
 	double sy = deco_sy;
@@ -77,7 +77,7 @@ static void seat_view_deco_motion(struct roots_seat_view *view,
 }
 
 static void seat_view_deco_leave(struct roots_seat_view *view) {
-	struct roots_cursor *cursor = view->seat->cursor;
+	struct roots_cursor *cursor = roots_seat_get_cursor (view->seat);
 
 	roots_seat_maybe_set_cursor (cursor->seat, NULL);
 	view->has_button_grab = false;

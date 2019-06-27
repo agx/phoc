@@ -105,7 +105,7 @@ void execute_binding_command(struct roots_seat *seat,
 		struct wl_list *list = &input->seats;
 		struct roots_seat *seat;
 		wl_list_for_each(seat, list, link) {
-			roots_cursor_constrain(seat->cursor, NULL, NAN, NAN);
+			roots_cursor_constrain(roots_seat_get_cursor (seat), NULL, NAN, NAN);
 		}
 	} else {
 		wlr_log(WLR_ERROR, "unknown binding command: %s", command);

@@ -312,7 +312,7 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 	}
 
 	// TODO verify event serial
-	if (!seat || seat->cursor->mode != ROOTS_CURSOR_PASSTHROUGH) {
+	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
 		return;
 	}
 	roots_seat_begin_move(seat, view);
@@ -327,7 +327,7 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 	// TODO verify event serial
 	struct roots_seat *seat = input_seat_from_wlr_seat(input, e->seat->seat);
 	assert(seat);
-	if (!seat || seat->cursor->mode != ROOTS_CURSOR_PASSTHROUGH) {
+	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
 		return;
 	}
 	roots_seat_begin_resize(seat, view, e->edges);

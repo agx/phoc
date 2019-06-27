@@ -144,6 +144,7 @@ void roots_seat_add_device(struct roots_seat *seat,
 		struct wlr_input_device *device);
 
 void roots_seat_configure_cursor(struct roots_seat *seat);
+struct roots_cursor *roots_seat_get_cursor (struct roots_seat *seat);
 
 void roots_seat_configure_xcursor(struct roots_seat *seat);
 

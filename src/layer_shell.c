@@ -86,16 +86,17 @@ static void update_cursors(struct roots_layer_surface *roots_surface,
 		struct wl_list *seats /* struct roots_seat */) {
 	struct roots_seat *seat;
 	wl_list_for_each(seat, seats, link) {
+		struct roots_cursor *cursor = roots_seat_get_cursor(seat);
 		double sx, sy;
 
 		struct wlr_surface *surface = desktop_surface_at(
 			seat->input->server->desktop,
-			seat->cursor->cursor->x, seat->cursor->cursor->y, &sx, &sy, NULL);
+			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
 		if (surface == roots_surface->layer_surface->surface) {
 			struct timespec time;
 			if (clock_gettime(CLOCK_MONOTONIC, &time) == 0) {
-				roots_cursor_update_position(seat->cursor,
+				roots_cursor_update_position(cursor,
 					time.tv_sec * 1000 + time.tv_nsec / 1000000);
 			} else {
 				wlr_log(WLR_ERROR, "Failed to get time, not updating"
@@ -452,14 +453,15 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		struct roots_input *input = desktop->server->input;
 		struct roots_seat *seat = input_last_active_seat(input);
 		assert(seat); // Technically speaking we should handle this case
+		struct roots_cursor *cursor = roots_seat_get_cursor(seat);
 		struct wlr_output *output =
 			wlr_output_layout_output_at(desktop->layout,
-					seat->cursor->cursor->x,
-					seat->cursor->cursor->y);
+					cursor->cursor->x,
+					cursor->cursor->y);
 		if (!output) {
 			wlr_log(WLR_ERROR, "Couldn't find output at (%.0f,%.0f)",
-				seat->cursor->cursor->x,
-				seat->cursor->cursor->y);
+				cursor->cursor->x,
+				cursor->cursor->y);
 			output = wlr_output_layout_get_center_output(desktop->layout);
 		}
 		if (output) {
