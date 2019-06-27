@@ -111,4 +111,6 @@ void roots_cursor_update_focus(struct roots_cursor *cursor);
 void roots_cursor_constrain(struct roots_cursor *cursor,
 	struct wlr_pointer_constraint_v1 *constraint, double sx, double sy);
 
+void phoc_maybe_set_cursor(struct roots_cursor *cursor);
+
 #endif

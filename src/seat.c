@@ -798,13 +798,7 @@ static void seat_update_capabilities(struct roots_seat *seat) {
 	}
 	wlr_seat_set_capabilities(seat->seat, caps);
 
-	// Hide cursor if seat doesn't have pointer capability
-	if ((caps & WL_SEAT_CAPABILITY_POINTER) == 0) {
-		wlr_cursor_set_image(seat->cursor->cursor, NULL, 0, 0, 0, 0, 0, 0);
-	} else {
-		wlr_xcursor_manager_set_cursor_image(seat->cursor->xcursor_manager,
-			seat->cursor->default_xcursor, seat->cursor->cursor);
-	}
+	roots_seat_maybe_set_cursor (seat, seat->cursor->default_xcursor);
 }
 
 static void handle_keyboard_destroy(struct wl_listener *listener, void *data) {
@@ -1143,6 +1137,8 @@ static void seat_add_tablet_tool(struct roots_seat *seat,
 
 void roots_seat_add_device(struct roots_seat *seat,
 		struct wlr_input_device *device) {
+
+	g_debug ("Adding device %s %d", device->name, device->type);
 	switch (device->type) {
 	case WLR_INPUT_DEVICE_KEYBOARD:
 		seat_add_keyboard(seat, device);
@@ -1197,8 +1193,7 @@ void roots_seat_configure_xcursor(struct roots_seat *seat) {
 		}
 	}
 
-	wlr_xcursor_manager_set_cursor_image(seat->cursor->xcursor_manager,
-		seat->cursor->default_xcursor, seat->cursor->cursor);
+	roots_seat_maybe_set_cursor (seat, seat->cursor->default_xcursor);
 	wlr_cursor_warp(seat->cursor->cursor, NULL, seat->cursor->cursor->x,
 		seat->cursor->cursor->y);
 }
@@ -1553,8 +1548,7 @@ void roots_seat_begin_move(struct roots_seat *seat, struct roots_view *view) {
 	view_maximize(view, false);
 	wlr_seat_pointer_clear_focus(seat->seat);
 
-	wlr_xcursor_manager_set_cursor_image(seat->cursor->xcursor_manager,
-		ROOTS_XCURSOR_MOVE, seat->cursor->cursor);
+	roots_seat_maybe_set_cursor (seat, ROOTS_XCURSOR_MOVE);
 }
 
 void roots_seat_begin_resize(struct roots_seat *seat, struct roots_view *view,
@@ -1581,8 +1575,7 @@ void roots_seat_begin_resize(struct roots_seat *seat, struct roots_view *view,
 	wlr_seat_pointer_clear_focus(seat->seat);
 
 	const char *resize_name = wlr_xcursor_get_resize_name(edges);
-	wlr_xcursor_manager_set_cursor_image(seat->cursor->xcursor_manager,
-		resize_name, seat->cursor->cursor);
+	roots_seat_maybe_set_cursor (seat, resize_name);
 }
 
 void roots_seat_begin_rotate(struct roots_seat *seat, struct roots_view *view) {
@@ -1594,8 +1587,7 @@ void roots_seat_begin_rotate(struct roots_seat *seat, struct roots_view *view) {
 	view_maximize(view, false);
 	wlr_seat_pointer_clear_focus(seat->seat);
 
-	wlr_xcursor_manager_set_cursor_image(seat->cursor->xcursor_manager,
-		ROOTS_XCURSOR_ROTATE, seat->cursor->cursor);
+	roots_seat_maybe_set_cursor (seat, ROOTS_XCURSOR_ROTATE);
 }
 
 void roots_seat_end_compositor_grab(struct roots_seat *seat) {
@@ -1632,4 +1624,26 @@ struct roots_seat *input_last_active_seat(struct roots_input *input) {
 		}
 	}
 	return seat;
+}
+
+/**
+ * roots_seat_maybe_set_cursor:
+ *
+ * Show a cursor if the seat has pointer capabilities
+ *
+ * @self: a struct roots_seat
+ * @name: (nullable): a cursor name or %NULL for the themes default cursor
+ */
+void roots_seat_maybe_set_cursor(struct roots_seat *self, const char *name) {
+	struct wlr_seat *wlr_seat = self->seat;
+
+	g_return_if_fail (wlr_seat);
+	if ((wlr_seat->capabilities & WL_SEAT_CAPABILITY_POINTER) == 0) {
+		wlr_cursor_set_image(self->cursor->cursor, NULL, 0, 0, 0, 0, 0, 0);
+	} else {
+		if (!name)
+			name = self->cursor->default_xcursor;
+		wlr_xcursor_manager_set_cursor_image(self->cursor->xcursor_manager,
+			name, self->cursor->cursor);
+	}
 }

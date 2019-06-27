@@ -180,4 +180,6 @@ void roots_seat_set_exclusive_client(struct roots_seat *seat,
 bool roots_seat_allow_input(struct roots_seat *seat,
 		struct wl_resource *resource);
 
+void roots_seat_maybe_set_cursor (struct roots_seat *seat, const char *name);
+
 #endif

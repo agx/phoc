@@ -66,20 +66,18 @@ static void seat_view_deco_motion(struct roots_seat_view *view,
 		view->has_button_grab = false;
 	} else {
 		if (is_titlebar) {
-			wlr_xcursor_manager_set_cursor_image(cursor->xcursor_manager,
-				cursor->default_xcursor, cursor->cursor);
+			roots_seat_maybe_set_cursor (cursor->seat, NULL);
 		} else if (edges) {
 			const char *resize_name = wlr_xcursor_get_resize_name(edges);
-			wlr_xcursor_manager_set_cursor_image(cursor->xcursor_manager,
-				resize_name, cursor->cursor);
+			roots_seat_maybe_set_cursor (cursor->seat, resize_name);
 		}
 	}
 }
 
 static void seat_view_deco_leave(struct roots_seat_view *view) {
 	struct roots_cursor *cursor = view->seat->cursor;
-	wlr_xcursor_manager_set_cursor_image(cursor->xcursor_manager,
-		cursor->default_xcursor, cursor->cursor);
+
+	roots_seat_maybe_set_cursor (cursor->seat, NULL);
 	view->has_button_grab = false;
 }
 
@@ -95,9 +93,7 @@ static void seat_view_deco_button(struct roots_seat_view *view, double sx,
 
 	enum roots_deco_part parts = view_get_deco_part(view->view, sx, sy);
 	if (state == WLR_BUTTON_RELEASED && (parts & ROOTS_DECO_PART_TITLEBAR)) {
-		struct roots_cursor *cursor = view->seat->cursor;
-		wlr_xcursor_manager_set_cursor_image(cursor->xcursor_manager,
-				cursor->default_xcursor, cursor->cursor);
+		roots_seat_maybe_set_cursor (view->seat, NULL);
 	}
 }
 
@@ -120,8 +116,7 @@ static void roots_passthrough_cursor(struct roots_cursor *cursor,
 	}
 
 	if (cursor->cursor_client != client) {
-		wlr_xcursor_manager_set_cursor_image(cursor->xcursor_manager,
-			cursor->default_xcursor, cursor->cursor);
+		roots_seat_maybe_set_cursor (seat, NULL);
 		cursor->cursor_client = client;
 	}
 
