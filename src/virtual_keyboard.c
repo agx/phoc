@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-virtual-keyboard"
+
 #define _POSIX_C_SOURCE 199309L
 
 #include <wlr/util/log.h>

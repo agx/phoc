@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-xdg-shell-v6"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>

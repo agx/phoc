@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-cursor"
+
 #define _XOPEN_SOURCE 700
 #include <assert.h>
 #include <math.h>

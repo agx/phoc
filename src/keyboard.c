@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-keyboard"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>

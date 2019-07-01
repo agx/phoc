@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-view"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

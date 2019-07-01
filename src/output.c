@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-output"
+
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <stdbool.h>

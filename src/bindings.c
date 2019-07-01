@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-bindings"
+
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>

@@ -1,3 +1,5 @@
+#define G_LOG_DOMAIN "phoc-text-input"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <wlr/util/log.h>
