@@ -279,14 +279,14 @@ want_maximize(struct roots_view *view) {
   case ROOTS_XDG_SHELL_V6_VIEW:
     xdg_surface_v6 = roots_xdg_surface_v6_from_view(view);
 
-    if (!xdg_surface_v6->xdg_surface_v6->toplevel ||
+    if (xdg_surface_v6->xdg_surface_v6->toplevel &&
 	!xdg_surface_v6->xdg_surface_v6->toplevel->parent)
       maximize = true;
     break;
   case ROOTS_XDG_SHELL_VIEW:
     xdg_surface = roots_xdg_surface_from_view(view);
 
-    if (!xdg_surface->xdg_surface->toplevel ||
+    if (xdg_surface->xdg_surface->toplevel &&
 	!xdg_surface->xdg_surface->toplevel->parent)
       maximize = true;
     break;
