@@ -25,6 +25,7 @@ struct roots_view_interface {
 	void (*close)(struct roots_view *view);
 	void (*for_each_surface)(struct roots_view *view,
 		wlr_surface_iterator_func_t iterator, void *user_data);
+	void (*get_geometry)(struct roots_view *view, struct wlr_box *box);
 	void (*destroy)(struct roots_view *view);
 };
 

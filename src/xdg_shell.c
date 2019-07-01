@@ -265,6 +265,10 @@ static void for_each_surface(struct roots_view *view,
 	wlr_xdg_surface_for_each_surface(xdg_surface, iterator, user_data);
 }
 
+static void get_geometry(struct roots_view *view, struct wlr_box *geom) {
+	wlr_xdg_surface_get_geometry (roots_xdg_surface_from_view(view)->xdg_surface, geom);
+}
+
 static void destroy(struct roots_view *view) {
 	struct roots_xdg_surface *roots_xdg_surface =
 		roots_xdg_surface_from_view(view);
@@ -291,6 +295,7 @@ static const struct roots_view_interface view_impl = {
 	.set_fullscreen = set_fullscreen,
 	.close = _close,
 	.for_each_surface = for_each_surface,
+	.get_geometry = get_geometry,
 	.destroy = destroy,
 };
 

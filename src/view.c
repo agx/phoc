@@ -48,6 +48,15 @@ void view_get_box(const struct roots_view *view, struct wlr_box *box) {
 	box->height = view->box.height;
 }
 
+
+static void
+view_get_geometry (struct roots_view *view, struct wlr_box *geom)
+{
+	if (view->impl->get_geometry)
+		view->impl->get_geometry (view, geom);
+}
+
+
 void view_get_deco_box(const struct roots_view *view, struct wlr_box *box) {
 	view_get_box(view, box);
 	if (!view->decorated) {
@@ -399,9 +408,11 @@ void view_close(struct roots_view *view) {
 	}
 }
 
+
 bool view_center(struct roots_view *view) {
-	struct wlr_box box;
+	struct wlr_box box, geom;
 	view_get_box(view, &box);
+	view_get_geometry (view, &geom);
 
 	PhocDesktop *desktop = view->desktop;
 	struct roots_input *input = desktop->server->input;
@@ -423,8 +434,9 @@ bool view_center(struct roots_view *view) {
 	int width, height;
 	wlr_output_effective_resolution(output, &width, &height);
 
-	double view_x = (double)(width - box.width) / 2 + l_output->x;
-	double view_y = (double)(height - box.height) / 2 + l_output->y;
+	double view_x = (double)(width - box.width) / 2 + l_output->x - geom.x;
+	double view_y = (double)(height - box.height) / 2 + l_output->y - geom.y;
+
 	view_move(view, view_x, view_y);
 
 	return true;
