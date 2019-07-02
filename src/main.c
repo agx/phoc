@@ -143,7 +143,7 @@ log_glib(enum wlr_log_importance verbosity, const char *fmt, va_list args) {
     g_assert_not_reached ();
   }
 
-  g_logv("phoc", level, fmt, args);
+  g_logv("phoc-wlroots", level, fmt, args);
 }
 
 
