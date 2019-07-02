@@ -52,8 +52,14 @@ void view_get_box(const struct roots_view *view, struct wlr_box *box) {
 static void
 view_get_geometry (struct roots_view *view, struct wlr_box *geom)
 {
-	if (view->impl->get_geometry)
-		view->impl->get_geometry (view, geom);
+  if (view->impl->get_geometry) {
+    view->impl->get_geometry (view, geom);
+  } else {
+    geom->x = view->box.x;
+    geom->y = view->box.y;
+    geom->width = view->box.width;
+    geom->height = view->box.height;
+  }
 }
 
 
