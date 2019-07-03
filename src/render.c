@@ -199,7 +199,7 @@ void output_render(struct roots_output *output) {
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
 
-	float clear_color[] = {0.25f, 0.25f, 0.25f, 1.0f};
+	float clear_color[] = {0.0f, 0.0f, 0.0f, 1.0f};
 
 	const struct wlr_box *output_box =
 		wlr_output_layout_get_box(desktop->layout, wlr_output);
