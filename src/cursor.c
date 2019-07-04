@@ -401,18 +401,9 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 	struct wlr_surface *surface = desktop_surface_at(
 		desktop, lx, ly, &sx, &sy, NULL);
 
-	uint32_t serial = 0;
 	if (surface && roots_seat_allow_input(cursor->seat, surface->resource)) {
-		serial = wlr_seat_touch_notify_down(cursor->seat->seat, surface,
+		wlr_seat_touch_notify_down(cursor->seat->seat, surface,
 			event->time_msec, event->touch_id, sx, sy);
-	}
-
-	if (serial && wlr_seat_touch_num_points(cursor->seat->seat) == 1) {
-		cursor->seat->touch_id = event->touch_id;
-		cursor->seat->touch_x = lx;
-		cursor->seat->touch_y = ly;
-		roots_cursor_press_button(cursor, event->device, event->time_msec,
-			BTN_LEFT, 1, lx, ly);
 	}
 }
 
@@ -422,11 +413,6 @@ void roots_cursor_handle_touch_up(struct roots_cursor *cursor,
 		wlr_seat_touch_get_point(cursor->seat->seat, event->touch_id);
 	if (!point) {
 		return;
-	}
-
-	if (wlr_seat_touch_num_points(cursor->seat->seat) == 1) {
-		roots_cursor_press_button(cursor, event->device, event->time_msec,
-			BTN_LEFT, 0, cursor->seat->touch_x, cursor->seat->touch_y);
 	}
 
 	wlr_seat_touch_notify_up(cursor->seat->seat, event->time_msec,
