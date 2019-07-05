@@ -231,7 +231,7 @@ handle_get_xdg_switcher(struct wl_client *client,
     phosh_private_from_resource(phosh_private_resource);
 
   struct phosh_private_xdg_switcher *xdg_switcher =
-    calloc(1, sizeof(struct wlr_gamma_control));
+    calloc(1, sizeof(struct phosh_private_xdg_switcher));
   if (xdg_switcher == NULL) {
     wl_client_post_no_memory(client);
     return;
