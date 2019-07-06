@@ -42,6 +42,7 @@ struct roots_view {
 	const struct roots_view_interface *impl;
 	PhocDesktop *desktop;
 	struct wl_list link; // roots_desktop::views
+	struct wl_list parent_link; // roots_view::stack
 
 	struct wlr_box box;
 	float rotation;
@@ -65,8 +66,11 @@ struct roots_view {
 		uint32_t width, height;
 	} pending_move_resize;
 
+	struct roots_view *parent;
+	struct wl_list stack; // roots_view::link
+
 	struct wlr_surface *wlr_surface;
-	struct wl_list children; // roots_view_child::link
+	struct wl_list child_surfaces; // roots_view_child::link
 
 	struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
 	struct wl_listener toplevel_handle_request_maximize;
@@ -97,6 +101,7 @@ struct roots_xdg_surface_v6 {
 	struct wl_listener request_fullscreen;
 	struct wl_listener set_title;
 	struct wl_listener set_app_id;
+	struct wl_listener set_parent;
 
 	struct wl_listener surface_commit;
 
@@ -120,6 +125,7 @@ struct roots_xdg_surface {
 	struct wl_listener request_fullscreen;
 	struct wl_listener set_title;
 	struct wl_listener set_app_id;
+	struct wl_listener set_parent;
 
 	struct wl_listener surface_commit;
 
@@ -227,6 +233,7 @@ bool view_center(struct roots_view *view);
 void view_setup(struct roots_view *view);
 void view_teardown(struct roots_view *view);
 void view_set_title(struct roots_view *view, const char *title);
+void view_set_parent(struct roots_view *view, struct roots_view *parent);
 void view_set_app_id(struct roots_view *view, const char *app_id);
 void view_create_foreign_toplevel_handle(struct roots_view *view);
 void view_get_deco_box(const struct roots_view *view, struct wlr_box *box);
