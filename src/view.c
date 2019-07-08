@@ -437,12 +437,17 @@ bool view_center(struct roots_view *view) {
 	const struct wlr_output_layout_output *l_output =
 		wlr_output_layout_get(desktop->layout, output);
 
-	int width, height;
-	wlr_output_effective_resolution(output, &width, &height);
+	struct wlr_box usable_area;
+	struct roots_output *roots_output = output->data;
 
-	double view_x = (double)(width - box.width) / 2 + l_output->x - geom.x;
-	double view_y = (double)(height - box.height) / 2 + l_output->y - geom.y;
+	memcpy(&usable_area, &roots_output->usable_area, sizeof(struct wlr_box));
 
+	double view_x = (double)(usable_area.width - box.width) / 2 +
+	  usable_area.x + l_output->x - geom.x;
+	double view_y = (double)(usable_area.height - box.height) / 2 +
+	  usable_area.y + l_output->y - geom.y;
+
+	g_debug ("moving view to %f %f", view_x, view_y);
 	view_move(view, view_x, view_y);
 
 	return true;
