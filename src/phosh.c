@@ -85,7 +85,7 @@ xdg_switcher_handle_raise_xdg_surfaces(struct wl_client *client,
   struct roots_input *input = desktop->server->input;
   struct roots_seat *seat = input_last_active_seat(input);
 
-  wlr_log(WLR_DEBUG, "will raise view %s", app_id);
+  g_debug ("will raise view %s", app_id);
   wl_list_for_each(view, &desktop->views, link) {
     switch (view->type) {
     case ROOTS_XDG_SHELL_VIEW: {
@@ -196,8 +196,8 @@ xdg_switcher_handle_resource_destroy(struct wl_resource *resource)
   struct phosh_private_xdg_switcher *xdg_switcher =
     phosh_private_xdg_switcher_from_resource(resource);
 
-  wlr_log(WLR_DEBUG, "Destroying xdg_switcher %p (res %p)", xdg_switcher,
-	  xdg_switcher->resource);
+  g_debug ("Destroying xdg_switcher %p (res %p)", xdg_switcher,
+	   xdg_switcher->resource);
   wl_list_remove(&xdg_switcher->link);
   free(xdg_switcher);
 }
@@ -219,7 +219,7 @@ void phosh_rotate_display(struct wl_client *client,
   struct phosh_private *phosh = wl_resource_get_user_data(resource);
   enum wl_output_transform transform = WL_OUTPUT_TRANSFORM_NORMAL;
 
-  wlr_log(WLR_DEBUG, "rotation: %d", degrees);
+  g_debug ("rotation: %d", degrees);
   if (degrees % 90 != 0) {
     wl_resource_post_error(resource,
 			   PHOSH_PRIVATE_ERROR_INVALID_ARGUMENT,
@@ -243,7 +243,7 @@ void phosh_rotate_display(struct wl_client *client,
   }
 
   if (!phosh->panel) {
-    wlr_log(WLR_ERROR, "Tried to rotate inexistent panel");
+    g_warning ("Tried to rotate inexistent panel");
     return;
   }
 
@@ -306,8 +306,8 @@ handle_get_xdg_switcher(struct wl_client *client,
     return;
   }
 
-  wlr_log(WLR_DEBUG, "new phosh_private_xdg_switcher %p (res %p)", xdg_switcher,
-	  xdg_switcher->resource);
+  g_debug ("new phosh_private_xdg_switcher %p (res %p)", xdg_switcher,
+	   xdg_switcher->resource);
   wl_resource_set_implementation(xdg_switcher->resource,
 				 &phosh_private_xdg_switcher_impl, xdg_switcher, xdg_switcher_handle_resource_destroy);
 
@@ -325,7 +325,7 @@ phosh_handle_resource_destroy(struct wl_resource *resource)
 
   phosh->resource = NULL;
   phosh->panel = NULL;
-  wlr_log(WLR_DEBUG, "Destroying phosh %p (res %p)", phosh, resource);
+  g_debug ("Destroying phosh %p (res %p)", phosh, resource);
 }
 
 
@@ -349,7 +349,7 @@ phosh_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 
   /* FIXME: unsafe, needs client == shell->child.client */
   if (true) {
-    wlr_log(WLR_ERROR, "FIXME: allowing every client to bind as phosh");
+    g_warning ("FIXME: allowing every client to bind as phosh");
     wl_resource_set_implementation(resource,
 				   &phosh_private_impl,
 				   phosh, phosh_handle_resource_destroy);
@@ -376,7 +376,7 @@ phosh_create(PhocDesktop *desktop, struct wl_display *display)
   phosh->listeners.layer_shell_new_surface.notify = handle_phosh_layer_shell_new_surface;
   wl_list_init(&phosh->xdg_switchers);
 
-  wlr_log(WLR_INFO, "Initializing phosh private interface");
+  g_info ("Initializing phosh private interface");
   phosh->global = wl_global_create(display, &phosh_private_interface, PHOSH_PRIVATE_VERSION, phosh, phosh_bind);
 
   if (!phosh->global) {
