@@ -20,7 +20,7 @@
 #include "desktop.h"
 #include "phosh.h"
 
-#define PHOSH_PRIVATE_VERSION 2
+#define PHOSH_PRIVATE_VERSION 3
 
 static void
 xdg_switcher_handle_list_xdg_surfaces(struct wl_client *client,
@@ -122,6 +122,65 @@ xdg_switcher_handle_raise_xdg_surfaces(struct wl_client *client,
   }
 }
 
+static void xdg_switcher_handle_close_xdg_surfaces(struct wl_client *client,
+						   struct wl_resource *resource,
+						   const char *app_id,
+						   const char *title) {
+  struct phosh_private_xdg_switcher *xdg_switcher =
+    phosh_private_xdg_switcher_from_resource(resource);
+  struct phosh_private *phosh = xdg_switcher->phosh;
+  PhocDesktop *desktop = phosh->desktop;
+  struct roots_view *view, *found_view;
+
+  g_debug ("Will close view %s: %s", app_id, title ? :"");
+  wl_list_for_each(view, &desktop->views, link) {
+    found_view = NULL;
+
+    switch (view->type) {
+    case ROOTS_XDG_SHELL_VIEW: {
+      struct roots_xdg_surface *xdg_surface =
+	roots_xdg_surface_from_view(view);
+      if (xdg_surface->xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+	continue;
+
+      if (!g_strcmp0 (app_id, xdg_surface->xdg_surface->toplevel->app_id)) {
+	if (title) {
+	  if (!g_strcmp0 (title, xdg_surface->xdg_surface->toplevel->title))
+	    found_view = view;
+	} else {
+	  found_view = view;
+	}
+      }
+      break;
+    }
+    case ROOTS_XDG_SHELL_V6_VIEW: {
+      struct roots_xdg_surface_v6 *xdg_surface_v6 =
+	roots_xdg_surface_v6_from_view(view);
+
+      if (xdg_surface_v6->xdg_surface_v6->role != WLR_XDG_SURFACE_V6_ROLE_TOPLEVEL)
+	continue;
+      if (!strcmp(app_id, xdg_surface_v6->xdg_surface_v6->toplevel->app_id)) {
+	if (title) {
+	  if (!strcmp(title, xdg_surface_v6->xdg_surface_v6->toplevel->title))
+	    found_view = view;
+	} else {
+	  found_view = view;
+	}
+      }
+      break;
+    }
+    default:
+      /* other surface types would go here */
+      break;
+    }
+
+    if (found_view) {
+      view_close(found_view);
+      /* we might have toplevels with same app_id and
+	 title so close all of them */
+    }
+  }
+}
 
 static void
 xdg_switcher_handle_destroy(struct wl_client *client,
@@ -148,6 +207,7 @@ static const struct phosh_private_xdg_switcher_interface phosh_private_xdg_switc
   .destroy = xdg_switcher_handle_destroy,
   .list_xdg_surfaces = xdg_switcher_handle_list_xdg_surfaces,
   .raise_xdg_surface = xdg_switcher_handle_raise_xdg_surfaces,
+  .close_xdg_surface = xdg_switcher_handle_close_xdg_surfaces,
 };
 
 
