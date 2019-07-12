@@ -483,10 +483,15 @@ void handle_xdg_shell_v6_surface(struct wl_listener *listener, void *data) {
 	view_init(&roots_surface->view, &view_impl, ROOTS_XDG_SHELL_V6_VIEW, desktop);
 	roots_surface->xdg_surface_v6 = surface;
 	surface->data = roots_surface;
+
+	// catch up with state accumulated before commiting
 	if (surface->toplevel->parent) {
 		struct roots_xdg_surface* parent = surface->toplevel->parent->data;
 		view_set_parent(&roots_surface->view, &parent->view);
 	}
+	view_maximize(&roots_surface->view, surface->toplevel->client_pending.maximized);
+	view_set_fullscreen(&roots_surface->view, surface->toplevel->client_pending.fullscreen,
+		surface->toplevel->client_pending.fullscreen_output);
 
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&surface->surface->events.commit,
