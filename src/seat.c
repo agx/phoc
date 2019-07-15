@@ -1318,6 +1318,10 @@ bool roots_seat_allow_input(struct roots_seat *seat,
 }
 
 static void seat_raise_view_stack(struct roots_seat *seat, struct roots_view *view) {
+	if (!view->wlr_surface) {
+		return;
+	}
+
 	wl_list_remove(&view->link);
 	wl_list_insert(&seat->input->server->desktop->views, &view->link);
 	view_damage_whole(view);

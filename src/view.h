@@ -69,7 +69,7 @@ struct roots_view {
 	struct roots_view *parent;
 	struct wl_list stack; // roots_view::link
 
-	struct wlr_surface *wlr_surface;
+	struct wlr_surface *wlr_surface; // set only when the surface is mapped
 	struct wl_list child_surfaces; // roots_view_child::link
 
 	struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
