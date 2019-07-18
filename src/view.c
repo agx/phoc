@@ -257,40 +257,6 @@ void view_arrange_maximized(struct roots_view *view) {
 	view_rotate(view, 0);
 }
 
-void view_maximize(struct roots_view *view, bool maximized) {
-	if (view->maximized == maximized || view->fullscreen_output != NULL) {
-		return;
-	}
-
-	if (view->impl->maximize) {
-		view->impl->maximize(view, maximized);
-	}
-
-	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
-			maximized);
-	}
-
-	if (!view->maximized && maximized) {
-		view->maximized = true;
-		view->saved.x = view->box.x;
-		view->saved.y = view->box.y;
-		view->saved.rotation = view->rotation;
-		view->saved.width = view->box.width;
-		view->saved.height = view->box.height;
-
-		view_arrange_maximized(view);
-	}
-
-	if (view->maximized && !maximized) {
-		view->maximized = false;
-
-		view_move_resize(view, view->saved.x, view->saved.y, view->saved.width,
-			view->saved.height);
-		view_rotate(view, view->saved.rotation);
-	}
-}
-
 /*
  * Check if a view needs to be maximized
  */
@@ -329,6 +295,40 @@ want_maximize(struct roots_view *view) {
     break;
   }
   return maximize;
+}
+
+void view_maximize(struct roots_view *view, bool maximized) {
+	if (view->maximized == maximized || view->fullscreen_output != NULL) {
+		return;
+	}
+
+	if (view->impl->maximize) {
+		view->impl->maximize(view, maximized);
+	}
+
+	if (view->toplevel_handle) {
+		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
+			maximized);
+	}
+
+	if (!view->maximized && maximized) {
+		view->maximized = true;
+		view->saved.x = view->box.x;
+		view->saved.y = view->box.y;
+		view->saved.rotation = view->rotation;
+		view->saved.width = view->box.width;
+		view->saved.height = view->box.height;
+
+		view_arrange_maximized(view);
+	}
+
+	if (view->maximized && !maximized) {
+		view->maximized = false;
+
+		view_move_resize(view, view->saved.x, view->saved.y, view->saved.width,
+			view->saved.height);
+		view_rotate(view, view->saved.rotation);
+	}
 }
 
 /*
