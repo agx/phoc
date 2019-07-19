@@ -37,18 +37,20 @@ math           = cc.find_library('m')
 
 embed_wlroots = get_option('embed-wlroots')
 
-# Try first to find wlroots as a subproject, then as a system dependency
-wlroots_proj = subproject(
+if not embed_wlroots.disabled()
+   # Try first to find wlroots as a subproject, then as a system dependency
+   wlroots_proj = subproject(
         'wlroots',
         default_options: ['rootston=false', 'examples=false'],
         required: false,
-)
+   )
 
-if embed_wlroots.enabled() and not wlroots_proj.found()
-   error('Wlroots subproject not found but enabled')
+   if embed_wlroots.enabled() and not wlroots_proj.found()
+        error('Wlroots subproject not found but enabled')
+   endif
 endif
 
-if wlroots_proj.found() and not embed_wlroots.disabled()
+if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots = wlroots_proj.get_variable('wlroots')
         wlroots_conf = wlroots_proj.get_variable('conf_data')
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
@@ -133,7 +135,7 @@ summary = [
         'phoc @0@'.format(meson.project_version()),
         '',
         '           xwayland: @0@'.format(have_xwayland),
-        ' wlroots subproject: @0@'.format(wlroots_proj.found()),
+        ' wlroots subproject: @0@'.format(not embed_wlroots.disabled() and wlroots_proj.found()),
         '--------------------------',
         ''
 ]
