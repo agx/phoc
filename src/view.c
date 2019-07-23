@@ -302,6 +302,10 @@ void view_maximize(struct roots_view *view, bool maximized) {
 		return;
 	}
 
+	if (!maximized && want_maximize(view)) {
+		return;
+	}
+
 	if (view->impl->maximize) {
 		view->impl->maximize(view, maximized);
 	}
@@ -340,7 +344,6 @@ maybe_maximize(struct roots_view *view)
   if (want_maximize(view))
     view_maximize (view, true);
 }
-
 
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		struct wlr_output *output) {
