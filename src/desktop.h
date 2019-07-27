@@ -3,7 +3,7 @@
 #include "config.h"
 
 #include <time.h>
-#include <wayland-server.h>
+#include <wayland-server-core.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>

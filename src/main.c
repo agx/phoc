@@ -9,7 +9,7 @@
 
 #include <gio/gio.h>
 
-#include <wayland-server.h>
+#include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/backend/headless.h>
 #include <wlr/backend/multi.h>
