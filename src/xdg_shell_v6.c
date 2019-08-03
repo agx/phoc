@@ -500,6 +500,7 @@ void handle_xdg_shell_v6_surface(struct wl_listener *listener, void *data) {
 	view_maximize(&roots_surface->view, surface->toplevel->client_pending.maximized);
 	view_set_fullscreen(&roots_surface->view, surface->toplevel->client_pending.fullscreen,
 		surface->toplevel->client_pending.fullscreen_output);
+	view_auto_maximize(&roots_surface->view);
 
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&surface->surface->events.commit,
