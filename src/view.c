@@ -265,40 +265,14 @@ void view_arrange_maximized(struct roots_view *view) {
  * Check if a view needs to be maximized
  */
 static bool
-want_maximize(struct roots_view *view) {
-  struct roots_xdg_surface_v6 *xdg_surface_v6;
-  struct roots_xdg_surface *xdg_surface;
-  bool maximize = false;
-
+want_auto_maximize(struct roots_view *view) {
   if (!view->desktop->maximize)
     return false;
 
-  switch (view->type) {
-    /*
-     * phosh: Maximize xdg shell surfaces by default
-     * but Don't maximize child surfaces like dialogs.
-     */
-  case ROOTS_XDG_SHELL_V6_VIEW:
-    xdg_surface_v6 = roots_xdg_surface_v6_from_view(view);
+  if (view->impl->want_auto_maximize)
+    return view->impl->want_auto_maximize(view);
 
-    if (xdg_surface_v6->xdg_surface_v6->toplevel &&
-	!xdg_surface_v6->xdg_surface_v6->toplevel->parent)
-      maximize = true;
-    break;
-  case ROOTS_XDG_SHELL_VIEW:
-    xdg_surface = roots_xdg_surface_from_view(view);
-
-    if (xdg_surface->xdg_surface->toplevel &&
-	!xdg_surface->xdg_surface->toplevel->parent)
-      maximize = true;
-    break;
-    /* Never maximize these */
-#ifdef PHOC_XWAYLAND
-  case ROOTS_XWAYLAND_VIEW:
-#endif
-    break;
-  }
-  return maximize;
+  return false;
 }
 
 void view_maximize(struct roots_view *view, bool maximize) {
@@ -306,7 +280,7 @@ void view_maximize(struct roots_view *view, bool maximize) {
 		return;
 	}
 
-	if (!maximize && want_maximize(view)) {
+	if (!maximize && want_auto_maximize(view)) {
 		return;
 	}
 
@@ -345,7 +319,7 @@ void view_maximize(struct roots_view *view, bool maximize) {
 static void
 maybe_maximize(struct roots_view *view)
 {
-  if (want_maximize(view))
+  if (want_auto_maximize (view))
     view_maximize (view, true);
 }
 
