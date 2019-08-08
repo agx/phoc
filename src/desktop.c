@@ -212,6 +212,15 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 		struct roots_output *output =
 			desktop_output_from_wlr_output(desktop, wlr_output);
 		if (output != NULL && output->fullscreen_view != NULL) {
+
+			if (output->force_shell_reveal) {
+				if ((surface = layer_surface_at(roots_output,
+						&roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+						ox, oy, sx, sy))) {
+					return surface;
+				}
+			}
+
 			if (view_at(output->fullscreen_view, lx, ly, &surface, sx, sy)) {
 				if (view) {
 					*view = output->fullscreen_view;

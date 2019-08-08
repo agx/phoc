@@ -366,6 +366,12 @@ void output_render(struct roots_output *output) {
 				render_surface_iterator, &data);
 		}
 #endif
+
+		if (output->force_shell_reveal) {
+			// Render top layer above fullscreen view when requested
+			render_layer(output, &buffer_damage,
+				&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+		}
 	} else {
 		// Render background and bottom layers under views
 		render_layer(output, &buffer_damage,

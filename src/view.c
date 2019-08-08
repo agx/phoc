@@ -372,6 +372,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		view_rotate(view, 0);
 
 		roots_output->fullscreen_view = view;
+		roots_output->force_shell_reveal = false;
 		view->fullscreen_output = roots_output;
 		output_damage_whole(roots_output);
 	}

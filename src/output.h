@@ -16,6 +16,7 @@ struct roots_output {
 
 	struct roots_view *fullscreen_view;
 	struct wl_list layers[4]; // layer_surface::link
+	bool force_shell_reveal;
 
 	struct timespec last_frame;
 	struct wlr_output_damage *damage;
