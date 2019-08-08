@@ -334,8 +334,13 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 	struct roots_view *view = &roots_xdg_surface->view;
 	struct roots_input *input = view->desktop->server->input;
 	struct wlr_xdg_toplevel_resize_event *e = data;
-	// TODO verify event serial
 	struct roots_seat *seat = input_seat_from_wlr_seat(input, e->seat->seat);
+
+	if (view->desktop->maximize) {
+		return;
+	}
+
+	// TODO verify event serial
 	assert(seat);
 	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
 		return;
