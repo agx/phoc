@@ -159,7 +159,28 @@ static struct roots_view *desktop_view_at(PhocDesktop *desktop,
 static struct wlr_surface *layer_surface_at(struct roots_output *output,
 		struct wl_list *layer, double ox, double oy, double *sx, double *sy) {
 	struct roots_layer_surface *roots_surface;
+
+	wl_list_for_each(roots_surface, layer, link) {
+		if (roots_surface->layer_surface->current.exclusive_zone > 0) {
+			continue;
+		}
+
+		double _sx = ox - roots_surface->geo.x;
+		double _sy = oy - roots_surface->geo.y;
+
+		struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
+			roots_surface->layer_surface, _sx, _sy, sx, sy);
+
+		if (sub) {
+			return sub;
+		}
+	}
+
 	wl_list_for_each_reverse(roots_surface, layer, link) {
+		if (roots_surface->layer_surface->current.exclusive_zone <= 0) {
+			continue;
+		}
+
 		double _sx = ox - roots_surface->geo.x;
 		double _sy = oy - roots_surface->geo.y;
 
