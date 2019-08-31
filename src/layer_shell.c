@@ -302,7 +302,8 @@ void arrange_layers(struct roots_output *output) {
 	for (size_t i = 0; i < nlayers; ++i) {
 		wl_list_for_each(layer,
 				&output->layers[layers_above_shell[i]], link) {
-			if (layer->layer_surface->current.keyboard_interactive) {
+			if (layer->layer_surface->current.keyboard_interactive
+					&& layer->layer_surface->mapped) {
 				topmost = layer;
 				break;
 			}
