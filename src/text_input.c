@@ -23,6 +23,7 @@ static struct roots_text_input *relay_get_focused_text_input(
 	struct roots_text_input *text_input = NULL;
 	wl_list_for_each(text_input, &relay->text_inputs, link) {
 		if (text_input->input->focused_surface) {
+			assert(text_input->pending_focused_surface == NULL);
 			return text_input;
 		}
 	}
@@ -82,6 +83,7 @@ static void handle_im_destroy(struct wl_listener *listener, void *data) {
 	if (text_input) {
 		// keyboard focus is still there, so keep the surface at hand in case
 		// the input method returns
+		assert(text_input->pending_focused_surface == NULL);
 		text_input_set_pending_focused_surface(text_input,
 			text_input->input->focused_surface);
 		wlr_text_input_v3_send_leave(text_input->input);
