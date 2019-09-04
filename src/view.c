@@ -618,13 +618,13 @@ void view_initial_focus(struct roots_view *view) {
 
 
 void view_setup(struct roots_view *view) {
+	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
 
 	if (view->fullscreen_output == NULL && !view->maximized) {
 		view_center(view);
 	}
 
-	view_create_foreign_toplevel_handle(view);
 	view_update_output(view, NULL);
 }
 
