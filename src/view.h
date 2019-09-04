@@ -53,6 +53,9 @@ struct roots_view {
 	int border_width;
 	int titlebar_height;
 
+	char *title;
+	char *app_id;
+
 	bool maximized;
 	struct roots_output *fullscreen_output;
 	struct {

@@ -1,5 +1,8 @@
 #define G_LOG_DOMAIN "phoc-view"
 
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +20,8 @@ void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 	view->type = type;
 	view->desktop = desktop;
 	view->alpha = 1.0f;
+	view->title = NULL;
+	view->app_id = NULL;
 	wl_signal_init(&view->events.unmap);
 	wl_signal_init(&view->events.destroy);
 	wl_list_init(&view->child_surfaces);
@@ -626,6 +631,15 @@ void view_setup(struct roots_view *view) {
 	}
 
 	view_update_output(view, NULL);
+
+	wlr_foreign_toplevel_handle_v1_set_fullscreen(view->toplevel_handle,
+	                                              view->fullscreen_output != NULL);
+	wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
+	                                             view->maximized);
+	wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle,
+	                                         view->title ?: "");
+	wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle,
+	                                          view->app_id ?: "");
 }
 
 void view_apply_damage(struct roots_view *view) {
@@ -691,8 +705,11 @@ void view_update_decorated(struct roots_view *view, bool decorated) {
 }
 
 void view_set_title(struct roots_view *view, const char *title) {
+	free(view->title);
+	view->title = title ? strdup(title) : NULL;
+
 	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle, title);
+		wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle, title ?: "");
 	}
 }
 
@@ -716,8 +733,11 @@ void view_set_parent(struct roots_view *view, struct roots_view *parent) {
 }
 
 void view_set_app_id(struct roots_view *view, const char *app_id) {
+	free(view->app_id);
+	view->app_id = app_id ? strdup(app_id) : NULL;
+
 	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle, app_id);
+		wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle, app_id ?: "");
 	}
 }
 

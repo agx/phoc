@@ -291,11 +291,6 @@ static void handle_map(struct wl_listener *listener, void *data) {
 		}
 
 		view_setup(view);
-
-		wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle,
-			roots_surface->xwayland_surface->title ?: "none");
-		wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle,
-			roots_surface->xwayland_surface->class ?: "none");
 	} else {
 		view_initial_focus(view);
 	}
@@ -329,6 +324,9 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 	roots_surface->view.box.x = surface->x;
 	roots_surface->view.box.y = surface->y;
 	roots_surface->xwayland_surface = surface;
+
+	view_set_title(&roots_surface->view, surface->title);
+	view_set_app_id(&roots_surface->view, surface->class);
 
 	roots_surface->destroy.notify = handle_destroy;
 	wl_signal_add(&surface->events.destroy, &roots_surface->destroy);

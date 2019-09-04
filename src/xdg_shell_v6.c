@@ -447,11 +447,6 @@ static void handle_map(struct wl_listener *listener, void *data) {
 
 	view_map(view, roots_xdg_surface->xdg_surface_v6->surface);
 	view_setup(view);
-
-	wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle,
-		roots_xdg_surface->xdg_surface_v6->toplevel->title ?: "none");
-	wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle,
-		roots_xdg_surface->xdg_surface_v6->toplevel->app_id ?: "none");
 }
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
@@ -501,6 +496,8 @@ void handle_xdg_shell_v6_surface(struct wl_listener *listener, void *data) {
 	view_set_fullscreen(&roots_surface->view, surface->toplevel->client_pending.fullscreen,
 		surface->toplevel->client_pending.fullscreen_output);
 	view_auto_maximize(&roots_surface->view);
+	view_set_title(&roots_surface->view, surface->toplevel->title);
+	view_set_app_id(&roots_surface->view, surface->toplevel->app_id);
 
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&surface->surface->events.commit,
