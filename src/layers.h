@@ -16,7 +16,6 @@ struct roots_layer_surface {
 	struct wl_listener output_destroy;
 	struct wl_listener new_popup;
 
-	bool configured;
 	struct wlr_box geo;
 };
 
