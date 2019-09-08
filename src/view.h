@@ -20,6 +20,7 @@ struct roots_view_interface {
 	void (*resize)(struct roots_view *view, uint32_t width, uint32_t height);
 	void (*move_resize)(struct roots_view *view, double x, double y,
 		uint32_t width, uint32_t height);
+	bool (*want_scaling)(struct roots_view *view);
 	bool (*want_auto_maximize)(struct roots_view *view);
 	void (*maximize)(struct roots_view *view, bool maximized);
 	void (*set_fullscreen)(struct roots_view *view, bool fullscreen);
@@ -59,6 +60,7 @@ struct roots_view {
 	struct wlr_box box;
 	float rotation;
 	float alpha;
+	float scale;
 
 	bool decorated;
 	int border_width;

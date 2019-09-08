@@ -51,7 +51,7 @@ struct surface_iterator_data {
 	struct roots_output *output;
 	double ox, oy;
 	int width, height;
-	float rotation;
+	float rotation, scale;
 };
 
 static bool get_surface_box(struct surface_iterator_data *data,
@@ -87,6 +87,7 @@ static bool get_surface_box(struct surface_iterator_data *data,
 	struct wlr_box output_box = {0};
 	wlr_output_effective_resolution(output->wlr_output,
 		&output_box.width, &output_box.height);
+	scale_box(&output_box, 1 / data->scale);
 
 	struct wlr_box intersection;
 	return wlr_box_intersection(&intersection, &output_box, &rotated_box);
@@ -103,7 +104,7 @@ static void output_for_each_surface_iterator(struct wlr_surface *surface,
 	}
 
 	data->user_iterator(data->output, surface, &box, data->rotation,
-		data->user_data);
+		data->scale, data->user_data);
 }
 
 void output_surface_for_each_surface(struct roots_output *output,
@@ -118,6 +119,7 @@ void output_surface_for_each_surface(struct roots_output *output,
 		.width = surface->current.width,
 		.height = surface->current.height,
 		.rotation = 0,
+		.scale = 1.0
 	};
 
 	wlr_surface_for_each_surface(surface,
@@ -135,7 +137,8 @@ void output_xdg_surface_for_each_surface(struct roots_output *output,
 		.oy = oy,
 		.width = xdg_surface->surface->current.width,
 		.height = xdg_surface->surface->current.height,
-		.rotation = 0
+		.rotation = 0,
+		.scale = 1.0
 	};
 
 	wlr_xdg_surface_for_each_surface(xdg_surface,
@@ -160,6 +163,7 @@ void output_view_for_each_surface(struct roots_output *output,
 		.width = view->box.width,
 		.height = view->box.height,
 		.rotation = view->rotation,
+		.scale = view->scale
 	};
 
 	view_for_each_surface(view, output_for_each_surface_iterator, &data);
@@ -359,10 +363,11 @@ static bool view_accept_damage(struct roots_output *output,
 
 static void damage_surface_iterator(struct roots_output *output,
 		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
-		void *data) {
+		float scale, void *data) {
 	bool *whole = data;
 
 	struct wlr_box box = *_box;
+	scale_box(&box, scale);
 	scale_box(&box, output->wlr_output->scale);
 
 	int center_x = box.x + box.width/2;
@@ -372,6 +377,7 @@ static void damage_surface_iterator(struct roots_output *output,
 		pixman_region32_t damage;
 		pixman_region32_init(&damage);
 		wlr_surface_get_effective_damage(surface, &damage);
+		wlr_region_scale(&damage, &damage, scale);
 		wlr_region_scale(&damage, &damage, output->wlr_output->scale);
 		if (ceil(output->wlr_output->scale) > surface->current.scale) {
 			// When scaling up a surface, it'll become blurry so we need to

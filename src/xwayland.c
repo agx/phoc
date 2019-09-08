@@ -100,6 +100,11 @@ static void _close(struct roots_view *view) {
 	wlr_xwayland_surface_close(xwayland_surface);
 }
 
+
+static bool want_scaling(struct roots_view *view) {
+	return false;
+}
+
 static bool want_auto_maximize(struct roots_view *view) {
 	return false;
 }
@@ -136,6 +141,7 @@ static const struct roots_view_interface view_impl = {
 	.resize = resize,
 	.move = move,
 	.move_resize = move_resize,
+	.want_scaling = want_scaling,
 	.want_auto_maximize = want_auto_maximize,
 	.maximize = maximize,
 	.set_fullscreen = set_fullscreen,

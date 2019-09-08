@@ -34,7 +34,7 @@ struct roots_output {
 
 typedef void (*roots_surface_iterator_func_t)(struct roots_output *output,
 	struct wlr_surface *surface, struct wlr_box *box, float rotation,
-	void *user_data);
+	float scale, void *user_data);
 
 void rotate_child_position(double *sx, double *sy, double sw, double sh,
 	double pw, double ph, float rotation);

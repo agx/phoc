@@ -232,6 +232,10 @@ static void move_resize(struct roots_view *view, double x, double y,
 	}
 }
 
+static bool want_scaling(struct roots_view *view) {
+	return true;
+}
+
 static bool want_auto_maximize(struct roots_view *view) {
 	struct wlr_xdg_surface *surface =
 		roots_xdg_surface_from_view(view)->xdg_surface;
@@ -304,6 +308,7 @@ static const struct roots_view_interface view_impl = {
 	.resize = resize,
 	.move_resize = move_resize,
 	.want_auto_maximize = want_auto_maximize,
+	.want_scaling = want_scaling,
 	.maximize = maximize,
 	.set_fullscreen = set_fullscreen,
 	.close = _close,

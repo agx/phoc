@@ -22,6 +22,7 @@ void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 	view->type = type;
 	view->desktop = desktop;
 	view->alpha = 1.0f;
+	view->scale = 1.0f;
 	view->title = NULL;
 	view->app_id = NULL;
 	wl_signal_init(&view->events.unmap);
@@ -71,8 +72,8 @@ gboolean view_is_maximized(const struct roots_view *view)
 void view_get_box(const struct roots_view *view, struct wlr_box *box) {
 	box->x = view->box.x;
 	box->y = view->box.y;
-	box->width = view->box.width;
-	box->height = view->box.height;
+	box->width = view->box.width * view->scale;
+	box->height = view->box.height * view->scale;
 }
 
 
@@ -84,8 +85,8 @@ view_get_geometry (struct roots_view *view, struct wlr_box *geom)
   } else {
     geom->x = 0;
     geom->y = 0;
-    geom->width = view->box.width;
-    geom->height = view->box.height;
+    geom->width = view->box.width * view->scale;
+    geom->height = view->box.height * view->scale;
   }
 }
 
@@ -207,6 +208,7 @@ void view_activate(struct roots_view *view, bool activate) {
 void view_resize(struct roots_view *view, uint32_t width, uint32_t height) {
 	struct wlr_box before;
 	view_get_box(view, &before);
+
 	if (view->impl->resize) {
 		view->impl->resize(view, width, height);
 	}
@@ -269,8 +271,8 @@ void view_arrange_maximized(struct roots_view *view) {
 	usable_area.x += output_box->x;
 	usable_area.y += output_box->y;
 
-	view_move_resize(view, usable_area.x, usable_area.y,
-			usable_area.width, usable_area.height);
+	view_move_resize(view, usable_area.x / view->scale, usable_area.y / view->scale,
+			usable_area.width / view->scale, usable_area.height / view->scale);
 	view_rotate(view, 0);
 }
 
@@ -553,12 +555,12 @@ bool view_center(struct roots_view *view) {
 	memcpy(&usable_area, &roots_output->usable_area, sizeof(struct wlr_box));
 
 	double view_x = (double)(usable_area.width - box.width) / 2 +
-	  usable_area.x + l_output->x - geom.x;
+	  usable_area.x + l_output->x - geom.x * view->scale;
 	double view_y = (double)(usable_area.height - box.height) / 2 +
-	  usable_area.y + l_output->y - geom.y;
+	  usable_area.y + l_output->y - geom.y * view->scale;
 
 	g_debug ("moving view to %f %f", view_x, view_y);
-	view_move(view, view_x, view_y);
+	view_move(view, view_x / view->scale, view_y / view->scale);
 
 	return true;
 }
@@ -670,6 +672,41 @@ static void view_handle_new_subsurface(struct wl_listener *listener,
 	subsurface_create(view, wlr_subsurface);
 }
 
+static void view_update_scale(struct roots_view *view) {
+	if (!view->impl->want_scaling(view)) {
+		return;
+	}
+
+	struct wlr_output *output = view_get_output(view);
+	if (!output) {
+		return;
+	}
+
+	struct roots_output *roots_output = output->data;
+
+	float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
+	scalex = roots_output->usable_area.width / (float)view->box.width;
+	scaley = roots_output->usable_area.height / (float)view->box.height;
+	if (scaley < scalex) {
+		view->scale = scaley;
+	} else {
+		view->scale = scalex;
+	}
+	if (view->scale < 0.5f) {
+		view->scale = 0.5f;
+	}
+	if (view->scale > 1.0f || view->fullscreen_output) {
+		view->scale = 1.0f;
+	}
+	if (view->scale != oldscale) {
+		if (view_is_maximized(view)) {
+			view_arrange_maximized(view);
+		} else {
+			view_center(view);
+		}
+	}
+}
+
 void view_map(struct roots_view *view, struct wlr_surface *surface) {
 	PhocServer *server = phoc_server_get_default ();
 	assert(view->wlr_surface == NULL);
@@ -740,6 +777,7 @@ void view_setup(struct roots_view *view) {
 	if (view->fullscreen_output == NULL && !view_is_maximized(view)) {
 		view_center(view);
 	}
+	view_update_scale(view);
 
 	view_update_output(view, NULL);
 
@@ -788,6 +826,7 @@ void view_update_position(struct roots_view *view, int x, int y) {
 }
 
 void view_update_size(struct roots_view *view, int width, int height) {
+
 	if (view->box.width == width && view->box.height == height) {
 		return;
 	}
@@ -795,6 +834,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 	view_damage_whole(view);
 	view->box.width = width;
 	view->box.height = height;
+	view_update_scale(view);
 	view_damage_whole(view);
 }
 

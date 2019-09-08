@@ -93,7 +93,7 @@ buffer_damage_finish:
 }
 
 static void
-collect_touch_points (struct roots_output *output, struct wlr_surface *surface, struct wlr_box box)
+collect_touch_points (struct roots_output *output, struct wlr_surface *surface, struct wlr_box box, float scale)
 {
   PhocServer *server = phoc_server_get_default ();
   if (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)) {
@@ -107,8 +107,8 @@ collect_touch_points (struct roots_output *output, struct wlr_surface *surface, 
       if (point->surface != surface) { continue; }
       struct touch_point_data *touch_point = g_malloc(sizeof(struct touch_point_data));
       touch_point->id = point->touch_id;
-      touch_point->x = box.x + point->sx * output->wlr_output->scale;
-      touch_point->y = box.y + point->sy * output->wlr_output->scale;
+      touch_point->x = box.x + point->sx * output->wlr_output->scale * scale;
+      touch_point->y = box.y + point->sy * output->wlr_output->scale * scale;
       output->debug_touch_points = g_list_append(output->debug_touch_points, touch_point);
     }
   }
@@ -116,7 +116,7 @@ collect_touch_points (struct roots_output *output, struct wlr_surface *surface, 
 
 static void render_surface_iterator(struct roots_output *output,
 		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
-		void *_data) {
+		float scale, void *_data) {
 	struct render_data *data = _data;
 	struct wlr_output *wlr_output = output->wlr_output;
 	pixman_region32_t *output_damage = data->damage;
@@ -128,6 +128,7 @@ static void render_surface_iterator(struct roots_output *output,
 	}
 
 	struct wlr_box box = *_box;
+	scale_box(&box, scale);
 	scale_box(&box, wlr_output->scale);
 
 	float matrix[9];
@@ -142,7 +143,7 @@ static void render_surface_iterator(struct roots_output *output,
 	wlr_presentation_surface_sampled_on_output(output->desktop->presentation,
 		surface, wlr_output);
 
-	collect_touch_points(output, surface, box);
+	collect_touch_points(output, surface, box, scale);
 }
 
 static void render_decorations(struct roots_output *output,
@@ -214,7 +215,7 @@ static void render_layer(struct roots_output *output,
 
 static void count_surface_iterator(struct roots_output *output,
 		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
-		void *data) {
+		float scale, void *data) {
 	size_t *n = data;
 	n++;
 }
@@ -411,6 +412,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *data)
   wlr_matrix_translate (mat, -geo.x, -geo.y);
 
   wlr_matrix_scale (mat, 1 / (float)root->current.scale, 1 / (float)root->current.scale);
+  wlr_matrix_scale (mat, view->scale, view->scale);
   wlr_matrix_scale (mat, root->current.scale / surface->current.scale, root->current.scale / surface->current.scale);
 
   wlr_render_texture (server->renderer, view_texture, mat, sx * surface->current.scale, sy * surface->current.scale, 1.0);
@@ -446,7 +448,7 @@ view_render_to_buffer (struct roots_view *view, int width, int height, int strid
 
 static void surface_send_frame_done_iterator(struct roots_output *output,
 		struct wlr_surface *surface, struct wlr_box *box, float rotation,
-		void *data) {
+		float scale, void *data) {
 	struct timespec *when = data;
 	wlr_surface_send_frame_done(surface, when);
 }
@@ -487,7 +489,7 @@ void output_render(struct roots_output *output) {
 
 		// Fullscreen views are rendered on a black background
 		clear_color[0] = clear_color[1] = clear_color[2] = 0;
-    
+
 		// Check if we can scan-out the fullscreen view
 		static bool last_scanned_out = false;
 		bool scanned_out = scan_out_fullscreen_view(output);

@@ -541,6 +541,8 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 
 	if (surface) {
 		bool found = false;
+		float scale = 1.0;
+
 		struct wlr_surface *root = wlr_surface_get_root_surface(surface);
 		if (wlr_surface_is_layer_surface(root)) {
 			struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_from_wlr_surface(root);
@@ -565,8 +567,9 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 		} else {
 			struct roots_view *view = roots_view_from_wlr_surface(root);
 			if (view) {
-				sx = lx - view->box.x;
-				sy = ly - view->box.y;
+				scale = view->scale;
+				sx = lx / scale - view->box.x;
+				sy = ly / scale - view->box.y;
 				rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height, -view->rotation);
 				found = true;
 			} else {

@@ -95,10 +95,12 @@ static bool view_at(struct roots_view *view, double lx, double ly,
 		return false;
 	}
 
-	double view_sx = lx - view->box.x;
-	double view_sy = ly - view->box.y;
+	double view_sx = lx - (view->box.x * view->scale);
+	double view_sy = ly - (view->box.y * view->scale);
 	rotate_child_position(&view_sx, &view_sy, 0, 0,
 		view->box.width, view->box.height, -view->rotation);
+	view_sx /= view->scale;
+	view_sy /= view->scale;
 
 	double _sx, _sy;
 	struct wlr_surface *_surface = NULL;
