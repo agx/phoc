@@ -382,6 +382,7 @@ static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	int oy = popup->wlr_popup->geometry.y + layer->geo.y;
 	output_damage_whole_local_surface(output, popup->wlr_popup->base->surface,
 		ox, oy);
+	input_update_cursor_focus(output->desktop->server->input);
 }
 
 static void popup_handle_commit(struct wl_listener *listener, void *data) {

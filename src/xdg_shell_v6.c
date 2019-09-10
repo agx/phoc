@@ -46,6 +46,7 @@ static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup_v6 *popup =
 		wl_container_of(listener, popup, unmap);
 	view_damage_whole(popup->view_child.view);
+	input_update_cursor_focus(popup->view_child.view->desktop->server->input);
 }
 
 static struct roots_xdg_popup_v6 *popup_create(struct roots_view *view,
