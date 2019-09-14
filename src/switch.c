@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <wlr/util/log.h>
 #include "config.h"
-#include "bindings.h"
+#include "switch.h"
 
 void roots_switch_handle_toggle(struct roots_switch *switch_device,
 		struct wlr_event_switch_toggle *event) {

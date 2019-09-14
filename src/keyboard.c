@@ -86,11 +86,6 @@ static void pressed_keysyms_update(xkb_keysym_t *pressed_keysyms,
 	}
 }
 
-static void keyboard_binding_execute(struct roots_keyboard *keyboard,
-		const char *command) {
-	execute_binding_command(keyboard->seat, keyboard->input, command);
-}
-
 /**
  * Execute a built-in, hardcoded compositor binding. These are triggered from a
  * single keysym.
