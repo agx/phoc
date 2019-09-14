@@ -1,5 +1,4 @@
 sources = [
-  'bindings.c',
   'settings.c',
   'cursor.c',
   'desktop.c',
