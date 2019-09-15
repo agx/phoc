@@ -38,6 +38,14 @@ struct roots_device_config {
 	struct wl_list link;
 };
 
+struct roots_binding_config {
+	uint32_t modifiers;
+	xkb_keysym_t *keysyms;
+	size_t keysyms_len;
+	char *command;
+	struct wl_list link;
+};
+
 struct roots_keyboard_config {
 	char *name;
 	char *seat;
