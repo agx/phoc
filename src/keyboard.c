@@ -12,6 +12,7 @@
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 #include "config.h"
+#include "bindings.h"
 #include "input.h"
 #include "keyboard.h"
 #include "seat.h"
@@ -133,21 +134,35 @@ static bool keyboard_execute_binding(struct roots_keyboard *keyboard,
 				     xkb_keysym_t *pressed_keysyms, uint32_t modifiers,
 				     const xkb_keysym_t *keysyms, size_t keysyms_len)
 {
-  PhocKeybindings *keybindings;
-
-  /* TODO: should be handled via PhocKeybindings as well */
   for (size_t i = 0; i < keysyms_len; ++i) {
     if (keyboard_execute_compositor_binding(keyboard, keysyms[i])) {
       return true;
     }
   }
 
+  // User-defined bindings
   size_t n = pressed_keysyms_length(pressed_keysyms);
-  keybindings = keyboard->input->server->config->keybindings;
+  struct wl_list *bindings = &keyboard->input->server->config->bindings;
+  struct roots_binding_config *bc;
+  wl_list_for_each(bc, bindings, link) {
+    if (modifiers ^ bc->modifiers || n != bc->keysyms_len) {
+      continue;
+    }
 
-  if (phoc_keybindings_handle_pressed (keybindings, modifiers, pressed_keysyms, n,
-				       keyboard->seat))
-    return true;
+    bool ok = true;
+    for (size_t i = 0; i < bc->keysyms_len; i++) {
+      ssize_t j = pressed_keysyms_index(pressed_keysyms, bc->keysyms[i]);
+      if (j < 0) {
+	ok = false;
+	break;
+      }
+    }
+
+    if (ok) {
+      keyboard_binding_execute(keyboard, bc->command);
+      return true;
+    }
+  }
 
   return false;
 }

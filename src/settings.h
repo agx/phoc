@@ -1,8 +1,6 @@
 #ifndef ROOTSTON_CONFIG_H
 #define ROOTSTON_CONFIG_H
 
-#include "keybindings.h"
-
 #include <xf86drmMode.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_switch.h>
@@ -80,10 +78,9 @@ struct roots_config {
 	bool xwayland;
 	bool xwayland_lazy;
 
-	PhocKeybindings *keybindings;
-
 	struct wl_list outputs;
 	struct wl_list devices;
+	struct wl_list bindings;
 	struct wl_list keyboards;
 	struct wl_list cursors;
 	struct wl_list switches;

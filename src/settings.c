@@ -18,7 +18,6 @@
 #include "settings.h"
 #include "ini.h"
 #include "input.h"
-#include "keybindings.h"
 #include "keyboard.h"
 
 static void usage(const char *name, int ret) {
@@ -166,6 +165,43 @@ static bool parse_modeline(const char *s, drmModeModeInfo *mode) {
 		 mode->hdisplay, mode->vdisplay, mode->vrefresh / 1000);
 
 	return true;
+}
+
+static void add_binding_config(struct wl_list *bindings, const char* combination,
+		const char* command) {
+	struct roots_binding_config *bc =
+		calloc(1, sizeof(struct roots_binding_config));
+
+	xkb_keysym_t keysyms[ROOTS_KEYBOARD_PRESSED_KEYSYMS_CAP];
+	char *symnames = strdup(combination);
+	char *symname = strtok(symnames, "+");
+	while (symname) {
+		uint32_t modifier = parse_modifier(symname);
+		if (modifier != 0) {
+			bc->modifiers |= modifier;
+		} else {
+			xkb_keysym_t sym = xkb_keysym_from_name(symname,
+				XKB_KEYSYM_NO_FLAGS);
+			if (sym == XKB_KEY_NoSymbol) {
+				wlr_log(WLR_ERROR, "got unknown key binding symbol: %s",
+					symname);
+				free(bc);
+				bc = NULL;
+				break;
+			}
+			keysyms[bc->keysyms_len] = sym;
+			bc->keysyms_len++;
+		}
+		symname = strtok(NULL, "+");
+	}
+	free(symnames);
+
+	if (bc) {
+		wl_list_insert(bindings, &bc->link);
+		bc->command = strdup(command);
+		bc->keysyms = malloc(bc->keysyms_len * sizeof(xkb_keysym_t));
+		memcpy(bc->keysyms, keysyms, bc->keysyms_len * sizeof(xkb_keysym_t));
+	}
 }
 
 static void add_switch_config(struct wl_list *switches, const char *switch_name,
@@ -433,6 +469,8 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 				section, strlen(keyboard_prefix)) == 0) {
 		const char *device_name = section + strlen(keyboard_prefix);
 		config_handle_keyboard(config, device_name, name, value);
+	} else if (strcmp(section, "bindings") == 0) {
+		add_binding_config(&config->bindings, name, value);
 	} else if (strncmp(switch_prefix, section, strlen(switch_prefix)) == 0) {
 		const char *switch_name = section + strlen(switch_prefix);
 		add_switch_config(&config->switches, switch_name, name, value);
@@ -455,6 +493,7 @@ struct roots_config *roots_config_create_from_args(int argc, char *argv[]) {
 	wl_list_init(&config->devices);
 	wl_list_init(&config->keyboards);
 	wl_list_init(&config->cursors);
+	wl_list_init(&config->bindings);
 	wl_list_init(&config->switches);
 
 	int c;
@@ -503,6 +542,10 @@ struct roots_config *roots_config_create_from_args(int argc, char *argv[]) {
 
 	if (result == -1) {
 		wlr_log(WLR_DEBUG, "No config file found. Using sensible defaults.");
+		add_binding_config(&config->bindings, "Logo+Shift+E", "exit");
+		add_binding_config(&config->bindings, "Ctrl+q", "close");
+		add_binding_config(&config->bindings, "Alt+Tab", "next_window");
+		add_binding_config(&config->bindings, "Logo+Escape", "break_pointer_constraint");
 		struct roots_keyboard_config *kc =
 			calloc(1, sizeof(struct roots_keyboard_config));
 		kc->meta_key = WLR_MODIFIER_LOGO;
@@ -515,8 +558,6 @@ struct roots_config *roots_config_create_from_args(int argc, char *argv[]) {
 		wlr_log(WLR_ERROR, "Could not parse config file");
 		exit(1);
 	}
-
-	config->keybindings = phoc_keybindings_new ();
 
 	return config;
 }
@@ -562,7 +603,12 @@ void roots_config_destroy(struct roots_config *config) {
 		free(cc);
 	}
 
-	g_object_unref (config->keybindings);
+	struct roots_binding_config *bc, *btmp = NULL;
+	wl_list_for_each_safe(bc, btmp, &config->bindings, link) {
+		free(bc->keysyms);
+		free(bc->command);
+		free(bc);
+	}
 
 	free(config->config_path);
 	free(config);
