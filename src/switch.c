@@ -19,6 +19,7 @@ void roots_switch_handle_toggle(struct roots_switch *switch_device,
 				event->switch_state != sc->switch_state) {
 			continue;
 		}
-		g_warning ("Unhandled switch event %s", sc->name);
+		execute_binding_command(switch_device->seat,
+			switch_device->seat->input, sc->command);
 	}
 }
