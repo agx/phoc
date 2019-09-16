@@ -1,3 +1,152 @@
+phoc (0.1.0) purple; urgency=medium
+
+  [ Guido Günther ]
+  * Avoid conflict with close(2)
+  * Add HACKING.md
+  * Drop wlroots CONTRIBUTING to avoid confusion
+  * Use glib main loop
+  * Rename roots_server to phoc_server
+  * main: Block SIGUSR1 early
+  * Maximize xdg_shell surfaces by default
+  * desktop: Allow to toggle maximization via dconf
+  * helpers: Add helper to toggle maximization
+  * Add run script
+  * Add editorconfig from libhandy
+  * desktop: Allow to toggle maximization via dconf
+  * Revert "Avoid conflict with close(2)"
+  * Don't access views directly
+  * Avoid conflict with close(2)
+  * Switch to wlroots 0.5.0
+  * outpout: Check for PHOC_XwAYLAND instead of WLR_HAS_XWAYLAND
+  * xwayland: Don't include config.h twice
+  * rootston: Also iterate layer shell popups
+  * render: Don't use rootston's types and headers
+  * Add phosh private protocol (Closes: #2)
+  * view: Move want_maximize upwards
+  * view: Introduce maybe_maximize()
+  * Update wlroots to 930e37eae97e2ae965f7ae3a05d2fdd700827688
+  * layer-shell: Don't dereference gone output
+  * Update wlroots to 0.6.0 (Closes: #14)
+  * run: Avoid word splitting
+  * main: Fix indentation
+  * main: Launch client in idle main loop
+  * xdg_shell: Don't move windows with auto_maximize == true (Closes: #8)
+  * main: Block SIGUSR1 instead of ignoring it (Closes: #20)
+  * Use glib logging (Closes: #21)
+  * gitlab-ci: Build a deb
+  * debian: Add compositor parts (Closes: #16)
+  * build: Allow to toggle using the embedded wlroots
+  * debian: Use a build profile for linking against embedded wlroots
+    (Closes: #17)
+  * gitlab-ci: Use build profile
+  * gitlab-ci: Build against packaged wlroots as well (Closes: #25)
+  * debian: Add missing build-dep for x11 backend with embedded wlroots
+  * Turn desktop in a PhocDesktop GObject
+  * PhocDesktop: Use constructed and finalize
+  * PhocDesktop: Use g_signal_connect_swapped
+  * desktop: Fix type check
+  * Only set a cursor when we have a pointer device (Closes: #31)
+  * Update submodule
+  * view: Make maximaziation logic match the comment
+  * Add logging domains
+  * Log wlroots messages as 'phoc-wlroots'
+  * view: Take geometry into account when centering views
+  * view: Use sane geometry when impl is missing
+  * view: Default geometry x,y to 0
+  * render: Clear to black background
+  * Add some debugging hints
+  * view: Take usable area into account when centering views (Closes: #45)
+  * roots_seat: Add roots_set_get_cursor ()
+  * phosh-private: Add a close request
+  * phosh: Implement phosh-private's close request
+  * phosh: Use g_* logging
+  * Update wlroots submodule
+  * protocols: Remove unused protocols
+  * protocols: Drop client protocol generation
+  * protocols: Don't generate unused server protocols
+  * text_input: Don't forget to send enter events (Closes: #51, #28, #12)
+  * cursor: Drop btn left emulation for touch
+  * Update submodule
+  * switch: Drop switch handling
+  * keyboard: Reformat keyboard_execute_binding
+  * Add PhocKeybindings
+  * Use PhocKeybindings
+  * Drop old bindings related code
+  * Revert "Drop old bindings related code"
+  * Revert "Use PhocKeybindings"
+  * Revert "Add PhocKeybindings"
+  * Revert "keyboard: Reformat keyboard_execute_binding"
+  * Revert "switch: Drop switch handling"
+
+  [ emersion ]
+  * data-device: refactor wlr_drag
+  * rootston: cancel drag on invalid serial
+  * rootston: move part of desktop.c to view.c, use an interface for views
+  * rootston: add a view child interface
+  * rootston: make roots_view embedded and remove unions
+  * rootston: refactor rendering
+  * rootston: fix rotated views rendering
+  * rootston: fix Xwayland children rendering when fullscreen
+  * rootston: split rendering code into render.c
+  * rootston: fix input events for rotated views
+  * xwayland: don't set DISPLAY
+  * rootston: add output-management-v1 support
+  * rootston: update output-management-v1 state when output is modeset
+  * output-management-v1: support applying configuration
+  * output-management-v1: update protocol, add set_custom_mode
+  * rootston: disable then enable outputs when applying output-management state
+  * output: remove lx, ly
+
+  [ Sebastian Krzyszkowiak ]
+  * rootston: surface_at: check for fullscreen surfaces in between TOP and OVERLAY layers
+  * Auto-maximize unfullscreened surfaces
+  * phosh: Fix incorrect type being passed to sizeof in calloc
+  * seat: Move view damage in set_focus to where the drawing list is handled
+  * Handle stacks (xdg_toplevel::set_parent relationships) (#4)
+  * seat: Move focus back to first shell surface when unfocusing layer surface
+  * xdg_shell(_v6): Take maximize/fullscreen state into account on view init
+  * seat: Don't try to raise unmapped surfaces in stacks
+  * Update wlroots submodule
+  * view: Move want_maximize above view_maximize
+  * view: Don't allow to unmaximize auto-maximized surfaces
+  * view: Null-check output in view_arrange_maximized
+  * view: Rename "maximized" argument in view_maximize
+  * view: Move want_maximize logic into protocol code
+  * Auto-maximize before mapping the surface
+  * Update wlroots submodule
+  * layer_shell: Guard against negative exclusive zone
+  * view: Create foreign-toplevel-handle before focusing
+  * Move wlr-foreign-toplevel-management support into view
+  * Refine the ordering of layer-shell surfaces
+  * Update cursor focus on popup unmap
+  * Update wlroots submodule
+
+  [ Ryan Walklin ]
+  * s/lid_switch/switch_device
+
+  [ Ilia Bozhinov ]
+  * rootston: remove disabled outputs from the output layout
+  * rootston: add support for foreign-toplevel fullscreening
+
+  [ Alyssa Ross ]
+  * Fix missing headers when building without X11
+
+  [ Simon Ser ]
+  * rootston: use wlr_output_preferred_mode
+  * output-damage: refactor API
+  * output: rename needs_commit to needs_frame
+  * rootston: don't submit too much damage
+  * rootston: fix damage tracking debug mode
+
+  [ Drew DeVault ]
+  * Remove wlr_wl_shell
+
+  [ Dorota Czaplejewicz ]
+  * build: Link supplied wlroots statically
+  * debian: Use build profile for shared wlroots build
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Mon, 16 Sep 2019 19:17:34 +0200
+
 phoc (0.0.0) purple; urgency=medium
 
   * Initial release
