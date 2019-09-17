@@ -1,3 +1,10 @@
+phoc (0.1.0pureos2) amber; urgency=medium
+
+  * Use embedded wlroots.  It's not yet available on pureos and 0.6.0 wouldn't
+    be recent enough anyway since it lacks lots of touch related fixes.
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 17 Sep 2019 14:55:24 -0700
+
 phoc (0.1.0pureos1) amber; urgency=medium
 
   [ Guido Günther ]
