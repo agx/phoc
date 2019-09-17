@@ -160,8 +160,8 @@ static struct wlr_surface *layer_surface_at(struct roots_output *output,
 		struct wl_list *layer, double ox, double oy, double *sx, double *sy) {
 	struct roots_layer_surface *roots_surface;
 
-	wl_list_for_each(roots_surface, layer, link) {
-		if (roots_surface->layer_surface->current.exclusive_zone > 0) {
+	wl_list_for_each_reverse(roots_surface, layer, link) {
+		if (roots_surface->layer_surface->current.exclusive_zone <= 0) {
 			continue;
 		}
 
@@ -176,8 +176,8 @@ static struct wlr_surface *layer_surface_at(struct roots_output *output,
 		}
 	}
 
-	wl_list_for_each_reverse(roots_surface, layer, link) {
-		if (roots_surface->layer_surface->current.exclusive_zone <= 0) {
+	wl_list_for_each(roots_surface, layer, link) {
+		if (roots_surface->layer_surface->current.exclusive_zone > 0) {
 			continue;
 		}
 
