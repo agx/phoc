@@ -1,4 +1,4 @@
-phoc (0.1.0) amber; urgency=medium
+phoc (0.1.0pureos1) amber; urgency=medium
 
   [ Guido Günther ]
   * Avoid conflict with close(2)
