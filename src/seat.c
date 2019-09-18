@@ -1494,10 +1494,11 @@ void roots_seat_set_focus_layer(struct roots_seat *seat,
 			NULL, 0, NULL);
 	}
 
-
 	if (seat->cursor) {
 		roots_cursor_update_focus(seat->cursor);
 	}
+
+	roots_input_method_relay_set_focus(&seat->im_relay, layer->surface);
 }
 
 void roots_seat_set_exclusive_client(struct roots_seat *seat,
