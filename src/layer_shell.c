@@ -200,10 +200,63 @@ static void arrange_layer(struct wlr_output *output,
 	}
 }
 
+struct osk_origin {
+	struct wlr_layer_surface_v1_state state;
+	struct roots_layer_surface *surface;
+	enum zwlr_layer_shell_v1_layer layer;
+};
+
+static struct osk_origin find_osk(struct wl_list layers[4]) {
+	struct osk_origin origin = {0};
+	for (unsigned i = 0; i < 4; i++) {
+		struct wl_list *list = &layers[i];
+		struct roots_layer_surface *roots_surface;
+		wl_list_for_each(roots_surface, list, link) {
+			if (strcmp(roots_surface->layer_surface->namespace, "osk") == 0) {
+				origin.state = roots_surface->layer_surface->current;
+				origin.surface = roots_surface;
+				origin.layer = i;
+				return origin;
+			}
+		}
+	}
+	return origin;
+}
+
+static bool find_prompter(struct wl_list *list) {
+	struct roots_layer_surface *roots_surface;
+	wl_list_for_each(roots_surface, list, link) {
+		if (strcmp(roots_surface->layer_surface->namespace, "phosh prompter") == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/// Adjusts keyboard properties
+static void change_osk(const struct osk_origin *osk, struct wl_list layers[4], bool prompter_present) {
+	if (!osk->surface) {
+		return;
+	}
+	if (prompter_present && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY) {
+		wl_list_remove(&osk->surface->link);
+		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &osk->surface->link);
+	}
+
+	if (!prompter_present && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_TOP) {
+		wl_list_remove(&osk->surface->link);
+		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &osk->surface->link);
+	}
+}
+
 void arrange_layers(struct roots_output *output) {
 	struct wlr_box usable_area = { 0 };
 	wlr_output_effective_resolution(output->wlr_output,
 			&usable_area.width, &usable_area.height);
+
+	struct osk_origin osk_place = find_osk(output->layers);
+	bool prompter_present = find_prompter(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
+	change_osk(&osk_place, output->layers, prompter_present);
 
 	// Arrange exclusive surfaces from top->bottom
 	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
