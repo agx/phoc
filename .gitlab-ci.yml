@@ -67,3 +67,5 @@ package-deb-without-wlroots:
   artifacts:
     paths:
       - "*.deb"
+  # Until we updated to 0.0.7
+  allow_failure: true
