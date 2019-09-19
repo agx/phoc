@@ -310,8 +310,10 @@ void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,
 		    && wl_resource_get_client(text_input->input->resource)
 		    == wl_resource_get_client(surface->resource)) {
 			if (relay->input_method) {
-				wlr_text_input_v3_send_enter(text_input->input, surface);
-			} else {
+				if (surface != text_input->input->focused_surface) {
+					wlr_text_input_v3_send_enter(text_input->input, surface);
+				}
+			} else if (surface != text_input->pending_focused_surface) {
 				text_input_set_pending_focused_surface(text_input, surface);
 			}
 		}
