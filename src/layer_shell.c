@@ -20,6 +20,8 @@
 #include "output.h"
 #include "server.h"
 
+#define LAYER_SHELL_LAYER_COUNT 4
+
 static void apply_exclusive(struct wlr_box *usable_area,
 		uint32_t anchor, int32_t exclusive,
 		int32_t margin_top, int32_t margin_right,
@@ -206,9 +208,9 @@ struct osk_origin {
 	enum zwlr_layer_shell_v1_layer layer;
 };
 
-static struct osk_origin find_osk(struct wl_list layers[4]) {
+static struct osk_origin find_osk(struct wl_list layers[LAYER_SHELL_LAYER_COUNT]) {
 	struct osk_origin origin = {0};
-	for (unsigned i = 0; i < 4; i++) {
+	for (unsigned i = 0; i < LAYER_SHELL_LAYER_COUNT; i++) {
 		struct wl_list *list = &layers[i];
 		struct roots_layer_surface *roots_surface;
 		wl_list_for_each(roots_surface, list, link) {
@@ -223,29 +225,16 @@ static struct osk_origin find_osk(struct wl_list layers[4]) {
 	return origin;
 }
 
-static bool find_prompter(struct wl_list *list) {
-	struct roots_layer_surface *roots_surface;
-	wl_list_for_each(roots_surface, list, link) {
-		if (strcmp(roots_surface->layer_surface->namespace, "phosh prompter") == 0) {
-			return true;
-		}
-	}
-	return false;
-}
-
 /// Adjusts keyboard properties
-static void change_osk(const struct osk_origin *osk, struct wl_list layers[4], bool prompter_present) {
-	if (!osk->surface) {
-		return;
-	}
-	if (prompter_present && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY) {
+static void change_osk(const struct osk_origin *osk, struct wl_list layers[LAYER_SHELL_LAYER_COUNT], bool force_overlay) {
+	if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY) {
 		wl_list_remove(&osk->surface->link);
 		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &osk->surface->link);
 	}
 
-	if (!prompter_present && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_TOP) {
+	if (!force_overlay && osk->layer != osk->surface->layer_surface->layer) {
 		wl_list_remove(&osk->surface->link);
-		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &osk->surface->link);
+		wl_list_insert(&layers[osk->surface->layer_surface->layer], &osk->surface->link);
 	}
 }
 
@@ -255,8 +244,17 @@ void arrange_layers(struct roots_output *output) {
 			&usable_area.width, &usable_area.height);
 
 	struct osk_origin osk_place = find_osk(output->layers);
-	bool prompter_present = find_prompter(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
-	change_osk(&osk_place, output->layers, prompter_present);
+	if (osk_place.surface) {
+		bool osk_force_overlay = false;
+		struct roots_seat *seat;
+		wl_list_for_each(seat, &output->desktop->server->input->seats, link) {
+			if (seat->focused_layer && seat->focused_layer->layer >= osk_place.surface->layer_surface->layer) {
+				osk_force_overlay = true;
+				break;
+			}
+		}
+		change_osk(&osk_place, output->layers, osk_force_overlay);
+	}
 
 	// Arrange exclusive surfaces from top->bottom
 	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
