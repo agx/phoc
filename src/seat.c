@@ -224,10 +224,9 @@ static void handle_tablet_tool_position(struct roots_cursor *cursor,
 	}
 
 	double sx, sy;
-	struct roots_view *view = NULL;
 	PhocDesktop *desktop = server->desktop;
 	struct wlr_surface *surface = desktop_surface_at(desktop,
-			cursor->cursor->x, cursor->cursor->y, &sx, &sy, &view);
+			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 	struct roots_tablet_tool *roots_tool = tool->data;
 
 	if (!surface) {
