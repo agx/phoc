@@ -186,9 +186,11 @@ static void arrange_layer(struct wlr_output *output,
 		// Apply
 		struct wlr_box old_geo = roots_surface->geo;
 		roots_surface->geo = box;
-		apply_exclusive(usable_area, state->anchor, state->exclusive_zone,
-				state->margin.top, state->margin.right,
-				state->margin.bottom, state->margin.left);
+		if (layer->mapped) {
+			apply_exclusive(usable_area, state->anchor, state->exclusive_zone,
+					state->margin.top, state->margin.right,
+					state->margin.bottom, state->margin.left);
+		}
 		wlr_layer_surface_v1_configure(layer, box.width, box.height);
 
 		// Having a cursor newly end up over the moved layer will not
