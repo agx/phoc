@@ -1,5 +1,7 @@
 #pragma once
 
+#include "config.h"
+
 #include <time.h>
 #include <wayland-server.h>
 #include <wlr/config.h>
@@ -32,7 +34,6 @@
 #include <gio/gio.h>
 
 #include "settings.h"
-#include "config.h"
 
 #define PHOC_TYPE_DESKTOP (phoc_desktop_get_type())
 
