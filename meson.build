@@ -64,16 +64,6 @@ if get_option('xwayland').enabled() and not wlroots_has_xwayland
 endif
 have_xwayland = get_option('xwayland').enabled()
 
-config_h = configuration_data()
-config_h.set_quoted('PHOC_VERSION', meson.project_version())
-config_h.set('PHOC_XWAYLAND', have_xwayland)
-
-configure_file(
-  input: 'config.h.in',
-  output: 'config.h',
-  configuration: config_h,
-)
-
 global_c_args = []
 test_c_args = [
   '-Wcast-align',
@@ -140,6 +130,17 @@ summary = [
         ''
 ]
 message('\n'.join(summary))
+
+
+config_h = configuration_data()
+config_h.set_quoted('PHOC_VERSION', meson.project_version())
+config_h.set('PHOC_XWAYLAND', have_xwayland)
+
+configure_file(
+  input: 'config.h.in',
+  output: 'config.h',
+  configuration: config_h,
+)
 
 run_data = configuration_data()
 run_data.set('ABS_BUILDDIR', meson.current_build_dir())
