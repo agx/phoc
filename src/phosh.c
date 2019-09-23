@@ -345,6 +345,7 @@ phosh_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
   if (phosh->resource) {
     wl_resource_post_error(resource, WL_DISPLAY_ERROR_INVALID_OBJECT,
 			   "Only a single client can bind to phosh's private protocol");
+    return;
   }
 
   /* FIXME: unsafe, needs client == shell->child.client */
