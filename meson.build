@@ -126,6 +126,7 @@ summary = [
         '',
         '           xwayland: @0@'.format(have_xwayland),
         ' wlroots subproject: @0@'.format(not embed_wlroots.disabled() and wlroots_proj.found()),
+        '    wlroots version: @0@'.format(wlroots.version()),
         '--------------------------',
         ''
 ]
