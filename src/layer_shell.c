@@ -300,7 +300,7 @@ void arrange_layers(struct roots_output *output) {
 	size_t nlayers = sizeof(layers_above_shell) / sizeof(layers_above_shell[0]);
 	struct roots_layer_surface *layer, *topmost = NULL;
 	for (size_t i = 0; i < nlayers; ++i) {
-		wl_list_for_each_reverse(layer,
+		wl_list_for_each(layer,
 				&output->layers[layers_above_shell[i]], link) {
 			if (layer->layer_surface->current.keyboard_interactive) {
 				topmost = layer;
