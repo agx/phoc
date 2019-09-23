@@ -12,7 +12,7 @@ Build-Depends:
  pkg-config,
  wayland-protocols,
  libwlroots-dev (>= 0.6.0) <!pkg.phoc.embedwlroots>,
- libwlroots-dev (<< 0.7.0) <!pkg.phoc.embedwlroots>,
+ libwlroots-dev (<< 0.8.0) <!pkg.phoc.embedwlroots>,
 # For wlroots subproject build
  libcap-dev <pkg.phoc.embedwlroots>,
  libdrm-dev <pkg.phoc.embedwlroots>,
