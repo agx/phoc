@@ -457,6 +457,61 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   return true;
 }
 
+void
+view_tile(struct roots_view *view, PhocViewTileDirection direction)
+{
+  struct wlr_output *output = view_get_output(view);
+  struct roots_output *roots_output = output->data;
+  struct wlr_box *output_box =
+    wlr_output_layout_get_box(view->desktop->layout, output);
+  struct wlr_box usable_area;
+  int x;
+
+  if (view->fullscreen_output)
+    return;
+
+  if (!output)
+    return;
+
+  /* Set the maximized flag on the toplevel so it remove it's drop shadows */
+  if (view->impl->maximize) {
+	  view->impl->maximize(view, true);
+  }
+
+  /* backup window state */
+  view->state = PHOC_VIEW_STATE_TILED;
+  view->saved.x = view->box.x;
+  view->saved.y = view->box.y;
+  view->saved.rotation = view->rotation;
+  view->saved.width = view->box.width;
+  view->saved.height = view->box.height;
+
+  memcpy(&usable_area, &roots_output->usable_area,
+	 sizeof(struct wlr_box));
+  usable_area.x += output_box->x;
+  usable_area.y += output_box->y;
+
+  switch (direction) {
+  case PHOC_VIEW_TILE_LEFT:
+    x = usable_area.x;
+    break;
+  case PHOC_VIEW_TILE_RIGHT:
+    x = usable_area.x + (0.5 * usable_area.width);
+    break;
+  default:
+    g_error ("Invalid tiling direction %d", direction);
+  }
+
+  /*
+   * No need to take geometry into account since maximized surfaces
+   * usually don't have drop shadows. It wouldn't be up to date here
+   * yet anyway since a client's configure is not yet processed.
+   */
+  view_move_resize(view, x, usable_area.y,
+		   usable_area.width / 2, usable_area.height);
+  view_rotate(view, 0);
+}
+
 bool view_center(struct roots_view *view) {
         PhocServer *server = phoc_server_get_default ();
 	struct wlr_box box, geom;
