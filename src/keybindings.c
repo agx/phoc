@@ -68,6 +68,15 @@ handle_unmaximize (struct roots_seat *seat)
 }
 
 static void
+handle_toggle_maximized (struct roots_seat *seat)
+{
+  struct roots_view *focus = roots_seat_get_focus(seat);
+
+  if (focus != NULL)
+    view_maximize(focus, !focus->maximized);
+}
+
+static void
 handle_toggle_fullscreen (struct roots_seat *seat)
 {
   struct roots_view *focus = roots_seat_get_focus(seat);
@@ -507,6 +516,7 @@ phoc_keybindings_constructed (GObject *object)
   phoc_add_keybinding (self, "cycle-windows", handle_cycle_windows);
   phoc_add_keybinding (self, "maximize", handle_maximize);
   phoc_add_keybinding (self, "toggle-fullscreen", handle_toggle_fullscreen);
+  phoc_add_keybinding (self, "toggle-maximized", handle_toggle_maximized);
   /* TODO: we need a real switch-applications but ALT-TAB should do s.th.
    * useful */
   phoc_add_keybinding (self, "switch-applications", handle_cycle_windows);
