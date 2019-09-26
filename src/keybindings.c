@@ -15,6 +15,7 @@
 #include <gio/gio.h>
 
 #define KEYBINDINGS_SCHEMA_ID "org.gnome.desktop.wm.keybindings"
+#define MUTTER_KEYBINDINGS_SCHEMA_ID "org.gnome.mutter.keybindings"
 
 typedef void (*PhocKeyHandlerFunc) (struct roots_seat *);
 
@@ -46,6 +47,7 @@ typedef struct _PhocKeybindings
 
   GSList *bindings;
   GSettings *settings;
+  GSettings *mutter_settings;
 } PhocKeybindings;
 
 G_DEFINE_TYPE (PhocKeybindings, phoc_keybindings, G_TYPE_OBJECT);
@@ -67,6 +69,26 @@ handle_unmaximize (struct roots_seat *seat)
   if (focus != NULL && view_is_maximized(focus))
     view_maximize(focus, FALSE);
 }
+
+static void
+handle_tile_right (struct roots_seat *seat)
+{
+  struct roots_view *view = roots_seat_get_focus(seat);
+
+  if (view != NULL)
+    view_tile(view, PHOC_VIEW_TILE_RIGHT);
+}
+
+
+static void
+handle_tile_left (struct roots_seat *seat)
+{
+  struct roots_view *view = roots_seat_get_focus(seat);
+
+  if (view != NULL)
+    view_tile(view, PHOC_VIEW_TILE_LEFT);
+}
+
 
 static void
 handle_toggle_maximized (struct roots_seat *seat)
@@ -535,6 +557,7 @@ phoc_keybindings_finalize (GObject *object)
   PhocKeybindings *self = PHOC_KEYBINDINGS (object);
 
   g_clear_object (&self->settings);
+  g_clear_object (&self->mutter_settings);
 
   G_OBJECT_CLASS (phoc_keybindings_parent_class)->finalize (object);
 }
@@ -570,6 +593,12 @@ phoc_keybindings_constructed (GObject *object)
 		       "unmaximize", handle_unmaximize);
   phoc_add_keybinding (self, self->settings,
 		       "switch-input-source", handle_switch_input_source);
+
+  self->mutter_settings = g_settings_new (MUTTER_KEYBINDINGS_SCHEMA_ID);
+  phoc_add_keybinding (self, self->mutter_settings,
+		       "toggle-tiled-left", handle_tile_left);
+  phoc_add_keybinding (self, self->mutter_settings,
+		       "toggle-tiled-right", handle_tile_right);
 
   G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
 }
