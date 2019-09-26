@@ -244,9 +244,6 @@ void view_arrange_maximized(struct roots_view *view) {
 		return;
 	}
 
-	struct wlr_box view_box;
-	view_get_box(view, &view_box);
-
 	struct wlr_output *output = view_get_output(view);
 	if (!output) {
 		return;
