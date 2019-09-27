@@ -428,7 +428,8 @@ on_keybinding_setting_changed (PhocKeybindings *self,
 
 
 static gboolean
-phoc_add_keybinding (PhocKeybindings *self, const gchar *name, PhocKeyHandlerFunc func)
+phoc_add_keybinding (PhocKeybindings *self, GSettings *settings,
+		     const gchar *name, PhocKeyHandlerFunc func)
 {
   g_autofree gchar *signal_name = NULL;
   PhocKeybinding *binding;
@@ -443,12 +444,12 @@ phoc_add_keybinding (PhocKeybindings *self, const gchar *name, PhocKeyHandlerFun
   binding->func = func;
 
   signal_name = g_strdup_printf ("changed::%s", name);
-  g_signal_connect_swapped (self->settings, signal_name,
+  g_signal_connect_swapped (settings, signal_name,
 			    G_CALLBACK (on_keybinding_setting_changed), self);
 
   self->bindings = g_slist_append (self->bindings, binding);
   /* Fill in initial values */
-  on_keybinding_setting_changed (self, name, self->settings);
+  on_keybinding_setting_changed (self, name, settings);
 
   return TRUE;
 }
@@ -510,17 +511,24 @@ phoc_keybindings_constructed (GObject *object)
   PhocKeybindings *self = PHOC_KEYBINDINGS (object);
 
   G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
-  self->settings = g_settings_new (KEYBINDINGS_SCHEMA_ID);
 
-  phoc_add_keybinding (self, "close", handle_close);
-  phoc_add_keybinding (self, "cycle-windows", handle_cycle_windows);
-  phoc_add_keybinding (self, "maximize", handle_maximize);
-  phoc_add_keybinding (self, "toggle-fullscreen", handle_toggle_fullscreen);
-  phoc_add_keybinding (self, "toggle-maximized", handle_toggle_maximized);
+  self->settings = g_settings_new (KEYBINDINGS_SCHEMA_ID);
+  phoc_add_keybinding (self, self->settings,
+		       "close", handle_close);
+  phoc_add_keybinding (self, self->settings,
+		       "cycle-windows", handle_cycle_windows);
+  phoc_add_keybinding (self, self->settings,
+		       "maximize", handle_maximize);
+  phoc_add_keybinding (self, self->settings,
+		       "toggle-fullscreen", handle_toggle_fullscreen);
+  phoc_add_keybinding (self, self->settings,
+		       "toggle-maximized", handle_toggle_maximized);
   /* TODO: we need a real switch-applications but ALT-TAB should do s.th.
    * useful */
-  phoc_add_keybinding (self, "switch-applications", handle_cycle_windows);
-  phoc_add_keybinding (self, "unmaximize", handle_unmaximize);
+  phoc_add_keybinding (self, self->settings,
+		       "switch-applications", handle_cycle_windows);
+  phoc_add_keybinding (self, self->settings,
+		       "unmaximize", handle_unmaximize);
 }
 
 
