@@ -103,6 +103,25 @@ static void handle_close (struct roots_seat *seat)
     view_close(focus);
 }
 
+static void
+handle_move_to_monitor_right (struct roots_seat *seat)
+{
+  struct roots_view *view = roots_seat_get_focus(seat);
+
+  if (view)
+    view_move_to_next_output(view, WLR_DIRECTION_RIGHT);
+}
+
+
+static void
+handle_move_to_monitor_left (struct roots_seat *seat)
+{
+  struct roots_view *view = roots_seat_get_focus(seat);
+
+  if (view)
+    view_move_to_next_output(view, WLR_DIRECTION_LEFT);
+}
+
 
 static void handle_switch_input_source (struct roots_seat *seat)
 {
@@ -539,6 +558,10 @@ phoc_keybindings_constructed (GObject *object)
 		       "toggle-fullscreen", handle_toggle_fullscreen);
   phoc_add_keybinding (self, self->settings,
 		       "toggle-maximized", handle_toggle_maximized);
+  phoc_add_keybinding (self, self->settings,
+		       "move-to-monitor-right", handle_move_to_monitor_right);
+  phoc_add_keybinding (self, self->settings,
+		       "move-to-monitor-left", handle_move_to_monitor_left);
   /* TODO: we need a real switch-applications but ALT-TAB should do s.th.
    * useful */
   phoc_add_keybinding (self, self->settings,
