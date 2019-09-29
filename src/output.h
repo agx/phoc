@@ -43,6 +43,9 @@ struct roots_input;
 void output_surface_for_each_surface(struct roots_output *output,
 	struct wlr_surface *surface, double ox, double oy,
 	roots_surface_iterator_func_t iterator, void *user_data);
+void output_xdg_surface_for_each_surface(struct roots_output *output,
+	struct wlr_xdg_surface *xdg_surface, double ox, double oy,
+	roots_surface_iterator_func_t iterator, void *user_data);
 void output_view_for_each_surface(struct roots_output *output,
 	struct roots_view *view, roots_surface_iterator_func_t iterator,
 	void *user_data);
