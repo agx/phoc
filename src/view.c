@@ -407,6 +407,52 @@ void view_close(struct roots_view *view) {
 }
 
 
+bool
+view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
+{
+  PhocDesktop *desktop = view->desktop;
+  struct wlr_output_layout *layout = view->desktop->layout;
+  const struct wlr_output_layout_output *l_output;
+  struct roots_output *roots_output;
+  struct wlr_output *output, *new_output;
+  struct wlr_box usable_area;
+  double x, y;
+
+  if (view->fullscreen_output)
+    return false;
+
+  output = view_get_output(view);
+  if (!output)
+    return false;
+
+  /* use current view's x,y as ref_lx, ref_ly */
+  new_output = wlr_output_layout_adjacent_output (layout, direction, output,
+						  view->box.x, view->box.y);
+  if (!new_output)
+    return false;
+
+  roots_output = new_output->data;
+  memcpy(&usable_area, &roots_output->usable_area, sizeof(struct wlr_box));
+  l_output = wlr_output_layout_get(desktop->layout, new_output);
+
+  /* use a proper position on the new output */
+  x = usable_area.x + l_output->x;
+  y = usable_area.y + l_output->y;
+  g_debug("moving view to %f %f", x, y);
+
+  if (view->maximized) {
+    view->saved.x = x;
+    view->saved.y = y;
+    view_move(view, x, y);
+    view_arrange_maximized (view);
+  } else {
+    view_move(view, x, y);
+  }
+
+  return true;
+}
+
+
 bool view_center(struct roots_view *view) {
         PhocServer *server = phoc_server_get_default ();
 	struct wlr_box box, geom;
