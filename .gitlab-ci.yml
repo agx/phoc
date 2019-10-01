@@ -22,15 +22,17 @@ before_script:
  - apt-get -y install $DEPS
  - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots apt-get -y build-dep .
 
-build-with-xwayland:
+build-with-xwayland-debian-buster:
   stage: build
+  image: debian:buster
   variables:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
   <<: *build
 
-build-without-xwayland:
+build-without-xwayland-debian-buster:
   stage: build
+  image: debian:buster
   variables:
      BUILD_ARGS: -Dxwayland=disabled
   <<: *tags
@@ -39,6 +41,7 @@ build-without-xwayland:
 package-deb-with-wlroots:
   <<: *tags
   stage: package
+  image: debian:buster
   script:
     - git submodule update --init
     - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots dpkg-buildpackage -uc -us
@@ -52,6 +55,7 @@ package-deb-with-wlroots:
 package-deb-without-wlroots:
   <<: *tags
   stage: package
+  image: debian:buster
   before_script:
     - echo "deb http://deb.debian.org/debian/ experimental main" > /etc/apt/sources.list.d/experimental.list
     - apt-get -y update
