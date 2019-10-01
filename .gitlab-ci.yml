@@ -9,6 +9,14 @@ variables:
   tags:
     - librem5
 
+.build: &build
+  script:
+    - export LC_ALL=C.UTF-8
+    - git submodule update --init
+    - meson . _build $BUILD_ARGS
+    - ninja -C _build
+    - ninja -C _build install
+
 before_script:
  - apt-get -y update
  - apt-get -y install $DEPS
@@ -16,23 +24,17 @@ before_script:
 
 build-with-xwayland:
   stage: build
+  variables:
+     BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
-  script:
-    - export LC_ALL=C.UTF-8
-    - git submodule update --init
-    - meson . _build -Dxwayland=enabled
-    - ninja -C _build
-    - ninja -C _build install
+  <<: *build
 
 build-without-xwayland:
   stage: build
+  variables:
+     BUILD_ARGS: -Dxwayland=disabled
   <<: *tags
-  script:
-    - export LC_ALL=C.UTF-8
-    - git submodule update --init
-    - meson . _build -Dxwayland=disabled
-    - ninja -C _build
-    - ninja -C _build install
+  <<: *build
 
 package-deb-with-wlroots:
   <<: *tags
