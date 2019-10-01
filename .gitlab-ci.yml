@@ -30,6 +30,14 @@ build-with-xwayland-debian-buster:
   <<: *tags
   <<: *build
 
+build-with-xwayland-debian-bullseye:
+  stage: build
+  image: debian:bullseye
+  variables:
+     BUILD_ARGS: -Dxwayland=enabled
+  <<: *tags
+  <<: *build
+
 build-without-xwayland-debian-buster:
   stage: build
   image: debian:buster
