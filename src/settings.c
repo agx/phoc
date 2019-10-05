@@ -18,7 +18,6 @@
 #include <wlr/util/log.h>
 #include "settings.h"
 #include "ini.h"
-#include "input.h"
 #include "keybindings.h"
 #include "keyboard.h"
 

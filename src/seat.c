@@ -28,22 +28,22 @@
 
 static void handle_keyboard_key(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_keyboard *keyboard =
+	PhocKeyboard *keyboard =
 		wl_container_of(listener, keyboard, keyboard_key);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, keyboard->seat->seat);
 	struct wlr_event_keyboard_key *event = data;
-	roots_keyboard_handle_key(keyboard, event);
+	phoc_keyboard_handle_key(keyboard, event);
 }
 
 static void handle_keyboard_modifiers(struct wl_listener *listener,
 		void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_keyboard *keyboard =
+	PhocKeyboard *keyboard =
 		wl_container_of(listener, keyboard, keyboard_modifiers);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, keyboard->seat->seat);
-	roots_keyboard_handle_modifiers(keyboard);
+	phoc_keyboard_handle_modifiers(keyboard);
 }
 
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
@@ -830,26 +830,28 @@ static void seat_update_capabilities(struct roots_seat *seat) {
 }
 
 static void handle_keyboard_destroy(struct wl_listener *listener, void *data) {
-	struct roots_keyboard *keyboard =
+	PhocKeyboard *keyboard =
 		wl_container_of(listener, keyboard, device_destroy);
 	struct roots_seat *seat = keyboard->seat;
 	wl_list_remove(&keyboard->device_destroy.link);
 	wl_list_remove(&keyboard->keyboard_key.link);
 	wl_list_remove(&keyboard->keyboard_modifiers.link);
-	roots_keyboard_destroy(keyboard);
+	g_object_unref (keyboard);
 	seat_update_capabilities(seat);
 }
 
 static void seat_add_keyboard(struct roots_seat *seat,
 		struct wlr_input_device *device) {
 	assert(device->type == WLR_INPUT_DEVICE_KEYBOARD);
-	struct roots_keyboard *keyboard =
-		roots_keyboard_create(device, seat->input);
+	/* todo use constructor */
+	PhocKeyboard *keyboard =
+		phoc_keyboard_create(device, seat->input);
 	if (keyboard == NULL) {
 		wlr_log(WLR_ERROR, "could not allocate keyboard for seat");
 		return;
 	}
 
+	/* todo: accessor */
 	keyboard->seat = seat;
 
 	wl_list_insert(&seat->keyboards, &keyboard->link);
@@ -1230,7 +1232,7 @@ void roots_seat_configure_xcursor(struct roots_seat *seat) {
 }
 
 bool roots_seat_has_meta_pressed(struct roots_seat *seat) {
-	struct roots_keyboard *keyboard;
+	PhocKeyboard *keyboard;
 	wl_list_for_each(keyboard, &seat->keyboards, link) {
 		if (!keyboard->config->meta_key) {
 			continue;
