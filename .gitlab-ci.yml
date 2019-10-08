@@ -46,6 +46,28 @@ build-without-xwayland-debian-buster:
   <<: *tags
   <<: *build
 
+build-with-xwayland-alpinelinux-edge:
+  stage: build
+  image: alpine:edge
+  before_script:
+    - apk -q add alpine-sdk
+    - apk -q add git meson ninja gobject-introspection-dev libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+  variables:
+     BUILD_ARGS: -Dxwayland=enabled
+  <<: *tags
+  <<: *build
+
+build-without-xwayland-alpinelinux-edge:
+  stage: build
+  image: alpine:edge
+  before_script:
+    - apk -q add alpine-sdk
+    - apk -q add git meson ninja gobject-introspection-dev libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+  variables:
+     BUILD_ARGS: -Dxwayland=disabled
+  <<: *tags
+  <<: *build
+
 package-deb-with-wlroots:
   <<: *tags
   stage: package
