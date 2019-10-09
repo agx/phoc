@@ -29,5 +29,3 @@ struct phoc_server {
   /* Global resources */
   struct wlr_data_device_manager *data_device_manager;
 };
-
-extern struct phoc_server server;
