@@ -237,6 +237,7 @@ void output_drag_icons_for_each_surface(struct roots_output *output,
 void output_for_each_surface(struct roots_output *output,
 		roots_surface_iterator_func_t iterator, void *user_data) {
 	PhocDesktop *desktop = output->desktop;
+	PhocServer *server = phoc_server_get_default ();
 
 	if (output->fullscreen_view != NULL) {
 		struct roots_view *view = output->fullscreen_view;
@@ -258,7 +259,7 @@ void output_for_each_surface(struct roots_output *output,
 		}
 	}
 
-	output_drag_icons_for_each_surface(output, desktop->server->input,
+	output_drag_icons_for_each_surface(output, server->input,
 		iterator, user_data);
 
 	size_t len = sizeof(output->layers) / sizeof(output->layers[0]);
@@ -618,7 +619,8 @@ void handle_new_output(struct wl_listener *listener, void *data) {
 	PhocDesktop *desktop = wl_container_of(listener, desktop,
 		new_output);
 	struct wlr_output *wlr_output = data;
-	struct roots_input *input = desktop->server->input;
+	PhocServer *server = phoc_server_get_default ();
+	struct roots_input *input = server->input;
 	struct roots_config *config = desktop->config;
 
 	wlr_log(WLR_DEBUG, "Output '%s' added", wlr_output->name);

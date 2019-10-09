@@ -87,13 +87,14 @@ static void apply_exclusive(struct wlr_box *usable_area,
 
 static void update_cursors(struct roots_layer_surface *roots_surface,
 		struct wl_list *seats /* struct roots_seat */) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_seat *seat;
 	wl_list_for_each(seat, seats, link) {
 		struct roots_cursor *cursor = roots_seat_get_cursor(seat);
 		double sx, sy;
 
 		struct wlr_surface *surface = desktop_surface_at(
-			seat->input->server->desktop,
+			server->desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
 		if (surface == roots_surface->layer_surface->surface) {
@@ -241,6 +242,8 @@ static void change_osk(const struct osk_origin *osk, struct wl_list layers[LAYER
 
 void arrange_layers(struct roots_output *output) {
 	struct wlr_box usable_area = { 0 };
+	PhocServer *server = phoc_server_get_default ();
+
 	wlr_output_effective_resolution(output->wlr_output,
 			&usable_area.width, &usable_area.height);
 
@@ -248,7 +251,7 @@ void arrange_layers(struct roots_output *output) {
 	if (osk_place.surface) {
 		bool osk_force_overlay = false;
 		struct roots_seat *seat;
-		wl_list_for_each(seat, &output->desktop->server->input->seats, link) {
+		wl_list_for_each(seat, &server->input->seats, link) {
 			if (seat->focused_layer && seat->focused_layer->layer >= osk_place.surface->layer_surface->layer) {
 				osk_force_overlay = true;
 				break;
@@ -258,16 +261,16 @@ void arrange_layers(struct roots_output *output) {
 	}
 
 	// Arrange exclusive surfaces from top->bottom
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
 			&usable_area, true);
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
 			&usable_area, true);
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
 			&usable_area, true);
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
 			&usable_area, true);
 	memcpy(&output->usable_area, &usable_area, sizeof(struct wlr_box));
@@ -280,16 +283,16 @@ void arrange_layers(struct roots_output *output) {
 	}
 
 	// Arrange non-exlusive surfaces from top->bottom
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
 			&usable_area, false);
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
 			&usable_area, false);
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
 			&usable_area, false);
-	arrange_layer(output->wlr_output, &output->desktop->server->input->seats,
+	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
 			&usable_area, false);
 
@@ -314,7 +317,7 @@ void arrange_layers(struct roots_output *output) {
 		}
 	}
 
-	struct roots_input *input = output->desktop->server->input;
+	struct roots_input *input = server->input;
 	struct roots_seat *seat;
 	wl_list_for_each(seat, &input->seats, link) {
 		roots_seat_set_focus_layer(seat,
@@ -331,6 +334,7 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
 }
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_surface *layer =
 		wl_container_of(listener, layer, surface_commit);
 	struct wlr_layer_surface_v1 *layer_surface = layer->layer_surface;
@@ -350,7 +354,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		struct wlr_surface *surface = layer_surface->surface;
 		if (surface->previous.width != surface->current.width ||
 				surface->previous.height != surface->current.height) {
-			update_cursors(layer, &output->desktop->server->input->seats);
+			update_cursors(layer, &server->input->seats);
 		}
 
 		if (memcmp(&old_geo, &layer->geo, sizeof(struct wlr_box)) != 0) {
@@ -404,17 +408,18 @@ static void handle_map(struct wl_listener *listener, void *data) {
 }
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_surface *layer = wl_container_of(
 			listener, layer, unmap);
 	struct wlr_output *wlr_output = layer->layer_surface->output;
 	unmap(layer->layer_surface);
 	if (wlr_output) {
-		struct roots_output *output = wlr_output->data;
-		input_update_cursor_focus(output->desktop->server->input);
+		input_update_cursor_focus(server->input);
 	}
 }
 
 static void popup_handle_map(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_popup *popup = wl_container_of(listener, popup, map);
 	struct roots_layer_surface *layer = popup->parent;
 	struct wlr_output *wlr_output = layer->layer_surface->output;
@@ -423,10 +428,11 @@ static void popup_handle_map(struct wl_listener *listener, void *data) {
 	int oy = popup->wlr_popup->geometry.y + layer->geo.y;
 	output_damage_whole_local_surface(output, popup->wlr_popup->base->surface,
 		ox, oy);
-	input_update_cursor_focus(output->desktop->server->input);
+	input_update_cursor_focus(server->input);
 }
 
 static void popup_handle_unmap(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_popup *popup = wl_container_of(listener, popup, unmap);
 	struct roots_layer_surface *layer = popup->parent;
 	struct wlr_output *wlr_output = layer->layer_surface->output;
@@ -435,7 +441,7 @@ static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	int oy = popup->wlr_popup->geometry.y + layer->geo.y;
 	output_damage_whole_local_surface(output, popup->wlr_popup->base->surface,
 		ox, oy);
-	input_update_cursor_focus(output->desktop->server->input);
+	input_update_cursor_focus(server->input);
 }
 
 static void popup_handle_commit(struct wl_listener *listener, void *data) {
@@ -490,6 +496,7 @@ static void handle_new_popup(struct wl_listener *listener, void *data) {
 }
 
 void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct wlr_layer_surface_v1 *layer_surface = data;
 	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, layer_shell_surface);
@@ -504,7 +511,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		layer_surface->client_pending.margin.left);
 
 	if (!layer_surface->output) {
-		struct roots_input *input = desktop->server->input;
+		struct roots_input *input = server->input;
 		struct roots_seat *seat = input_last_active_seat(input);
 		assert(seat); // Technically speaking we should handle this case
 		struct roots_cursor *cursor = roots_seat_get_cursor(seat);

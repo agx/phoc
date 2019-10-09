@@ -85,8 +85,8 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
 	}
 }
 
-struct roots_input *input_create(struct phoc_server *server,
-		struct roots_config *config) {
+struct roots_input *input_create(struct roots_config *config) {
+	PhocServer *server = phoc_server_get_default ();
 	wlr_log(WLR_DEBUG, "Initializing roots input");
 	assert(server->desktop);
 
@@ -96,7 +96,6 @@ struct roots_input *input_create(struct phoc_server *server,
 	}
 
 	input->config = config;
-	input->server = server;
 
 	wl_list_init(&input->seats);
 

@@ -40,4 +40,6 @@ struct _PhocServer {
   struct wlr_data_device_manager *data_device_manager;
 };
 
+PhocServer *phoc_server_get_default (void);
+
 G_END_DECLS

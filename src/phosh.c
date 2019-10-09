@@ -82,8 +82,9 @@ xdg_switcher_handle_raise_xdg_surfaces(struct wl_client *client,
     phosh_private_xdg_switcher_from_resource(resource);
   struct phosh_private *phosh = xdg_switcher->phosh;
   PhocDesktop *desktop = phosh->desktop;
+  PhocServer *server = phoc_server_get_default ();
   struct roots_view *view, *found_view = NULL;
-  struct roots_input *input = desktop->server->input;
+  struct roots_input *input = server->input;
   struct roots_seat *seat = input_last_active_seat(input);
 
   g_debug ("will raise view %s", app_id);

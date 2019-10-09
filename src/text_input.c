@@ -277,16 +277,17 @@ static void relay_handle_input_method(struct wl_listener *listener,
 
 void roots_input_method_relay_init(struct roots_seat *seat,
 		struct roots_input_method_relay *relay) {
+        PhocServer *server = phoc_server_get_default ();
 	relay->seat = seat;
 	wl_list_init(&relay->text_inputs);
 
 	relay->text_input_new.notify = relay_handle_text_input;
-	wl_signal_add(&seat->input->server->desktop->text_input->events.text_input,
+	wl_signal_add(&server->desktop->text_input->events.text_input,
 		&relay->text_input_new);
 
 	relay->input_method_new.notify = relay_handle_input_method;
 	wl_signal_add(
-		&seat->input->server->desktop->input_method->events.input_method,
+		&server->desktop->input_method->events.input_method,
 		&relay->input_method_new);
 }
 

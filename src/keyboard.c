@@ -98,7 +98,7 @@ static bool keyboard_execute_compositor_binding(struct roots_keyboard *keyboard,
 		xkb_keysym_t keysym) {
 	if (keysym >= XKB_KEY_XF86Switch_VT_1 &&
 			keysym <= XKB_KEY_XF86Switch_VT_12) {
-		struct phoc_server *server = keyboard->input->server;
+		PhocServer *server = phoc_server_get_default ();
 
 		struct wlr_session *session = wlr_backend_get_session(server->backend);
 		if (session) {
@@ -129,6 +129,7 @@ static bool keyboard_execute_binding(struct roots_keyboard *keyboard,
 				     xkb_keysym_t *pressed_keysyms, uint32_t modifiers,
 				     const xkb_keysym_t *keysyms, size_t keysyms_len)
 {
+  PhocServer *server = phoc_server_get_default ();
   PhocKeybindings *keybindings;
 
   /* TODO: should be handled via PhocKeybindings as well */
@@ -139,7 +140,7 @@ static bool keyboard_execute_binding(struct roots_keyboard *keyboard,
   }
 
   size_t n = pressed_keysyms_length(pressed_keysyms);
-  keybindings = keyboard->input->server->config->keybindings;
+  keybindings = server->config->keybindings;
 
   if (phoc_keybindings_handle_pressed (keybindings, modifiers, pressed_keysyms, n,
 				       keyboard->seat))

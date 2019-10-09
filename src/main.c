@@ -74,7 +74,7 @@ wayland_event_source_new (struct wl_display *display)
 }
 
 static void
-phoc_wayland_init (struct phoc_server *server)
+phoc_wayland_init (PhocServer *server)
 {
   GSource *wayland_event_source;
 
@@ -84,7 +84,7 @@ phoc_wayland_init (struct phoc_server *server)
 
 
 static gboolean
-phoc_startup_cmd_in_idle(struct phoc_server *server)
+phoc_startup_cmd_in_idle(PhocServer *server)
 {
   const char *cmd = server->config->startup_cmd;
   pid_t pid = fork();
@@ -102,7 +102,7 @@ phoc_startup_cmd_in_idle(struct phoc_server *server)
 
 
 static void
-phoc_startup_cmd (struct phoc_server *server)
+phoc_startup_cmd (PhocServer *server)
 {
   gint id;
 
@@ -150,6 +150,7 @@ int
 main(int argc, char **argv)
 {
   GMainLoop *loop;
+  PhocServer *server;
 
   setup_signals();
 
@@ -171,8 +172,8 @@ main(int argc, char **argv)
   server->data_device_manager =
     wlr_data_device_manager_create(server->wl_display);
   wlr_renderer_init_wl_display(server->renderer, server->wl_display);
-  server->desktop = phoc_desktop_new (&server-> server->config);
-  server->input = input_create(&server-> server->config);
+  server->desktop = phoc_desktop_new (server->config);
+  server->input = input_create(server->config);
 
   const char *socket = wl_display_add_socket_auto(server->wl_display);
   if (!socket) {

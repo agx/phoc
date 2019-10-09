@@ -9,11 +9,12 @@
 #include "seat.h"
 
 void handle_virtual_keyboard(struct wl_listener *listener, void *data) {
+        PhocServer *server = phoc_server_get_default ();
 	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, virtual_keyboard_new);
 	struct wlr_virtual_keyboard_v1 *keyboard = data;
 
-	struct roots_seat *seat = input_seat_from_wlr_seat(desktop->server->input,
+	struct roots_seat *seat = input_seat_from_wlr_seat(server->input,
 		keyboard->seat);
 	if (!seat) {
 		wlr_log(WLR_ERROR, "could not find roots seat");

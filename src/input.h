@@ -12,15 +12,13 @@
 
 struct roots_input {
 	struct roots_config *config;
-	struct phoc_server *server;
 
 	struct wl_listener new_input;
 
 	struct wl_list seats; // roots_seat::link
 };
 
-struct roots_input *input_create(struct phoc_server *server,
-		struct roots_config *config);
+struct roots_input *input_create(struct roots_config *config);
 void input_destroy(struct roots_input *input);
 
 struct roots_seat *input_seat_from_wlr_seat(struct roots_input *input,

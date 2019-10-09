@@ -55,7 +55,6 @@ struct _PhocDesktop {
 	struct wl_list outputs; // roots_output::link
 	struct timespec last_frame;
 
-	struct phoc_server *server;
 	struct roots_config *config;
 
 	struct wlr_output_layout *layout;
@@ -112,9 +111,7 @@ struct _PhocDesktop {
 	struct phosh_private *phosh;
 };
 
-PhocDesktop *phoc_desktop_new (struct phoc_server *server, struct roots_config *config);
-
-struct phoc_server;
+PhocDesktop *phoc_desktop_new (struct roots_config *config);
 
 struct roots_output *desktop_output_from_wlr_output(
 	PhocDesktop *desktop, struct wlr_output *output);

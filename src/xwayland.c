@@ -165,7 +165,8 @@ static void handle_request_configure(struct wl_listener *listener, void *data) {
 static struct roots_seat *guess_seat_for_view(struct roots_view *view) {
 	// the best we can do is to pick the first seat that has the surface focused
 	// for the pointer
-	struct roots_input *input = view->desktop->server->input;
+	PhocServer *server = phoc_server_get_default ();
+	struct roots_input *input = server->input;
 	struct roots_seat *seat;
 	wl_list_for_each(seat, &input->seats, link) {
 		if (seat->seat->pointer_state.focused_surface == view->wlr_surface) {
