@@ -19,8 +19,6 @@
 #include "settings.h"
 #include "server.h"
 
-struct phoc_server server = { 0 };
-
 typedef struct {
   GSource source;
   struct wl_display *display;
@@ -156,53 +154,55 @@ main(int argc, char **argv)
   setup_signals();
 
   wlr_log_init(WLR_DEBUG, log_glib);
-  server.config = roots_config_create_from_args(argc, argv);
-  server.wl_display = wl_display_create();
-  assert(server.config && server.wl_display);
+  server = phoc_server_get_default ();
 
-  server.backend = wlr_backend_autocreate(server.wl_display, NULL);
-  if (server.backend == NULL) {
+  server->config = roots_config_create_from_args(argc, argv);
+  server->wl_display = wl_display_create();
+  assert(server->config && server->wl_display);
+
+  server->backend = wlr_backend_autocreate(server->wl_display, NULL);
+  if (server->backend == NULL) {
     wlr_log(WLR_ERROR, "could not start backend");
     return 1;
   }
 
-  server.renderer = wlr_backend_get_renderer(server.backend);
-  assert(server.renderer);
-  server.data_device_manager =
-    wlr_data_device_manager_create(server.wl_display);
-  wlr_renderer_init_wl_display(server.renderer, server.wl_display);
-  server.desktop = phoc_desktop_new (&server, server.config);
-  server.input = input_create(&server, server.config);
+  server->renderer = wlr_backend_get_renderer(server->backend);
+  assert(server->renderer);
+  server->data_device_manager =
+    wlr_data_device_manager_create(server->wl_display);
+  wlr_renderer_init_wl_display(server->renderer, server->wl_display);
+  server->desktop = phoc_desktop_new (&server-> server->config);
+  server->input = input_create(&server-> server->config);
 
-  const char *socket = wl_display_add_socket_auto(server.wl_display);
+  const char *socket = wl_display_add_socket_auto(server->wl_display);
   if (!socket) {
     wlr_log_errno(WLR_ERROR, "Unable to open wayland socket");
-    wlr_backend_destroy(server.backend);
+    wlr_backend_destroy(server->backend);
     return 1;
   }
 
   wlr_log(WLR_INFO, "Running compositor on wayland display '%s'", socket);
   setenv("_WAYLAND_DISPLAY", socket, true);
 
-  if (!wlr_backend_start(server.backend)) {
+  if (!wlr_backend_start(server->backend)) {
     wlr_log(WLR_ERROR, "Failed to start backend");
-    wlr_backend_destroy(server.backend);
-    wl_display_destroy(server.wl_display);
+    wlr_backend_destroy(server->backend);
+    wl_display_destroy(server->wl_display);
     return 1;
   }
 
   setenv("WAYLAND_DISPLAY", socket, true);
 #ifdef PHOC_XWAYLAND
-  if (server.desktop->xwayland != NULL) {
+  if (server->desktop->xwayland != NULL) {
     struct roots_seat *xwayland_seat =
-      input_get_seat(server.input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
-    wlr_xwayland_set_seat(server.desktop->xwayland, xwayland_seat->seat);
+      input_get_seat(server->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
+    wlr_xwayland_set_seat(server->desktop->xwayland, xwayland_seat->seat);
   }
 #endif
 
-  phoc_wayland_init (&server);
-  if (server.config->startup_cmd)
-    phoc_startup_cmd (&server);
+  phoc_wayland_init (server);
+  if (server->config->startup_cmd)
+    phoc_startup_cmd (server);
 
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
@@ -210,10 +210,10 @@ main(int argc, char **argv)
 #ifdef PHOC_XWAYLAND
   // We need to shutdown Xwayland before disconnecting all clients, otherwise
   // wlroots will restart it automatically.
-  wlr_xwayland_destroy(server.desktop->xwayland);
+  wlr_xwayland_destroy(server->desktop->xwayland);
 #endif
-  wl_display_destroy_clients(server.wl_display);
-  wl_display_destroy(server.wl_display);
-  g_object_unref (server.desktop);
+  wl_display_destroy_clients(server->wl_display);
+  wl_display_destroy(server->wl_display);
+  g_object_unref (server->desktop);
   return 0;
 }

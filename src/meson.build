@@ -12,6 +12,7 @@ sources = [
   'phosh.c',
   'render.c',
   'seat.c',
+  'server.c',
   'switch.c',
   'text_input.c',
   'view.c',
