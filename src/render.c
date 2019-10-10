@@ -274,7 +274,7 @@ void output_render(struct roots_output *output) {
 		// During normal rendering the xwayland window tree isn't traversed
 		// because all windows are rendered. Here we only want to render
 		// the fullscreen window's children so we have to traverse the tree.
-#if WLR_HAS_XWAYLAND
+#ifdef PHOC_XWAYLAND
 		if (view->type == ROOTS_XWAYLAND_VIEW) {
 			struct roots_xwayland_surface *xwayland_surface =
 				roots_xwayland_surface_from_view(view);
