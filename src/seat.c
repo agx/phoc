@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-seat"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <libinput.h>
@@ -17,7 +19,6 @@
 #include <wlr/types/wlr_tablet_v2.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "cursor.h"
 #include "input.h"
 #include "keyboard.h"

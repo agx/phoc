@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-xwayland"
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -9,7 +11,6 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/util/log.h>
 #include <wlr/xwayland.h>
-#include "config.h"
 #include "server.h"
 #include "view.h"
 

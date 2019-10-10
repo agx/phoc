@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-input"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <stdlib.h>
@@ -10,7 +12,6 @@
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/util/log.h>
 #include <wlr/xcursor.h>
-#include "config.h"
 #ifdef PHOC_XWAYLAND
 #include <wlr/xwayland.h>
 #endif

@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-xdg-shell"
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -8,7 +10,6 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"

@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-layer-shell"
 
+#include "config.h"
+
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
 #endif
@@ -14,7 +16,6 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "desktop.h"
 #include "layers.h"
 #include "output.h"

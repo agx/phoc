@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-view"
 
+#include "config.h"
+
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #endif

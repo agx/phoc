@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-cursor"
 
+#include "config.h"
+
 #define _XOPEN_SOURCE 700
 #include <assert.h>
 #include <math.h>
@@ -10,7 +12,6 @@
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
 #include <linux/input-event-codes.h>
-#include "config.h"
 #include "cursor.h"
 #include "desktop.h"
 #include "view.h"

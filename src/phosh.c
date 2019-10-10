@@ -6,6 +6,8 @@
 
 #define G_LOG_DOMAIN "phoc-phosh"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <stdlib.h>
@@ -15,7 +17,6 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/util/log.h>
 #include <phosh-private-protocol.h>
-#include "config.h"
 #include "server.h"
 #include "desktop.h"
 #include "phosh.h"

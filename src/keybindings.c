@@ -6,6 +6,7 @@
  * @Title: PhocKeybindings
  * @Summary: Handled keybindings stored in gsettings
  */
+#include "config.h"
 #include "keybindings.h"
 #include "seat.h"
 

@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <stdlib.h>
@@ -14,7 +16,6 @@
 #include <wlr/config.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "settings.h"
 #include "server.h"
 

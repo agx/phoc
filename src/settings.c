@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-settings"
 
+#include "config.h"
+
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -14,7 +16,6 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "settings.h"
 #include "ini.h"
 #include "input.h"

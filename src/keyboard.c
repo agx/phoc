@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-keyboard"
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,7 +13,6 @@
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
-#include "config.h"
 #include "input.h"
 #include "keyboard.h"
 #include "seat.h"

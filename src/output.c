@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-output"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <stdbool.h>
@@ -14,7 +16,6 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
-#include "config.h"
 #include "settings.h"
 #include "layers.h"
 #include "output.h"
