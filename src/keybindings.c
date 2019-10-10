@@ -530,6 +530,8 @@ phoc_keybindings_constructed (GObject *object)
 		       "switch-applications", handle_cycle_windows);
   phoc_add_keybinding (self, self->settings,
 		       "unmaximize", handle_unmaximize);
+
+  G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
 }
 
 
