@@ -52,7 +52,7 @@ void output_drag_icons_for_each_surface(struct roots_output *output,
 void output_layer_for_each_surface(struct roots_output *output,
 	struct wl_list *layer_surfaces, roots_surface_iterator_func_t iterator,
 	void *user_data);
-#if WLR_HAS_XWAYLAND
+#ifdef PHOC_XWAYLAND
 struct wlr_xwayland_surface;
 void output_xwayland_children_for_each_surface(
 	struct roots_output *output, struct wlr_xwayland_surface *surface,
