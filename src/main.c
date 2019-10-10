@@ -158,20 +158,8 @@ main(int argc, char **argv)
   server = phoc_server_get_default ();
 
   server->config = roots_config_create_from_args(argc, argv);
-  server->wl_display = wl_display_create();
-  assert(server->config && server->wl_display);
+  assert(server->config);
 
-  server->backend = wlr_backend_autocreate(server->wl_display, NULL);
-  if (server->backend == NULL) {
-    wlr_log(WLR_ERROR, "could not start backend");
-    return 1;
-  }
-
-  server->renderer = wlr_backend_get_renderer(server->backend);
-  assert(server->renderer);
-  server->data_device_manager =
-    wlr_data_device_manager_create(server->wl_display);
-  wlr_renderer_init_wl_display(server->renderer, server->wl_display);
   server->desktop = phoc_desktop_new (server->config);
   server->input = input_create(server->config);
 
@@ -208,13 +196,7 @@ main(int argc, char **argv)
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
   g_main_loop_unref (loop);
-#ifdef PHOC_XWAYLAND
-  // We need to shutdown Xwayland before disconnecting all clients, otherwise
-  // wlroots will restart it automatically.
-  wlr_xwayland_destroy(server->desktop->xwayland);
-#endif
-  wl_display_destroy_clients(server->wl_display);
-  wl_display_destroy(server->wl_display);
-  g_object_unref (server->desktop);
+  g_object_unref (server);
+
   return 0;
 }
