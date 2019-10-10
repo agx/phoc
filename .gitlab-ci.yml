@@ -56,6 +56,7 @@ build-with-xwayland-alpinelinux-edge:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
   <<: *build
+  allow_failure: true
 
 build-without-xwayland-alpinelinux-edge:
   stage: build
@@ -67,6 +68,7 @@ build-without-xwayland-alpinelinux-edge:
      BUILD_ARGS: -Dxwayland=disabled
   <<: *tags
   <<: *build
+  allow_failure: true
 
 package-deb-with-wlroots:
   <<: *tags
