@@ -5,7 +5,7 @@ stages:
 variables:
   DEPS: build-essential git
   ALPINE_EDGE_DEPS: |
-        git meson ninja gobject-introspection-dev
+        git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
 
 .tags: &tags
