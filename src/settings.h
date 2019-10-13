@@ -38,19 +38,6 @@ struct roots_device_config {
 	struct wl_list link;
 };
 
-struct roots_keyboard_config {
-	char *name;
-	char *seat;
-	uint32_t meta_key;
-	char *rules;
-	char *model;
-	char *layout;
-	char *variant;
-	char *options;
-	int repeat_rate, repeat_delay;
-	struct wl_list link;
-};
-
 struct roots_cursor_config {
 	char *seat;
 	char *mapped_output;
@@ -76,7 +63,6 @@ struct roots_config {
 
 	struct wl_list outputs;
 	struct wl_list devices;
-	struct wl_list keyboards;
 	struct wl_list cursors;
 	struct wl_list switches;
 

@@ -13,11 +13,70 @@
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
-#include "input.h"
 #include "keyboard.h"
 #include "seat.h"
 
+#include <glib.h>
+#include <glib/gprintf.h>
+
+#define KEYBOARD_DEFAULT_XKB_RULES "evdev";
+#define KEYBOARD_DEFAULT_XKB_MODEL "pc105";
+
+enum {
+  PROP_0,
+  PROP_DEVICE,
+  PROP_SEAT,
+  PROP_LAST_PROP,
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
 G_DEFINE_TYPE(PhocKeyboard, phoc_keyboard, G_TYPE_OBJECT);
+
+static void
+phoc_keyboard_set_property (GObject     *object,
+                            guint         property_id,
+                            const GValue *value,
+                            GParamSpec   *pspec)
+{
+  PhocKeyboard *self = PHOC_KEYBOARD (object);
+
+  switch (property_id) {
+  case PROP_DEVICE:
+    self->device = g_value_get_pointer (value);
+    self->device->data = self;
+    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DEVICE]);
+    break;
+  case PROP_SEAT:
+    self->seat = g_value_get_pointer (value);
+    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SEAT]);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_keyboard_get_property (GObject    *object,
+                            guint       property_id,
+                            GValue     *value,
+                            GParamSpec *pspec)
+{
+  PhocKeyboard *self = PHOC_KEYBOARD (object);
+
+  switch (property_id) {
+  case PROP_DEVICE:
+    g_value_set_pointer (value, self->device);
+    break;
+  case PROP_SEAT:
+    g_value_set_pointer (value, self->seat);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
 
 static ssize_t
 pressed_keysyms_index(xkb_keysym_t *pressed_keysyms,
@@ -252,123 +311,239 @@ phoc_keyboard_handle_modifiers(PhocKeyboard *self)
 {
   struct wlr_seat *seat = self->seat->seat;
   wlr_seat_set_keyboard(seat, self->device);
-  wlr_seat_keyboard_notify_modifiers(seat,
-                                     &self->device->keyboard->modifiers);
+  wlr_seat_keyboard_notify_modifiers(seat, &self->device->keyboard->modifiers);
+}
+
+
+static void
+set_fallback_keymap (PhocKeyboard *self)
+{
+  struct xkb_rule_names rules = { 0 };
+  struct xkb_context *context;
+
+  rules.rules = KEYBOARD_DEFAULT_XKB_RULES;
+  rules.model = KEYBOARD_DEFAULT_XKB_MODEL;
+  rules.layout = "us";
+  rules.variant = "";
+  rules.options = "";
+
+  context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
+  if (context == NULL) {
+       return;
+  }
+
+  xkb_keymap_unref (self->keymap);
+  self->keymap = xkb_keymap_new_from_names (context, &rules,
+                                            XKB_KEYMAP_COMPILE_NO_FLAGS);
+  xkb_context_unref (context);
+
+  g_return_if_fail (self->device);
+  wlr_keyboard_set_keymap(self->device->keyboard, self->keymap);
+}
+
+
+static void
+set_xkb_keymap (PhocKeyboard *self, const gchar *layout, const gchar *variant, const gchar *options)
+{
+  struct xkb_rule_names rules = { 0 };
+  struct xkb_context *context = NULL;
+  struct xkb_keymap *keymap = NULL;
+
+  g_return_if_fail (self->device);
+  g_return_if_fail (self->device->keyboard);
+
+  rules.rules = KEYBOARD_DEFAULT_XKB_RULES;
+  rules.model = KEYBOARD_DEFAULT_XKB_MODEL;
+  rules.layout = layout;
+  rules.variant = variant;
+  rules.options = options;
+
+  context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+  if (context == NULL) {
+    g_warning ("Cannot create XKB context");
+    goto out;
+  }
+
+  keymap = xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
+  if (keymap == NULL) {
+    g_warning ("Cannot create XKB keymap");
+  }
+
+ out:
+  if (context)
+    xkb_context_unref(context);
+
+  if (keymap) {
+    xkb_keymap_unref (self->keymap);
+    self->keymap = keymap;
+  } else if (self->keymap == NULL) {
+    set_fallback_keymap (self);
+    return;
+  }
+
+  wlr_keyboard_set_keymap(self->device->keyboard, self->keymap);
+}
+
+
+static void
+on_input_setting_changed (PhocKeyboard *self,
+                             const gchar  *key,
+                             GSettings    *settings)
+{
+  g_auto(GStrv) xkb_options = NULL;
+  g_autoptr(GVariant) sources = NULL;
+  GVariantIter iter;
+  g_autofree gchar *id = NULL;
+  g_autofree gchar *type = NULL;
+  g_autofree gchar *xkb_options_string = NULL;
+  const gchar *layout = NULL;
+  const gchar *variant = NULL;
+
+  g_return_if_fail (PHOC_IS_KEYBOARD (self));
+  g_return_if_fail (G_IS_SETTINGS (settings));
+
+  g_debug ("Setting changed, reloading input settings");
+
+  sources = g_settings_get_value(settings, "sources");
+
+  g_variant_iter_init (&iter, sources);
+  g_variant_iter_next (&iter, "(ss)", &type, &id);
+
+  if (g_strcmp0 (type, "xkb")) {
+    g_debug ("Not a xkb layout: '%s' - ignoring", id);
+    return;
+  }
+
+  xkb_options = g_settings_get_strv (settings, "xkb-options");
+  if (xkb_options) {
+    xkb_options_string = g_strjoinv (",", xkb_options);
+    g_debug ("Setting options %s", xkb_options_string);
+  }
+
+  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, id,
+                                       NULL, NULL, &layout, &variant)) {
+    g_debug ("Failed to get layout info for %s", id);
+    return;
+  }
+  g_debug ("Switching to layout %s %s", layout, variant);
+
+  set_xkb_keymap (self, layout, variant, xkb_options_string);
 }
 
 static void
-keyboard_config_merge(struct roots_keyboard_config *config,
-                      struct roots_keyboard_config *fallback)
+on_keyboard_setting_changed (PhocKeyboard *self,
+                             const gchar  *key,
+                             GSettings    *settings)
 {
-  if (fallback == NULL) {
-    return;
+  gboolean repeat;
+  gint rate = 0, delay = 0;
+
+  g_return_if_fail (PHOC_IS_KEYBOARD (self));
+  g_return_if_fail (G_IS_SETTINGS (settings));
+
+  repeat = g_settings_get_boolean (self->keyboard_settings, "repeat");
+  if (repeat) {
+    guint interval = g_settings_get_uint (self->keyboard_settings, "repeat-interval");
+
+    /* The setting is in the milliseconds between keys. "rate" is the number
+     * of keys per second. */
+    if (interval > 0)
+      rate = (1000 / interval);
+    else
+      rate = 0;
+
+    delay = g_settings_get_uint (self->keyboard_settings, "delay");
   }
-  if (config->rules == NULL) {
-    config->rules = fallback->rules;
-  }
-  if (config->model == NULL) {
-    config->model = fallback->model;
-  }
-  if (config->layout == NULL) {
-    config->layout = fallback->layout;
-  }
-  if (config->variant == NULL) {
-    config->variant = fallback->variant;
-  }
-  if (config->options == NULL) {
-    config->options = fallback->options;
-  }
-  if (config->meta_key == 0) {
-    config->meta_key = fallback->meta_key;
-  }
-  if (config->name == NULL) {
-    config->name = fallback->name;
-  }
-  if (config->repeat_rate <= 0) {
-    config->repeat_rate = fallback->repeat_rate;
-  }
-  if (config->repeat_delay <= 0) {
-    config->repeat_delay = fallback->repeat_delay;
-  }
+
+  g_debug ("Setting repeat rate to %d, delay %d", rate, delay);
+  wlr_keyboard_set_repeat_info(self->device->keyboard, rate, delay);
 }
 
-PhocKeyboard *
-phoc_keyboard_create(struct wlr_input_device *device,
-                     struct roots_input *input)
+
+static void
+phoc_keyboard_dispose(GObject *object)
 {
-  PhocKeyboard *keyboard = phoc_keyboard_new ();
+  PhocKeyboard *self = PHOC_KEYBOARD (object);
 
-  device->data = keyboard;
-  keyboard->device = device;
-  keyboard->input = input;
+  g_clear_pointer (&self->input_settings, g_object_unref);
+  g_clear_pointer (&self->keyboard_settings, g_object_unref);
+  g_clear_pointer (&self->xkbinfo, g_object_unref);
 
-  struct roots_keyboard_config *config =
-    calloc(1, sizeof(struct roots_keyboard_config));
-  if (config == NULL) {
-    free(keyboard);
-    return NULL;
-  }
-  keyboard_config_merge(config, roots_config_get_keyboard(input->config, device));
-  keyboard_config_merge(config, roots_config_get_keyboard(input->config, NULL));
-
-  struct roots_keyboard_config env_config = {
-                                             .rules = getenv("XKB_DEFAULT_RULES"),
-                                             .model = getenv("XKB_DEFAULT_MODEL"),
-                                             .layout = getenv("XKB_DEFAULT_LAYOUT"),
-                                             .variant = getenv("XKB_DEFAULT_VARIANT"),
-                                             .options = getenv("XKB_DEFAULT_OPTIONS"),
-  };
-  keyboard_config_merge(config, &env_config);
-  keyboard->config = config;
-
-  struct xkb_rule_names rules = { 0 };
-  rules.rules = config->rules;
-  rules.model = config->model;
-  rules.layout = config->layout;
-  rules.variant = config->variant;
-  rules.options = config->options;
-  struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-  if (context == NULL) {
-    wlr_log(WLR_ERROR, "Cannot create XKB context");
-    return NULL;
-  }
-
-  struct xkb_keymap *keymap = xkb_map_new_from_names(context, &rules,
-                                                     XKB_KEYMAP_COMPILE_NO_FLAGS);
-  if (keymap == NULL) {
-    xkb_context_unref(context);
-    wlr_log(WLR_ERROR, "Cannot create XKB keymap");
-    return NULL;
-  }
-
-  wlr_keyboard_set_keymap(device->keyboard, keymap);
-  xkb_keymap_unref(keymap);
-  xkb_context_unref(context);
-
-  int repeat_rate = (config->repeat_rate > 0) ? config->repeat_rate : 25;
-  int repeat_delay = (config->repeat_delay > 0) ? config->repeat_delay : 600;
-  wlr_keyboard_set_repeat_info(device->keyboard, repeat_rate, repeat_delay);
-
-  return keyboard;
+  G_OBJECT_CLASS (phoc_keyboard_parent_class)->dispose (object);
 }
+
 
 static void
 phoc_keyboard_finalize(GObject *object)
 {
   PhocKeyboard *self = PHOC_KEYBOARD (object);
 
+  xkb_keymap_unref (self->keymap);
+  self->keymap = NULL;
+
   wl_list_remove(&self->link);
-  free(self->config);
 
   G_OBJECT_CLASS (phoc_keyboard_parent_class)->finalize (object);
 }
+
+
+static void
+phoc_keyboard_constructed (GObject *object)
+{
+  PhocKeyboard *self = PHOC_KEYBOARD (object);
+
+  self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
+  self->keyboard_settings = g_settings_new (
+    "org.gnome.desktop.peripherals.keyboard");
+  self->meta_key = WLR_MODIFIER_LOGO;
+
+  set_fallback_keymap (self);
+  self->xkbinfo = gnome_xkb_info_new ();
+
+  g_object_connect (self->input_settings,
+    "swapped-signal::changed::sources", G_CALLBACK (on_input_setting_changed), self,
+    "swapped-signal::changed::xkb-options", G_CALLBACK (on_input_setting_changed), self,
+    NULL);
+  on_input_setting_changed (self, NULL, self->input_settings);
+
+  g_object_connect (self->keyboard_settings,
+    "swapped-signal::changed::repeat", G_CALLBACK (on_keyboard_setting_changed), self,
+    "swapped-signal::changed::repeat-interval", G_CALLBACK (on_keyboard_setting_changed), self,
+    "swapped-signal::changed::delay", G_CALLBACK (on_keyboard_setting_changed), self,
+    NULL);
+  on_keyboard_setting_changed (self, NULL, self->keyboard_settings);
+
+  G_OBJECT_CLASS (phoc_keyboard_parent_class)->constructed (object);
+}
+
 
 static void
 phoc_keyboard_class_init (PhocKeyboardClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
 
+  object_class->set_property = phoc_keyboard_set_property;
+  object_class->get_property = phoc_keyboard_get_property;
+
+  object_class->constructed = phoc_keyboard_constructed;
+  object_class->dispose = phoc_keyboard_dispose;
   object_class->finalize = phoc_keyboard_finalize;
+
+  props[PROP_DEVICE] =
+    g_param_spec_pointer (
+      "device",
+      "Device",
+      "The device object",
+      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  props[PROP_SEAT] =
+    g_param_spec_pointer (
+      "seat",
+      "Seat",
+      "The seat this keyboard belongs to",
+      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 
 static void
@@ -377,7 +552,10 @@ phoc_keyboard_init (PhocKeyboard *self)
 }
 
 PhocKeyboard *
-phoc_keyboard_new (void)
+phoc_keyboard_new (struct wlr_input_device *device, struct roots_seat *seat)
 {
-  return g_object_new (PHOC_TYPE_KEYBOARD, NULL);
+  return g_object_new (PHOC_TYPE_KEYBOARD,
+                       "device", device,
+                       "seat", seat,
+                       NULL);
 }

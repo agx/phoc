@@ -20,7 +20,6 @@
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 #include "cursor.h"
-#include "input.h"
 #include "keyboard.h"
 #include "seat.h"
 #include "text_input.h"
@@ -843,16 +842,7 @@ static void handle_keyboard_destroy(struct wl_listener *listener, void *data) {
 static void seat_add_keyboard(struct roots_seat *seat,
 		struct wlr_input_device *device) {
 	assert(device->type == WLR_INPUT_DEVICE_KEYBOARD);
-	/* todo use constructor */
-	PhocKeyboard *keyboard =
-		phoc_keyboard_create(device, seat->input);
-	if (keyboard == NULL) {
-		wlr_log(WLR_ERROR, "could not allocate keyboard for seat");
-		return;
-	}
-
-	/* todo: accessor */
-	keyboard->seat = seat;
+	PhocKeyboard *keyboard = phoc_keyboard_new (device, seat);
 
 	wl_list_insert(&seat->keyboards, &keyboard->link);
 
@@ -1234,13 +1224,9 @@ void roots_seat_configure_xcursor(struct roots_seat *seat) {
 bool roots_seat_has_meta_pressed(struct roots_seat *seat) {
 	PhocKeyboard *keyboard;
 	wl_list_for_each(keyboard, &seat->keyboards, link) {
-		if (!keyboard->config->meta_key) {
-			continue;
-		}
-
 		uint32_t modifiers =
 			wlr_keyboard_get_modifiers(keyboard->device->keyboard);
-		if ((modifiers ^ keyboard->config->meta_key) == 0) {
+		if ((modifiers ^ keyboard->meta_key) == 0) {
 			return true;
 		}
 	}

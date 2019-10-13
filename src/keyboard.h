@@ -1,15 +1,16 @@
 #pragma once
 
-#include <xkbcommon/xkbcommon.h>
 #include "input.h"
+
+#include <gio/gio.h>
+#include <glib-object.h>
+#include <xkbcommon/xkbcommon.h>
 
 #define PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP 32
 
 #define PHOC_TYPE_KEYBOARD (phoc_keyboard_get_type())
 
 G_DECLARE_FINAL_TYPE (PhocKeyboard, phoc_keyboard, PHOC, KEYBOARD, GObject);
-
-struct roots_input;
 
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
@@ -22,20 +23,21 @@ struct _PhocKeyboard {
   struct wl_list link;
 
   /* private */
-  struct roots_input *input;
+  GSettings *input_settings;
+  GSettings *keyboard_settings;
+  struct xkb_keymap *keymap;
+  uint32_t meta_key;
+  GnomeXkbInfo *xkbinfo;
+
   struct roots_seat *seat;
   struct wlr_input_device *device;
-  struct roots_keyboard_config *config;
 
   xkb_keysym_t pressed_keysyms_translated[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
   xkb_keysym_t pressed_keysyms_raw[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
 };
 
-PhocKeyboard *phoc_keyboard_create(struct wlr_input_device *device,
-                                   struct roots_input *input);
-PhocKeyboard *phoc_keyboard_new (void);
-void          phoc_keyboard_destroy(PhocKeyboard *self);
+PhocKeyboard *phoc_keyboard_new (struct wlr_input_device *device,
+                                 struct roots_seat *seat);
 void          phoc_keyboard_handle_key(PhocKeyboard *self,
                                        struct wlr_event_keyboard_key *event);
 void          phoc_keyboard_handle_modifiers(PhocKeyboard *self);
-
