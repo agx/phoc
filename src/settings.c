@@ -18,7 +18,6 @@
 #include <wlr/util/log.h>
 #include "settings.h"
 #include "ini.h"
-#include "keybindings.h"
 
 static void usage(const char *name, int ret) {
 	fprintf(stderr,
