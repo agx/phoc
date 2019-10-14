@@ -1,3 +1,67 @@
+phoc (0.1.1) amber-phone; urgency=medium
+
+  [ Dorota Czaplejewicz ]
+  * text_input: Add asserts guarding focus state
+  * Clear pending surface before setting it to a new value
+  * text_input: Eliminate excessive messages
+  * layer shell: Adjust position of osk depending on presence of the prompter
+
+  [ Guido Günther ]
+  * gitlab-ci: Disable the deb build for the moment
+  * build: Delay config file creation
+  * build: print detected wlroots version
+  * desktop: Include config.h early
+  * Use old gamma control protocol if available
+  * debian: Allow to build against 0.7.0
+  * switch: Drop switch handling
+  * keyboard: Reformat keyboard_execute_binding
+  * Add PhocKeybindings
+  * Use PhocKeybindings
+  * Drop old bindings related code
+  * gitlab-ci: De-duplicate build logic
+  * gitlab-ci: Specify the docker image to use
+  * gitlab-ci: Build against Debian Bullseye as well
+  * keybindings: bind toggle-maximized too
+  * view_arrange_maximized: Drop unused variable
+  * keybindings: Pass settings to add_keybindings
+  * view: Drop view_cycle_alpha
+  * gitlab-ci: Allow alpine linux build to fail but not break ci
+  * Include config.h first in all .c files
+  * render: Use PHOC_XWAYLAND instead of WLR_HAS_XWAYLAND
+  * outpout: Use PHOC_XWAYLAND instead of WLR_HAS_XWAYLAND
+  * Update wlroots submodule
+  * server: Drop redundant 'extern struct'
+  * server: Turn into a GObject
+  * Use the PhocServer singleton
+  * server: Move server init/deinit into constructor/dispose
+  * keybindings: Fix missing chain-up in constructed()
+  * debian: Add gbp.conf
+
+  [ Sebastian Krzyszkowiak ]
+  * layer_surface_at: Fix the order of surface processing to match rendering
+  * seat: Call roots_input_method_relay_set_focus for layer-surfaces
+  * layer-shell: Elevate layer of OSK when same or higher layer is focused
+  * meson: Don't add wlroots as subproject when embed-wlroots is disabled
+  * xdg-shells: Block interactive resize when in auto-maximizing mode
+  * layer-shell: Update focus order in arrange_layers
+  * phosh: Fix rejection of multiple clients binding to phosh private protocol
+  * seat: Handle unfocusing layer-surface with no other focusable view
+  * layer-shell: Handle subsurfaces and nested popups
+  * desktop_surface_at: Set a "view" argument in case of fullscreen surface
+  * Clean up desktop_surface_at calls
+
+  [ Simon Ser ]
+  * Remove orbital screenshooter
+  * layer-shell: Don't give focus to unmapped layer surfaces
+
+  [ Aleksis ]
+  * layer-shell: Remove unused "configured" variable
+
+  [ Bart Ribbers ]
+  * gitlab-ci: Build and unit test for Alpine Linux edge as well
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Mon, 14 Oct 2019 23:08:40 +0200
+
 phoc (0.1.0) purple; urgency=medium
 
   [ Guido Günther ]
