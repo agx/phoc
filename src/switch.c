@@ -1,14 +1,16 @@
 #define G_LOG_DOMAIN "phoc-switch"
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <wlr/util/log.h>
-#include "config.h"
-#include "bindings.h"
+#include "switch.h"
 
 void roots_switch_handle_toggle(struct roots_switch *switch_device,
 		struct wlr_event_switch_toggle *event) {
+	PhocServer *server = phoc_server_get_default ();
 	struct wl_list *bound_switches =
-		&switch_device->seat->input->server->config->switches;
+		&server->config->switches;
 	struct roots_switch_config *sc;
 	wl_list_for_each(sc, bound_switches, link) {
 		if ((sc->name != NULL && strcmp(event->device->name, sc->name) != 0) &&
@@ -19,7 +21,6 @@ void roots_switch_handle_toggle(struct roots_switch *switch_device,
 				event->switch_state != sc->switch_state) {
 			continue;
 		}
-		execute_binding_command(switch_device->seat,
-			switch_device->seat->input, sc->command);
+		g_warning ("Unhandled switch event %s", sc->name);
 	}
 }

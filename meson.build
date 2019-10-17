@@ -1,5 +1,5 @@
 project('phoc', 'c',
-          version: '0.1.0',
+          version: '0.1.1',
           license: 'GPLv3+',
     meson_version: '>= 0.47.0',
   default_options: [
@@ -37,18 +37,20 @@ math           = cc.find_library('m')
 
 embed_wlroots = get_option('embed-wlroots')
 
-# Try first to find wlroots as a subproject, then as a system dependency
-wlroots_proj = subproject(
+if not embed_wlroots.disabled()
+   # Try first to find wlroots as a subproject, then as a system dependency
+   wlroots_proj = subproject(
         'wlroots',
         default_options: ['rootston=false', 'examples=false'],
         required: false,
-)
+   )
 
-if embed_wlroots.enabled() and not wlroots_proj.found()
-   error('Wlroots subproject not found but enabled')
+   if embed_wlroots.enabled() and not wlroots_proj.found()
+        error('Wlroots subproject not found but enabled')
+   endif
 endif
 
-if wlroots_proj.found() and not embed_wlroots.disabled()
+if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots = wlroots_proj.get_variable('wlroots')
         wlroots_conf = wlroots_proj.get_variable('conf_data')
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
@@ -62,15 +64,12 @@ if get_option('xwayland').enabled() and not wlroots_has_xwayland
 endif
 have_xwayland = get_option('xwayland').enabled()
 
-config_h = configuration_data()
-config_h.set_quoted('PHOC_VERSION', meson.project_version())
-config_h.set('PHOC_XWAYLAND', have_xwayland)
-
-configure_file(
-  input: 'config.h.in',
-  output: 'config.h',
-  configuration: config_h,
-)
+wlroots_major_version = wlroots.version().split('.')[0]
+wlroots_minor_version = wlroots.version().split('.')[1]
+use_gamma_control = false
+if wlroots_major_version.to_int() == 0 and wlroots_minor_version.to_int() == 6
+  use_gamma_control = true
+endif
 
 global_c_args = []
 test_c_args = [
@@ -133,11 +132,25 @@ summary = [
         'phoc @0@'.format(meson.project_version()),
         '',
         '           xwayland: @0@'.format(have_xwayland),
-        ' wlroots subproject: @0@'.format(wlroots_proj.found()),
+        ' wlroots subproject: @0@'.format(not embed_wlroots.disabled() and wlroots_proj.found()),
+        '    wlroots version: @0@'.format(wlroots.version()),
+        '  use gamma control: @0@'.format(use_gamma_control),
         '--------------------------',
         ''
 ]
 message('\n'.join(summary))
+
+
+config_h = configuration_data()
+config_h.set_quoted('PHOC_VERSION', meson.project_version())
+config_h.set('PHOC_XWAYLAND', have_xwayland)
+config_h.set('PHOC_USE_GAMMA_CONTROL', use_gamma_control)
+
+configure_file(
+  input: 'config.h.in',
+  output: 'config.h',
+  configuration: config_h,
+)
 
 run_data = configuration_data()
 run_data.set('ABS_BUILDDIR', meson.current_build_dir())

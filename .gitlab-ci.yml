@@ -9,34 +9,71 @@ variables:
   tags:
     - librem5
 
+.build: &build
+  script:
+    - export LC_ALL=C.UTF-8
+    - git submodule update --init
+    - meson . _build $BUILD_ARGS
+    - ninja -C _build
+    - ninja -C _build install
+
 before_script:
  - apt-get -y update
  - apt-get -y install $DEPS
  - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots apt-get -y build-dep .
 
-build-with-xwayland:
+build-with-xwayland-debian-buster:
   stage: build
+  image: debian:buster
+  variables:
+     BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
-  script:
-    - export LC_ALL=C.UTF-8
-    - git submodule update --init
-    - meson . _build -Dxwayland=enabled
-    - ninja -C _build
-    - ninja -C _build install
+  <<: *build
 
-build-without-xwayland:
+build-with-xwayland-debian-bullseye:
   stage: build
+  image: debian:bullseye
+  variables:
+     BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
-  script:
-    - export LC_ALL=C.UTF-8
-    - git submodule update --init
-    - meson . _build -Dxwayland=disabled
-    - ninja -C _build
-    - ninja -C _build install
+  <<: *build
+
+build-without-xwayland-debian-buster:
+  stage: build
+  image: debian:buster
+  variables:
+     BUILD_ARGS: -Dxwayland=disabled
+  <<: *tags
+  <<: *build
+
+build-with-xwayland-alpinelinux-edge:
+  stage: build
+  image: alpine:edge
+  before_script:
+    - apk -q add alpine-sdk
+    - apk -q add git meson ninja gobject-introspection-dev libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+  variables:
+     BUILD_ARGS: -Dxwayland=enabled
+  <<: *tags
+  <<: *build
+  allow_failure: true
+
+build-without-xwayland-alpinelinux-edge:
+  stage: build
+  image: alpine:edge
+  before_script:
+    - apk -q add alpine-sdk
+    - apk -q add git meson ninja gobject-introspection-dev libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+  variables:
+     BUILD_ARGS: -Dxwayland=disabled
+  <<: *tags
+  <<: *build
+  allow_failure: true
 
 package-deb-with-wlroots:
   <<: *tags
   stage: package
+  image: debian:buster
   script:
     - git submodule update --init
     - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots dpkg-buildpackage -uc -us
@@ -50,6 +87,7 @@ package-deb-with-wlroots:
 package-deb-without-wlroots:
   <<: *tags
   stage: package
+  image: debian:buster
   before_script:
     - echo "deb http://deb.debian.org/debian/ experimental main" > /etc/apt/sources.list.d/experimental.list
     - apt-get -y update

@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-render"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <stdbool.h>
@@ -187,7 +189,7 @@ static void surface_send_frame_done_iterator(struct roots_output *output,
 void output_render(struct roots_output *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	PhocDesktop *desktop = output->desktop;
-	struct phoc_server *server = desktop->server;
+	PhocServer *server = phoc_server_get_default ();
 	struct wlr_renderer *renderer =
 		wlr_backend_get_renderer(wlr_output->backend);
 	assert(renderer);
@@ -272,7 +274,7 @@ void output_render(struct roots_output *output) {
 		// During normal rendering the xwayland window tree isn't traversed
 		// because all windows are rendered. Here we only want to render
 		// the fullscreen window's children so we have to traverse the tree.
-#if WLR_HAS_XWAYLAND
+#ifdef PHOC_XWAYLAND
 		if (view->type == ROOTS_XWAYLAND_VIEW) {
 			struct roots_xwayland_surface *xwayland_surface =
 				roots_xwayland_surface_from_view(view);

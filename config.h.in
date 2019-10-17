@@ -7,3 +7,4 @@
 
 #mesondefine PHOC_VERSION
 #mesondefine PHOC_XWAYLAND
+#mesondefine PHOC_USE_GAMMA_CONTROL

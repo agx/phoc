@@ -1,9 +1,10 @@
 #define G_LOG_DOMAIN "phoc-text-input"
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "seat.h"
 #include "text_input.h"
 
@@ -23,6 +24,7 @@ static struct roots_text_input *relay_get_focused_text_input(
 	struct roots_text_input *text_input = NULL;
 	wl_list_for_each(text_input, &relay->text_inputs, link) {
 		if (text_input->input->focused_surface) {
+			assert(text_input->pending_focused_surface == NULL);
 			return text_input;
 		}
 	}
@@ -58,18 +60,20 @@ static void handle_im_commit(struct wl_listener *listener, void *data) {
 	wlr_text_input_v3_send_done(text_input->input);
 }
 
-static void text_input_set_pending_focused_surface(
-		struct roots_text_input *text_input, struct wlr_surface *surface) {
-	text_input->pending_focused_surface = surface;
-	wl_signal_add(&surface->events.destroy,
-		&text_input->pending_focused_surface_destroy);
-}
 
 static void text_input_clear_pending_focused_surface(
 		struct roots_text_input *text_input) {
 	wl_list_remove(&text_input->pending_focused_surface_destroy.link);
 	wl_list_init(&text_input->pending_focused_surface_destroy.link);
 	text_input->pending_focused_surface = NULL;
+}
+
+static void text_input_set_pending_focused_surface(
+		struct roots_text_input *text_input, struct wlr_surface *surface) {
+	text_input_clear_pending_focused_surface(text_input);
+	text_input->pending_focused_surface = surface;
+	wl_signal_add(&surface->events.destroy,
+		&text_input->pending_focused_surface_destroy);
 }
 
 static void handle_im_destroy(struct wl_listener *listener, void *data) {
@@ -82,6 +86,7 @@ static void handle_im_destroy(struct wl_listener *listener, void *data) {
 	if (text_input) {
 		// keyboard focus is still there, so keep the surface at hand in case
 		// the input method returns
+		assert(text_input->pending_focused_surface == NULL);
 		text_input_set_pending_focused_surface(text_input,
 			text_input->input->focused_surface);
 		wlr_text_input_v3_send_leave(text_input->input);
@@ -272,16 +277,17 @@ static void relay_handle_input_method(struct wl_listener *listener,
 
 void roots_input_method_relay_init(struct roots_seat *seat,
 		struct roots_input_method_relay *relay) {
+        PhocServer *server = phoc_server_get_default ();
 	relay->seat = seat;
 	wl_list_init(&relay->text_inputs);
 
 	relay->text_input_new.notify = relay_handle_text_input;
-	wl_signal_add(&seat->input->server->desktop->text_input->events.text_input,
+	wl_signal_add(&server->desktop->text_input->events.text_input,
 		&relay->text_input_new);
 
 	relay->input_method_new.notify = relay_handle_input_method;
 	wl_signal_add(
-		&seat->input->server->desktop->input_method->events.input_method,
+		&server->desktop->input_method->events.input_method,
 		&relay->input_method_new);
 }
 
@@ -306,8 +312,10 @@ void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,
 		    && wl_resource_get_client(text_input->input->resource)
 		    == wl_resource_get_client(surface->resource)) {
 			if (relay->input_method) {
-				wlr_text_input_v3_send_enter(text_input->input, surface);
-			} else {
+				if (surface != text_input->input->focused_surface) {
+					wlr_text_input_v3_send_enter(text_input->input, surface);
+				}
+			} else if (surface != text_input->pending_focused_surface) {
 				text_input_set_pending_focused_surface(text_input, surface);
 			}
 		}

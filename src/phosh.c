@@ -6,6 +6,8 @@
 
 #define G_LOG_DOMAIN "phoc-phosh"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <stdlib.h>
@@ -15,7 +17,6 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/util/log.h>
 #include <phosh-private-protocol.h>
-#include "config.h"
 #include "server.h"
 #include "desktop.h"
 #include "phosh.h"
@@ -81,8 +82,9 @@ xdg_switcher_handle_raise_xdg_surfaces(struct wl_client *client,
     phosh_private_xdg_switcher_from_resource(resource);
   struct phosh_private *phosh = xdg_switcher->phosh;
   PhocDesktop *desktop = phosh->desktop;
+  PhocServer *server = phoc_server_get_default ();
   struct roots_view *view, *found_view = NULL;
-  struct roots_input *input = desktop->server->input;
+  struct roots_input *input = server->input;
   struct roots_seat *seat = input_last_active_seat(input);
 
   g_debug ("will raise view %s", app_id);
@@ -345,6 +347,7 @@ phosh_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
   if (phosh->resource) {
     wl_resource_post_error(resource, WL_DISPLAY_ERROR_INVALID_OBJECT,
 			   "Only a single client can bind to phosh's private protocol");
+    return;
   }
 
   /* FIXME: unsafe, needs client == shell->child.client */

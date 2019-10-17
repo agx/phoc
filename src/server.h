@@ -13,7 +13,17 @@
 #include "desktop.h"
 #include "input.h"
 
-struct phoc_server {
+G_BEGIN_DECLS
+
+#define PHOC_TYPE_SERVER (phoc_server_get_type())
+
+G_DECLARE_FINAL_TYPE (PhocServer, phoc_server, PHOC, SERVER, GObject);
+
+/* TODO: we keep the struct public due to heaps of direct access
+   which will be replaced by getters and setters over time */
+struct _PhocServer {
+  GObject parent;
+
   /* Phoc resources */
   struct roots_config *config;
   PhocDesktop *desktop;
@@ -30,4 +40,6 @@ struct phoc_server {
   struct wlr_data_device_manager *data_device_manager;
 };
 
-extern struct phoc_server server;
+PhocServer *phoc_server_get_default (void);
+
+G_END_DECLS

@@ -1,6 +1,8 @@
 #ifndef ROOTSTON_CONFIG_H
 #define ROOTSTON_CONFIG_H
 
+#include "keybindings.h"
+
 #include <xf86drmMode.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_switch.h>
@@ -33,14 +35,6 @@ struct roots_device_config {
 	char *mapped_output;
 	bool tap_enabled;
 	struct wlr_box *mapped_box;
-	struct wl_list link;
-};
-
-struct roots_binding_config {
-	uint32_t modifiers;
-	xkb_keysym_t *keysyms;
-	size_t keysyms_len;
-	char *command;
 	struct wl_list link;
 };
 
@@ -78,9 +72,10 @@ struct roots_config {
 	bool xwayland;
 	bool xwayland_lazy;
 
+	PhocKeybindings *keybindings;
+
 	struct wl_list outputs;
 	struct wl_list devices;
-	struct wl_list bindings;
 	struct wl_list keyboards;
 	struct wl_list cursors;
 	struct wl_list switches;

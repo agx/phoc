@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-output"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <stdbool.h>
@@ -14,7 +16,6 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
-#include "config.h"
 #include "settings.h"
 #include "layers.h"
 #include "output.h"
@@ -120,6 +121,24 @@ void output_surface_for_each_surface(struct roots_output *output,
 		output_for_each_surface_iterator, &data);
 }
 
+void output_xdg_surface_for_each_surface(struct roots_output *output,
+		struct wlr_xdg_surface *xdg_surface, double ox, double oy,
+		roots_surface_iterator_func_t iterator, void *user_data) {
+	struct surface_iterator_data data = {
+		.user_iterator = iterator,
+		.user_data = user_data,
+		.output = output,
+		.ox = ox,
+		.oy = oy,
+		.width = xdg_surface->surface->current.width,
+		.height = xdg_surface->surface->current.height,
+		.rotation = 0
+	};
+
+	wlr_xdg_surface_for_each_surface(xdg_surface,
+		output_for_each_surface_iterator, &data);
+}
+
 void output_view_for_each_surface(struct roots_output *output,
 		struct roots_view *view, roots_surface_iterator_func_t iterator,
 		void *user_data) {
@@ -189,7 +208,7 @@ static void output_layer_handle_surface(struct roots_output *output,
 		popup_sy = layer_surface->geo.y;
 		popup_sy += popup->popup->geometry.y - popup->geometry.y;
 
-		output_surface_for_each_surface(output, popup->surface,
+		output_xdg_surface_for_each_surface(output, popup,
 			popup_sx, popup_sy, iterator, user_data);
 	}
 }
@@ -236,6 +255,7 @@ void output_drag_icons_for_each_surface(struct roots_output *output,
 void output_for_each_surface(struct roots_output *output,
 		roots_surface_iterator_func_t iterator, void *user_data) {
 	PhocDesktop *desktop = output->desktop;
+	PhocServer *server = phoc_server_get_default ();
 
 	if (output->fullscreen_view != NULL) {
 		struct roots_view *view = output->fullscreen_view;
@@ -257,7 +277,7 @@ void output_for_each_surface(struct roots_output *output,
 		}
 	}
 
-	output_drag_icons_for_each_surface(output, desktop->server->input,
+	output_drag_icons_for_each_surface(output, server->input,
 		iterator, user_data);
 
 	size_t len = sizeof(output->layers) / sizeof(output->layers[0]);
@@ -617,7 +637,8 @@ void handle_new_output(struct wl_listener *listener, void *data) {
 	PhocDesktop *desktop = wl_container_of(listener, desktop,
 		new_output);
 	struct wlr_output *wlr_output = data;
-	struct roots_input *input = desktop->server->input;
+	PhocServer *server = phoc_server_get_default ();
+	struct roots_input *input = server->input;
 	struct roots_config *config = desktop->config;
 
 	wlr_log(WLR_DEBUG, "Output '%s' added", wlr_output->name);

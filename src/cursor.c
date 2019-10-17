@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-cursor"
 
+#include "config.h"
+
 #define _XOPEN_SOURCE 700
 #include <assert.h>
 #include <math.h>
@@ -10,7 +12,6 @@
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
 #include <linux/input-event-codes.h>
-#include "config.h"
 #include "cursor.h"
 #include "desktop.h"
 #include "view.h"
@@ -101,10 +102,11 @@ static void seat_view_deco_button(struct roots_seat_view *view, double sx,
 
 static void roots_passthrough_cursor(struct roots_cursor *cursor,
 		uint32_t time) {
+	PhocServer *server = phoc_server_get_default ();
 	double sx, sy;
 	struct roots_view *view = NULL;
 	struct roots_seat *seat = cursor->seat;
-	PhocDesktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = server->desktop;
 	struct wlr_surface *surface = desktop_surface_at(desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, &view);
 
@@ -235,8 +237,9 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 static void roots_cursor_press_button(struct roots_cursor *cursor,
 		struct wlr_input_device *device, uint32_t time, uint32_t button,
 		uint32_t state, double lx, double ly) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_seat *seat = cursor->seat;
-	PhocDesktop *desktop = seat->input->server->desktop;
+	PhocDesktop *desktop = server->desktop;
 
 	bool is_touch = device->type == WLR_INPUT_DEVICE_TOUCH;
 
@@ -304,6 +307,7 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 
 void roots_cursor_handle_motion(struct roots_cursor *cursor,
 		struct wlr_event_pointer_motion *event) {
+	PhocServer *server = phoc_server_get_default ();
 	double dx = event->delta_x;
 	double dy = event->delta_y;
 
@@ -311,7 +315,7 @@ void roots_cursor_handle_motion(struct roots_cursor *cursor,
 	double dy_unaccel = event->unaccel_dy;
 
 	wlr_relative_pointer_manager_v1_send_relative_motion(
-		cursor->seat->input->server->desktop->relative_pointer_manager,
+		server->desktop->relative_pointer_manager,
 		cursor->seat->seat, (uint64_t)event->time_msec * 1000, dx, dy,
 		dx_unaccel, dy_unaccel);
 
@@ -350,6 +354,7 @@ void roots_cursor_handle_motion(struct roots_cursor *cursor,
 
 void roots_cursor_handle_motion_absolute(struct roots_cursor *cursor,
 		struct wlr_event_pointer_motion_absolute *event) {
+	PhocServer *server = phoc_server_get_default ();
 	double lx, ly;
 	wlr_cursor_absolute_to_layout_coords(cursor->cursor, event->device, event->x,
 		event->y, &lx, &ly);
@@ -357,7 +362,7 @@ void roots_cursor_handle_motion_absolute(struct roots_cursor *cursor,
 	double dx = lx - cursor->cursor->x;
 	double dy = ly - cursor->cursor->y;
 	wlr_relative_pointer_manager_v1_send_relative_motion(
-		cursor->seat->input->server->desktop->relative_pointer_manager,
+		server->desktop->relative_pointer_manager,
 		cursor->seat->seat, (uint64_t)event->time_msec * 1000, dx, dy, dx, dy);
 
 	if (cursor->pointer_view) {
@@ -392,7 +397,8 @@ void roots_cursor_handle_frame(struct roots_cursor *cursor) {
 
 void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 		struct wlr_event_touch_down *event) {
-	PhocDesktop *desktop = cursor->seat->input->server->desktop;
+	PhocServer *server = phoc_server_get_default ();
+	PhocDesktop *desktop = server->desktop;
 	double lx, ly;
 	wlr_cursor_absolute_to_layout_coords(cursor->cursor, event->device,
 		event->x, event->y, &lx, &ly);
@@ -421,7 +427,8 @@ void roots_cursor_handle_touch_up(struct roots_cursor *cursor,
 
 void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 		struct wlr_event_touch_motion *event) {
-	PhocDesktop *desktop = cursor->seat->input->server->desktop;
+	PhocServer *server = phoc_server_get_default ();
+	PhocDesktop *desktop = server->desktop;
 	struct wlr_touch_point *point =
 		wlr_seat_touch_get_point(cursor->seat->seat, event->touch_id);
 	if (!point) {
@@ -514,6 +521,7 @@ void roots_cursor_handle_request_set_cursor(struct roots_cursor *cursor,
 
 void roots_cursor_handle_focus_change(struct roots_cursor *cursor,
 		struct wlr_seat_pointer_focus_change_event *event) {
+	PhocServer *server = phoc_server_get_default ();
 	double sx = event->sx;
 	double sy = event->sy;
 
@@ -525,18 +533,18 @@ void roots_cursor_handle_focus_change(struct roots_cursor *cursor,
 
 	roots_cursor_constrain(cursor,
 		wlr_pointer_constraints_v1_constraint_for_surface(
-			cursor->seat->input->server->desktop->pointer_constraints,
+			server->desktop->pointer_constraints,
 			event->new_surface, cursor->seat->seat),
 		sx, sy);
 }
 
 void roots_cursor_handle_constraint_commit(struct roots_cursor *cursor) {
-	PhocDesktop *desktop = cursor->seat->input->server->desktop;
+	PhocServer *server = phoc_server_get_default ();
+	PhocDesktop *desktop = server->desktop;
 
-	struct roots_view *view;
 	double sx, sy;
 	struct wlr_surface *surface = desktop_surface_at(desktop,
-			cursor->cursor->x, cursor->cursor->y, &sx, &sy, &view);
+			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 	// This should never happen but views move around right when they're
 	// created from (0, 0) to their actual coordinates.
 	if (surface != cursor->active_constraint->surface) {

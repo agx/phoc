@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <stdlib.h>
@@ -14,11 +16,8 @@
 #include <wlr/config.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "settings.h"
 #include "server.h"
-
-struct phoc_server server = { 0 };
 
 typedef struct {
   GSource source;
@@ -75,7 +74,7 @@ wayland_event_source_new (struct wl_display *display)
 }
 
 static void
-phoc_wayland_init (struct phoc_server *server)
+phoc_wayland_init (PhocServer *server)
 {
   GSource *wayland_event_source;
 
@@ -85,7 +84,7 @@ phoc_wayland_init (struct phoc_server *server)
 
 
 static gboolean
-phoc_startup_cmd_in_idle(struct phoc_server *server)
+phoc_startup_cmd_in_idle(PhocServer *server)
 {
   const char *cmd = server->config->startup_cmd;
   pid_t pid = fork();
@@ -103,7 +102,7 @@ phoc_startup_cmd_in_idle(struct phoc_server *server)
 
 
 static void
-phoc_startup_cmd (struct phoc_server *server)
+phoc_startup_cmd (PhocServer *server)
 {
   gint id;
 
@@ -151,68 +150,53 @@ int
 main(int argc, char **argv)
 {
   GMainLoop *loop;
+  PhocServer *server;
 
   setup_signals();
 
   wlr_log_init(WLR_DEBUG, log_glib);
-  server.config = roots_config_create_from_args(argc, argv);
-  server.wl_display = wl_display_create();
-  assert(server.config && server.wl_display);
+  server = phoc_server_get_default ();
 
-  server.backend = wlr_backend_autocreate(server.wl_display, NULL);
-  if (server.backend == NULL) {
-    wlr_log(WLR_ERROR, "could not start backend");
-    return 1;
-  }
+  server->config = roots_config_create_from_args(argc, argv);
+  assert(server->config);
 
-  server.renderer = wlr_backend_get_renderer(server.backend);
-  assert(server.renderer);
-  server.data_device_manager =
-    wlr_data_device_manager_create(server.wl_display);
-  wlr_renderer_init_wl_display(server.renderer, server.wl_display);
-  server.desktop = phoc_desktop_new (&server, server.config);
-  server.input = input_create(&server, server.config);
+  server->desktop = phoc_desktop_new (server->config);
+  server->input = input_create(server->config);
 
-  const char *socket = wl_display_add_socket_auto(server.wl_display);
+  const char *socket = wl_display_add_socket_auto(server->wl_display);
   if (!socket) {
     wlr_log_errno(WLR_ERROR, "Unable to open wayland socket");
-    wlr_backend_destroy(server.backend);
+    wlr_backend_destroy(server->backend);
     return 1;
   }
 
   wlr_log(WLR_INFO, "Running compositor on wayland display '%s'", socket);
   setenv("_WAYLAND_DISPLAY", socket, true);
 
-  if (!wlr_backend_start(server.backend)) {
+  if (!wlr_backend_start(server->backend)) {
     wlr_log(WLR_ERROR, "Failed to start backend");
-    wlr_backend_destroy(server.backend);
-    wl_display_destroy(server.wl_display);
+    wlr_backend_destroy(server->backend);
+    wl_display_destroy(server->wl_display);
     return 1;
   }
 
   setenv("WAYLAND_DISPLAY", socket, true);
 #ifdef PHOC_XWAYLAND
-  if (server.desktop->xwayland != NULL) {
+  if (server->desktop->xwayland != NULL) {
     struct roots_seat *xwayland_seat =
-      input_get_seat(server.input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
-    wlr_xwayland_set_seat(server.desktop->xwayland, xwayland_seat->seat);
+      input_get_seat(server->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
+    wlr_xwayland_set_seat(server->desktop->xwayland, xwayland_seat->seat);
   }
 #endif
 
-  phoc_wayland_init (&server);
-  if (server.config->startup_cmd)
-    phoc_startup_cmd (&server);
+  phoc_wayland_init (server);
+  if (server->config->startup_cmd)
+    phoc_startup_cmd (server);
 
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
   g_main_loop_unref (loop);
-#ifdef PHOC_XWAYLAND
-  // We need to shutdown Xwayland before disconnecting all clients, otherwise
-  // wlroots will restart it automatically.
-  wlr_xwayland_destroy(server.desktop->xwayland);
-#endif
-  wl_display_destroy_clients(server.wl_display);
-  wl_display_destroy(server.wl_display);
-  g_object_unref (server.desktop);
+  g_object_unref (server);
+
   return 0;
 }

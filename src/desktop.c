@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-desktop"
 
+#include "config.h"
+
 #define _POSIX_C_SOURCE 200112L
 #include <assert.h>
 #include <math.h>
@@ -12,7 +14,9 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_gamma_control.h>
+#ifdef PHOC_USE_GAMMA_CONTROL
+#  include <wlr/types/wlr_gamma_control.h>
+#endif
 #include <wlr/types/wlr_gtk_primary_selection.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle.h>
@@ -28,7 +32,6 @@
 #include <wlr/types/wlr_xdg_shell_v6.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "layers.h"
 #include "seat.h"
 #include "server.h"
@@ -39,7 +42,6 @@
 
 enum {
   PROP_0,
-  PROP_SERVER,
   PROP_CONFIG,
   PROP_LAST_PROP,
 };
@@ -57,10 +59,6 @@ phoc_desktop_set_property (GObject     *object,
   PhocDesktop *self = PHOC_DESKTOP (object);
 
   switch (property_id) {
-  case PROP_SERVER:
-    self->server = g_value_get_pointer (value);
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SERVER]);
-    break;
   case PROP_CONFIG:
     self->config = g_value_get_pointer (value);
     g_object_notify_by_pspec (G_OBJECT (self), props[PROP_CONFIG]);
@@ -81,9 +79,6 @@ phoc_desktop_get_property (GObject    *object,
   PhocDesktop *self = PHOC_DESKTOP (object);
 
   switch (property_id) {
-  case PROP_SERVER:
-    g_value_set_pointer (value, self->server);
-    break;
   case PROP_CONFIG:
     g_value_set_pointer (value, self->config);
     break;
@@ -160,8 +155,8 @@ static struct wlr_surface *layer_surface_at(struct roots_output *output,
 		struct wl_list *layer, double ox, double oy, double *sx, double *sy) {
 	struct roots_layer_surface *roots_surface;
 
-	wl_list_for_each(roots_surface, layer, link) {
-		if (roots_surface->layer_surface->current.exclusive_zone > 0) {
+	wl_list_for_each_reverse(roots_surface, layer, link) {
+		if (roots_surface->layer_surface->current.exclusive_zone <= 0) {
 			continue;
 		}
 
@@ -176,8 +171,8 @@ static struct wlr_surface *layer_surface_at(struct roots_output *output,
 		}
 	}
 
-	wl_list_for_each_reverse(roots_surface, layer, link) {
-		if (roots_surface->layer_surface->current.exclusive_zone <= 0) {
+	wl_list_for_each(roots_surface, layer, link) {
+		if (roots_surface->layer_surface->current.exclusive_zone > 0) {
 			continue;
 		}
 
@@ -221,6 +216,9 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 			desktop_output_from_wlr_output(desktop, wlr_output);
 		if (output != NULL && output->fullscreen_view != NULL) {
 			if (view_at(output->fullscreen_view, lx, ly, &surface, sx, sy)) {
+				if (view) {
+					*view = output->fullscreen_view;
+				}
 				return surface;
 			} else {
 				return NULL;
@@ -289,7 +287,9 @@ static void input_inhibit_activate(struct wl_listener *listener, void *data) {
 	PhocDesktop *desktop = wl_container_of(
 			listener, desktop, input_inhibit_activate);
 	struct roots_seat *seat;
-	wl_list_for_each(seat, &desktop->server->input->seats, link) {
+	PhocServer *server = phoc_server_get_default ();
+
+	wl_list_for_each(seat, &server->input->seats, link) {
 		roots_seat_set_exclusive_client(seat,
 				desktop->input_inhibit->active_client);
 	}
@@ -299,7 +299,9 @@ static void input_inhibit_deactivate(struct wl_listener *listener, void *data) {
 	PhocDesktop *desktop = wl_container_of(
 			listener, desktop, input_inhibit_deactivate);
 	struct roots_seat *seat;
-	wl_list_for_each(seat, &desktop->server->input->seats, link) {
+	PhocServer *server = phoc_server_get_default ();
+
+	wl_list_for_each(seat, &server->input->seats, link) {
 		roots_seat_set_exclusive_client(seat, NULL);
 	}
 }
@@ -340,6 +342,7 @@ static void handle_constraint_destroy(struct wl_listener *listener,
 
 static void handle_pointer_constraint(struct wl_listener *listener,
 		void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
 	struct roots_seat *seat = wlr_constraint->seat->data;
 	struct roots_cursor *cursor = roots_seat_get_cursor (seat);
@@ -353,7 +356,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 
 	double sx, sy;
 	struct wlr_surface *surface = desktop_surface_at(
-		seat->input->server->desktop,
+		server->desktop,
 		cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
 	if (surface == wlr_constraint->surface) {
@@ -381,7 +384,7 @@ static void
 phoc_desktop_constructed (GObject *object)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
-  struct phoc_server *server = self->server;
+  PhocServer *server = phoc_server_get_default ();
   struct roots_config *config = self->config;
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
@@ -468,9 +471,10 @@ phoc_desktop_constructed (GObject *object)
   }
 #endif
 
+#ifdef PHOC_USE_GAMMA_CONTROL
   self->gamma_control_manager = wlr_gamma_control_manager_create(server->wl_display);
+#endif
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create(server->wl_display);
-  self->screenshooter = wlr_screenshooter_create(server->wl_display);
   self->export_dmabuf_manager_v1 =
     wlr_export_dmabuf_manager_v1_create(server->wl_display);
   self->server_decoration_manager =
@@ -565,13 +569,6 @@ phoc_desktop_class_init (PhocDesktopClass *klass)
   object_class->constructed = phoc_desktop_constructed;
   object_class->finalize = phoc_desktop_finalize;
 
-  props[PROP_SERVER] =
-    g_param_spec_pointer (
-      "server",
-      "Server",
-      "The server object",
-      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
   props[PROP_CONFIG] =
     g_param_spec_pointer (
       "config",
@@ -590,9 +587,9 @@ phoc_desktop_init (PhocDesktop *self)
 
 
 PhocDesktop *
-phoc_desktop_new (struct phoc_server *server, struct roots_config *config)
+phoc_desktop_new (struct roots_config *config)
 {
-  return g_object_new (PHOC_TYPE_DESKTOP, "server", server, "config", config, NULL);
+  return g_object_new (PHOC_TYPE_DESKTOP, "config", config, NULL);
 }
 
 

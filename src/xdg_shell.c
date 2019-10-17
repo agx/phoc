@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-xdg-shell"
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -8,7 +10,6 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
-#include "config.h"
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"
@@ -38,15 +39,17 @@ static void popup_handle_destroy(struct wl_listener *listener, void *data) {
 }
 
 static void popup_handle_map(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, map);
 	view_damage_whole(popup->view_child.view);
-	input_update_cursor_focus(popup->view_child.view->desktop->server->input);
+	input_update_cursor_focus(server->input);
 }
 
 static void popup_handle_unmap(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, unmap);
 	view_damage_whole(popup->view_child.view);
-	input_update_cursor_focus(popup->view_child.view->desktop->server->input);
+	input_update_cursor_focus(server->input);
 }
 
 static struct roots_xdg_popup *popup_create(struct roots_view *view,
@@ -310,10 +313,11 @@ static const struct roots_view_interface view_impl = {
 };
 
 static void handle_request_move(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_surface *roots_xdg_surface =
 		wl_container_of(listener, roots_xdg_surface, request_move);
 	struct roots_view *view = &roots_xdg_surface->view;
-	struct roots_input *input = view->desktop->server->input;
+	struct roots_input *input = server->input;
 	struct wlr_xdg_toplevel_move_event *e = data;
 	struct roots_seat *seat = input_seat_from_wlr_seat(input, e->seat->seat);
 
@@ -329,13 +333,19 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 }
 
 static void handle_request_resize(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_surface *roots_xdg_surface =
 		wl_container_of(listener, roots_xdg_surface, request_resize);
 	struct roots_view *view = &roots_xdg_surface->view;
-	struct roots_input *input = view->desktop->server->input;
+	struct roots_input *input = server->input;
 	struct wlr_xdg_toplevel_resize_event *e = data;
-	// TODO verify event serial
 	struct roots_seat *seat = input_seat_from_wlr_seat(input, e->seat->seat);
+
+	if (view->desktop->maximize) {
+		return;
+	}
+
+	// TODO verify event serial
 	assert(seat);
 	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
 		return;

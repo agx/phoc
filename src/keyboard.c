@@ -1,5 +1,7 @@
 #define G_LOG_DOMAIN "phoc-keyboard"
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,8 +13,6 @@
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
-#include "config.h"
-#include "bindings.h"
 #include "input.h"
 #include "keyboard.h"
 #include "seat.h"
@@ -87,11 +87,6 @@ static void pressed_keysyms_update(xkb_keysym_t *pressed_keysyms,
 	}
 }
 
-static void keyboard_binding_execute(struct roots_keyboard *keyboard,
-		const char *command) {
-	execute_binding_command(keyboard->seat, keyboard->input, command);
-}
-
 /**
  * Execute a built-in, hardcoded compositor binding. These are triggered from a
  * single keysym.
@@ -103,7 +98,7 @@ static bool keyboard_execute_compositor_binding(struct roots_keyboard *keyboard,
 		xkb_keysym_t keysym) {
 	if (keysym >= XKB_KEY_XF86Switch_VT_1 &&
 			keysym <= XKB_KEY_XF86Switch_VT_12) {
-		struct phoc_server *server = keyboard->input->server;
+		PhocServer *server = phoc_server_get_default ();
 
 		struct wlr_session *session = wlr_backend_get_session(server->backend);
 		if (session) {
@@ -131,39 +126,27 @@ static bool keyboard_execute_compositor_binding(struct roots_keyboard *keyboard,
  * should be propagated to clients.
  */
 static bool keyboard_execute_binding(struct roots_keyboard *keyboard,
-		xkb_keysym_t *pressed_keysyms, uint32_t modifiers,
-		const xkb_keysym_t *keysyms, size_t keysyms_len) {
-	for (size_t i = 0; i < keysyms_len; ++i) {
-		if (keyboard_execute_compositor_binding(keyboard, keysyms[i])) {
-			return true;
-		}
-	}
+				     xkb_keysym_t *pressed_keysyms, uint32_t modifiers,
+				     const xkb_keysym_t *keysyms, size_t keysyms_len)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocKeybindings *keybindings;
 
-	// User-defined bindings
-	size_t n = pressed_keysyms_length(pressed_keysyms);
-	struct wl_list *bindings = &keyboard->input->server->config->bindings;
-	struct roots_binding_config *bc;
-	wl_list_for_each(bc, bindings, link) {
-		if (modifiers ^ bc->modifiers || n != bc->keysyms_len) {
-			continue;
-		}
+  /* TODO: should be handled via PhocKeybindings as well */
+  for (size_t i = 0; i < keysyms_len; ++i) {
+    if (keyboard_execute_compositor_binding(keyboard, keysyms[i])) {
+      return true;
+    }
+  }
 
-		bool ok = true;
-		for (size_t i = 0; i < bc->keysyms_len; i++) {
-			ssize_t j = pressed_keysyms_index(pressed_keysyms, bc->keysyms[i]);
-			if (j < 0) {
-				ok = false;
-				break;
-			}
-		}
+  size_t n = pressed_keysyms_length(pressed_keysyms);
+  keybindings = server->config->keybindings;
 
-		if (ok) {
-			keyboard_binding_execute(keyboard, bc->command);
-			return true;
-		}
-	}
+  if (phoc_keybindings_handle_pressed (keybindings, modifiers, pressed_keysyms, n,
+				       keyboard->seat))
+    return true;
 
-	return false;
+  return false;
 }
 
 /*
