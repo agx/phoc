@@ -1507,7 +1507,7 @@ void roots_seat_set_focus_layer(struct roots_seat *seat,
 		view_activate(prev_focus, false);
 	}
 	seat->has_focus = false;
-	if (layer->layer >= ZWLR_LAYER_SHELL_V1_LAYER_TOP) {
+	if (layer->current.layer >= ZWLR_LAYER_SHELL_V1_LAYER_TOP) {
 		seat->focused_layer = layer;
 	}
 	if (keyboard != NULL) {

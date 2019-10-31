@@ -236,9 +236,9 @@ static void change_osk(const struct osk_origin *osk, struct wl_list layers[LAYER
 		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &osk->surface->link);
 	}
 
-	if (!force_overlay && osk->layer != osk->surface->layer_surface->layer) {
+	if (!force_overlay && osk->layer != osk->surface->layer_surface->client_pending.layer) {
 		wl_list_remove(&osk->surface->link);
-		wl_list_insert(&layers[osk->surface->layer_surface->layer], &osk->surface->link);
+		wl_list_insert(&layers[osk->surface->layer_surface->client_pending.layer], &osk->surface->link);
 	}
 }
 
@@ -254,7 +254,8 @@ void arrange_layers(struct roots_output *output) {
 		bool osk_force_overlay = false;
 		struct roots_seat *seat;
 		wl_list_for_each(seat, &server->input->seats, link) {
-			if (seat->focused_layer && seat->focused_layer->layer >= osk_place.surface->layer_surface->layer) {
+			if (seat->focused_layer && seat->focused_layer->client_pending.layer >=
+					osk_place.surface->layer_surface->client_pending.layer) {
 				osk_force_overlay = true;
 				break;
 			}
@@ -733,7 +734,8 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		wl_container_of(listener, desktop, layer_shell_surface);
 	wlr_log(WLR_DEBUG, "new layer surface: namespace %s layer %d anchor %d "
 			"size %dx%d margin %d,%d,%d,%d",
-		layer_surface->namespace, layer_surface->layer, layer_surface->layer,
+		layer_surface->namespace, layer_surface->client_pending.layer,
+			layer_surface->client_pending.layer,
 		layer_surface->client_pending.desired_width,
 		layer_surface->client_pending.desired_height,
 		layer_surface->client_pending.margin.top,
@@ -793,7 +795,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	layer_surface->data = roots_surface;
 
 	struct roots_output *output = layer_surface->output->data;
-	wl_list_insert(&output->layers[layer_surface->layer], &roots_surface->link);
+	wl_list_insert(&output->layers[layer_surface->client_pending.layer], &roots_surface->link);
 
 	// Temporarily set the layer's current state to client_pending
 	// So that we can easily arrange it
