@@ -465,9 +465,9 @@ phoc_keyboard_dispose(GObject *object)
 {
   PhocKeyboard *self = PHOC_KEYBOARD (object);
 
-  g_clear_pointer (&self->input_settings, g_object_unref);
-  g_clear_pointer (&self->keyboard_settings, g_object_unref);
-  g_clear_pointer (&self->xkbinfo, g_object_unref);
+  g_clear_object (&self->input_settings);
+  g_clear_object (&self->keyboard_settings);
+  g_clear_object (&self->xkbinfo);
 
   G_OBJECT_CLASS (phoc_keyboard_parent_class)->dispose (object);
 }

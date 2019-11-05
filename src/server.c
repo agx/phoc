@@ -49,7 +49,7 @@ phoc_server_dispose (GObject *object)
 
   g_clear_pointer (&self->wl_display, &wl_display_destroy_clients);
   g_clear_pointer (&self->wl_display, &wl_display_destroy);
-  g_clear_pointer (&self->desktop, g_object_unref);
+  g_clear_object (&self->desktop);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
