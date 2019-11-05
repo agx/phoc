@@ -44,6 +44,7 @@ phoc_keyboard_set_property (GObject     *object,
   case PROP_DEVICE:
     self->device = g_value_get_pointer (value);
     self->device->data = self;
+    self->device->keyboard->data = self;
     g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DEVICE]);
     break;
   case PROP_SEAT:
