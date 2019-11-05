@@ -387,8 +387,8 @@ set_xkb_keymap (PhocKeyboard *self, const gchar *layout, const gchar *variant, c
 
 static void
 on_input_setting_changed (PhocKeyboard *self,
-                             const gchar  *key,
-                             GSettings    *settings)
+                          const gchar  *key,
+                          GSettings    *settings)
 {
   g_auto(GStrv) xkb_options = NULL;
   g_autoptr(GVariant) sources = NULL;
