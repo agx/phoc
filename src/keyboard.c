@@ -560,3 +560,37 @@ phoc_keyboard_new (struct wlr_input_device *device, struct roots_seat *seat)
                        "seat", seat,
                        NULL);
 }
+
+/**
+ * phoc_keyboard_next_layout:
+ *
+ * Switch to next keyboard in the list of available layouts
+ */
+void
+phoc_keyboard_next_layout (PhocKeyboard *self)
+{
+  g_autoptr(GVariant) sources = NULL;
+  GVariantIter iter;
+  gchar *type, *id, *cur_type, *cur_id;
+  GVariantBuilder builder;
+  gboolean next;
+
+  g_return_if_fail (PHOC_IS_KEYBOARD (self));
+  sources = g_settings_get_value(self->input_settings, "sources");
+
+  if (g_variant_n_children (sources) < 2)
+    return;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(ss)"));
+  g_variant_iter_init (&iter, sources);
+  next = g_variant_iter_next (&iter, "(ss)", &cur_type, &cur_id);
+  while (next) {
+    next = g_variant_iter_next (&iter, "(ss)", &type, &id);
+    if (!next)
+      break;
+    g_variant_builder_add (&builder, "(ss)", type, id);
+  }
+  g_variant_builder_add (&builder, "(ss)", cur_type, cur_id);
+
+  g_settings_set_value(self->input_settings, "sources", g_variant_builder_end(&builder));
+}

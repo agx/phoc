@@ -41,3 +41,4 @@ PhocKeyboard *phoc_keyboard_new (struct wlr_input_device *device,
 void          phoc_keyboard_handle_key(PhocKeyboard *self,
                                        struct wlr_event_keyboard_key *event);
 void          phoc_keyboard_handle_modifiers(PhocKeyboard *self);
+void          phoc_keyboard_next_layout (PhocKeyboard *self);
