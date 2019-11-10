@@ -399,26 +399,17 @@ static void handle_destroy(struct wl_listener *listener, void *data) {
 	free(layer);
 }
 
-static void handle_map(struct wl_listener *listener, void *data) {
-	struct wlr_layer_surface_v1 *layer_surface = data;
-	struct roots_layer_surface *layer = layer_surface->data;
-	struct wlr_output *wlr_output = layer_surface->output;
-	if (!wlr_output) {
-		return;
-	}
-	struct roots_output *output = wlr_output->data;
-	output_damage_whole_local_surface(output, layer_surface->surface,
-		layer->geo.x, layer->geo.y);
-	wlr_surface_send_enter(layer_surface->surface, wlr_output);
+static void subsurface_destroy(struct roots_layer_subsurface *subsurface) {
+	wl_list_remove(&subsurface->map.link);
+	wl_list_remove(&subsurface->unmap.link);
+	wl_list_remove(&subsurface->destroy.link);
+	wl_list_remove(&subsurface->commit.link);
+	wl_list_remove(&subsurface->link);
+	free(subsurface);
 }
 
-static void handle_unmap(struct wl_listener *listener, void *data) {
-	PhocServer *server = phoc_server_get_default ();
-	struct roots_layer_surface *layer = wl_container_of(
-			listener, layer, unmap);
-	unmap(layer->layer_surface);
-	input_update_cursor_focus(server->input);
-}
+static struct roots_layer_popup *popup_create(struct wlr_xdg_popup *wlr_popup);
+static struct roots_layer_subsurface *layer_subsurface_create(struct wlr_subsurface *wlr_subsurface);
 
 static struct roots_layer_surface *popup_get_root_layer(struct roots_layer_popup *popup) {
 	while (popup->parent_type == LAYER_PARENT_POPUP) {
@@ -474,6 +465,26 @@ static void popup_damage(struct roots_layer_popup *layer_popup, bool whole) {
 	}
 }
 
+static void popup_new_popup(struct wl_listener *listener, void *data) {
+	struct roots_layer_popup *popup =
+		wl_container_of(listener, popup, new_popup);
+	struct wlr_xdg_popup *wlr_popup = data;
+	struct roots_layer_popup *new_popup = popup_create(wlr_popup);
+	new_popup->parent_type = LAYER_PARENT_POPUP;
+	new_popup->parent_popup = popup;
+	popup_unconstrain(new_popup);
+}
+
+static void popup_new_subsurface(struct wl_listener *listener, void *data) {
+	struct roots_layer_popup *popup =
+		wl_container_of(listener, popup, new_subsurface);
+	struct wlr_subsurface *wlr_subsurface = data;
+	struct roots_layer_subsurface *subsurface = layer_subsurface_create(wlr_subsurface);
+	subsurface->parent_type = LAYER_PARENT_POPUP;
+	subsurface->parent_popup = popup;
+	wl_list_insert(&popup->subsurfaces, &subsurface->link);
+}
+
 static void popup_handle_map(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_popup *popup = wl_container_of(listener, popup, map);
@@ -482,6 +493,17 @@ static void popup_handle_map(struct wl_listener *listener, void *data) {
 	if (!wlr_output) {
 		return;
 	}
+
+	struct wlr_subsurface *child;
+	wl_list_for_each(child, &popup->wlr_popup->base->surface->subsurfaces, parent_link) {
+		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
+		new_subsurface->parent_type = LAYER_PARENT_POPUP;
+		new_subsurface->parent_popup = popup;
+		wl_list_insert(&popup->subsurfaces, &new_subsurface->link);
+	}
+	popup->new_subsurface.notify = popup_new_subsurface;
+	wl_signal_add(&popup->wlr_popup->base->surface->events.new_subsurface, &popup->new_subsurface);
+
 	wlr_surface_send_enter(popup->wlr_popup->base->surface, wlr_output);
 	popup_damage(popup, true);
 	input_update_cursor_focus(server->input);
@@ -490,6 +512,11 @@ static void popup_handle_map(struct wl_listener *listener, void *data) {
 static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_popup *popup = wl_container_of(listener, popup, unmap);
+	struct roots_layer_subsurface *child, *tmp;
+	wl_list_for_each_safe(child, tmp, &popup->subsurfaces, link) {
+		subsurface_destroy(child);
+	}
+	wl_list_remove(&popup->new_subsurface.link);
 	popup_damage(popup, true);
 	input_update_cursor_focus(server->input);
 }
@@ -508,30 +535,7 @@ static void popup_handle_destroy(struct wl_listener *listener, void *data) {
 	wl_list_remove(&popup->destroy.link);
 	wl_list_remove(&popup->commit.link);
 	wl_list_remove(&popup->new_popup.link);
-	wl_list_remove(&popup->new_subsurface.link);
 	free(popup);
-}
-
-static struct roots_layer_popup *popup_create(struct wlr_xdg_popup *wlr_popup);
-static struct roots_layer_subsurface *layer_subsurface_create(struct wlr_subsurface *wlr_subsurface);
-
-static void popup_new_popup(struct wl_listener *listener, void *data) {
-	struct roots_layer_popup *popup =
-		wl_container_of(listener, popup, new_popup);
-	struct wlr_xdg_popup *wlr_popup = data;
-	struct roots_layer_popup *new_popup = popup_create(wlr_popup);
-	new_popup->parent_type = LAYER_PARENT_POPUP;
-	new_popup->parent_popup = popup;
-	popup_unconstrain(new_popup);
-}
-
-static void popup_new_subsurface(struct wl_listener *listener, void *data) {
-	struct roots_layer_popup *popup =
-		wl_container_of(listener, popup, new_subsurface);
-	struct wlr_subsurface *wlr_subsurface = data;
-	struct roots_layer_subsurface *subsurface = layer_subsurface_create(wlr_subsurface);
-	subsurface->parent_type = LAYER_PARENT_POPUP;
-	subsurface->parent_popup = popup;
 }
 
 static struct roots_layer_popup *popup_create(struct wlr_xdg_popup *wlr_popup) {
@@ -551,8 +555,8 @@ static struct roots_layer_popup *popup_create(struct wlr_xdg_popup *wlr_popup) {
 	wl_signal_add(&wlr_popup->base->surface->events.commit, &popup->commit);
 	popup->new_popup.notify = popup_new_popup;
 	wl_signal_add(&wlr_popup->base->events.new_popup, &popup->new_popup);
-	popup->new_subsurface.notify = popup_new_subsurface;
-	wl_signal_add(&wlr_popup->base->surface->events.new_subsurface, &popup->new_subsurface);
+
+	wl_list_init(&popup->subsurfaces);
 
 	return popup;
 }
@@ -595,9 +599,31 @@ static void subsurface_damage(struct roots_layer_subsurface *subsurface, bool wh
 	}
 }
 
+static void subsurface_new_subsurface(struct wl_listener *listener, void *data) {
+	struct roots_layer_subsurface *subsurface =
+		wl_container_of(listener, subsurface, new_subsurface);
+	struct wlr_subsurface *wlr_subsurface = data;
+
+	struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(wlr_subsurface);
+	new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
+	new_subsurface->parent_subsurface = subsurface;
+	wl_list_insert(&subsurface->subsurfaces, &new_subsurface->link);
+}
+
 static void subsurface_handle_map(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_subsurface *subsurface = wl_container_of(listener, subsurface, map);
+
+	struct wlr_subsurface *child;
+	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->subsurfaces, parent_link) {
+		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
+		new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
+		new_subsurface->parent_subsurface = subsurface;
+		wl_list_insert(&subsurface->subsurfaces, &new_subsurface->link);
+	}
+	subsurface->new_subsurface.notify = subsurface_new_subsurface;
+	wl_signal_add(&subsurface->wlr_subsurface->surface->events.new_subsurface, &subsurface->new_subsurface);
+
 	subsurface_damage(subsurface, true);
 	input_update_cursor_focus(server->input);
 }
@@ -605,6 +631,11 @@ static void subsurface_handle_map(struct wl_listener *listener, void *data) {
 static void subsurface_handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_subsurface *subsurface = wl_container_of(listener, subsurface, unmap);
+	struct roots_layer_subsurface *child, *tmp;
+	wl_list_for_each_safe(child, tmp, &subsurface->subsurfaces, link) {
+		subsurface_destroy(child);
+	}
+	wl_list_remove(&subsurface->new_subsurface.link);
 	subsurface_damage(subsurface, true);
 	input_update_cursor_focus(server->input);
 }
@@ -618,22 +649,7 @@ static void subsurface_handle_destroy(struct wl_listener *listener, void *data) 
 	struct roots_layer_subsurface *subsurface =
 		wl_container_of(listener, subsurface, destroy);
 
-	wl_list_remove(&subsurface->map.link);
-	wl_list_remove(&subsurface->unmap.link);
-	wl_list_remove(&subsurface->destroy.link);
-	wl_list_remove(&subsurface->commit.link);
-	wl_list_remove(&subsurface->new_subsurface.link);
-	free(subsurface);
-}
-
-static void subsurface_new_subsurface(struct wl_listener *listener, void *data) {
-	struct roots_layer_subsurface *subsurface =
-		wl_container_of(listener, subsurface, new_subsurface);
-	struct wlr_subsurface *wlr_subsurface = data;
-
-	struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(wlr_subsurface);
-	new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
-	new_subsurface->parent_subsurface = subsurface;
+	subsurface_destroy(subsurface);
 }
 
 static struct roots_layer_subsurface *layer_subsurface_create(struct wlr_subsurface *wlr_subsurface) {
@@ -652,8 +668,9 @@ static struct roots_layer_subsurface *layer_subsurface_create(struct wlr_subsurf
 	wl_signal_add(&wlr_subsurface->events.destroy, &subsurface->destroy);
 	subsurface->commit.notify = subsurface_handle_commit;
 	wl_signal_add(&wlr_subsurface->surface->events.commit, &subsurface->commit);
-	subsurface->new_subsurface.notify = subsurface_new_subsurface;
-	wl_signal_add(&wlr_subsurface->surface->events.new_subsurface, &subsurface->new_subsurface);
+
+	wl_list_init(&subsurface->subsurfaces);
+	wl_list_init(&subsurface->link);
 
 	return subsurface;
 }
@@ -666,6 +683,47 @@ static void handle_new_subsurface(struct wl_listener *listener, void *data) {
 	struct roots_layer_subsurface *subsurface = layer_subsurface_create(wlr_subsurface);
 	subsurface->parent_type = LAYER_PARENT_LAYER;
 	subsurface->parent_layer = roots_layer_surface;
+	wl_list_insert(&roots_layer_surface->subsurfaces, &subsurface->link);
+}
+
+static void handle_map(struct wl_listener *listener, void *data) {
+	struct wlr_layer_surface_v1 *layer_surface = data;
+	struct roots_layer_surface *layer = layer_surface->data;
+	struct wlr_output *wlr_output = layer_surface->output;
+	if (!wlr_output) {
+		return;
+	}
+
+	struct wlr_subsurface *subsurface;
+	wl_list_for_each(subsurface, &layer_surface->surface->subsurfaces, parent_link) {
+		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
+		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
+		roots_subsurface->parent_layer = layer;
+		wl_list_insert(&layer->subsurfaces, &roots_subsurface->link);
+	}
+
+	layer->new_subsurface.notify = handle_new_subsurface;
+	wl_signal_add(&layer_surface->surface->events.new_subsurface, &layer->new_subsurface);
+
+	struct roots_output *output = wlr_output->data;
+	output_damage_whole_local_surface(output, layer_surface->surface,
+		layer->geo.x, layer->geo.y);
+	wlr_surface_send_enter(layer_surface->surface, wlr_output);
+}
+
+static void handle_unmap(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
+	struct roots_layer_surface *layer = wl_container_of(
+			listener, layer, unmap);
+
+	struct roots_layer_subsurface *subsurface, *tmp;
+	wl_list_for_each_safe(subsurface, tmp, &layer->subsurfaces, link) {
+		subsurface_destroy(subsurface);
+	}
+	wl_list_remove(&layer->new_subsurface.link);
+
+	unmap(layer->layer_surface);
+	input_update_cursor_focus(server->input);
 }
 
 void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
@@ -712,6 +770,8 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		return;
 	}
 
+	wl_list_init(&roots_surface->subsurfaces);
+
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&layer_surface->surface->events.commit,
 		&roots_surface->surface_commit);
@@ -728,8 +788,6 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	wl_signal_add(&layer_surface->events.unmap, &roots_surface->unmap);
 	roots_surface->new_popup.notify = handle_new_popup;
 	wl_signal_add(&layer_surface->events.new_popup, &roots_surface->new_popup);
-	roots_surface->new_subsurface.notify = handle_new_subsurface;
-	wl_signal_add(&layer_surface->surface->events.new_subsurface, &roots_surface->new_subsurface);
 
 	roots_surface->layer_surface = layer_surface;
 	layer_surface->data = roots_surface;

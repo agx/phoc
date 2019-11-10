@@ -22,6 +22,7 @@ struct roots_layer_surface {
 	struct wl_listener output_destroy;
 	struct wl_listener new_popup;
 	struct wl_listener new_subsurface;
+	struct wl_list subsurfaces; // roots_layer_subsurface::link
 
 	struct wlr_box geo;
 };
@@ -40,6 +41,7 @@ struct roots_layer_popup {
 	struct wl_listener commit;
 	struct wl_listener new_popup;
 	struct wl_listener new_subsurface;
+	struct wl_list subsurfaces; // roots_layer_subsurface::link
 };
 
 struct roots_layer_subsurface {
@@ -49,6 +51,7 @@ struct roots_layer_subsurface {
 		struct roots_layer_popup *parent_popup;
 		struct roots_layer_subsurface *parent_subsurface;
 	};
+	struct wl_list link;
 
 	struct wlr_subsurface *wlr_subsurface;
 	struct wl_listener map;
@@ -56,6 +59,7 @@ struct roots_layer_subsurface {
 	struct wl_listener destroy;
 	struct wl_listener commit;
 	struct wl_listener new_subsurface;
+	struct wl_list subsurfaces; // roots_layer_subsurface::link
 };
 
 
