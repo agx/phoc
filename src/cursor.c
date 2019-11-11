@@ -490,6 +490,8 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 	    roots_seat_allow_input(cursor->seat, surface->resource)) {
 		wlr_seat_touch_notify_down(cursor->seat->seat, surface,
 			event->time_msec, event->touch_id, sx, sy);
+		wlr_seat_touch_point_focus(cursor->seat->seat, surface,
+			event->time_msec, event->touch_id, sx, sy);
 	}
 
 	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS) {
@@ -525,19 +527,68 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 	double lx, ly;
 	wlr_cursor_absolute_to_layout_coords(cursor->cursor, event->device,
 		event->x, event->y, &lx, &ly);
+	struct wlr_output *wlr_output =
+		wlr_output_layout_output_at(desktop->layout, lx, ly);
+	if (!wlr_output) {
+		return;
+	}
+	struct roots_output *roots_output = wlr_output->data;
 
 	double sx, sy;
-	struct wlr_surface *surface = desktop_surface_at(
-			desktop, lx, ly, &sx, &sy, NULL);
+	struct wlr_surface *surface = point->focus_surface;
+
+	// TODO: test with input regions
+
+	if (surface) {
+		bool found = false;
+		struct wlr_surface *root = wlr_surface_get_root_surface(surface);
+		if (wlr_surface_is_layer_surface(root)) {
+			struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_from_wlr_surface(root);
+			struct roots_layer_surface *layer;
+			wl_list_for_each_reverse(layer, &roots_output->layers[layer_surface->current.layer], link) {
+				if (layer->layer_surface->surface == root) {
+					sx = lx - layer->geo.x;
+					sy = ly - layer->geo.y;
+					found = true;
+					break;
+				}
+			}
+			// try the overlay layer as well since the on-screen keyboard might have been elevated there
+			wl_list_for_each_reverse(layer, &roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], link) {
+				if (layer->layer_surface->surface == root) {
+					sx = lx - layer->geo.x;
+					sy = ly - layer->geo.y;
+					found = true;
+					break;
+				}
+			}
+		} else {
+			struct roots_view *view = roots_view_from_wlr_surface(root);
+			if (view) {
+				sx = lx - view->box.x;
+				sy = ly - view->box.y;
+				rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height, -view->rotation);
+				found = true;
+			} else {
+				// FIXME: buggy fallback, but at least handles xdg_popups for now...
+				surface = desktop_surface_at(desktop, lx, ly, &sx, &sy, NULL);
+			}
+		}
+
+		if (found) {
+			struct wlr_surface *sub = surface;
+			while (sub && wlr_surface_is_subsurface(sub)) {
+				struct wlr_subsurface *subsurface = wlr_subsurface_from_wlr_surface(sub);
+				sx -= subsurface->current.x;
+				sy -= subsurface->current.y;
+				sub = subsurface->parent;
+			}
+		}
+	}
 
 	if (surface && roots_seat_allow_input(cursor->seat, surface->resource)) {
-		wlr_seat_touch_point_focus(cursor->seat->seat, surface,
-			event->time_msec, event->touch_id, sx, sy);
 		wlr_seat_touch_notify_motion(cursor->seat->seat, event->time_msec,
 			event->touch_id, sx, sy);
-	} else {
-		wlr_seat_touch_point_clear_focus(cursor->seat->seat, event->time_msec,
-			event->touch_id);
 	}
 
 	if (event->touch_id == cursor->seat->touch_id) {
