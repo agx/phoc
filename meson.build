@@ -1,5 +1,5 @@
 project('phoc', 'c',
-          version: '0.1.1',
+          version: '0.1.2',
           license: 'GPLv3+',
     meson_version: '>= 0.47.0',
   default_options: [
@@ -27,6 +27,7 @@ cc = meson.get_compiler('c')
 gio            = dependency('gio-2.0', version: '>=2.50.0')
 glib           = dependency('glib-2.0', version: '>=2.50.0')
 gobject        = dependency('gobject-2.0', version: '>=2.50.0')
+gnome_desktop  = dependency('gnome-desktop-3.0', version: '>=3.26')
 input          = dependency('libinput')
 pixman         = dependency('pixman-1')
 wayland_client = dependency('wayland-client')
@@ -63,13 +64,6 @@ if get_option('xwayland').enabled() and not wlroots_has_xwayland
         error('Cannot enable Xwayland in phoc: wlroots has been built without Xwayland support')
 endif
 have_xwayland = get_option('xwayland').enabled()
-
-wlroots_major_version = wlroots.version().split('.')[0]
-wlroots_minor_version = wlroots.version().split('.')[1]
-use_gamma_control = false
-if wlroots_major_version.to_int() == 0 and wlroots_minor_version.to_int() == 6
-  use_gamma_control = true
-endif
 
 global_c_args = []
 test_c_args = [
@@ -134,7 +128,6 @@ summary = [
         '           xwayland: @0@'.format(have_xwayland),
         ' wlroots subproject: @0@'.format(not embed_wlroots.disabled() and wlroots_proj.found()),
         '    wlroots version: @0@'.format(wlroots.version()),
-        '  use gamma control: @0@'.format(use_gamma_control),
         '--------------------------',
         ''
 ]
@@ -144,7 +137,6 @@ message('\n'.join(summary))
 config_h = configuration_data()
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland)
-config_h.set('PHOC_USE_GAMMA_CONTROL', use_gamma_control)
 
 configure_file(
   input: 'config.h.in',

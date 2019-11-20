@@ -5,7 +5,7 @@
 
 #include <pixman.h>
 #include <time.h>
-#include <wayland-server.h>
+#include <wayland-server-core.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_output_damage.h>
 
@@ -16,6 +16,7 @@ struct roots_output {
 
 	struct roots_view *fullscreen_view;
 	struct wl_list layers[4]; // layer_surface::link
+	bool force_shell_reveal;
 
 	struct timespec last_frame;
 	struct wlr_output_damage *damage;

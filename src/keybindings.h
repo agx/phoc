@@ -6,6 +6,8 @@
 #pragma once
 
 #include <glib-object.h>
+#define GNOME_DESKTOP_USE_UNSTABLE_API
+#include <libgnome-desktop/gnome-xkb-info.h>
 
 #include <wlr/types/wlr_keyboard.h>
 

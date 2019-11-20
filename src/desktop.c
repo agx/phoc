@@ -14,9 +14,6 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#ifdef PHOC_USE_GAMMA_CONTROL
-#  include <wlr/types/wlr_gamma_control.h>
-#endif
 #include <wlr/types/wlr_gtk_primary_selection.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle.h>
@@ -215,6 +212,15 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 		struct roots_output *output =
 			desktop_output_from_wlr_output(desktop, wlr_output);
 		if (output != NULL && output->fullscreen_view != NULL) {
+
+			if (output->force_shell_reveal) {
+				if ((surface = layer_surface_at(roots_output,
+						&roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+						ox, oy, sx, sy))) {
+					return surface;
+				}
+			}
+
 			if (view_at(output->fullscreen_view, lx, ly, &surface, sx, sy)) {
 				if (view) {
 					*view = output->fullscreen_view;
@@ -471,9 +477,6 @@ phoc_desktop_constructed (GObject *object)
   }
 #endif
 
-#ifdef PHOC_USE_GAMMA_CONTROL
-  self->gamma_control_manager = wlr_gamma_control_manager_create(server->wl_display);
-#endif
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create(server->wl_display);
   self->export_dmabuf_manager_v1 =
     wlr_export_dmabuf_manager_v1_create(server->wl_display);

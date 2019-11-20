@@ -1,3 +1,31 @@
+phoc (0.1.2) amber-phone; urgency=medium
+
+  [ Sebastian Krzyszkowiak ]
+  * layer-shell: Don't apply exclusive zones of unmapped surfaces
+  * Revert "Use old gamma control protocol if available"
+  * Update wlroots submodule
+  * Add a way to reveal shell on a fullscreen surface
+  * layer-shell: Create/destroy layer_subsurface objects on parent map/unmap
+
+  [ Guido Günther ]
+  * gitlab-ci: Remove redundancy in alpine deps
+  * Add libgnome-desktop-3-dev
+  * Turn keyboard into a gobject
+  * keyboard: Read keyboard config from gsettings
+  * settings: Remove superfluous include
+  * keyboard: fix indentation
+  * Use g_clear_object
+  * keyboard: Set wlr_keyboard's data to phoc_keyboard
+  * keyboard: Add method to witch to next layout
+  * keybindinds: Listen to switch-input-source changes
+
+  [ Simon Ser ]
+  * Remove orbital screenshooter and gamma-control
+  * rootston: add support for direct scan-out
+  * Remove all wayland-server.h includes
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Mon, 18 Nov 2019 22:48:51 +0100
+
 phoc (0.1.1pureos1) amber; urgency=medium
 
   * Upload to amber

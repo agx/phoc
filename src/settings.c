@@ -18,9 +18,6 @@
 #include <wlr/util/log.h>
 #include "settings.h"
 #include "ini.h"
-#include "input.h"
-#include "keybindings.h"
-#include "keyboard.h"
 
 static void usage(const char *name, int ret) {
 	fprintf(stderr,
@@ -100,28 +97,6 @@ invalid_input:
 	free(buf);
 	free(box);
 	return NULL;
-}
-
-static uint32_t parse_modifier(const char *symname) {
-	if (strcmp(symname, "Shift") == 0) {
-		return WLR_MODIFIER_SHIFT;
-	} else if (strcmp(symname, "Caps") == 0) {
-		return WLR_MODIFIER_CAPS;
-	} else if (strcmp(symname, "Ctrl") == 0) {
-		return WLR_MODIFIER_CTRL;
-	} else if (strcmp(symname, "Alt") == 0) {
-		return WLR_MODIFIER_ALT;
-	} else if (strcmp(symname, "Mod2") == 0) {
-		return WLR_MODIFIER_MOD2;
-	} else if (strcmp(symname, "Mod3") == 0) {
-		return WLR_MODIFIER_MOD3;
-	} else if (strcmp(symname, "Logo") == 0) {
-		return WLR_MODIFIER_LOGO;
-	} else if (strcmp(symname, "Mod5") == 0) {
-		return WLR_MODIFIER_MOD5;
-	} else {
-		return 0;
-	}
 }
 
 static bool parse_modeline(const char *s, drmModeModeInfo *mode) {
@@ -234,50 +209,8 @@ static void config_handle_cursor(struct roots_config *config,
 	}
 }
 
-static void config_handle_keyboard(struct roots_config *config,
-		const char *device_name, const char *name, const char *value) {
-	struct roots_keyboard_config *kc;
-	bool found = false;
-	wl_list_for_each(kc, &config->keyboards, link) {
-		if (strcmp(kc->name, device_name) == 0) {
-			found = true;
-			break;
-		}
-	}
-
-	if (!found) {
-		kc = calloc(1, sizeof(struct roots_keyboard_config));
-		kc->name = strdup(device_name);
-		wl_list_insert(&config->keyboards, &kc->link);
-	}
-
-	if (strcmp(name, "meta-key") == 0) {
-		kc->meta_key = parse_modifier(value);
-		if (kc->meta_key == 0) {
-			wlr_log(WLR_ERROR, "got unknown meta key: %s", name);
-		}
-	} else if (strcmp(name, "rules") == 0) {
-		kc->rules = strdup(value);
-	} else if (strcmp(name, "model") == 0) {
-		kc->model = strdup(value);
-	} else if (strcmp(name, "layout") == 0) {
-		kc->layout = strdup(value);
-	} else if (strcmp(name, "variant") == 0) {
-		kc->variant = strdup(value);
-	} else if (strcmp(name, "options") == 0) {
-		kc->options = strdup(value);
-	} else if (strcmp(name, "repeat-rate") == 0) {
-		kc->repeat_rate = strtol(value, NULL, 10);
-	} else if (strcmp(name, "repeat-delay") == 0) {
-		kc->repeat_delay = strtol(value, NULL, 10);
-	} else {
-		wlr_log(WLR_ERROR, "got unknown keyboard config: %s", name);
-	}
-}
-
 static const char *output_prefix = "output:";
 static const char *device_prefix = "device:";
-static const char *keyboard_prefix = "keyboard:";
 static const char *cursor_prefix = "cursor:";
 static const char *switch_prefix = "switch:";
 
@@ -428,12 +361,6 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 		} else {
 			wlr_log(WLR_ERROR, "got unknown device config: %s", name);
 		}
-	} else if (strcmp(section, "keyboard") == 0) {
-		config_handle_keyboard(config, "", name, value);
-	} else if (strncmp(keyboard_prefix,
-				section, strlen(keyboard_prefix)) == 0) {
-		const char *device_name = section + strlen(keyboard_prefix);
-		config_handle_keyboard(config, device_name, name, value);
 	} else if (strncmp(switch_prefix, section, strlen(switch_prefix)) == 0) {
 		const char *switch_name = section + strlen(switch_prefix);
 		add_switch_config(&config->switches, switch_name, name, value);
@@ -454,7 +381,6 @@ struct roots_config *roots_config_create_from_args(int argc, char *argv[]) {
 	config->xwayland_lazy = true;
 	wl_list_init(&config->outputs);
 	wl_list_init(&config->devices);
-	wl_list_init(&config->keyboards);
 	wl_list_init(&config->cursors);
 	wl_list_init(&config->switches);
 
@@ -504,11 +430,6 @@ struct roots_config *roots_config_create_from_args(int argc, char *argv[]) {
 
 	if (result == -1) {
 		wlr_log(WLR_DEBUG, "No config file found. Using sensible defaults.");
-		struct roots_keyboard_config *kc =
-			calloc(1, sizeof(struct roots_keyboard_config));
-		kc->meta_key = WLR_MODIFIER_LOGO;
-		kc->name = strdup("");
-		wl_list_insert(&config->keyboards, &kc->link);
 	} else if (result == -2) {
 		wlr_log(WLR_ERROR, "Could not allocate memory to parse config file");
 		exit(1);
@@ -540,17 +461,6 @@ void roots_config_destroy(struct roots_config *config) {
 		free(dc->mapped_output);
 		free(dc->mapped_box);
 		free(dc);
-	}
-
-	struct roots_keyboard_config *kc, *ktmp = NULL;
-	wl_list_for_each_safe(kc, ktmp, &config->keyboards, link) {
-		free(kc->name);
-		free(kc->rules);
-		free(kc->model);
-		free(kc->layout);
-		free(kc->variant);
-		free(kc->options);
-		free(kc);
 	}
 
 	struct roots_cursor_config *cc, *ctmp = NULL;
@@ -592,23 +502,6 @@ struct roots_device_config *roots_config_get_device(struct roots_config *config,
 	wl_list_for_each(d_config, &config->devices, link) {
 		if (strcmp(d_config->name, device->name) == 0) {
 			return d_config;
-		}
-	}
-
-	return NULL;
-}
-
-struct roots_keyboard_config *roots_config_get_keyboard(
-		struct roots_config *config, struct wlr_input_device *device) {
-	const char *device_name = "";
-	if (device != NULL) {
-		device_name = device->name;
-	}
-
-	struct roots_keyboard_config *kc;
-	wl_list_for_each(kc, &config->keyboards, link) {
-		if (strcmp(kc->name, device_name) == 0) {
-			return kc;
 		}
 	}
 

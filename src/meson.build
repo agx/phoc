@@ -28,6 +28,7 @@ endif
 phoc_deps = [
   input,
   gio,
+  gnome_desktop,
   math,
   pixman,
   wayland_server,

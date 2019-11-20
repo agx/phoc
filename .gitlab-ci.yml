@@ -4,6 +4,9 @@ stages:
 
 variables:
   DEPS: build-essential git
+  ALPINE_EDGE_DEPS: |
+        git meson ninja gnome-desktop-dev gobject-introspection-dev
+        libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
 
 .tags: &tags
   tags:
@@ -51,7 +54,7 @@ build-with-xwayland-alpinelinux-edge:
   image: alpine:edge
   before_script:
     - apk -q add alpine-sdk
-    - apk -q add git meson ninja gobject-introspection-dev libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+    - apk -q add $ALPINE_EDGE_DEPS
   variables:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
@@ -63,7 +66,7 @@ build-without-xwayland-alpinelinux-edge:
   image: alpine:edge
   before_script:
     - apk -q add alpine-sdk
-    - apk -q add git meson ninja gobject-introspection-dev libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+    - apk -q add $ALPINE_EDGE_DEPS
   variables:
      BUILD_ARGS: -Dxwayland=disabled
   <<: *tags

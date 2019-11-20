@@ -1,7 +1,7 @@
 #ifndef ROOTSTON_SEAT_H
 #define ROOTSTON_SEAT_H
 
-#include <wayland-server.h>
+#include <wayland-server-core.h>
 #include "input.h"
 #include "keyboard.h"
 #include "layers.h"

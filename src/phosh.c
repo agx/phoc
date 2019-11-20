@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <wayland-server.h>
+#include <wayland-server-core.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/util/log.h>

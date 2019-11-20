@@ -100,6 +100,81 @@ static void seat_view_deco_button(struct roots_seat_view *view, double sx,
 	}
 }
 
+static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, double ly, double threshold) {
+	PhocServer *server = phoc_server_get_default ();
+	PhocDesktop *desktop = server->desktop;
+
+	if (!surface) {
+		return false;
+	}
+
+	struct wlr_surface *root = wlr_surface_get_root_surface(surface), *iter = root;
+
+	while (wlr_surface_is_xdg_surface(iter)) {
+		struct wlr_xdg_surface *xdg_surface = wlr_xdg_surface_from_wlr_surface(iter);
+		if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
+			iter = xdg_surface->popup->parent;
+		} else {
+			break;
+		}
+	}
+
+	if (wlr_surface_is_layer_surface(iter)) {
+		return false;
+	}
+
+	struct wlr_output *wlr_output = wlr_output_layout_output_at(desktop->layout, lx, ly);
+	struct roots_output *output = desktop_output_from_wlr_output(desktop, wlr_output);
+	if (!output) {
+		return false;
+	}
+
+	struct wlr_box *output_box =
+		wlr_output_layout_get_box(desktop->layout, wlr_output);
+
+	struct roots_layer_surface *roots_surface;
+	bool left = false, right = false, top = false, bottom = false;
+	wl_list_for_each(roots_surface, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], link) {
+		struct wlr_layer_surface_v1 *layer = roots_surface->layer_surface;
+		struct wlr_layer_surface_v1_state *state = &layer->current;
+		const uint32_t both_horiz = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+			| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+		const uint32_t both_vert = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+			| ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
+
+		if (state->anchor == (both_horiz | ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP)) {
+			top = true;
+		}
+		if (state->anchor == (both_horiz | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM)) {
+			bottom = true;
+		}
+		if (state->anchor == (both_vert | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT)) {
+			left = true;
+		}
+		if (state->anchor == (both_vert | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT)) {
+			right = true;
+		}
+	}
+
+	if ((top    && ly <= output_box->y + threshold * output_box->height) ||
+			(bottom && ly >= output_box->y + (1.0 - threshold) * output_box->height - 1) ||
+			(left   && lx <= output_box->x + threshold * output_box->width) ||
+			(right  && lx >= output_box->x + (1.0 - threshold) * output_box->width - 1)) {
+		if (output->fullscreen_view && output->fullscreen_view->wlr_surface == root) {
+			output->force_shell_reveal = true;
+			output_damage_whole(output);
+		}
+		return true;
+	} else {
+		if (output->force_shell_reveal) {
+			output->force_shell_reveal = false;
+			output_damage_whole(output);
+		}
+	}
+
+	return false;
+}
+
 static void roots_passthrough_cursor(struct roots_cursor *cursor,
 		uint32_t time) {
 	PhocServer *server = phoc_server_get_default ();
@@ -300,7 +375,7 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 		}
 	}
 
-	if (!is_touch) {
+	if (!roots_handle_shell_reveal(surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch) {
 		wlr_seat_pointer_notify_button(seat->seat, time, button, state);
 	}
 }
@@ -407,10 +482,12 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 	struct wlr_surface *surface = desktop_surface_at(
 		desktop, lx, ly, &sx, &sy, NULL);
 
-	if (surface && roots_seat_allow_input(cursor->seat, surface->resource)) {
+	if (surface && !roots_handle_shell_reveal(surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD) &&
+	    roots_seat_allow_input(cursor->seat, surface->resource)) {
 		wlr_seat_touch_notify_down(cursor->seat->seat, surface,
 			event->time_msec, event->touch_id, sx, sy);
 	}
+
 }
 
 void roots_cursor_handle_touch_up(struct roots_cursor *cursor,

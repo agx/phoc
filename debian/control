@@ -4,6 +4,7 @@ Maintainer: Guido Günther <agx@sigxcpu.org>
 Build-Depends:
  debhelper (>= 12),
  libglib2.0-dev,
+ libgnome-desktop-3-dev,
  libinput-dev,
  libpixman-1-dev,
  libwayland-dev,

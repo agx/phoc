@@ -104,6 +104,21 @@ static void handle_close (struct roots_seat *seat)
 }
 
 
+static void handle_switch_input_source (struct roots_seat *seat)
+{
+  struct wlr_keyboard *wlr_keyboard = wlr_seat_get_keyboard (seat->seat);
+  PhocKeyboard *keyboard;
+
+  if (wlr_keyboard == NULL)
+    return;
+
+  keyboard = wlr_keyboard->data;
+  g_return_if_fail (PHOC_IS_KEYBOARD (keyboard));
+
+  phoc_keyboard_next_layout (keyboard);
+}
+
+
 /* This is copied from mutter which in turn got it form GTK+ */
 static inline gboolean
 is_alt (const gchar *string)
@@ -530,6 +545,8 @@ phoc_keybindings_constructed (GObject *object)
 		       "switch-applications", handle_cycle_windows);
   phoc_add_keybinding (self, self->settings,
 		       "unmaximize", handle_unmaximize);
+  phoc_add_keybinding (self, self->settings,
+		       "switch-input-source", handle_switch_input_source);
 
   G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
 }
