@@ -1,3 +1,12 @@
+phoc (0.1.3) amber; urgency=medium
+
+  [ Guido Günther ]
+  * wlroots: Update submodule
+  * desktop: Allow to blank/unblank all outputs
+  * keyboard: Blank/unblank all outputs on power button press (Closes: #86)
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Sat, 23 Nov 2019 00:27:10 +0100
+
 phoc (0.1.2) amber-phone; urgency=medium
 
   [ Sebastian Krzyszkowiak ]
