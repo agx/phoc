@@ -170,9 +170,10 @@ static bool
 keyboard_execute_compositor_binding(PhocKeyboard *self,
                                     xkb_keysym_t keysym)
 {
+  PhocServer *server = phoc_server_get_default ();
+
   if (keysym >= XKB_KEY_XF86Switch_VT_1 &&
       keysym <= XKB_KEY_XF86Switch_VT_12) {
-    PhocServer *server = phoc_server_get_default ();
 
     struct wlr_session *session = wlr_backend_get_session(server->backend);
     if (session) {
@@ -180,6 +181,12 @@ keyboard_execute_compositor_binding(PhocKeyboard *self,
       wlr_session_change_vt(session, vt);
     }
 
+    return true;
+  }
+
+  if (keysym == XKB_KEY_XF86PowerDown || keysym == XKB_KEY_XF86PowerOff) {
+    g_debug ("Power button pressed");
+    phoc_desktop_toggle_output_blank (server->desktop);
     return true;
   }
 

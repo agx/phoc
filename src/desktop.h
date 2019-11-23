@@ -106,6 +106,7 @@ struct _PhocDesktop {
 };
 
 PhocDesktop *phoc_desktop_new (struct roots_config *config);
+void         phoc_desktop_toggle_output_blank (PhocDesktop *self);
 
 struct roots_output *desktop_output_from_wlr_output(
 	PhocDesktop *desktop, struct wlr_output *output);

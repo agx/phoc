@@ -606,3 +606,23 @@ struct roots_output *desktop_output_from_wlr_output(
 	}
 	return NULL;
 }
+
+
+/**
+ * phoc_desktop_toggle_output_blank:
+ *
+ * Blank or unblank all outputs depending on the current state
+ */
+void
+phoc_desktop_toggle_output_blank (PhocDesktop *self)
+{
+  struct roots_output *output;
+
+  wl_list_for_each(output, &self->outputs, link) {
+    gboolean enable = !output->wlr_output->enabled;
+
+    wlr_output_enable (output->wlr_output, enable);
+    if (enable)
+      output_damage_whole(output);
+  }
+}
