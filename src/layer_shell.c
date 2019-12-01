@@ -279,7 +279,7 @@ void arrange_layers(struct roots_output *output) {
 
 	struct roots_view *view;
 	wl_list_for_each(view, &output->desktop->views, link) {
-		if (view->maximized) {
+		if (view_is_maximized(view)) {
 			view_arrange_maximized(view);
 		}
 	}

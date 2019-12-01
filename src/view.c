@@ -63,6 +63,11 @@ void view_destroy(struct roots_view *view) {
 	view->impl->destroy(view);
 }
 
+gboolean view_is_maximized(const struct roots_view *view)
+{
+	return view->state == PHOC_VIEW_STATE_MAXIMIZED;
+}
+
 void view_get_box(const struct roots_view *view, struct wlr_box *box) {
 	box->x = view->box.x;
 	box->y = view->box.y;
@@ -280,7 +285,8 @@ want_auto_maximize(struct roots_view *view) {
 }
 
 void view_maximize(struct roots_view *view, bool maximize) {
-	if (view->maximized == maximize || view->fullscreen_output != NULL) {
+	if (view_is_maximized (view) == maximize
+	    || view->fullscreen_output != NULL) {
 		return;
 	}
 
@@ -297,8 +303,8 @@ void view_maximize(struct roots_view *view, bool maximize) {
 			maximize);
 	}
 
-	if (!view->maximized && maximize) {
-		view->maximized = true;
+	if (!view_is_maximized(view) && maximize) {
+		view->state = PHOC_VIEW_STATE_MAXIMIZED;
 		view->saved.x = view->box.x;
 		view->saved.y = view->box.y;
 		view->saved.rotation = view->rotation;
@@ -308,8 +314,8 @@ void view_maximize(struct roots_view *view, bool maximize) {
 		view_arrange_maximized(view);
 	}
 
-	if (view->maximized && !maximize) {
-		view->maximized = false;
+	if (view_is_maximized(view) && !maximize) {
+		view->state = PHOC_VIEW_STATE_NORMAL;
 
 		view_move_resize(view, view->saved.x, view->saved.y, view->saved.width,
 			view->saved.height);
@@ -406,7 +412,6 @@ void view_close(struct roots_view *view) {
 	}
 }
 
-
 bool
 view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
 {
@@ -440,7 +445,7 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   y = usable_area.y + l_output->y;
   g_debug("moving view to %f %f", x, y);
 
-  if (view->maximized) {
+  if (view_is_maximized (view)) {
     view->saved.x = x;
     view->saved.y = y;
     view_move(view, x, y);
@@ -451,7 +456,6 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
 
   return true;
 }
-
 
 bool view_center(struct roots_view *view) {
         PhocServer *server = phoc_server_get_default ();
@@ -668,7 +672,7 @@ void view_setup(struct roots_view *view) {
 	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
 
-	if (view->fullscreen_output == NULL && !view->maximized) {
+	if (view->fullscreen_output == NULL && !view_is_maximized(view)) {
 		view_center(view);
 	}
 
@@ -677,7 +681,7 @@ void view_setup(struct roots_view *view) {
 	wlr_foreign_toplevel_handle_v1_set_fullscreen(view->toplevel_handle,
 	                                              view->fullscreen_output != NULL);
 	wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
-	                                             view->maximized);
+	                                             view_is_maximized(view));
 	wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle,
 	                                         view->title ?: "");
 	wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle,

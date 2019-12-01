@@ -38,6 +38,16 @@ enum roots_view_type {
 #endif
 };
 
+typedef enum {
+  PHOC_VIEW_TILE_LEFT,
+  PHOC_VIEW_TILE_RIGHT,
+} PhocViewTileDirection;
+
+typedef enum {
+  PHOC_VIEW_STATE_NORMAL,
+  PHOC_VIEW_STATE_MAXIMIZED,
+} PhocViewState;
+
 struct roots_view {
 	enum roots_view_type type;
 	const struct roots_view_interface *impl;
@@ -56,7 +66,7 @@ struct roots_view {
 	char *title;
 	char *app_id;
 
-	bool maximized;
+	PhocViewState state;
 	struct roots_output *fullscreen_output;
 	struct {
 		double x, y;
@@ -215,6 +225,7 @@ void view_destroy(struct roots_view *view);
 void view_activate(struct roots_view *view, bool activate);
 void view_apply_damage(struct roots_view *view);
 void view_damage_whole(struct roots_view *view);
+gboolean view_is_maximized(const struct roots_view *view);
 void view_update_position(struct roots_view *view, int x, int y);
 void view_update_size(struct roots_view *view, int width, int height);
 void view_update_decorated(struct roots_view *view, bool decorated);
