@@ -70,6 +70,7 @@ struct roots_view {
 	PhocViewState state;
 	struct roots_output *fullscreen_output;
 	struct {
+		PhocViewState state;
 		double x, y;
 		uint32_t width, height;
 		float rotation;

@@ -315,10 +315,16 @@ void view_maximize(struct roots_view *view, bool maximize) {
 	}
 
 	if (view_is_maximized(view) && !maximize) {
-		view->state = PHOC_VIEW_STATE_NORMAL;
-
-		view_move_resize(view, view->saved.x, view->saved.y, view->saved.width,
-			view->saved.height);
+		if (view->saved.state == PHOC_VIEW_STATE_TILED) {
+			view->state = PHOC_VIEW_STATE_TILED;
+			if (view->impl->maximize) {
+				view->impl->maximize(view, true);
+			}
+		}  else {
+			view->state = PHOC_VIEW_STATE_NORMAL;
+		}
+		view_move_resize(view, view->saved.x, view->saved.y,
+				 view->saved.width, view->saved.height);
 		view_rotate(view, view->saved.rotation);
 	}
 }
