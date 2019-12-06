@@ -740,3 +740,29 @@ void handle_new_output(struct wl_listener *listener, void *data) {
 
 	update_output_manager_config(desktop);
 }
+
+/**
+ * phoc_output_is_builtin:
+ *
+ * Returns: %TRUE if the output a built in panel (e.g. laptop panel or
+ * phone LCD), %FALSE otherwise.
+ */
+gboolean
+phoc_output_is_builtin (struct roots_output *self)
+{
+  struct wlr_output *output;
+
+  g_return_val_if_fail (self, FALSE);
+  g_return_val_if_fail (self->wlr_output, FALSE);
+  output = self->wlr_output;
+  g_return_val_if_fail (output->name, FALSE);
+
+  if (g_str_has_prefix (output->name, "LVDS-"))
+    return TRUE;
+  else if (g_str_has_prefix (output->name, "eDP-"))
+    return TRUE;
+  else if (g_str_has_prefix (output->name, "DSI-"))
+    return TRUE;
+
+  return FALSE;
+}

@@ -92,5 +92,6 @@ void output_render(struct roots_output *output);
 void scale_box(struct wlr_box *box, float scale);
 void get_decoration_box(struct roots_view *view,
 	struct roots_output *output, struct wlr_box *box);
+gboolean phoc_output_is_builtin (struct roots_output *self);
 
 #endif
