@@ -434,7 +434,7 @@ static void seat_reset_device_mappings(struct roots_seat *seat,
 }
 
 static void seat_set_device_output_mappings(struct roots_seat *seat,
-		struct wlr_input_device *device, struct wlr_output *output) {
+		struct wlr_input_device *device, struct roots_output *output) {
 	struct wlr_cursor *cursor = seat->cursor->cursor;
 
 	if (0)
@@ -467,15 +467,15 @@ void roots_seat_configure_cursor(struct roots_seat *seat) {
 	wl_list_for_each(output, &desktop->outputs, link) {
 		wl_list_for_each(pointer, &seat->pointers, link) {
 			seat_set_device_output_mappings(seat, pointer->device,
-				output->wlr_output);
+				output);
 		}
 		wl_list_for_each(tablet, &seat->tablets, link) {
 			seat_set_device_output_mappings(seat, tablet->device,
-				output->wlr_output);
+				output);
 		}
 		wl_list_for_each(touch, &seat->touch, link) {
 			seat_set_device_output_mappings(seat, touch->device,
-				output->wlr_output);
+				output);
 		}
 	}
 }
