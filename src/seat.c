@@ -436,9 +436,18 @@ static void seat_reset_device_mappings(struct roots_seat *seat,
 static void seat_set_device_output_mappings(struct roots_seat *seat,
 		struct wlr_input_device *device, struct roots_output *output) {
 	struct wlr_cursor *cursor = seat->cursor->cursor;
+	/*
+	 * Currently only maps touch
+	 * TODO: tablet
+	 */
+	if (device->type != WLR_INPUT_DEVICE_TOUCH)
+	  return;
 
-	if (0)
-		wlr_cursor_map_input_to_output(cursor, device, output);
+	if (!phoc_output_is_builtin (output))
+	  return;
+
+	g_debug ("Mapping %s to %s", device->name, output->wlr_output->name);
+	wlr_cursor_map_input_to_output(cursor, device, output->wlr_output);
 }
 
 void roots_seat_configure_cursor(struct roots_seat *seat) {
