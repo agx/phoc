@@ -19,68 +19,6 @@
 #include "settings.h"
 #include "ini.h"
 
-static struct wlr_box *parse_geometry(const char *str) {
-	// format: {width}x{height}+{x}+{y}
-	if (strlen(str) > 255) {
-		wlr_log(WLR_ERROR, "cannot parse geometry string, too long");
-		return NULL;
-	}
-
-	char *buf = strdup(str);
-	struct wlr_box *box = calloc(1, sizeof(struct wlr_box));
-
-	bool has_width = false;
-	bool has_height = false;
-	bool has_x = false;
-	bool has_y = false;
-
-	char *pch = strtok(buf, "x+");
-	while (pch != NULL) {
-		errno = 0;
-		char *endptr;
-		long val = strtol(pch, &endptr, 0);
-
-		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
-				(errno != 0 && val == 0)) {
-			goto invalid_input;
-		}
-
-		if (endptr == pch) {
-			goto invalid_input;
-		}
-
-		if (!has_width) {
-			box->width = val;
-			has_width = true;
-		} else if (!has_height) {
-			box->height = val;
-			has_height = true;
-		} else if (!has_x) {
-			box->x = val;
-			has_x = true;
-		} else if (!has_y) {
-			box->y = val;
-			has_y = true;
-		} else {
-			break;
-		}
-		pch = strtok(NULL, "x+");
-	}
-
-	if (!has_width || !has_height) {
-		goto invalid_input;
-	}
-
-	free(buf);
-	return box;
-
-invalid_input:
-	wlr_log(WLR_ERROR, "could not parse geometry string: %s", str);
-	free(buf);
-	free(box);
-	return NULL;
-}
-
 static bool parse_modeline(const char *s, drmModeModeInfo *mode) {
 	char hsync[16];
 	char vsync[16];
@@ -174,13 +112,7 @@ static void config_handle_cursor(struct roots_config *config,
 		wl_list_insert(&config->cursors, &cc->link);
 	}
 
-	if (strcmp(name, "map-to-output") == 0) {
-		free(cc->mapped_output);
-		cc->mapped_output = strdup(value);
-	} else if (strcmp(name, "geometry") == 0) {
-		free(cc->mapped_box);
-		cc->mapped_box = parse_geometry(value);
-	} else if (strcmp(name, "theme") == 0) {
+	if (strcmp(name, "theme") == 0) {
 		free(cc->theme);
 		cc->theme = strdup(value);
 	} else if (strcmp(name, "default-image") == 0) {
@@ -321,13 +253,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 			wl_list_insert(&config->devices, &dc->link);
 		}
 
-		if (strcmp(name, "map-to-output") == 0) {
-			free(dc->mapped_output);
-			dc->mapped_output = strdup(value);
-		} else if (strcmp(name, "geometry") == 0) {
-			free(dc->mapped_box);
-			dc->mapped_box = parse_geometry(value);
-		} else if (strcmp(name, "seat") == 0) {
+		if (strcmp(name, "seat") == 0) {
 			free(dc->seat);
 			dc->seat = strdup(value);
 		} else if (strcmp(name, "tap_enabled") == 0) {
@@ -419,16 +345,12 @@ void roots_config_destroy(struct roots_config *config) {
 	wl_list_for_each_safe(dc, dtmp, &config->devices, link) {
 		free(dc->name);
 		free(dc->seat);
-		free(dc->mapped_output);
-		free(dc->mapped_box);
 		free(dc);
 	}
 
 	struct roots_cursor_config *cc, *ctmp = NULL;
 	wl_list_for_each_safe(cc, ctmp, &config->cursors, link) {
 		free(cc->seat);
-		free(cc->mapped_output);
-		free(cc->mapped_box);
 		free(cc->theme);
 		free(cc->default_image);
 		free(cc);

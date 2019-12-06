@@ -32,16 +32,12 @@ struct roots_output_config {
 struct roots_device_config {
 	char *name;
 	char *seat;
-	char *mapped_output;
 	bool tap_enabled;
-	struct wlr_box *mapped_box;
 	struct wl_list link;
 };
 
 struct roots_cursor_config {
 	char *seat;
-	char *mapped_output;
-	struct wlr_box *mapped_box;
 	char *theme;
 	char *default_image;
 	struct wl_list link;
