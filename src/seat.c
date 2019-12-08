@@ -905,7 +905,7 @@ static void seat_add_switch(struct roots_seat *seat,
 }
 
 static void handle_touch_destroy(struct wl_listener *listener, void *data) {
-	struct roots_pointer *touch =
+	struct roots_touch *touch =
 		wl_container_of(listener, touch, device_destroy);
 	struct roots_seat *seat = touch->seat;
 
