@@ -28,7 +28,6 @@ struct roots_output {
 	struct wl_listener enable;
 	struct wl_listener mode;
 	struct wl_listener transform;
-	struct wl_listener present;
 	struct wl_listener damage_frame;
 	struct wl_listener damage_destroy;
 };
