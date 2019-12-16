@@ -1117,6 +1117,10 @@ static void handle_tablet_destroy(struct wl_listener *listener,
 static void seat_add_tablet_tool(struct roots_seat *seat,
 		struct wlr_input_device *device) {
 	PhocServer *server = phoc_server_get_default ();
+
+	if (!wlr_input_device_is_libinput (device))
+		return;
+
 	struct roots_tablet *tablet =
 		calloc(1, sizeof(struct roots_tablet));
 	if (!tablet) {
