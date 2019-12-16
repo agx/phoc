@@ -64,12 +64,12 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
 
 	struct roots_seat *seat = input_get_seat(input, seat_name);
 	if (!seat) {
-		wlr_log(WLR_ERROR, "could not create roots seat");
+		g_warning("could not create roots seat");
 		return;
 	}
 
-	wlr_log(WLR_DEBUG, "New input device: %s (%d:%d) %s seat:%s", device->name,
-			device->vendor, device->product, device_type(device->type), seat_name);
+	g_debug("New input device: %s (%d:%d) %s seat:%s", device->name,
+		device->vendor, device->product, device_type(device->type), seat_name);
 
 	roots_seat_add_device(seat, device);
 
@@ -77,7 +77,7 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
 		struct libinput_device *libinput_dev =
 			wlr_libinput_get_device_handle(device);
 
-		wlr_log(WLR_DEBUG, "input has config, tap_enabled: %d\n", dc->tap_enabled);
+		g_debug("input has config, tap_enabled: %d\n", dc->tap_enabled);
 		if (dc->tap_enabled) {
 			libinput_device_config_tap_set_enabled(libinput_dev,
 					LIBINPUT_CONFIG_TAP_ENABLED);
@@ -87,7 +87,7 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
 
 struct roots_input *input_create(struct roots_config *config) {
 	PhocServer *server = phoc_server_get_default ();
-	wlr_log(WLR_DEBUG, "Initializing roots input");
+	g_debug("Initializing roots input");
 	assert(server->desktop);
 
 	struct roots_input *input = calloc(1, sizeof(struct roots_input));
