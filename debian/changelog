@@ -1,3 +1,44 @@
+phoc (0.1.4) amber; urgency=medium
+
+  [ Guido Günther ]
+  * build: drop rootston=false from wlroots submodule build
+    rootston is no longer part of wlroots so the option causes
+    a warning during build.
+  * view: Add helper to move windows between outputs
+  * keybindings: allow to move windows to left/right output
+  * Update submodule.
+    This pulls in the gbm fix.
+  * Add doap file.
+    This helps to identify project maintainers and contact points.
+  * d/control: Add Sebastian to uploaders
+  * xdg_shell_v6: Implement get_geometry.
+    As long as these are around there's no reason why v6 should
+    be worse than stable
+  * Introduce view_is_maximized.
+    This will allow us to introduce a tiled state as well.
+  * view: Simple left right tilig.
+    This uses the 'maximized' state to get rid of GTK's drop
+    shadows until we have fixed
+    https://gitlab.gnome.org/GNOME/gtk/issues/2171
+  * view: Differentiate between tiled and normal on unmaximize
+  * keybindings: bind left and right tiling
+  * d/control: Depend on gsettings schemas.
+    Not having them makes us not start
+
+  [ Sebastian Krzyszkowiak ]
+  * Update wlroots submodule.
+    Forward to 9fb251c33fc404f106f0b4e3b6839de9d4753a4c for virtual
+    keyboard keycode 0 fix.
+
+  [ Simon Ser ]
+  * render: set surface as sampled for presentation.
+    This is necessary after [1].
+    [1]: https://github.com/swaywm/wlroots/pull/1798
+  * Fix presentation feedback when scanning out fullscreen views.
+    References: https://github.com/swaywm/sway/pull/4667
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 17 Dec 2019 17:54:07 +0100
+
 phoc (0.1.3) amber; urgency=medium
 
   [ Guido Günther ]
