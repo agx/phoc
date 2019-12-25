@@ -198,6 +198,10 @@ void view_activate(struct roots_view *view, bool activate) {
 		wlr_foreign_toplevel_handle_v1_set_activated(view->toplevel_handle,
 			activate);
 	}
+
+	if (activate && view->fullscreen_output) {
+		view->fullscreen_output->force_shell_reveal = false;
+	}
 }
 
 void view_resize(struct roots_view *view, uint32_t width, uint32_t height) {
