@@ -407,8 +407,8 @@ struct phosh_private
 }
 
 
-struct phosh_private_xdg_switcher
-*phosh_private_xdg_switcher_from_resource(struct wl_resource *resource) {
+struct phosh_private_xdg_switcher *
+phosh_private_xdg_switcher_from_resource(struct wl_resource *resource) {
   assert(wl_resource_instance_of(resource, &phosh_private_xdg_switcher_interface,
 				 &phosh_private_xdg_switcher_impl));
   return wl_resource_get_user_data(resource);
