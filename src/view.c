@@ -912,3 +912,46 @@ void view_create_foreign_toplevel_handle(struct roots_view *view) {
 	wl_signal_add(&view->toplevel_handle->events.request_close,
 			&view->toplevel_handle_request_close);
 }
+
+/*
+ * roots_view_get_from_wlr_surface::
+ *
+ * Given a #wlr_surface return the corresponding view
+ */
+struct roots_view *
+roots_view_get_from_wlr_surface (struct wlr_surface *wlr_surface)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+  struct roots_view *view, *found_view = NULL;
+
+  wl_list_for_each(view, &desktop->views, link) {
+    switch (view->type) {
+    case ROOTS_XDG_SHELL_VIEW: {
+      struct roots_xdg_surface *xdg_surface =
+	roots_xdg_surface_from_view(view);
+      if (xdg_surface->xdg_surface->surface == wlr_surface)
+	found_view = view;
+      break;
+    }
+    case ROOTS_XDG_SHELL_V6_VIEW: {
+      struct roots_xdg_surface_v6 *xdg_surface_v6 =
+	roots_xdg_surface_v6_from_view(view);
+      if (xdg_surface_v6->xdg_surface_v6->surface == wlr_surface)
+	found_view = view;
+      break;
+    }
+#ifdef PHOC_XWAYLAND
+    case ROOTS_XWAYLAND_VIEW: {
+      struct roots_xwayland_surface *xwayland_surface =
+	roots_xwayland_surface_from_view(view);
+      if (xwayland_surface->xwayland_surface->surface == wlr_surface)
+	found_view = view;
+      break;
+    }
+#endif
+    }
+  }
+
+  return found_view;
+}
