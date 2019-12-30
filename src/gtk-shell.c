@@ -24,43 +24,43 @@
 
 static void
 handle_set_dbus_properties(struct wl_client *client,
-			   struct wl_resource *resource,
-			   const char *application_id,
-			   const char *app_menu_path,
-			   const char *menubar_path,
-			   const char *window_object_path,
-			   const char *application_object_path,
-			   const char *unique_bus_name)
+                           struct wl_resource *resource,
+                           const char *application_id,
+                           const char *app_menu_path,
+                           const char *menubar_path,
+                           const char *window_object_path,
+                           const char *application_object_path,
+                           const char *unique_bus_name)
 {
   g_debug ("%s not implemented for %s", __func__, application_id);
 }
 
 static void
 handle_set_modal(struct wl_client *client,
-		 struct wl_resource *resource)
+                 struct wl_resource *resource)
 {
   g_debug ("%s not implemented", __func__);
 }
 
 static void
 handle_unset_modal(struct wl_client *client,
-		    struct wl_resource *resource)
+                    struct wl_resource *resource)
 {
   g_debug ("%s not implemented", __func__);
 }
 
 static void
 handle_present(struct wl_client *client,
-	       struct wl_resource *resource,
-	       uint32_t time)
+               struct wl_resource *resource,
+               uint32_t time)
 {
   g_debug ("%s not implemented", __func__);
 }
 
 static void
 handle_request_focus(struct wl_client *client,
-		     struct wl_resource *resource,
-		     const char *startup_id)
+                     struct wl_resource *resource,
+                     const char *startup_id)
 {
   PhocGtkSurface *gtk_surface =
     gtk_surface_from_resource (resource);
@@ -93,7 +93,7 @@ gtk_surface_handle_resource_destroy(struct wl_resource *resource)
     gtk_surface_from_resource(resource);
 
   g_debug ("Destroying gtk_surface %p (res %p)", gtk_surface,
-	   gtk_surface->resource);
+           gtk_surface->resource);
   if (gtk_surface->wlr_surface) {
     wl_list_remove(&gtk_surface->wlr_surface_handle_destroy.link);
     gtk_surface->wlr_surface = NULL;
@@ -102,20 +102,20 @@ gtk_surface_handle_resource_destroy(struct wl_resource *resource)
 }
 
 static void handle_wlr_surface_handle_destroy(struct wl_listener *listener,
-					      void *data)
+                                              void *data)
 {
   PhocGtkSurface *gtk_surface =
     wl_container_of(listener, gtk_surface, wlr_surface_handle_destroy);
 
-  /* Make sure we don't try to race an already gone surface */
+  /* Make sure we don't try to raise an already gone surface */
   gtk_surface->wlr_surface = NULL;
 }
 
 static void
 handle_get_gtk_surface(struct wl_client *client,
-		       struct wl_resource *gtk_shell_resource,
-		       uint32_t id,
-		       struct wl_resource *surface_resource)
+                       struct wl_resource *gtk_shell_resource,
+                       uint32_t id,
+                       struct wl_resource *surface_resource)
 {
   struct wlr_surface *wlr_surface =
     wlr_surface_from_resource (surface_resource);
@@ -129,7 +129,7 @@ handle_get_gtk_surface(struct wl_client *client,
 
   int version = wl_resource_get_version(gtk_shell_resource);
   gtk_surface->resource = wl_resource_create(client,
-					     &gtk_surface1_interface, version, id);
+                                             &gtk_surface1_interface, version, id);
   if (gtk_surface->resource == NULL) {
     g_free (gtk_surface);
     wl_client_post_no_memory(client);
@@ -137,42 +137,42 @@ handle_get_gtk_surface(struct wl_client *client,
   }
 
   g_debug ("New gtk_surface_surface %p (res %p)", gtk_surface,
-	   gtk_surface->resource);
+           gtk_surface->resource);
   wl_resource_set_implementation(gtk_surface->resource,
-				 &gtk_surface1_impl,
-				 gtk_surface,
-				 gtk_surface_handle_resource_destroy);
+                                 &gtk_surface1_impl,
+                                 gtk_surface,
+                                 gtk_surface_handle_resource_destroy);
 
   gtk_surface->wlr_surface = wlr_surface;
   gtk_surface->wlr_surface_handle_destroy.notify =
     handle_wlr_surface_handle_destroy;
 
   wl_signal_add(&wlr_surface->events.destroy,
-		&gtk_surface->wlr_surface_handle_destroy);
+                &gtk_surface->wlr_surface_handle_destroy);
 
   wl_signal_init(&gtk_surface->events.destroy);
 }
 
 static void
 handle_set_startup_id(struct wl_client *client,
-		      struct wl_resource *resource,
-		      const char *startup_id)
+                      struct wl_resource *resource,
+                      const char *startup_id)
 {
   g_debug ("%s not implemented", __func__);
 }
 
 static void
 handle_system_bell(struct wl_client *client,
-		   struct wl_resource *resource,
-		   struct wl_resource *surface)
+                   struct wl_resource *resource,
+                   struct wl_resource *surface)
 {
   g_debug ("%s not implmented", __func__);
 }
 
 static void
 handle_notify_launch(struct wl_client *client,
-		     struct wl_resource *resource,
-		     const char *startup_id)
+                     struct wl_resource *resource,
+                     const char *startup_id)
 {
   g_debug ("%s not implmented", __func__);
 }
@@ -184,7 +184,7 @@ gtk_shell1_handle_resource_destroy(struct wl_resource *resource)
 
   g_debug ("Destroying gtk_shell %p (res %p)", gtk_shell, resource);
   gtk_shell->resources = g_slist_remove (gtk_shell->resources,
-					 resource);
+                                         resource);
 }
 
 static const struct gtk_shell1_interface gtk_shell1_impl = {
@@ -199,14 +199,14 @@ gtk_shell_bind(struct wl_client *client, void *data, uint32_t version, uint32_t 
 {
   PhocGtkShell *gtk_shell = data;
   struct wl_resource *resource  = wl_resource_create(client, &gtk_shell1_interface,
-						     version, id);
+                                                     version, id);
   wl_resource_set_implementation(resource,
-				 &gtk_shell1_impl,
-				 gtk_shell,
-				 gtk_shell1_handle_resource_destroy);
+                                 &gtk_shell1_impl,
+                                 gtk_shell,
+                                 gtk_shell1_handle_resource_destroy);
 
   gtk_shell->resources = g_slist_prepend (gtk_shell->resources,
-					  resource);
+                                          resource);
 
   gtk_shell1_send_capabilities (resource, 0);
   return;
@@ -240,7 +240,7 @@ PhocGtkShell *
 phoc_gtk_shell_from_resource (struct wl_resource *resource)
 {
   g_assert(wl_resource_instance_of(resource, &gtk_shell1_interface,
-				   &gtk_shell1_impl));
+                                   &gtk_shell1_impl));
   return wl_resource_get_user_data(resource);
 }
 
@@ -248,6 +248,6 @@ PhocGtkSurface *
 gtk_surface_from_resource (struct wl_resource *resource)
 {
   g_assert(wl_resource_instance_of (resource, &gtk_surface1_interface,
-				    &gtk_surface1_impl));
+                                    &gtk_surface1_impl));
   return wl_resource_get_user_data (resource);
 }

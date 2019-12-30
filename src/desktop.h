@@ -43,6 +43,7 @@ G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
 #include "output.h"
 #include "view.h"
 #include "phosh.h"
+#include "gtk-shell.h"
 
 struct _PhocDesktop {
 	GObject parent;
@@ -102,7 +103,9 @@ struct _PhocDesktop {
 	GSettings *settings;
 	gboolean maximize;
 
+	/* Protocols that upstreamable implementations */
 	struct phosh_private *phosh;
+	PhocGtkShell *gtk_shell;
 };
 
 PhocDesktop *phoc_desktop_new (struct roots_config *config);
