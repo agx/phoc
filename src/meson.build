@@ -2,6 +2,7 @@ sources = [
   'settings.c',
   'cursor.c',
   'desktop.c',
+  'gtk-shell.c',
   'ini.c',
   'input.c',
   'keyboard.c',
