@@ -1,3 +1,28 @@
+phoc (0.1.5) amber; urgency=medium
+
+  [ Guido Günther ]
+  * input: Use g_* for logging.
+    This makes log domains work for input as well.
+  * seat: Don't initialize tablets if we don't have libinput.
+    This leads to crashes otherwise e.g. on the wayland backend
+  * phosh: Fix indentation
+  * view: Introduce helper to find a roots_surface from a given wlr_surface.
+  * protocols: Add gtk-shell v3.
+    Taken from gtk 3.24.8. This will allow to implement raising surfaces on
+    their request and startup notifications if we want these before there's a
+    mainlineable protocol.
+  * Implement gtk-shell's handle_request_focus.
+    This allows to raise windows on their request.
+    See https://source.puri.sm/Librem5/phoc/issues/93
+  * desktop: Wire up gtk-shell
+
+  [ Sebastian Krzyszkowiak ]
+  * view: Hide shell overlay when activating a fullscreen window.
+    Without that, the overlay stays needlessly visible after selecting a
+    fullscreen window in the activity switcher until further input event.
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 02 Jan 2020 23:52:47 +0100
+
 phoc (0.1.4) amber; urgency=medium
 
   [ Guido Günther ]
