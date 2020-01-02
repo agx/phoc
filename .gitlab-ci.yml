@@ -108,3 +108,18 @@ package-deb-without-wlroots:
   artifacts:
     paths:
       - "*.deb"
+
+package-deb-with-wlroots:arm64:
+  tags:
+    - librem5:arm64
+  stage: package
+  image: debian:buster
+  script:
+    - git submodule update --init
+    - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots dpkg-buildpackage -uc -us
+    # Must not be dynamically linked against wlroots
+    - ldd debian/phoc/usr/bin/phoc | grep -qs libwlroots && exit 1 || true
+    - cp ../*.deb .
+  artifacts:
+    paths:
+      - "*.deb"
