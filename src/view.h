@@ -258,7 +258,7 @@ void view_create_foreign_toplevel_handle(struct roots_view *view);
 void view_get_deco_box(const struct roots_view *view, struct wlr_box *box);
 void view_for_each_surface(struct roots_view *view,
 	wlr_surface_iterator_func_t iterator, void *user_data);
-struct roots_view *roots_view_get_from_wlr_surface (struct wlr_surface *surface);
+struct roots_view *roots_view_from_wlr_surface (struct wlr_surface *surface);
 
 struct roots_xdg_surface *roots_xdg_surface_from_view(struct roots_view *view);
 struct roots_xdg_surface_v6 *roots_xdg_surface_v6_from_view(

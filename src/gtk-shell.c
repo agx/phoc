@@ -73,7 +73,7 @@ handle_request_focus(struct wl_client *client,
   if (!gtk_surface->wlr_surface)
     return;
 
-  view = roots_view_get_from_wlr_surface (gtk_surface->wlr_surface);
+  view = roots_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
     roots_seat_set_focus(seat, view);
 }
