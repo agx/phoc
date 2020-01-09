@@ -360,7 +360,16 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 			update_cursors(layer, &server->input->seats);
 		}
 
-		if (memcmp(&old_geo, &layer->geo, sizeof(struct wlr_box)) != 0) {
+		bool geo_changed =
+			memcmp(&old_geo, &layer->geo, sizeof(struct wlr_box)) != 0;
+		bool layer_changed = layer->layer != layer_surface->current.layer;
+		if (layer_changed) {
+			wl_list_remove(&layer->link);
+			wl_list_insert(&output->layers[layer_surface->current.layer],
+				&layer->link);
+			layer->layer = layer_surface->current.layer;
+		}
+		if (geo_changed || layer_changed) {
 			output_damage_whole_local_surface(output, layer_surface->surface,
 					old_geo.x, old_geo.y);
 			output_damage_whole_local_surface(output, layer_surface->surface,

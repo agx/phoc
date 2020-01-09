@@ -25,6 +25,7 @@ struct roots_layer_surface {
 	struct wl_list subsurfaces; // roots_layer_subsurface::link
 
 	struct wlr_box geo;
+	enum zwlr_layer_shell_v1_layer layer;
 };
 
 struct roots_layer_popup {
