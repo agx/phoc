@@ -735,7 +735,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	wlr_log(WLR_DEBUG, "new layer surface: namespace %s layer %d anchor %d "
 			"size %dx%d margin %d,%d,%d,%d",
 		layer_surface->namespace, layer_surface->client_pending.layer,
-			layer_surface->client_pending.layer,
+		layer_surface->client_pending.anchor,
 		layer_surface->client_pending.desired_width,
 		layer_surface->client_pending.desired_height,
 		layer_surface->client_pending.margin.top,
