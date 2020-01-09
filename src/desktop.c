@@ -624,6 +624,7 @@ phoc_desktop_toggle_output_blank (PhocDesktop *self)
     gboolean enable = !output->wlr_output->enabled;
 
     wlr_output_enable (output->wlr_output, enable);
+    wlr_output_commit (output->wlr_output);
     if (enable)
       output_damage_whole(output);
   }
