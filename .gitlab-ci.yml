@@ -4,10 +4,11 @@ stages:
  - package
 
 variables:
-  DEPS: build-essential git
+  DEPS: git
   ALPINE_EDGE_DEPS: |
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+  DEB_BUILD_PROFILES: pkg.phoc.embedwlroots
 
 .tags: &tags
   tags:
@@ -21,14 +22,28 @@ variables:
     - ninja -C _build
     - ninja -C _build install
 
-before_script:
- - apt-get -y update
- - apt-get -y install $DEPS
- - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots apt-get -y build-dep .
+.before_script_debian: &before_script_debian
+  - apt-get -y update
+  - apt-get -y install $DEPS
+  - apt-get -y build-dep .
+
+.before_script_debian_buster: &before_script_debian_buster
+  # meson in buster is too old
+  - apt-get -y update
+  - apt-get -y install wget ca-certificates gnupg
+  - wget -O- https://ci.puri.sm/ci-repo.key | apt-key add -
+  - echo "deb https://ci.puri.sm/ scratch librem5" > /etc/apt/sources.list.d/ci.list
+  - *before_script_debian
+
+.before_script_alpine: &before_script_alpine
+  - apk -q add alpine-sdk
+  - apk -q add $ALPINE_EDGE_DEPS
+
 
 build-with-xwayland-debian-buster:
   stage: build
   image: debian:buster
+  before_script: *before_script_debian_buster
   variables:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
@@ -40,6 +55,7 @@ build-with-xwayland-debian-buster:
 build-with-xwayland-debian-bullseye:
   stage: build
   image: debian:bullseye
+  before_script: *before_script_debian
   variables:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
@@ -48,6 +64,7 @@ build-with-xwayland-debian-bullseye:
 build-without-xwayland-debian-buster:
   stage: build
   image: debian:buster
+  before_script: *before_script_debian_buster
   variables:
      BUILD_ARGS: -Dxwayland=disabled
   <<: *tags
@@ -56,9 +73,7 @@ build-without-xwayland-debian-buster:
 build-with-xwayland-alpinelinux-edge:
   stage: build
   image: alpine:edge
-  before_script:
-    - apk -q add alpine-sdk
-    - apk -q add $ALPINE_EDGE_DEPS
+  before_script: *before_script_alpine
   variables:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
@@ -68,9 +83,7 @@ build-with-xwayland-alpinelinux-edge:
 build-without-xwayland-alpinelinux-edge:
   stage: build
   image: alpine:edge
-  before_script:
-    - apk -q add alpine-sdk
-    - apk -q add $ALPINE_EDGE_DEPS
+  before_script: *before_script_alpine
   variables:
      BUILD_ARGS: -Dxwayland=disabled
   <<: *tags
@@ -84,6 +97,7 @@ unit-test-with-xwayland-debian-buster:
   image: debian:buster
   dependencies:
     - build-with-xwayland-debian-buster
+  before_script: *before_script_debian_buster
   script:
     - xvfb-run ninja -C _build test
   artifacts:
@@ -95,9 +109,10 @@ package-deb-with-wlroots:
   <<: *tags
   stage: package
   image: debian:buster
+  before_script: *before_script_debian_buster
   script:
     - git submodule update --init
-    - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots dpkg-buildpackage -uc -us
+    - dpkg-buildpackage -uc -us
     # Must not be dynamically linked against wlroots
     - ldd debian/phoc/usr/bin/phoc | grep -qs libwlroots && exit 1 || true
     - cp ../*.deb .
@@ -109,15 +124,16 @@ package-deb-without-wlroots:
   <<: *tags
   stage: package
   image: debian:buster
+  variables:
+    DEB_BUILD_PROFILES: ""
   before_script:
-    - echo "deb http://deb.debian.org/debian/ experimental main" > /etc/apt/sources.list.d/experimental.list
+    - echo "deb http://deb.debian.org/debian/ sid main" > /etc/apt/sources.list.d/sid.list
     - apt-get -y update
-    - apt-get -y install $DEPS
     # This pulls in wlroots build-deps and so avoids pulling in e.g. mesa from
-    # experimental due to  pulling wlroots from experimental
+    # sid due to pulling wlroots from sid
     # Once we have wlroots in our archive we can drop the build profile
-    - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots apt-get -y build-dep .
-    - apt-get -y -t experimental install libwlroots-dev
+    - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots apt-get -y -t buster build-dep .
+    - apt-get -y -t sid install libwlroots-dev meson
   script:
     - dpkg-buildpackage -uc -us
     # Must be dynamically linked against wlroots
@@ -132,9 +148,10 @@ package-deb-with-wlroots:arm64:
     - librem5:arm64
   stage: package
   image: debian:buster
+  before_script: *before_script_debian_buster
   script:
     - git submodule update --init
-    - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots dpkg-buildpackage -uc -us
+    - dpkg-buildpackage -uc -us
     # Must not be dynamically linked against wlroots
     - ldd debian/phoc/usr/bin/phoc | grep -qs libwlroots && exit 1 || true
     - cp ../*.deb .
