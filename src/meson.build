@@ -8,7 +8,6 @@ sources = [
   'keyboard.c',
   'keybindings.c',
   'layer_shell.c',
-  'main.c',
   'output.c',
   'phosh.c',
   'render.c',
@@ -38,9 +37,22 @@ phoc_deps = [
   xkbcommon,
 ]
 
-executable(
+phoc_lib = static_library(
   'phoc',
   sources,
   dependencies: phoc_deps,
+  install: false,
+)
+phoc_inc = include_directories('.')
+
+phoc_dep = declare_dependency(
+  include_directories: phoc_inc,
+  link_with: phoc_lib,
+  dependencies: phoc_deps)
+
+executable(
+  'phoc',
+  sources: 'main.c',
+  dependencies: phoc_dep,
   install: true,
 )
