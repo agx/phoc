@@ -35,6 +35,11 @@ Build-Depends:
  libxcb-xinput-dev <pkg.phoc.embedwlroots>,
  libxkbcommon-dev <pkg.phoc.embedwlroots>,
  wayland-protocols <pkg.phoc.embedwlroots>,
+# to run the tests
+ gsettings-desktop-schemas <!nocheck>,
+ mutter-common <!nocheck>,
+ xvfb <!nocheck>,
+ xauth <!nocheck>,
 Standards-Version: 4.1.3
 Section: libs
 Homepage: https://source.puri.sm/librem5/phoc
