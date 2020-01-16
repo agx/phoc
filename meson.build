@@ -118,6 +118,7 @@ gnome = import('gnome')
 
 subdir('protocols')
 subdir('src')
+subdir('tests')
 subdir('data')
 
 summary = [
