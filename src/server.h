@@ -41,5 +41,6 @@ struct _PhocServer {
 };
 
 PhocServer *phoc_server_get_default (void);
+gboolean phoc_server_setup (PhocServer *server, int argc, char **argv);
 
 G_END_DECLS
