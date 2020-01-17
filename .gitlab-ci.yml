@@ -1,5 +1,6 @@
 stages:
  - build
+ - test
  - package
 
 variables:
@@ -32,6 +33,9 @@ build-with-xwayland-debian-buster:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
   <<: *build
+  artifacts:
+    paths:
+      - _build
 
 build-with-xwayland-debian-bullseye:
   stage: build
@@ -72,6 +76,20 @@ build-without-xwayland-alpinelinux-edge:
   <<: *tags
   <<: *build
   allow_failure: true
+
+
+unit-test-with-xwayland-debian-buster:
+  <<: *tags
+  stage: test
+  image: debian:buster
+  dependencies:
+    - build-with-xwayland-debian-buster
+  script:
+    - xvfb-run ninja -C _build test
+  artifacts:
+    when: always
+    paths:
+      - _build
 
 package-deb-with-wlroots:
   <<: *tags
