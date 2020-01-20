@@ -25,7 +25,7 @@ test_phoc_server_setup (void)
 
   g_assert_true (PHOC_IS_SERVER (server));
 
-  g_assert_true (phoc_server_setup(server, 0, NULL));
+  g_assert_true (phoc_server_setup(server, NULL, NULL, false));
 }
 
 gint

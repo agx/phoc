@@ -190,9 +190,10 @@ phoc_server_get_default (void)
  * Returns: %TRUE on success, %FALSE otherwise
  */
 gboolean
-phoc_server_setup (PhocServer *server, int argc, char **argv)
+phoc_server_setup (PhocServer *server, const char *config_path,
+		   const char *exec, gboolean debug_damage)
 {
-  server->config = roots_config_create_from_args(argc, argv);
+  server->config = roots_config_create(config_path, exec, debug_damage);
   if (!server->config) {
     g_warning("Failed to parse config");
     return FALSE;

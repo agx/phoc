@@ -19,24 +19,6 @@
 #include "settings.h"
 #include "ini.h"
 
-static void usage(const char *name, int ret) {
-	fprintf(stderr,
-		"usage: %s [-C <FILE>] [-E <COMMAND>]\n"
-		"\n"
-		" -C <FILE>      Path to the configuration file\n"
-		"                (default: phoc.ini).\n"
-		"                See `phoc.ini.example` for config\n"
-		"                file documentation.\n"
-		" -E <COMMAND>   Command that will be ran at startup.\n"
-		" -D             Enable damage tracking debugging.\n"
-		" -l <LEVEL>     Set log verbosity, where,\n"
-		"                0:SILENT, 1:ERROR, 2:INFO, 3+:DEBUG\n"
-		"                (default: DEBUG)\n",
-		name);
-
-	exit(ret);
-}
-
 static struct wlr_box *parse_geometry(const char *str) {
 	// format: {width}x{height}+{x}+{y}
 	if (strlen(str) > 255) {
@@ -371,7 +353,8 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 	return 1;
 }
 
-struct roots_config *roots_config_create_from_args(int argc, char *argv[]) {
+struct roots_config *roots_config_create(const char *config_path, const char *startup_cmd,
+					 gboolean debug_damage) {
 	struct roots_config *config = calloc(1, sizeof(struct roots_config));
 	if (config == NULL) {
 		return NULL;
@@ -384,24 +367,9 @@ struct roots_config *roots_config_create_from_args(int argc, char *argv[]) {
 	wl_list_init(&config->cursors);
 	wl_list_init(&config->switches);
 
-	int c;
-	unsigned int log_verbosity = WLR_DEBUG;
-	while ((c = getopt(argc, argv, "C:E:hD:")) != -1) {
-		switch (c) {
-		case 'C':
-			config->config_path = strdup(optarg);
-			break;
-		case 'E':
-			config->startup_cmd = strdup(optarg);
-			break;
-		case 'D':
-			config->debug_damage_tracking = true;
-			break;
-		case 'h':
-		case '?':
-			usage(argv[0], c != 'h');
-		}
-	}
+	config->config_path = g_strdup(config_path);
+	config->startup_cmd = g_strdup(startup_cmd);
+	config->debug_damage_tracking = debug_damage;
 
 	if (!config->config_path) {
 		// get the config path from the current directory

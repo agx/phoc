@@ -72,12 +72,10 @@ struct roots_config {
 };
 
 /**
- * Create a roots config from the given command line arguments. Command line
- * arguments can specify the location of the config file. If it is not
- * specified, the default location will be used.
+ * Create a roots config from the given arguments.
  */
-struct roots_config *roots_config_create_from_args(int argc, char *argv[]);
-
+struct roots_config *roots_config_create(const char *config_path, const char *exec,
+					 gboolean debug_damage);
 /**
  * Destroy the config and free its resources.
  */

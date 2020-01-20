@@ -55,15 +55,38 @@ log_glib(enum wlr_log_importance verbosity, const char *fmt, va_list args) {
 int
 main(int argc, char **argv)
 {
+  g_autoptr(GOptionContext) opt_context = NULL;
+  g_autoptr(GError) err = NULL;
   GMainLoop *loop;
   PhocServer *server;
+  g_autofree gchar *config_path = NULL;
+  g_autofree gchar *exec = NULL;
+  gboolean debug_damage;
 
   setup_signals();
+
+  const GOptionEntry options [] = {
+    {"config", 'C', 0, G_OPTION_ARG_STRING, &config_path,
+     "Path to the configuration file. (default: phoc.ini).", NULL},
+    {"exec", 'E', 0, G_OPTION_ARG_STRING, &exec,
+     "Command that will be ran at startup", NULL},
+    {"damage-tracking", 'D', 0, G_OPTION_ARG_NONE, &debug_damage,
+     "Enable damage tracking debugging", NULL},
+    { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
+  };
+
+  opt_context = g_option_context_new ("- A phone compositor");
+  g_option_context_add_main_entries (opt_context, options, NULL);
+  if (!g_option_context_parse (opt_context, &argc, &argv, &err)) {
+    g_warning ("%s", err->message);
+    g_clear_error (&err);
+    return 1;
+  }
 
   wlr_log_init(WLR_DEBUG, log_glib);
   server = phoc_server_get_default ();
 
-  if (!phoc_server_setup (server, argc, argv))
+  if (!phoc_server_setup (server, config_path, exec, debug_damage))
     return 1;
 
   loop = g_main_loop_new (NULL, FALSE);
