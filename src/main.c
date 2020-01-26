@@ -61,7 +61,7 @@ main(int argc, char **argv)
   PhocServer *server;
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
-  gboolean debug_damage;
+  gboolean debug_damage = false;
 
   setup_signals();
 
