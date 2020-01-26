@@ -62,6 +62,7 @@ main(int argc, char **argv)
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
   gboolean debug_damage = false;
+  gboolean debug_touch = false;
 
   setup_signals();
 
@@ -72,6 +73,8 @@ main(int argc, char **argv)
      "Command that will be ran at startup", NULL},
     {"damage-tracking", 'D', 0, G_OPTION_ARG_NONE, &debug_damage,
      "Enable damage tracking debugging", NULL},
+    {"touch-debug", 't', 0, G_OPTION_ARG_NONE, &debug_touch,
+     "Enable touch point visualization", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
   };
 
@@ -86,7 +89,7 @@ main(int argc, char **argv)
   wlr_log_init(WLR_DEBUG, log_glib);
   server = phoc_server_get_default ();
 
-  if (!phoc_server_setup (server, config_path, exec, debug_damage))
+  if (!phoc_server_setup (server, config_path, exec, debug_damage, debug_touch))
     return 1;
 
   loop = g_main_loop_new (NULL, FALSE);

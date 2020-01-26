@@ -655,6 +655,8 @@ void handle_new_output(struct wl_listener *listener, void *data) {
 
 	output->damage = wlr_output_damage_create(wlr_output);
 
+	output->debug_touch_points = NULL;
+
 	output->destroy.notify = output_handle_destroy;
 	wl_signal_add(&wlr_output->events.destroy, &output->destroy);
 	output->enable.notify = output_handle_enable;

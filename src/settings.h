@@ -69,13 +69,14 @@ struct roots_config {
 	char *config_path;
 	char *startup_cmd;
 	bool debug_damage_tracking;
+	bool debug_touch_points;
 };
 
 /**
  * Create a roots config from the given arguments.
  */
 struct roots_config *roots_config_create(const char *config_path, const char *exec,
-					 gboolean debug_damage);
+					 gboolean debug_damage, gboolean debug_touch);
 /**
  * Destroy the config and free its resources.
  */

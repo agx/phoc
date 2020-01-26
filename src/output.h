@@ -20,6 +20,7 @@ struct roots_output {
 
 	struct timespec last_frame;
 	struct wlr_output_damage *damage;
+	GList *debug_touch_points;
 
 	struct wlr_box usable_area;
 

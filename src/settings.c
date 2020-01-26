@@ -354,7 +354,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 }
 
 struct roots_config *roots_config_create(const char *config_path, const char *startup_cmd,
-					 gboolean debug_damage) {
+					 gboolean debug_damage, gboolean debug_touch) {
 	struct roots_config *config = calloc(1, sizeof(struct roots_config));
 	if (config == NULL) {
 		return NULL;
@@ -370,6 +370,7 @@ struct roots_config *roots_config_create(const char *config_path, const char *st
 	config->config_path = g_strdup(config_path);
 	config->startup_cmd = g_strdup(startup_cmd);
 	config->debug_damage_tracking = debug_damage;
+	config->debug_touch_points = debug_touch;
 
 	if (!config->config_path) {
 		// get the config path from the current directory

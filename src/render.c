@@ -18,9 +18,18 @@
 #include "output.h"
 #include "server.h"
 
+#define TOUCH_POINT_RADIUS 30
+#define TOUCH_POINT_BORDER 0.1
+
 struct render_data {
 	pixman_region32_t *damage;
 	float alpha;
+};
+
+struct touch_point_data {
+  int id;
+  double x;
+  double y;
 };
 
 static void scissor_output(struct wlr_output *wlr_output,
@@ -78,6 +87,28 @@ buffer_damage_finish:
 	pixman_region32_fini(&damage);
 }
 
+static void
+collect_touch_points (struct roots_output *output, struct wlr_surface *surface, struct wlr_box box)
+{
+  PhocServer *server = phoc_server_get_default ();
+  if (!server->config->debug_touch_points) {
+    return;
+  }
+
+  struct roots_seat *seat;
+  wl_list_for_each(seat, &server->input->seats, link) {
+    struct wlr_touch_point *point;
+    wl_list_for_each(point, &seat->seat->touch_state.touch_points, link) {
+      if (point->surface != surface) { continue; }
+      struct touch_point_data *touch_point = g_malloc(sizeof(struct touch_point_data));
+      touch_point->id = point->touch_id;
+      touch_point->x = box.x + point->sx * output->wlr_output->scale;
+      touch_point->y = box.y + point->sy * output->wlr_output->scale;
+      output->debug_touch_points = g_list_append(output->debug_touch_points, touch_point);
+    }
+  }
+}
+
 static void render_surface_iterator(struct roots_output *output,
 		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
 		void *_data) {
@@ -104,6 +135,8 @@ static void render_surface_iterator(struct roots_output *output,
 		texture, &box, matrix, rotation, alpha);
 
 	wlr_presentation_surface_sampled(output->desktop->presentation, surface);
+
+	collect_touch_points(output, surface, box);
 }
 
 static void render_decorations(struct roots_output *output,
@@ -255,6 +288,97 @@ static void render_drag_icons(struct roots_output *output,
 		render_surface_iterator, &data);
 }
 
+static void
+color_hsv_to_rgb (float* color)
+{
+  float h = color[0], s = color[1], v = color[2];
+
+  h = fmodf (h, 360);
+  if (h < 0) {
+    h += 360;
+  }
+  int d = h / 60;
+  float e = h / 60 - d;
+  float a = v * (1 - s);
+  float b = v * (1 - e * s);
+  float c = v * (1 - (1 - e) * s);
+  switch (d) {
+    default:
+    case 0: color[0] = v, color[1] = c, color[2] = a; return;
+    case 1: color[0] = b, color[1] = v, color[2] = a; return;
+    case 2: color[0] = a, color[1] = v, color[2] = c; return;
+    case 3: color[0] = a, color[1] = b, color[2] = v; return;
+    case 4: color[0] = c, color[1] = a, color[2] = v; return;
+    case 5: color[0] = v, color[1] = a, color[2] = b; return;
+  }
+}
+
+static struct wlr_box
+wlr_box_from_touch_point (struct touch_point_data *touch_point, int radius)
+{
+  return (struct wlr_box) {
+    .x = touch_point->x - radius / 2.0,
+    .y = touch_point->y - radius / 2.0,
+    .width = radius,
+    .height = radius
+  };
+}
+
+static void
+render_touch_point_cb (gpointer data, gpointer user_data)
+{
+  struct touch_point_data *touch_point = data;
+
+  struct roots_output *output = user_data;
+  struct wlr_output *wlr_output = output->wlr_output;
+
+  struct wlr_box point_box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * wlr_output->scale);
+
+  struct wlr_renderer *renderer = wlr_backend_get_renderer (wlr_output->backend);
+
+  float color[4] = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
+  color_hsv_to_rgb (color);
+  wlr_render_ellipse (renderer, &point_box, color, wlr_output->transform_matrix);
+
+  point_box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale);
+  wlr_render_ellipse(renderer, &point_box, (float[]){0.5, 0.5, 0.5, 0.5}, wlr_output->transform_matrix);
+}
+
+static void
+render_touch_points (struct roots_output *output)
+{
+  PhocServer *server = phoc_server_get_default ();
+  if (!server->config->debug_touch_points) {
+    return;
+  }
+  g_list_foreach (output->debug_touch_points, render_touch_point_cb, output);
+}
+
+static void
+damage_touch_point_cb (gpointer data, gpointer user_data)
+{
+  struct touch_point_data *touch_point = data;
+
+  struct roots_output *output = user_data;
+  struct wlr_output *wlr_output = output->wlr_output;
+
+  struct wlr_box box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * wlr_output->scale);
+  pixman_region32_t region;
+  pixman_region32_init_rect(&region, box.x, box.y, box.width, box.height);
+  wlr_output_damage_add(output->damage, &region);
+  pixman_region32_fini(&region);
+}
+
+static void
+damage_touch_points (struct roots_output *output)
+{
+  if (!g_list_length (output->debug_touch_points)) {
+    return;
+  }
+  g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
+  wlr_output_schedule_frame(output->wlr_output);
+}
+
 static void surface_send_frame_done_iterator(struct roots_output *output,
 		struct wlr_surface *surface, struct wlr_box *box, float rotation,
 		void *data) {
@@ -402,6 +526,9 @@ void output_render(struct roots_output *output) {
 renderer_end:
 	wlr_output_render_software_cursors(wlr_output, &buffer_damage);
 	wlr_renderer_scissor(renderer, NULL);
+
+	render_touch_points (output);
+
 	wlr_renderer_end(renderer);
 
 	int width, height;
@@ -434,4 +561,8 @@ buffer_damage_finish:
 send_frame_done:
 	// Send frame done events to all surfaces
 	output_for_each_surface(output, surface_send_frame_done_iterator, &now);
+
+	damage_touch_points(output);
+	g_list_free_full(output->debug_touch_points, g_free);
+	output->debug_touch_points = NULL;
 }
