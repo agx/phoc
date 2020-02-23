@@ -20,7 +20,8 @@
       <foaf:name>Guido Günther</foaf:name>
       <foaf:mbox rdf:resource="mailto:agx@sigxcpu.org" />
     </foaf:Person>
-    <foaf:name>Sebastian Krzyszkowiak</foaf:name>
+    <foaf:Person>
+      <foaf:name>Sebastian Krzyszkowiak</foaf:name>
       <foaf:mbox rdf:resource="mailto:sebastian.krzyszkowiak@puri.sm" />
     </foaf:Person>
   </maintainer>
