@@ -1,7 +1,11 @@
+include:
+ - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-definitions.yml'
+
 stages:
  - build
  - test
  - package
+ - test-package
 
 variables:
   DEPS: git
@@ -111,14 +115,15 @@ package-deb-with-wlroots:
   image: debian:buster
   before_script: *before_script_debian_buster
   script:
+    - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
     - git submodule update --init
-    - dpkg-buildpackage -uc -us
+    - dpkg-buildpackage -b -uc -us
     # Must not be dynamically linked against wlroots
     - ldd debian/phoc/usr/bin/phoc | grep -qs libwlroots && exit 1 || true
-    - cp ../*.deb .
+    - cp -l ../*.deb ../*.changes ../*.buildinfo "${L5_WORKING_DIR}/"
   artifacts:
     paths:
-      - "*.deb"
+      - "${L5_WORKING_DIR}"
 
 package-deb-without-wlroots:
   <<: *tags
@@ -135,13 +140,14 @@ package-deb-without-wlroots:
     - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots apt-get -y -t buster build-dep .
     - apt-get -y -t sid install libwlroots-dev meson
   script:
-    - dpkg-buildpackage -uc -us
+    - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
+    - dpkg-buildpackage -b -uc -us
     # Must be dynamically linked against wlroots
     - ldd debian/phoc/usr/bin/phoc | grep -qs libwlroots
-    - cp ../*.deb .
+    - cp -l ../*.deb ../*.changes ../*.buildinfo "${L5_WORKING_DIR}/"
   artifacts:
     paths:
-      - "*.deb"
+      - "${L5_WORKING_DIR}"
 
 package-deb-with-wlroots:arm64:
   tags:
@@ -150,11 +156,23 @@ package-deb-with-wlroots:arm64:
   image: debian:buster
   before_script: *before_script_debian_buster
   script:
+    - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
     - git submodule update --init
-    - dpkg-buildpackage -uc -us
+    - dpkg-buildpackage -b -uc -us
     # Must not be dynamically linked against wlroots
     - ldd debian/phoc/usr/bin/phoc | grep -qs libwlroots && exit 1 || true
-    - cp ../*.deb .
+    - cp -l ../*.deb ../*.changes ../*.buildinfo "${L5_WORKING_DIR}/"
   artifacts:
     paths:
-      - "*.deb"
+      - "${L5_WORKING_DIR}"
+
+autopkgtest-debian-buster-package:
+  dependencies:
+    - package-deb-with-wlroots
+  extends: .l5-autopkgtest-debian-package
+
+lintian-debian-buster-package:
+  dependencies:
+    - package-deb-with-wlroots
+  extends: .l5-lintian-debian-package
+
