@@ -209,8 +209,7 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 			return surface;
 		}
 
-		struct roots_output *output =
-			desktop_output_from_wlr_output(desktop, wlr_output);
+		struct roots_output *output = wlr_output->data;
 		if (output != NULL && output->fullscreen_view != NULL) {
 
 			if (output->force_shell_reveal) {
@@ -595,18 +594,6 @@ PhocDesktop *
 phoc_desktop_new (struct roots_config *config)
 {
   return g_object_new (PHOC_TYPE_DESKTOP, "config", config, NULL);
-}
-
-
-struct roots_output *desktop_output_from_wlr_output(
-		PhocDesktop *desktop, struct wlr_output *wlr_output) {
-	struct roots_output *output;
-	wl_list_for_each(output, &desktop->outputs, link) {
-		if (output->wlr_output == wlr_output) {
-			return output;
-		}
-	}
-	return NULL;
 }
 
 

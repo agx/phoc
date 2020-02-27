@@ -124,7 +124,7 @@ static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, do
 	}
 
 	struct wlr_output *wlr_output = wlr_output_layout_output_at(desktop->layout, lx, ly);
-	struct roots_output *output = desktop_output_from_wlr_output(desktop, wlr_output);
+	struct roots_output *output = wlr_output->data;
 	if (!output) {
 		return false;
 	}

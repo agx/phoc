@@ -366,8 +366,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		if (output == NULL) {
 			output = view_get_output(view);
 		}
-		struct roots_output *roots_output =
-			desktop_output_from_wlr_output(view->desktop, output);
+		struct roots_output *roots_output = output->data;
 		if (roots_output == NULL) {
 			return;
 		}
