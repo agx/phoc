@@ -29,6 +29,7 @@ server_protocols = [
 	['gtk-shell.xml'],
 	['phosh-private.xml'],
 	['wlr-layer-shell-unstable-v1.xml'],
+	['wlr-output-power-management-unstable-v1.xml'],
 ]
 
 server_protos_src = []
