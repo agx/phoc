@@ -153,31 +153,3 @@ configure_file(
   output: 'run',
   configuration: run_data)
 
-git = find_program('git', required: false)
-if git.found()
-	all_files = run_command(
-		git,
-		['--git-dir=@0@/.git'.format(meson.current_source_dir()),
-		 'ls-files',
-		 ':/*.[ch]'])
-	all_files = files(all_files.stdout().split())
-
-	etags = find_program('etags', required: false)
-	if etags.found() and all_files.length() > 0
-		custom_target('phoc_etags',
-			build_by_default: true,
-			input: all_files,
-			output: 'TAGS',
-			command: [etags.path(), '-o', 'TAGS'] + all_files)
-	endif
-
-	ctags = find_program('ctags', required: false)
-	if ctags.found() and all_files.length() > 0
-		custom_target('phoc_ctags',
-			build_by_default: true,
-			input: all_files,
-			output: 'tags',
-			command: [ctags.path(), '-o', 'tags'] + all_files)
-	endif
-endif
-
