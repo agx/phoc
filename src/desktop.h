@@ -81,6 +81,7 @@ struct _PhocDesktop {
 	struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
 	struct wlr_pointer_gestures_v1 *pointer_gestures;
 	struct wlr_output_manager_v1 *output_manager_v1;
+	struct wlr_output_power_manager_v1 *output_power_manager_v1;
 
 	struct wl_listener new_output;
 	struct wl_listener layout_change;
@@ -94,6 +95,7 @@ struct _PhocDesktop {
 	struct wl_listener pointer_constraint;
 	struct wl_listener output_manager_apply;
 	struct wl_listener output_manager_test;
+	struct wl_listener output_power_manager_set_mode;
 
 #ifdef PHOC_XWAYLAND
 	struct wlr_xwayland *xwayland;

@@ -11,6 +11,7 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_xdg_shell_v6.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
@@ -551,6 +552,43 @@ void handle_output_manager_test(struct wl_listener *listener, void *data) {
 	// TODO: implement test-only mode
 	wlr_output_configuration_v1_send_succeeded(config);
 	wlr_output_configuration_v1_destroy(config);
+}
+
+void
+phoc_output_handle_output_power_manager_set_mode(struct wl_listener *listener, void *data)
+{
+  struct wlr_output_power_v1_set_mode_event *event = data;
+  struct roots_output *self;
+  bool enable = true;
+
+  g_return_if_fail (event && event->output && event->output->data);
+
+  self = event->output->data;
+  g_debug ("Request to set output power mode of %p to %d",
+	   self, event->mode);
+  switch (event->mode) {
+  case ZWLR_OUTPUT_POWER_V1_MODE_OFF:
+    enable = false;
+    break;
+  case ZWLR_OUTPUT_POWER_V1_MODE_ON:
+    enable = true;
+    break;
+  default:
+    g_warning ("Unhandled power state %d for %p", event->mode, self);
+    return;
+  }
+
+  if (enable == self->wlr_output->enabled)
+    return;
+
+  wlr_output_enable(self->wlr_output, enable);
+  if (!wlr_output_commit(self->wlr_output)) {
+    g_warning ("Failed to commit power mode change to %d for %p", enable, self);
+    return;
+  }
+
+  if (enable)
+    output_damage_whole (self);
 }
 
 static void output_destroy(struct roots_output *output) {
