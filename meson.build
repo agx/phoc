@@ -93,6 +93,7 @@ test_c_args = [
   '-Wold-style-definition',
   '-Wpointer-arith',
   '-Wredundant-decls',
+  '-Wshadow',
   '-Wstrict-prototypes',
   '-Wtype-limits',
   '-Wundef',
@@ -101,7 +102,6 @@ test_c_args = [
 
 # TODO:
 #  '-Wfloat-equal',
-#  '-Wshadow',
 #  '-Wswitch-default',
 #  '-Wswitch-enum',
 
