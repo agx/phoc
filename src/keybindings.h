@@ -19,7 +19,7 @@ G_DECLARE_FINAL_TYPE (PhocKeybindings, phoc_keybindings, PHOC, KEYBINDINGS, GObj
 
 PhocKeybindings *phoc_keybindings_new (void);
 
-struct roots_seat *seat;
+struct roots_seat;
 gboolean         phoc_keybindings_handle_pressed (PhocKeybindings *self,
 						  guint32 modifiers,
 						  xkb_keysym_t *pressed_keysyms,
