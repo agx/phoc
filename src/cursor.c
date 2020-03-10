@@ -687,14 +687,14 @@ void roots_cursor_constrain(struct roots_cursor *cursor,
 		if (nboxes > 0) {
 			struct roots_view *view = cursor->pointer_view->view;
 
-			double sx = (boxes[0].x1 + boxes[0].x2) / 2.;
-			double sy = (boxes[0].y1 + boxes[0].y2) / 2.;
+			double box_sx = (boxes[0].x1 + boxes[0].x2) / 2.;
+			double box_sy = (boxes[0].y1 + boxes[0].y2) / 2.;
 
-			rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height,
+			rotate_child_position(&box_sx, &box_sy, 0, 0, view->box.width, view->box.height,
 				view->rotation);
 
-			double lx = view->box.x + sx;
-			double ly = view->box.y + sy;
+			double lx = view->box.x + box_sx;
+			double ly = view->box.y + box_sy;
 
 			wlr_cursor_warp_closest(cursor->cursor, NULL, lx, ly);
 		}
