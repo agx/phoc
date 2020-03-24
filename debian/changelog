@@ -1,3 +1,46 @@
+phoc (0.1.6) amber-phone; urgency=medium
+
+  [ Guido Günther ]
+  * Add arm64 build
+  * Move server setup into PhocServer
+  * build: Build phoc_lib
+  * Add initial test
+  * gitlab-ci: Run unit tests
+  * debian: Run tests via xvfb
+  * settings: Don't init logging twice
+  * server: Move command line parsing to main()
+  * tests: Test option passing
+  * Adjust to wlroots 0.8.1 layer shell changes
+  * debian: Add breaks on older phosh
+  * build: Drop custom tags generation
+  * gitlab-ci: Run lintian and autopkgtests
+  * Add superficial autopkgtest
+  * Add wlr-output-power-management protocol
+  * Update wlroots submodule
+  * Drop roots_output_from_wlr_output
+  * Support wlr-output-power-management
+
+  [ Sebastian Krzyszkowiak ]
+  * view: Simplify roots_view_get_from_wlr_surface
+  * view: Rename roots_view_get_from_wlr_surface to roots_view_from_wlr_surface
+  * main: Fix uninitialized debug_damage value
+  * Touch point visualization
+  * Update to wlr_output's atomic API and wlroots 0.9.x branch
+  * layer-shell: Fix incorrect variable passed to debug log
+  * layer-shell: Handle layer changes
+  * Update git submodule to 8fd62aaa18bd4f31933e99ef5d5fd15aff5b6c5e (wlroots 0.10.0)
+  * CI: Update to deal with newer wlroots
+  * debian: Update wlroots dependency version
+  * Update wlroots submodule
+
+  [ Dorota Czaplejewicz ]
+  * doap: Fix malformed Person tag
+
+  [ Simon Ser ]
+  * Update to new presentation-time API
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Tue, 24 Mar 2020 15:59:24 +0100
+
 phoc (0.1.5) amber; urgency=medium
 
   [ Guido Günther ]
