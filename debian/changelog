@@ -1,3 +1,16 @@
+phoc (0.1.7) amber-phone; urgency=medium
+
+  [ &t ]
+  * keybindings: Declare roots_seat as incomplete type
+  * cursor: Don't shadow sx and sy
+  * build: Add -Wshadow to cflags
+
+  [ Sebastian Krzyszkowiak ]
+  * Guard wlr-output-power-management usage with header existence check
+  * gbp.conf: Set multimaint-merge as default when generating changelogs
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Thu, 26 Mar 2020 17:04:53 +0100
+
 phoc (0.1.6) amber-phone; urgency=medium
 
   [ Guido Günther ]
