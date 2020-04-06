@@ -25,6 +25,7 @@ src_inc = include_directories('src')
 cc = meson.get_compiler('c')
 
 gio            = dependency('gio-2.0', version: '>=2.50.0')
+glesv2         = dependency('glesv2')
 glib           = dependency('glib-2.0', version: '>=2.50.0')
 gobject        = dependency('gobject-2.0', version: '>=2.50.0')
 gnome_desktop  = dependency('gnome-desktop-3.0', version: '>=3.26')

@@ -29,6 +29,7 @@ phoc_deps = [
   input,
   drm,
   gio,
+  glesv2,
   gnome_desktop,
   math,
   pixman,
