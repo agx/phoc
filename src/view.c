@@ -76,7 +76,7 @@ void view_get_box(const struct roots_view *view, struct wlr_box *box) {
 }
 
 
-static void
+void
 view_get_geometry (struct roots_view *view, struct wlr_box *geom)
 {
   if (view->impl->get_geometry) {

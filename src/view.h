@@ -236,6 +236,7 @@ void view_map(struct roots_view *view, struct wlr_surface *surface);
 void view_unmap(struct roots_view *view);
 void view_arrange_maximized(struct roots_view *view);
 void view_get_box(const struct roots_view *view, struct wlr_box *box);
+void view_get_geometry(struct roots_view *view, struct wlr_box *box);
 void view_move(struct roots_view *view, double x, double y);
 bool view_move_to_next_output (struct roots_view *view, enum wlr_direction direction);
 void view_resize(struct roots_view *view, uint32_t width, uint32_t height);
