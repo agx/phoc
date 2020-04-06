@@ -716,6 +716,7 @@ void view_unmap(struct roots_view *view) {
 	view->box.width = view->box.height = 0;
 
 	if (view->toplevel_handle) {
+		view->toplevel_handle->data = NULL;
 		wlr_foreign_toplevel_handle_v1_destroy(view->toplevel_handle);
 		view->toplevel_handle = NULL;
 	}
@@ -910,6 +911,8 @@ void view_create_foreign_toplevel_handle(struct roots_view *view) {
 		handle_toplevel_handle_request_close;
 	wl_signal_add(&view->toplevel_handle->events.request_close,
 			&view->toplevel_handle_request_close);
+
+	view->toplevel_handle->data = view;
 }
 
 /*
