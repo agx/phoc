@@ -34,6 +34,7 @@ server_protocols = [
         [wl_protocol_dir, 'unstable/tablet/tablet-unstable-v2.xml'],
 	['gtk-shell.xml'],
 	['phosh-private.xml'],
+	['wlr-foreign-toplevel-management-unstable-v1.xml'],
 	['wlr-layer-shell-unstable-v1.xml'],
 	['wlr-output-power-management-unstable-v1.xml'],
 ]
