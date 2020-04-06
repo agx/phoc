@@ -87,8 +87,6 @@ void output_damage_from_local_surface(struct roots_output *output,
 void output_damage_whole_local_surface(struct roots_output *output,
 	struct wlr_surface *surface, double ox, double oy);
 
-void output_render(struct roots_output *output);
-
 void scale_box(struct wlr_box *box, float scale);
 void get_decoration_box(struct roots_view *view,
 	struct roots_output *output, struct wlr_box *box);

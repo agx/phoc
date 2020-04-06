@@ -15,7 +15,7 @@
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
 #include "layers.h"
-#include "output.h"
+#include "render.h"
 #include "server.h"
 
 #define TOUCH_POINT_RADIUS 30

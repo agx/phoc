@@ -21,6 +21,7 @@
 #include "settings.h"
 #include "layers.h"
 #include "output.h"
+#include "render.h"
 #include "server.h"
 
 /**
