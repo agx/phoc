@@ -35,8 +35,23 @@ struct phosh_private_xdg_switcher {
 };
 
 
+struct phosh_private_screencopy_frame {
+  struct wl_resource *resource, *toplevel;
+  struct phosh_private *phosh;
+  struct wl_listener view_destroy;
+
+  enum wl_shm_format format;
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+
+  struct wl_shm_buffer *buffer;
+  struct roots_view *view;
+};
+
 struct phosh_private* phosh_create(PhocDesktop *desktop,
 				   struct wl_display *display);
 void phosh_destroy(struct phosh_private *shell);
 struct phosh_private *phosh_private_from_resource(struct wl_resource *resource);
 struct phosh_private_xdg_switcher *phosh_private_xdg_switcher_from_resource(struct wl_resource *resource);
+struct phosh_private_screencopy_frame *phosh_private_screencopy_frame_from_resource(struct wl_resource *resource);

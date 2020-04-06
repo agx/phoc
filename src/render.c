@@ -7,16 +7,21 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
+#include <wlr/backend.h>
 #include <wlr/config.h>
+#include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_buffer.h>
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include "layers.h"
 #include "render.h"
 #include "server.h"
+#include "render.h"
 
 #define TOUCH_POINT_RADIUS 30
 #define TOUCH_POINT_BORDER 0.1
@@ -378,6 +383,65 @@ damage_touch_points (struct roots_output *output)
   }
   g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
   wlr_output_schedule_frame(output->wlr_output);
+}
+
+static void
+view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *data)
+{
+  PhocServer *server = phoc_server_get_default ();
+  struct wlr_texture *view_texture = wlr_surface_get_texture (surface);
+
+  struct roots_view *view = data;
+  struct wlr_surface *root = view->wlr_surface;
+
+  struct wlr_box box;
+  view_get_box (view, &box);
+
+  struct wlr_box geo;
+  view_get_geometry (view, &geo);
+
+  float mat[16];
+  wlr_matrix_identity (mat);
+
+  // NDC
+  wlr_matrix_translate (mat, -1, -1);
+  wlr_matrix_scale (mat, 2, 2);
+
+  wlr_matrix_scale (mat, 1 / (float)box.width, 1 / (float)box.height);
+  wlr_matrix_translate (mat, -geo.x, -geo.y);
+
+  wlr_matrix_scale (mat, 1 / (float)root->current.scale, 1 / (float)root->current.scale);
+  wlr_matrix_scale (mat, root->current.scale / surface->current.scale, root->current.scale / surface->current.scale);
+
+  wlr_render_texture (server->renderer, view_texture, mat, sx * surface->current.scale, sy * surface->current.scale, 1.0);
+}
+
+void
+view_render_to_buffer (struct roots_view *view, int width, int height, int stride, uint32_t *flags, void* data)
+{
+  PhocServer *server = phoc_server_get_default ();
+  struct wlr_surface *surface = view->wlr_surface;
+  GLuint tex, fbo;
+
+  glGenTextures (1, &tex);
+  glBindTexture (GL_TEXTURE_2D, tex);
+  glTexImage2D (GL_TEXTURE_2D, 0, GL_BGRA_EXT, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, NULL);
+  glBindTexture (GL_TEXTURE_2D, 0);
+
+  glGenFramebuffers (1, &fbo);
+  glBindFramebuffer (GL_FRAMEBUFFER, fbo);
+  glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+
+  wlr_renderer_begin (server->renderer, width, height);
+  wlr_renderer_clear (server->renderer, (float[]){0.0, 0.0, 0.0, 0.0});
+  wlr_surface_for_each_surface (surface, view_render_iterator, view);
+  wlr_renderer_end (server->renderer);
+
+  wlr_renderer_read_pixels (server->renderer, WL_SHM_FORMAT_ARGB8888, flags, stride, width, height, 0, 0, 0, 0, data);
+
+  glDeleteFramebuffers (1, &fbo);
+  glDeleteTextures (1, &tex);
+  glBindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 
 static void surface_send_frame_done_iterator(struct roots_output *output,
