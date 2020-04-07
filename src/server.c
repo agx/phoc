@@ -78,9 +78,9 @@ phoc_wayland_init (PhocServer *server)
 
 
 static gboolean
-phoc_startup_cmd_in_idle(PhocServer *server)
+phoc_startup_session_in_idle (PhocServer *server)
 {
-  const char *cmd = server->config->startup_cmd;
+  const char *cmd = server->session;
   pid_t pid = fork();
 
   g_return_val_if_fail (cmd, FALSE);
@@ -95,12 +95,12 @@ phoc_startup_cmd_in_idle(PhocServer *server)
 }
 
 static void
-phoc_startup_cmd (PhocServer *server)
+phoc_startup_session (PhocServer *server)
 {
   gint id;
 
-  id = g_idle_add ((GSourceFunc) phoc_startup_cmd_in_idle, server);
-  g_source_set_name_by_id (id, "[phoc] phoc_startup_cmd");
+  id = g_idle_add ((GSourceFunc) phoc_startup_session_in_idle, server);
+  g_source_set_name_by_id (id, "[phoc] phoc_startup_session");
 }
 
 
@@ -143,6 +143,7 @@ phoc_server_dispose (GObject *object)
   g_clear_pointer (&self->wl_display, &wl_display_destroy_clients);
   g_clear_pointer (&self->wl_display, &wl_display_destroy);
   g_clear_object (&self->desktop);
+  g_clear_pointer (&self->session, g_free);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
@@ -191,10 +192,10 @@ phoc_server_get_default (void)
  */
 gboolean
 phoc_server_setup (PhocServer *server, const char *config_path,
-		   const char *exec, gboolean debug_damage,
+		   const char *session, gboolean debug_damage,
 		   gboolean debug_touch)
 {
-  server->config = roots_config_create(config_path, exec, debug_damage, debug_touch);
+  server->config = roots_config_create(config_path, debug_damage, debug_touch);
   if (!server->config) {
     g_warning("Failed to parse config");
     return FALSE;
@@ -202,6 +203,7 @@ phoc_server_setup (PhocServer *server, const char *config_path,
 
   server->desktop = phoc_desktop_new (server->config);
   server->input = input_create(server->config);
+  server->session = g_strdup (session);
 
   const char *socket = wl_display_add_socket_auto(server->wl_display);
   if (!socket) {
@@ -230,8 +232,8 @@ phoc_server_setup (PhocServer *server, const char *config_path,
 #endif
 
   phoc_wayland_init (server);
-  if (server->config->startup_cmd)
-    phoc_startup_cmd (server);
+  if (server->session)
+    phoc_startup_session (server);
 
   return TRUE;
 }

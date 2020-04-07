@@ -37,7 +37,7 @@ test_phoc_server_setup_args (void)
 
   g_assert_true (phoc_server_setup(server, NULL, "/bin/bash", TRUE, FALSE));
 
-  g_assert_cmpstr (server->config->startup_cmd, ==, "/bin/bash");
+  g_assert_cmpstr (server->session, ==, "/bin/bash");
   g_assert_true (server->config->debug_damage_tracking);
   g_assert_false (server->config->debug_touch_points);
 }

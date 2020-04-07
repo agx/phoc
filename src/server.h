@@ -29,6 +29,9 @@ struct _PhocServer {
   PhocDesktop *desktop;
   struct roots_input *input;
 
+  /* The session */
+  gchar *session;
+
   /* Wayland resources */
   struct wl_display *wl_display;
 
