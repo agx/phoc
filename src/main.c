@@ -58,7 +58,7 @@ main(int argc, char **argv)
   g_autoptr(GOptionContext) opt_context = NULL;
   g_autoptr(GError) err = NULL;
   g_autoptr(GMainLoop) loop = NULL;
-  PhocServer *server;
+  g_autoptr(PhocServer) server = NULL;
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
   gboolean debug_damage = false;
@@ -94,7 +94,6 @@ main(int argc, char **argv)
 
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
-  g_object_unref (server);
 
   return 0;
 }
