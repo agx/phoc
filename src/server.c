@@ -213,10 +213,9 @@ phoc_server_get_default (void)
 gboolean
 phoc_server_setup (PhocServer *server, const char *config_path,
 		   const char *session, GMainLoop *mainloop,
-		   PhocServerDebugFlags debug_flags,
-		   gboolean debug_touch)
+		   PhocServerDebugFlags debug_flags)
 {
-  server->config = roots_config_create(config_path, debug_touch);
+  server->config = roots_config_create(config_path);
   if (!server->config) {
     g_warning("Failed to parse config");
     return FALSE;

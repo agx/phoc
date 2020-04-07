@@ -279,7 +279,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 	return 1;
 }
 
-struct roots_config *roots_config_create(const char *config_path, gboolean debug_touch) {
+struct roots_config *roots_config_create(const char *config_path) {
 	struct roots_config *config = calloc(1, sizeof(struct roots_config));
 	if (config == NULL) {
 		return NULL;
@@ -293,7 +293,6 @@ struct roots_config *roots_config_create(const char *config_path, gboolean debug
 	wl_list_init(&config->switches);
 
 	config->config_path = g_strdup(config_path);
-	config->debug_touch_points = debug_touch;
 
 	if (!config->config_path) {
 		// get the config path from the current directory

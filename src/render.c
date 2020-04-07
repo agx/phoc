@@ -91,7 +91,7 @@ static void
 collect_touch_points (struct roots_output *output, struct wlr_surface *surface, struct wlr_box box)
 {
   PhocServer *server = phoc_server_get_default ();
-  if (!server->config->debug_touch_points) {
+  if (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)) {
     return;
   }
 
@@ -349,7 +349,7 @@ static void
 render_touch_points (struct roots_output *output)
 {
   PhocServer *server = phoc_server_get_default ();
-  if (!server->config->debug_touch_points) {
+  if (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)) {
     return;
   }
   g_list_foreach (output->debug_touch_points, render_touch_point_cb, output);

@@ -58,6 +58,9 @@ static GDebugKey debug_keys[] =
  { .key = "damage-tracking",
    .value = PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING,
  },
+ { .key = "touch-points",
+   .value = PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS,
+ },
 };
 
 
@@ -86,7 +89,6 @@ main(int argc, char **argv)
   g_autoptr(PhocServer) server = NULL;
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
-  gboolean debug_touch = false;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
 
   setup_signals();
@@ -96,8 +98,6 @@ main(int argc, char **argv)
      "Path to the configuration file. (default: phoc.ini).", NULL},
     {"exec", 'E', 0, G_OPTION_ARG_STRING, &exec,
      "Command (session) that will be ran at startup", NULL},
-    {"touch-debug", 't', 0, G_OPTION_ARG_NONE, &debug_touch,
-     "Enable touch point visualization", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
   };
 
@@ -114,7 +114,7 @@ main(int argc, char **argv)
   server = phoc_server_get_default ();
 
   loop = g_main_loop_new (NULL, FALSE);
-  if (!phoc_server_setup (server, config_path, exec, loop, debug_flags, debug_touch))
+  if (!phoc_server_setup (server, config_path, exec, loop, debug_flags))
     return 1;
 
   g_main_loop_run (loop);

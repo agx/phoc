@@ -488,7 +488,7 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 			event->time_msec, event->touch_id, sx, sy);
 	}
 
-	if (server->config->debug_touch_points) {
+	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS) {
 		struct roots_output *output;
 		wl_list_for_each(output, &desktop->outputs, link) {
 			output_damage_whole(output);

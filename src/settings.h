@@ -63,14 +63,13 @@ struct roots_config {
 	struct wl_list switches;
 
 	char *config_path;
-	bool debug_touch_points;
 };
 
 /**
  * Create a roots config from the given arguments.
  */
-struct roots_config *roots_config_create(const char *config_path,
-					 gboolean debug_touch);
+struct roots_config *roots_config_create(const char *config_path);
+
 /**
  * Destroy the config and free its resources.
  */
