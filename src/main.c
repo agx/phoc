@@ -52,6 +52,26 @@ log_glib(enum wlr_log_importance verbosity, const char *fmt, va_list args) {
   g_logv("phoc-wlroots", level, fmt, args);
 }
 
+
+static GDebugKey debug_keys[] = {};
+
+
+static PhocServerDebugFlags
+parse_debug_env (void)
+{
+  const char *debugenv;
+  PhocServerDebugFlags flags = PHOC_SERVER_DEBUG_FLAG_NONE;
+
+  debugenv = g_getenv("PHOC_DEBUG");
+  if (!debugenv)
+    return flags;
+
+  return g_parse_debug_string(debugenv,
+			      debug_keys,
+			      G_N_ELEMENTS (debug_keys));
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -87,6 +107,7 @@ main(int argc, char **argv)
     return 1;
   }
 
+  debug_flags = parse_debug_env ();
   wlr_log_init(WLR_DEBUG, log_glib);
   server = phoc_server_get_default ();
 
