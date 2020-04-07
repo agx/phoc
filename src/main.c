@@ -61,6 +61,9 @@ static GDebugKey debug_keys[] =
  { .key = "touch-points",
    .value = PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS,
  },
+ { .key = "no-quit",
+   .value = PHOC_SERVER_DEBUG_FLAG_NO_QUIT,
+ },
 };
 
 

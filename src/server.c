@@ -92,7 +92,8 @@ on_session_exit (GPid pid, gint status, PhocServer *self)
     else
       g_warning ("Session terminated: %s (%d)", err->message, self->exit_status);
   }
-  g_main_loop_quit (self->mainloop);
+  if (!(self->debug_flags & PHOC_SERVER_DEBUG_FLAG_NO_QUIT))
+    g_main_loop_quit (self->mainloop);
 }
 
 
