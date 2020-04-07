@@ -63,6 +63,7 @@ main(int argc, char **argv)
   g_autofree gchar *exec = NULL;
   gboolean debug_damage = false;
   gboolean debug_touch = false;
+  PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
 
   setup_signals();
 
@@ -90,7 +91,7 @@ main(int argc, char **argv)
   server = phoc_server_get_default ();
 
   loop = g_main_loop_new (NULL, FALSE);
-  if (!phoc_server_setup (server, config_path, exec, loop, debug_damage, debug_touch))
+  if (!phoc_server_setup (server, config_path, exec, loop, debug_flags, debug_damage, debug_touch))
     return 1;
 
   g_main_loop_run (loop);

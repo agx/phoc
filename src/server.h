@@ -19,6 +19,10 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocServer, phoc_server, PHOC, SERVER, GObject);
 
+typedef enum _PhocServerDebugFlags {
+  PHOC_SERVER_DEBUG_FLAG_NONE = 0,
+} PhocServerDebugFlags;
+
 /* TODO: we keep the struct public due to heaps of direct access
    which will be replaced by getters and setters over time */
 struct _PhocServer {
@@ -28,6 +32,7 @@ struct _PhocServer {
   struct roots_config *config;
   PhocDesktop *desktop;
   struct roots_input *input;
+  PhocServerDebugFlags debug_flags;
 
   /* The session */
   gchar *session;
@@ -48,6 +53,7 @@ struct _PhocServer {
 PhocServer *phoc_server_get_default (void);
 gboolean phoc_server_setup (PhocServer *server, const char *config_path,
 			    const char *exec, GMainLoop *mainloop,
+			    PhocServerDebugFlags debug_flags,
 			    gboolean debug_damage, gboolean debug_touch);
 gint phoc_server_get_session_exit_status (PhocServer *self);
 
