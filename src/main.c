@@ -89,10 +89,10 @@ main(int argc, char **argv)
   wlr_log_init(WLR_DEBUG, log_glib);
   server = phoc_server_get_default ();
 
-  if (!phoc_server_setup (server, config_path, exec, debug_damage, debug_touch))
+  loop = g_main_loop_new (NULL, FALSE);
+  if (!phoc_server_setup (server, config_path, exec, loop, debug_damage, debug_touch))
     return 1;
 
-  loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
 
   return 0;

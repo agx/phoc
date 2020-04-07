@@ -25,7 +25,7 @@ test_phoc_server_setup (void)
 
   g_assert_true (PHOC_IS_SERVER (server));
 
-  g_assert_true (phoc_server_setup(server, NULL, NULL, false, false));
+  g_assert_true (phoc_server_setup(server, NULL, NULL, NULL, false, false));
 }
 
 static void
@@ -35,7 +35,7 @@ test_phoc_server_setup_args (void)
 
   g_assert_true (PHOC_IS_SERVER (server));
 
-  g_assert_true (phoc_server_setup(server, NULL, "/bin/bash", TRUE, FALSE));
+  g_assert_true (phoc_server_setup(server, NULL, "/bin/bash", NULL, TRUE, FALSE));
 
   g_assert_cmpstr (server->session, ==, "/bin/bash");
   g_assert_true (server->config->debug_damage_tracking);

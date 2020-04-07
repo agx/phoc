@@ -192,8 +192,8 @@ phoc_server_get_default (void)
  */
 gboolean
 phoc_server_setup (PhocServer *server, const char *config_path,
-		   const char *session, gboolean debug_damage,
-		   gboolean debug_touch)
+		   const char *session, GMainLoop *mainloop,
+		   gboolean debug_damage, gboolean debug_touch)
 {
   server->config = roots_config_create(config_path, debug_damage, debug_touch);
   if (!server->config) {
@@ -204,6 +204,7 @@ phoc_server_setup (PhocServer *server, const char *config_path,
   server->desktop = phoc_desktop_new (server->config);
   server->input = input_create(server->config);
   server->session = g_strdup (session);
+  server->mainloop = mainloop;
 
   const char *socket = wl_display_add_socket_auto(server->wl_display);
   if (!socket) {
