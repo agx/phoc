@@ -467,7 +467,7 @@ void output_render(struct roots_output *output) {
 		goto renderer_end;
 	}
 
-	if (server->config->debug_damage_tracking) {
+	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING) {
 		wlr_renderer_clear(renderer, (float[]){1, 1, 0, 1});
 	}
 
@@ -544,7 +544,7 @@ renderer_end:
 	wlr_region_transform(&frame_damage, &output->damage->current,
 		transform, width, height);
 
-	if (server->config->debug_damage_tracking) {
+	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING) {
 		pixman_region32_union_rect(&frame_damage, &frame_damage,
 			0, 0, wlr_output->width, wlr_output->height);
 	}
