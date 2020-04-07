@@ -31,6 +31,7 @@ struct _PhocServer {
 
   /* The session */
   gchar *session;
+  gint exit_status;
   GMainLoop *mainloop;
 
   /* Wayland resources */
@@ -48,6 +49,6 @@ PhocServer *phoc_server_get_default (void);
 gboolean phoc_server_setup (PhocServer *server, const char *config_path,
 			    const char *exec, GMainLoop *mainloop,
 			    gboolean debug_damage, gboolean debug_touch);
-
+gint phoc_server_get_session_exit_status (PhocServer *self);
 
 G_END_DECLS

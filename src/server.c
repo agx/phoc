@@ -77,20 +77,40 @@ phoc_wayland_init (PhocServer *server)
 }
 
 
-static gboolean
-phoc_startup_session_in_idle (PhocServer *server)
+static void
+on_session_exit (GPid pid, gint status, PhocServer *self)
 {
-  const char *cmd = server->session;
-  pid_t pid = fork();
+  g_autoptr(GError) err = NULL;
 
-  g_return_val_if_fail (cmd, FALSE);
-
-  if (pid < 0) {
-    g_warning ("Cannot execute binding command: fork() failed");
-  } else if (pid == 0) {
-    execl("/bin/sh", "/bin/sh", "-c", cmd, (void *)NULL);
+  g_return_if_fail (PHOC_IS_SERVER (self));
+  g_spawn_close_pid (pid);
+  if (g_spawn_check_exit_status (status, &err)) {
+    self->exit_status = 0;
+  } else {
+    if (err->domain ==  G_SPAWN_EXIT_ERROR)
+      self->exit_status = err->code;
+    else
+    g_warning ("Session terminated: %s (%d)", err->message, self->exit_status);
   }
+  g_main_loop_quit (self->mainloop);
+}
 
+
+static gboolean
+phoc_startup_session_in_idle(PhocServer *self)
+{
+  GPid pid;
+  g_autoptr(GError) err = NULL;
+  gchar *cmd[] = { "/bin/sh", "-c", self->session, NULL };
+
+  if (g_spawn_async (NULL, cmd, NULL,
+		      G_SPAWN_DO_NOT_REAP_CHILD,
+		      NULL, self, &pid, &err)) {
+    g_child_watch_add (pid, (GChildWatchFunc)on_session_exit, self);
+  } else {
+    g_warning ("Failed to launch session: %s", err->message);
+    g_main_loop_quit (self->mainloop);
+  }
   return FALSE;
 }
 
@@ -201,6 +221,8 @@ phoc_server_setup (PhocServer *server, const char *config_path,
     return FALSE;
   }
 
+  server->mainloop = mainloop;
+  server->exit_status = 1;
   server->desktop = phoc_desktop_new (server->config);
   server->input = input_create(server->config);
   server->session = g_strdup (session);
@@ -237,4 +259,18 @@ phoc_server_setup (PhocServer *server, const char *config_path,
     phoc_startup_session (server);
 
   return TRUE;
+}
+
+/**
+ * phoc_server_get_exit_status:
+ *
+ * Return the session's exit status. This is only meaningful
+ * if the session has ended.
+ *
+ * Returns: The session's exit status.
+ */
+gint
+phoc_server_get_session_exit_status (PhocServer *self)
+{
+  return self->exit_status;
 }

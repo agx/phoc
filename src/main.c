@@ -70,7 +70,7 @@ main(int argc, char **argv)
     {"config", 'C', 0, G_OPTION_ARG_STRING, &config_path,
      "Path to the configuration file. (default: phoc.ini).", NULL},
     {"exec", 'E', 0, G_OPTION_ARG_STRING, &exec,
-     "Command that will be ran at startup", NULL},
+     "Command (session) that will be ran at startup", NULL},
     {"damage-tracking", 'D', 0, G_OPTION_ARG_NONE, &debug_damage,
      "Enable damage tracking debugging", NULL},
     {"touch-debug", 't', 0, G_OPTION_ARG_NONE, &debug_touch,
@@ -95,5 +95,5 @@ main(int argc, char **argv)
 
   g_main_loop_run (loop);
 
-  return 0;
+  return phoc_server_get_session_exit_status (server);
 }
