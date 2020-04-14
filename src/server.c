@@ -90,7 +90,7 @@ on_session_exit (GPid pid, gint status, PhocServer *self)
     if (err->domain ==  G_SPAWN_EXIT_ERROR)
       self->exit_status = err->code;
     else
-    g_warning ("Session terminated: %s (%d)", err->message, self->exit_status);
+      g_warning ("Session terminated: %s (%d)", err->message, self->exit_status);
   }
   g_main_loop_quit (self->mainloop);
 }
