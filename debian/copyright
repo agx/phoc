@@ -2,11 +2,23 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: phoc
 Source: https://source.puri.sm/Librem5/phoc
 
-Files: */src
+Files: *
 Copyright: 2017, Drew DeVault
   2014, Jari Vetoniemi
   2019, Purism SPC
 License: MIT
+
+Files: debian/*
+Copyright: 2018, Guido Günther <agx@sigxcpu.org>
+License: GPL-2+
+
+Files: src/gtk-shell.*
+ src/keybindings.*
+ src/phosh.*
+ src/server.*
+ tests/*
+Copyright: 2019, 2020 Purism SPC
+License: GPL-3+
 
 License: MIT
  Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -27,25 +39,6 @@ License: MIT
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
 
-Files: protocol/idle.xml
- protocol/server-decoration.xml
-Copyright: 2015 Martin Gräßlin
-License: LGPL-2.1+
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Lesser General Public License as published by
- the Free Software Foundation, either version 2.1 of the License, or
- (at your option) any later version.
- .
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Lesser General Public License for more details.
- .
- You should have received a copy of the GNU Lesser General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-Files: debian/*
-Copyright: 2018, Guido Günther <agx@sigxcpu.org>
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -62,3 +55,20 @@ License: GPL-2+
  .
  On Debian systems, the complete text of the GNU General
  Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
+
+License: GPL-3+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <https://www.gnu.org/licenses/>
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
