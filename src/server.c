@@ -68,12 +68,12 @@ wayland_event_source_new (struct wl_display *display)
 }
 
 static void
-phoc_wayland_init (PhocServer *server)
+phoc_wayland_init (PhocServer *self)
 {
   GSource *wayland_event_source;
 
-  wayland_event_source = wayland_event_source_new (server->wl_display);
-  server->wl_source = g_source_attach (wayland_event_source, NULL);
+  wayland_event_source = wayland_event_source_new (self->wl_display);
+  self->wl_source = g_source_attach (wayland_event_source, NULL);
 }
 
 
@@ -211,57 +211,57 @@ phoc_server_get_default (void)
  * Returns: %TRUE on success, %FALSE otherwise
  */
 gboolean
-phoc_server_setup (PhocServer *server, const char *config_path,
+phoc_server_setup (PhocServer *self, const char *config_path,
 		   const char *session, GMainLoop *mainloop,
 		   PhocServerDebugFlags debug_flags)
 {
-  g_assert (!server->inited);
+  g_assert (!self->inited);
 
-  server->config = roots_config_create(config_path);
-  if (!server->config) {
+  self->config = roots_config_create(config_path);
+  if (!self->config) {
     g_warning("Failed to parse config");
     return FALSE;
   }
 
-  server->mainloop = mainloop;
-  server->exit_status = 1;
-  server->desktop = phoc_desktop_new (server->config);
-  server->input = input_create(server->config);
-  server->session = g_strdup (session);
-  server->mainloop = mainloop;
-  server->debug_flags = debug_flags;
+  self->mainloop = mainloop;
+  self->exit_status = 1;
+  self->desktop = phoc_desktop_new (self->config);
+  self->input = input_create(self->config);
+  self->session = g_strdup (session);
+  self->mainloop = mainloop;
+  self->debug_flags = debug_flags;
 
-  const char *socket = wl_display_add_socket_auto(server->wl_display);
+  const char *socket = wl_display_add_socket_auto(self->wl_display);
   if (!socket) {
     g_warning("Unable to open wayland socket: %s", strerror(errno));
-    wlr_backend_destroy(server->backend);
+    wlr_backend_destroy(self->backend);
     return FALSE;
   }
 
   g_info("Running compositor on wayland display '%s'", socket);
   setenv("_WAYLAND_DISPLAY", socket, true);
 
-  if (!wlr_backend_start(server->backend)) {
+  if (!wlr_backend_start(self->backend)) {
     g_warning("Failed to start backend");
-    wlr_backend_destroy(server->backend);
-    wl_display_destroy(server->wl_display);
+    wlr_backend_destroy(self->backend);
+    wl_display_destroy(self->wl_display);
     return FALSE;
   }
 
   setenv("WAYLAND_DISPLAY", socket, true);
 #ifdef PHOC_XWAYLAND
-  if (server->desktop->xwayland != NULL) {
+  if (self->desktop->xwayland != NULL) {
     struct roots_seat *xwayland_seat =
-      input_get_seat(server->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
-    wlr_xwayland_set_seat(server->desktop->xwayland, xwayland_seat->seat);
+      input_get_seat(self->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
+    wlr_xwayland_set_seat(self->desktop->xwayland, xwayland_seat->seat);
   }
 #endif
 
-  phoc_wayland_init (server);
-  if (server->session)
-    phoc_startup_session (server);
+  phoc_wayland_init (self);
+  if (self->session)
+    phoc_startup_session (self);
 
-  server->inited = TRUE;
+  self->inited = TRUE;
   return TRUE;
 }
 
