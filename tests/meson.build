@@ -15,6 +15,7 @@ test_env.set('WLR_BACKENDS', 'x11')
 test_env.set('XDG_RUNTIME_DIR', meson.current_build_dir())
 
 test_cflags = [
+  '-DTEST_PHOC_INI="@0@/phoc.ini"'.format(meson.current_source_dir()),
 ]
 
 test_link_args = [
