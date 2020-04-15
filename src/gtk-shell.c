@@ -166,7 +166,7 @@ handle_system_bell(struct wl_client *client,
                    struct wl_resource *resource,
                    struct wl_resource *surface)
 {
-  g_debug ("%s not implmented", __func__);
+  g_debug ("%s not implemented", __func__);
 }
 
 static void
@@ -174,7 +174,7 @@ handle_notify_launch(struct wl_client *client,
                      struct wl_resource *resource,
                      const char *startup_id)
 {
-  g_debug ("%s not implmented", __func__);
+  g_debug ("%s not implemented", __func__);
 }
 
 static void
