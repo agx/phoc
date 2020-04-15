@@ -9,7 +9,7 @@
 static void
 test_phoc_server_get_default (void)
 {
-  PhocServer *server = phoc_server_get_default ();
+  g_autoptr(PhocServer) server = phoc_server_get_default ();
   PhocServer *server2;
 
   g_assert_true (PHOC_IS_SERVER (server));
@@ -21,7 +21,7 @@ test_phoc_server_get_default (void)
 static void
 test_phoc_server_setup (void)
 {
-  PhocServer *server = phoc_server_get_default ();
+  g_autoptr(PhocServer) server = phoc_server_get_default ();
 
   g_assert_true (PHOC_IS_SERVER (server));
 
@@ -32,7 +32,7 @@ test_phoc_server_setup (void)
 static void
 test_phoc_server_setup_args (void)
 {
-  PhocServer *server = phoc_server_get_default ();
+  g_autoptr(PhocServer) server = phoc_server_get_default ();
 
   g_assert_true (PHOC_IS_SERVER (server));
 
