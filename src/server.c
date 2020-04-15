@@ -155,12 +155,6 @@ phoc_server_finalize (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
 
-#ifdef PHOC_XWAYLAND
-  // We need to shutdown Xwayland before disconnecting all clients, otherwise
-  // wlroots will restart it automatically.
-  g_clear_pointer (&self->desktop->xwayland, wlr_xwayland_destroy);
-#endif
-
   g_clear_pointer (&self->wl_display, &wl_display_destroy_clients);
   g_clear_pointer (&self->wl_display, &wl_display_destroy);
   g_clear_object (&self->desktop);
