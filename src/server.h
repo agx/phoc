@@ -45,6 +45,7 @@ struct _PhocServer {
 
   /* Wayland resources */
   struct wl_display *wl_display;
+  guint wl_source;
 
   /* WLR tools */
   struct wlr_backend *backend;

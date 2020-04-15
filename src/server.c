@@ -73,7 +73,7 @@ phoc_wayland_init (PhocServer *server)
   GSource *wayland_event_source;
 
   wayland_event_source = wayland_event_source_new (server->wl_display);
-  g_source_attach (wayland_event_source, NULL);
+  server->wl_source = g_source_attach (wayland_event_source, NULL);
 }
 
 
@@ -157,6 +157,10 @@ phoc_server_finalize (GObject *object)
 
   g_clear_pointer (&self->wl_display, &wl_display_destroy_clients);
   g_clear_pointer (&self->wl_display, &wl_display_destroy);
+  if (self->wl_source) {
+    g_source_remove (self->wl_source);
+    self->wl_source = 0;
+  }
   g_clear_object (&self->desktop);
   g_clear_pointer (&self->session, g_free);
 
