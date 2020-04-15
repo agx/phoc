@@ -151,7 +151,7 @@ phoc_server_constructed (GObject *object)
 
 
 static void
-phoc_server_dispose (GObject *object)
+phoc_server_finalize (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
 
@@ -176,7 +176,7 @@ phoc_server_class_init (PhocServerClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->constructed = phoc_server_constructed;
-  object_class->finalize = phoc_server_dispose;
+  object_class->finalize = phoc_server_finalize;
 }
 
 static void
