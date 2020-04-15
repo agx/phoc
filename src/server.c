@@ -136,7 +136,7 @@ phoc_server_constructed (GObject *object)
 
   self->backend = wlr_backend_autocreate(self->wl_display, NULL);
   if (self->backend == NULL)
-    g_error("Could not start backend");
+    g_error("Could not create backend");
 
   self->renderer = wlr_backend_get_renderer(self->backend);
   if (self->renderer == NULL)
