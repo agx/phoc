@@ -182,16 +182,11 @@ PhocServer *
 phoc_server_get_default (void)
 {
   static PhocServer *instance;
-  static gboolean initialized;
 
   if (G_UNLIKELY (instance == NULL)) {
-    if (G_UNLIKELY (initialized)) {
-      g_error ("PhocServer can only be initialized once");
-    }
     g_debug("Creating server");
     instance = g_object_new (PHOC_TYPE_SERVER, NULL);
     g_object_add_weak_pointer (G_OBJECT (instance), (gpointer *)&instance);
-    initialized = TRUE;
   }
 
   return instance;
@@ -210,6 +205,8 @@ phoc_server_setup (PhocServer *server, const char *config_path,
 		   const char *session, GMainLoop *mainloop,
 		   PhocServerDebugFlags debug_flags)
 {
+  g_assert (!server->inited);
+
   server->config = roots_config_create(config_path);
   if (!server->config) {
     g_warning("Failed to parse config");
@@ -254,6 +251,7 @@ phoc_server_setup (PhocServer *server, const char *config_path,
   if (server->session)
     phoc_startup_session (server);
 
+  server->inited = TRUE;
   return TRUE;
 }
 

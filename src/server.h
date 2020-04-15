@@ -36,6 +36,7 @@ struct _PhocServer {
   PhocDesktop *desktop;
   struct roots_input *input;
   PhocServerDebugFlags debug_flags;
+  gboolean inited;
 
   /* The session */
   gchar *session;
