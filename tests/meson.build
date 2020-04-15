@@ -27,6 +27,7 @@ test_deps = [
 
 tests = [
   'server',
+  'run',
 ]
 
 # Unit tests
