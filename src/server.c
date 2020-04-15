@@ -164,6 +164,12 @@ phoc_server_finalize (GObject *object)
   g_clear_object (&self->desktop);
   g_clear_pointer (&self->session, g_free);
 
+  if (self->inited) {
+    g_unsetenv("WAYLAND_DISPLAY");
+    g_unsetenv("_WAYLAND_DISPLAY");
+    self->inited = FALSE;
+  }
+
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
 
