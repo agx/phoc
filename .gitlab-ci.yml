@@ -8,7 +8,7 @@ stages:
  - test-package
 
 variables:
-  DEPS: git
+  DEPS: git lcov
   ALPINE_EDGE_DEPS: |
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
@@ -49,7 +49,7 @@ build-with-xwayland-debian-buster:
   image: debian:buster
   before_script: *before_script_debian_buster
   variables:
-     BUILD_ARGS: -Dxwayland=enabled
+     BUILD_ARGS: -Dxwayland=enabled -Db_coverage=true
   <<: *tags
   <<: *build
   artifacts:
@@ -103,7 +103,8 @@ unit-test-with-xwayland-debian-buster:
     - build-with-xwayland-debian-buster
   before_script: *before_script_debian_buster
   script:
-    - xvfb-run ninja -C _build test
+    - xvfb-run ninja -C _build test coverage
+  coverage: '/^\s+lines\.+:\s+([\d.]+\%)\s+/'
   artifacts:
     when: always
     paths:
