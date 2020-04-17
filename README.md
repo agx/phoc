@@ -39,4 +39,7 @@ and criticals. The log domains all start with `phoc-` and are usally
 See https://developer.gnome.org/glib/stable/glib-running.html for more
 details on these environment variables.
 
+There's also a `PHOC_DEBUG` enviroment variable to turn on some debugging
+features. Use `PHOC_DEBUG=help phoc` to see supported flags.
+
 [1]: https://github.com/swaywm/wlroots
