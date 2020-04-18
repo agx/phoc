@@ -155,9 +155,10 @@ phoc_server_dispose (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
 
-  if (self->wl_display) {
+  if (self->backend) {
     wl_display_destroy_clients (self->wl_display);
-    self->wl_display = NULL;
+    wlr_backend_destroy(self->backend);
+    self->backend = NULL;
   }
 
   G_OBJECT_CLASS (phoc_server_parent_class)->dispose (object);
@@ -181,8 +182,7 @@ phoc_server_finalize (GObject *object)
     self->inited = FALSE;
   }
 
-  /* TODO: wl_display_destroy () */
-
+  wl_display_destroy (self->wl_display);
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
 
