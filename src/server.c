@@ -151,12 +151,23 @@ phoc_server_constructed (GObject *object)
 
 
 static void
+phoc_server_dispose (GObject *object)
+{
+  PhocServer *self = PHOC_SERVER (object);
+
+  if (self->wl_display) {
+    wl_display_destroy_clients (self->wl_display);
+    self->wl_display = NULL;
+  }
+
+  G_OBJECT_CLASS (phoc_server_parent_class)->dispose (object);
+}
+
+static void
 phoc_server_finalize (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
 
-  g_clear_pointer (&self->wl_display, &wl_display_destroy_clients);
-  g_clear_pointer (&self->wl_display, &wl_display_destroy);
   if (self->wl_source) {
     g_source_remove (self->wl_source);
     self->wl_source = 0;
@@ -170,6 +181,8 @@ phoc_server_finalize (GObject *object)
     self->inited = FALSE;
   }
 
+  /* TODO: wl_display_destroy () */
+
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
 
@@ -181,6 +194,7 @@ phoc_server_class_init (PhocServerClass *klass)
 
   object_class->constructed = phoc_server_constructed;
   object_class->finalize = phoc_server_finalize;
+  object_class->dispose = phoc_server_dispose;
 }
 
 static void
