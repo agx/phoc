@@ -141,6 +141,7 @@ static inline int64_t timespec_to_msec(const struct timespec *a) {
 void input_update_cursor_focus(struct roots_input *input) {
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
+	g_assert_nonnull (input);
 
 	struct roots_seat *seat;
 	wl_list_for_each(seat, &input->seats, link) {
