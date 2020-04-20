@@ -26,6 +26,7 @@ test_link_args = [
 tests = [
   'server',
   'run',
+  'client',
 ]
 
 phoctest_sources = [
