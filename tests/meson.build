@@ -16,7 +16,6 @@ test_env.set('XDG_RUNTIME_DIR', meson.current_build_dir())
 
 test_cflags = [
   '-DTEST_PHOC_INI="@0@/phoc.ini"'.format(meson.current_source_dir()),
-  '-DPHOC_TEST_SCREENSHOTS="@0@/screenshots"'.format(meson.current_source_dir()),
 ]
 
 test_link_args = [
@@ -27,6 +26,7 @@ tests = [
   'server',
   'run',
   'client',
+  'layer-shell',
 ]
 
 phoctest_sources = [
