@@ -37,6 +37,7 @@ License: GPL-2+
 
 Files: protocols/*
 Copyright: 2017, Drew DeVault
+  2018, Simon Ser
   2019, Purism SPC
 License: MIT
 
