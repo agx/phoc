@@ -38,7 +38,7 @@ foreach test : tests
                  c_args: test_cflags,
                  pie: true,
                  link_args: test_link_args,
-                 dependencies: phoc_dep)
+                 dependencies: [phoc_dep, client_protos])
   test(test, t, env: test_env)
 endforeach
 
