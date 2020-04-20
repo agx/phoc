@@ -30,6 +30,13 @@ To run from the source tree use
 
     _build/run
 
+## Test
+After making source changes run
+
+    xvfb-run ninja -C _build test
+
+to see if anything broke.
+
 # Debugging
 
 phoc uses glib so the `G_MESSAGES_DEBUG` environment variable can be
