@@ -16,20 +16,28 @@ test_env.set('XDG_RUNTIME_DIR', meson.current_build_dir())
 
 test_cflags = [
   '-DTEST_PHOC_INI="@0@/phoc.ini"'.format(meson.current_source_dir()),
+  '-DPHOC_TEST_SCREENSHOTS="@0@/screenshots"'.format(meson.current_source_dir()),
 ]
 
 test_link_args = [
   '-fPIC',
 ]
 
-test_deps = [
-  phoc_lib,
-]
-
 tests = [
   'server',
   'run',
 ]
+
+phoctest_sources = [
+  'testlib.c',
+]
+
+phoctest_lib = static_library('phoctest', phoctest_sources,
+  c_args: test_cflags,
+  dependencies: [phoc_dep, client_protos])
+phoctest_dep = declare_dependency(
+  include_directories: include_directories('.'),
+  link_with: phoctest_lib)
 
 # Unit tests
 foreach test : tests
@@ -38,7 +46,7 @@ foreach test : tests
                  c_args: test_cflags,
                  pie: true,
                  link_args: test_link_args,
-                 dependencies: [phoc_dep, client_protos])
+                 dependencies: [phoctest_dep, phoc_dep, client_protos])
   test(test, t, env: test_env)
 endforeach
 

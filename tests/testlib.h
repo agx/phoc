@@ -1,0 +1,105 @@
+/*
+ * Copyright (C) 2020 Purism SPC
+ * SPDX-License-Identifier: GPL-3.0+
+ * Author: Guido Günther <agx@sigxcpu.org>
+ */
+
+#include <glib.h>
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
+#include "wlr-screencopy-unstable-v1-client-protocol.h"
+
+G_BEGIN_DECLS
+
+typedef struct _PhocTestBuffer {
+  struct wl_buffer *wl_buffer;
+  guint8 *shm_data;
+  guint32 width, height, stride;
+  enum wl_shm_format format;
+  gboolean valid;
+} PhocTestBuffer;
+
+typedef struct _PhocTestOutput {
+  struct wl_output *output;
+
+  guint32 width, height;
+
+  /* for screenshots of this output */
+  struct zwlr_screencopy_frame_v1 *screencopy_frame;
+  PhocTestBuffer screenshot;
+  gboolean screenshot_done;
+  uint32_t screencopy_frame_flags;
+} PhocTestOutput;
+
+typedef struct _PhocTestWlGlobals {
+  struct wl_display *display;
+  struct wl_compositor *compositor;
+  struct wl_shm *shm;
+  struct zwlr_layer_shell_v1 *layer_shell;
+  struct zwlr_screencopy_manager_v1 *screencopy_manager;
+  /* TODO: handle multiple outputs */
+  PhocTestOutput output;
+
+  guint32 formats;
+} PhocTestClientGlobals;
+
+typedef gboolean (* PhocTestClientFunc) (PhocTestClientGlobals *globals, gpointer data);
+
+typedef struct PhocTestClientIface {
+  PhocTestClientFunc client_run;
+} PhocTestClientIface;
+
+/* Test client */
+void phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data);
+int  phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
+					 PhocTestBuffer *buffer,
+					 int width, int height, guint32 format);
+PhocTestBuffer *phoc_test_client_capture_output(PhocTestClientGlobals *globals,
+						PhocTestOutput *output);
+
+/* Buffers */
+gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2);
+gboolean phoc_test_buffer_save (PhocTestBuffer *buffer, const gchar *filename);
+gboolean phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filename);
+void phoc_test_buffer_free (PhocTestBuffer *buffer);
+
+#define _phoc_test_screenshot_name(l, f, n) (g_strdup_printf ("phoc-test-screenshot-%d-%s_%d.png", l, f, n))
+
+/*
+ * phoc_assert_screenshot:
+ * @g: The client global object
+ * @f: The screenshot to compare the current output to
+ */
+#define phoc_assert_screenshot(g, f) G_STMT_START {                      \
+    PhocTestClientGlobals *__g = (g);                                    \
+    const gchar *__f = g_test_build_filename (G_TEST_DIST, "screenshots", f, NULL); \
+    PhocTestBuffer *__s = phoc_test_client_capture_output (__g, &__g->output); \
+    if (phoc_test_buffer_matches_screenshot (__s, __f)) ; else {         \
+      g_autofree gchar *__name = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 0); \
+      phoc_test_buffer_save (&__g->output.screenshot, __name);		 \
+      g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC,	 \
+			   "Output content does not match " #f);         \
+    }                                                                    \
+    phoc_test_buffer_free (__s);					 \
+  } G_STMT_END
+
+/**
+ * phoc_test_assert_buffer_equal:
+ * @b1: A PhocClientBuffer
+ * @b2: A PhocClientBuffer
+ *
+ * Debugging macro to compare two buffers. If the buffers don't match
+ * screenshots are taken and saved as PNG.
+ */
+#define phoc_assert_buffer_equal(b1, b2)    G_STMT_START { \
+    PhocTestBuffer *__b1 = (b1), *__b2 = (b2);			        \
+    if (phoc_test_buffer_equal (__b1 , __b2)) ; else {			\
+      g_autofree gchar *__name1 = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 1); \
+      g_autofree gchar *__name2 = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 2); \
+      phoc_test_buffer_save (__b1, __name1);                            \
+      phoc_test_buffer_save (__b2, __name2);                            \
+      g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC,	\
+			 "Buffer " #b1 " != " #b2);			\
+    } \
+  } G_STMT_END
+
+G_END_DECLS
