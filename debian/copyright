@@ -3,22 +3,42 @@ Upstream-Name: phoc
 Source: https://source.puri.sm/Librem5/phoc
 
 Files: *
+Copyright: 2019, 2020 Purism SPC
+License: GPL-3+
+
+Files: src/cursor.*
+ src/desktop.*
+ src/ini.*
+ src/input.*
+ src/keyboard.*
+ src/layers.h
+ src/layer_shell.c
+ src/main.*
+ src/output.*
+ src/render.*
+ src/seat.*
+ src/settings.*
+ src/switch.*
+ src/text_input.*
+ src/view.*
+ src/virtual_keyboard.*
+ src/xcursor.h
+ src/xdg_shell.c
+ src/xdg_shell_v6.c
+ src/xwayland.c
 Copyright: 2017, Drew DeVault
   2014, Jari Vetoniemi
   2019, Purism SPC
-License: MIT
+License: GPL-3+ or MIT
 
 Files: debian/*
 Copyright: 2018, Guido Günther <agx@sigxcpu.org>
 License: GPL-2+
 
-Files: src/gtk-shell.*
- src/keybindings.*
- src/phosh.*
- src/server.*
- tests/*
-Copyright: 2019, 2020 Purism SPC
-License: GPL-3+
+Files: protocols/*
+Copyright: 2017, Drew DeVault
+  2019, Purism SPC
+License: MIT
 
 License: MIT
  Permission is hereby granted, free of charge, to any person obtaining a copy of
