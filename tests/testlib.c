@@ -182,6 +182,16 @@ static const struct wl_output_listener output_listener = {
   .scale = output_handle_scale,
 };
 
+static void
+xdg_wm_base_ping(void *data, struct xdg_wm_base *shell, uint32_t serial)
+{
+  xdg_wm_base_pong(shell, serial);
+}
+
+static const struct xdg_wm_base_listener wm_base_listener = {
+  xdg_wm_base_ping,
+};
+
 static void registry_handle_global(void *data, struct wl_registry *registry,
 				   uint32_t name, const char *interface, uint32_t version)
 {
@@ -198,6 +208,10 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
     globals->output.output = wl_registry_bind(registry, name,
 					      &wl_output_interface, 3);
     wl_output_add_listener(globals->output.output, &output_listener, &globals->output);
+  } else if (!g_strcmp0 (interface, xdg_wm_base_interface.name)) {
+    globals->xdg_shell = wl_registry_bind (registry, name,
+					   &xdg_wm_base_interface, 1);
+    xdg_wm_base_add_listener(globals->xdg_shell, &wm_base_listener, NULL);
   } else if (!g_strcmp0 (interface, zwlr_layer_shell_v1_interface.name)) {
     globals->layer_shell = wl_registry_bind (registry, name,
 					     &zwlr_layer_shell_v1_interface, 1);
@@ -235,6 +249,7 @@ wl_client_run (GTask *task, gpointer source,
   g_assert_nonnull (globals.compositor);
   g_assert_nonnull (globals.layer_shell);
   g_assert_nonnull (globals.shm);
+  g_assert_nonnull (globals.xdg_shell);
 
   g_assert (globals.formats & (1 << WL_SHM_FORMAT_XRGB8888));
 
