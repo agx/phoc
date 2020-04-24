@@ -27,6 +27,7 @@ tests = [
   'run',
   'client',
   'layer-shell',
+  'xdg-shell',
 ]
 
 phoctest_sources = [
