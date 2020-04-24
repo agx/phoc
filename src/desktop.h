@@ -116,6 +116,8 @@ struct _PhocDesktop {
 
 PhocDesktop *phoc_desktop_new (struct roots_config *config);
 void         phoc_desktop_toggle_output_blank (PhocDesktop *self);
+void         phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean on);
+gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);
 
 struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,

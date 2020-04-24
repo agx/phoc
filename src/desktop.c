@@ -385,8 +385,7 @@ auto_maximize_changed_cb (PhocDesktop *self,
   g_return_if_fail (PHOC_IS_DESKTOP (self));
   g_return_if_fail (G_IS_SETTINGS (settings));
 
-  g_debug ("auto-maximize: %d", max);
-  self->maximize = max;
+  phoc_desktop_set_auto_maximize (self, max);
 }
 
 
@@ -635,4 +634,22 @@ phoc_desktop_toggle_output_blank (PhocDesktop *self)
     if (enable)
       output_damage_whole(output);
   }
+}
+
+/**
+ * phoc_desktop_set_auto_maximize:
+ *
+ * Turn auto maximization of toplevels on (%TRUE) or off (%FALSE)
+ */
+void
+phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
+{
+  g_debug ("auto-maximize: %d", enable);
+  self->maximize = enable;
+}
+
+gboolean
+phoc_desktop_get_auto_maximize (PhocDesktop *self)
+{
+  return self->maximize;
 }
