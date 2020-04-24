@@ -295,6 +295,8 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
   g_assert_true (PHOC_IS_SERVER (server));
   g_assert_true (phoc_server_setup(server, TEST_PHOC_INI, NULL, loop,
 				   PHOC_SERVER_DEBUG_FLAG_NONE));
+  if (iface && iface->server_prepare)
+    g_assert_true (iface->server_prepare(server, data));
 
   g_task_set_task_data (wl_client_task, &td, NULL);
   g_task_run_in_thread (wl_client_task, wl_client_run);

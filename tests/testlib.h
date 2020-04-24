@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0+
  * Author: Guido Günther <agx@sigxcpu.org>
  */
+#include "server.h"
 
 #include <glib.h>
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
@@ -42,9 +43,12 @@ typedef struct _PhocTestWlGlobals {
   guint32 formats;
 } PhocTestClientGlobals;
 
+typedef gboolean (* PhocTestServerFunc) (PhocServer *server, gpointer data);
 typedef gboolean (* PhocTestClientFunc) (PhocTestClientGlobals *globals, gpointer data);
 
 typedef struct PhocTestClientIface {
+  /* Prepare function runs in server context */
+  PhocTestServerFunc server_prepare;
   PhocTestClientFunc client_run;
 } PhocTestClientIface;
 
