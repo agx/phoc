@@ -222,11 +222,6 @@ void phosh_rotate_display(struct wl_client *client,
   enum wl_output_transform transform = WL_OUTPUT_TRANSFORM_NORMAL;
 
   g_debug ("rotation: %d", degrees);
-  if (degrees % 90 != 0) {
-    wl_resource_post_error(resource,
-			   PHOSH_PRIVATE_ERROR_INVALID_ARGUMENT,
-			   "Can only rotate in 90 degree steps");
-  }
   degrees %= 360;
 
   switch (degrees) {
@@ -242,6 +237,10 @@ void phosh_rotate_display(struct wl_client *client,
   case 270:
     transform = WL_OUTPUT_TRANSFORM_270;
     break;
+  default:
+    wl_resource_post_error(resource,
+			   PHOSH_PRIVATE_ERROR_INVALID_ARGUMENT,
+			   "Can only rotate in 90 degree steps");
   }
 
   if (!phosh->panel) {

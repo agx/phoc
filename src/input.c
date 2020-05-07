@@ -35,8 +35,9 @@ static const char *device_type(enum wlr_input_device_type type) {
 		return "tablet tool";
 	case WLR_INPUT_DEVICE_TABLET_PAD:
 		return "tablet pad";
+	default:
+		return NULL;
 	}
-	return NULL;
 }
 
 struct roots_seat *input_get_seat(struct roots_input *input, char *name) {
