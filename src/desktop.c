@@ -121,6 +121,8 @@ static bool view_at(struct roots_view *view, double lx, double ly,
 			view_sx, view_sy, &_sx, &_sy);
 		break;
 #endif
+	default:
+		g_error("Invalid view type %d", view->type);
 	}
 	if (_surface != NULL) {
 		*sx = _sx;

@@ -707,6 +707,8 @@ void roots_drag_icon_update_position(struct roots_drag_icon *icon) {
 		icon->x = seat->touch_x;
 		icon->y = seat->touch_y;
 		break;
+	default:
+		g_error("Invalid drag grab type %d", seat->seat->drag->grab_type);
 	}
 
 	roots_drag_icon_damage_whole(icon);
@@ -1167,6 +1169,8 @@ void roots_seat_add_device(struct roots_seat *seat,
 	case WLR_INPUT_DEVICE_TABLET_TOOL:
 		seat_add_tablet_tool(seat, device);
 		break;
+	default:
+		g_error("Invalid device type %d", device->type);
 	}
 
 	seat_update_capabilities(seat);
@@ -1652,6 +1656,8 @@ void roots_seat_end_compositor_grab(struct roots_seat *seat) {
 			break;
 		case ROOTS_CURSOR_PASSTHROUGH:
 			break;
+		default:
+			g_error("Invalid cursor mode %d", cursor->mode);
 	}
 
 	cursor->mode = ROOTS_CURSOR_PASSTHROUGH;

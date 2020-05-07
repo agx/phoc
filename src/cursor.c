@@ -306,6 +306,8 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 			view_rotate(view, cursor->view_rotation + angle);
 		}
 		break;
+	default:
+		g_error("Invalid cursor mode %d", cursor->mode);
 	}
 }
 
@@ -349,6 +351,8 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 		case BTN_MIDDLE:
 			roots_seat_begin_rotate(seat, view);
 			break;
+		default:
+			g_error("Invalid button %d", button);
 		}
 	} else {
 		if (view && !surface && cursor->pointer_view) {
