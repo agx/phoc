@@ -100,11 +100,11 @@ test_c_args = [
   '-Wtype-limits',
   '-Wundef',
   '-Wunused-function',
+  '-Wswitch-default',
 ]
 
 # TODO:
 #  '-Wfloat-equal',
-#  '-Wswitch-default',
 #  '-Wswitch-enum',
 
 if get_option('buildtype') != 'plain'
