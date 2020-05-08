@@ -103,7 +103,7 @@ unit-test-with-xwayland-debian-buster:
     - build-with-xwayland-debian-buster
   before_script: *before_script_debian_buster
   script:
-    - xvfb-run ninja -C _build test coverage
+    - xvfb-run -s -noreset ninja -C _build test coverage
   coverage: '/^\s+lines\.+:\s+([\d.]+\%)\s+/'
   artifacts:
     when: always
