@@ -354,10 +354,11 @@ static void handle_tool_button(struct wl_listener *listener, void *data) {
 }
 
 static void handle_tablet_tool_set_cursor(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_tablet_tool *tool =
 		wl_container_of(listener, tool, set_cursor);
 	struct wlr_tablet_v2_event_cursor *evt = data;
-
+	PhocDesktop *desktop = server->desktop;
 
 	struct wlr_seat_pointer_request_set_cursor_event event = {
 		.surface = evt->surface,
@@ -367,6 +368,7 @@ static void handle_tablet_tool_set_cursor(struct wl_listener *listener, void *da
 		.seat_client = evt->seat_client,
 	};
 
+	wlr_idle_notify_activity(desktop->idle, tool->seat->seat);
 	roots_cursor_handle_request_set_cursor(tool->seat->cursor, &event);
 }
 
@@ -410,11 +412,8 @@ static void handle_tool_proximity(struct wl_listener *listener, void *data) {
 
 static void handle_request_set_cursor(struct wl_listener *listener,
 		void *data) {
-        PhocServer *server = phoc_server_get_default ();
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, request_set_cursor);
-	PhocDesktop *desktop = server->desktop;
-	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_seat_pointer_request_set_cursor_event *event = data;
 	roots_cursor_handle_request_set_cursor(cursor, event);
 }
