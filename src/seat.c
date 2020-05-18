@@ -310,7 +310,7 @@ static void handle_tool_axis(struct wl_listener *listener, void *data) {
 }
 
 static void handle_tool_tip(struct wl_listener *listener, void *data) {
-        PhocServer *server = phoc_server_get_default ();
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, tool_tip);
 	PhocDesktop *desktop = server->desktop;
@@ -340,7 +340,7 @@ static void handle_tablet_tool_destroy(struct wl_listener *listener, void *data)
 }
 
 static void handle_tool_button(struct wl_listener *listener, void *data) {
-        PhocServer *server = phoc_server_get_default ();
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, tool_button);
 	PhocDesktop *desktop = server->desktop;
@@ -371,7 +371,7 @@ static void handle_tablet_tool_set_cursor(struct wl_listener *listener, void *da
 }
 
 static void handle_tool_proximity(struct wl_listener *listener, void *data) {
-        PhocServer *server = phoc_server_get_default ();
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, tool_proximity);
 	PhocDesktop *desktop = server->desktop;
@@ -455,7 +455,7 @@ static void seat_set_device_output_mappings(struct roots_seat *seat,
 }
 
 void roots_seat_configure_cursor(struct roots_seat *seat) {
-        PhocServer *server = phoc_server_get_default ();
+	PhocServer *server = phoc_server_get_default ();
 	PhocDesktop *desktop = server->desktop;
 	struct wlr_cursor *cursor = seat->cursor->cursor;
 
@@ -494,7 +494,7 @@ void roots_seat_configure_cursor(struct roots_seat *seat) {
 }
 
 static void roots_seat_init_cursor(struct roots_seat *seat) {
-        PhocServer *server = phoc_server_get_default ();
+	PhocServer *server = phoc_server_get_default ();
 	seat->cursor = roots_cursor_create(seat);
 	if (!seat->cursor) {
 		return;
@@ -715,7 +715,7 @@ void roots_drag_icon_update_position(struct roots_drag_icon *icon) {
 }
 
 void roots_drag_icon_damage_whole(struct roots_drag_icon *icon) {
-        PhocServer *server = phoc_server_get_default ();
+	PhocServer *server = phoc_server_get_default ();
 	struct roots_output *output;
 	wl_list_for_each(output, &server->desktop->outputs,
 			link) {
