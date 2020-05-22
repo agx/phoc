@@ -725,6 +725,7 @@ void handle_new_output(struct wl_listener *listener, void *data) {
 		if (preferred_mode != NULL) {
 			wlr_output_set_mode(wlr_output, preferred_mode);
 		}
+		wlr_output_enable(wlr_output, true);
 		wlr_output_layout_add_auto(desktop->layout, wlr_output);
 	}
 	wlr_output_commit(wlr_output);
