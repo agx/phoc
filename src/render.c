@@ -16,6 +16,7 @@
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
+#include <wlr/version.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include "layers.h"
@@ -285,9 +286,13 @@ static bool scan_out_fullscreen_view(struct roots_output *output) {
 
 	wlr_presentation_surface_sampled(output->desktop->presentation, surface);
 
+#if WLR_VERSION_MAJOR == 0 && WLR_VERSION_MINOR < 11
 	if (!wlr_output_attach_buffer(wlr_output, surface->buffer)) {
 		return false;
 	}
+#else
+	wlr_output_attach_buffer(wlr_output, &surface->buffer->base);
+#endif
 	return wlr_output_commit(wlr_output);
 }
 
