@@ -513,6 +513,11 @@ phoc_desktop_constructed (GObject *object)
 		&self->virtual_keyboard_new);
   self->virtual_keyboard_new.notify = phoc_handle_virtual_keyboard;
 
+  self->virtual_pointer = wlr_virtual_pointer_manager_v1_create(server->wl_display);
+  wl_signal_add(&self->virtual_pointer->events.new_virtual_pointer,
+		&self->virtual_pointer_new);
+  self->virtual_pointer_new.notify = phoc_handle_virtual_pointer;
+
   self->screencopy = wlr_screencopy_manager_v1_create(server->wl_display);
 
   self->xdg_decoration_manager =
