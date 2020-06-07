@@ -27,6 +27,7 @@ endif
 
 phoc_deps = [
   input,
+  drm,
   gio,
   gnome_desktop,
   math,
