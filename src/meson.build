@@ -16,7 +16,7 @@ sources = [
   'switch.c',
   'text_input.c',
   'view.c',
-  'virtual_keyboard.c',
+  'virtual.c',
   'xdg_shell.c',
   'xdg_shell_v6.c',
 ]

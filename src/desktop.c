@@ -36,7 +36,7 @@
 #include "seat.h"
 #include "server.h"
 #include "view.h"
-#include "virtual_keyboard.h"
+#include "virtual.h"
 #include "xcursor.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 
@@ -511,7 +511,7 @@ phoc_desktop_constructed (GObject *object)
 								  server->wl_display);
   wl_signal_add(&self->virtual_keyboard->events.new_virtual_keyboard,
 		&self->virtual_keyboard_new);
-  self->virtual_keyboard_new.notify = handle_virtual_keyboard;
+  self->virtual_keyboard_new.notify = phoc_handle_virtual_keyboard;
 
   self->screencopy = wlr_screencopy_manager_v1_create(server->wl_display);
 
