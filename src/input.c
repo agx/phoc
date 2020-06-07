@@ -21,23 +21,25 @@
 #include "seat.h"
 #include "server.h"
 
-static const char *device_type(enum wlr_input_device_type type) {
-	switch (type) {
-	case WLR_INPUT_DEVICE_KEYBOARD:
-		return "keyboard";
-	case WLR_INPUT_DEVICE_POINTER:
-		return "pointer";
-	case WLR_INPUT_DEVICE_SWITCH:
-		return "switch";
-	case WLR_INPUT_DEVICE_TOUCH:
-		return "touch";
-	case WLR_INPUT_DEVICE_TABLET_TOOL:
-		return "tablet tool";
-	case WLR_INPUT_DEVICE_TABLET_PAD:
-		return "tablet pad";
-	default:
-		return NULL;
-	}
+const char *
+phoc_input_get_device_type (enum wlr_input_device_type type)
+{
+  switch (type) {
+  case WLR_INPUT_DEVICE_KEYBOARD:
+    return "keyboard";
+  case WLR_INPUT_DEVICE_POINTER:
+    return "pointer";
+  case WLR_INPUT_DEVICE_SWITCH:
+    return "switch";
+  case WLR_INPUT_DEVICE_TOUCH:
+    return "touch";
+  case WLR_INPUT_DEVICE_TABLET_TOOL:
+    return "tablet tool";
+  case WLR_INPUT_DEVICE_TABLET_PAD:
+    return "tablet pad";
+  default:
+    return NULL;
+  }
 }
 
 struct roots_seat *input_get_seat(struct roots_input *input, char *name) {
@@ -70,7 +72,8 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
 	}
 
 	g_debug("New input device: %s (%d:%d) %s seat:%s", device->name,
-		device->vendor, device->product, device_type(device->type), seat_name);
+		device->vendor, device->product,
+		phoc_input_get_device_type(device->type), seat_name);
 
 	roots_seat_add_device(seat, device);
 
