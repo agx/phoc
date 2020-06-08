@@ -3,7 +3,6 @@
 #include "config.h"
 
 #define _POSIX_C_SOURCE 199309L
-#include <wlr/util/log.h>
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
 #include "virtual.h"
 #include "seat.h"
@@ -18,10 +17,7 @@ phoc_handle_virtual_keyboard (struct wl_listener *listener, void *data)
 
   struct roots_seat *seat = input_seat_from_wlr_seat (server->input,
 						      keyboard->seat);
-  if (!seat) {
-    wlr_log (WLR_ERROR, "could not find roots seat");
-    return;
-  }
+  g_return_if_fail (seat);
 
   roots_seat_add_device (seat, &keyboard->input_device);
 }
