@@ -1,3 +1,173 @@
+phoc (0.1.8) amber-phone; urgency=medium
+
+  [ Guido Günther ]
+  * d/control: Bump wlroots dependency.
+    Bumped to 0.10.0 since this is sufficient to build and run
+    although 0.10.1 is preferred.
+  * build: Bump project version.
+    This makes it match the version in the changelog
+  * PhocServer: Move startup command from config.
+    No need to tuck away the command we run in config, it's only
+    configurable via the command line.
+  * main: Use automtic cleanup for mainloop
+  * main: Use automatic cleanup for the server
+  * server: Get hold of the main loop.
+    This allows the server to exit cleanly
+  * server: Exit when session exits.
+    This allows e.g. a systemd unit to properly restart compositor
+    and shell in case of session crash. It also allows to support
+    logout under display managers like GDM.
+    Prerequisite for phosh#117 since we also need to updte gnome-session
+    for this.
+  * Remove output mapping for devices and cursors.
+    For cursors we don't have a real use and for devices we're going
+    to make this default properly.
+  * output: Add helper to detect built-in panels.
+    This is similar to what phosh does.
+  * roots_seat_configure_cursor: Pass roots_output.
+    This avoids going back and forth between roots_ and wlr_output;
+  * seat: Map touch screens to build in displays by default.
+    This is currently hard coded and can not be changed
+  * seat: Map tablet devices as well
+  * seat: Fix wrong struct type.
+    Touch is not a pointer but 'struct roots_touch'
+  * server: Fix odd indentation
+  * server: Introduce debug flags.
+    This keeps the number of arguments and variables under control.
+  * Parse debug flags from environment.
+    This makes things more consistent with other glib applications
+    and allows us to use expressive comma separated lists instead
+    of command line flags.
+  * Use PHOC_SERVER_DEBUG_DAMAGE_TRACKING.
+    This avoids passing boolean flags around
+  * Use PHOC_SERVER_DEBUG_TOUCH_POINTS.
+    This avoids passing boolean flags around
+  * server: Introduce no-quit debug flag.
+    This allow to not quit the session which is useful for e.g.
+    phosh development where one wants to replace the running shell
+    without the compositor caring.
+  * README: Document PHOC_DEBUG
+  * gitlab-ci: Enable coverage information
+  * README: add coverage information.
+    This makes current coverage very visible
+  * README: fix cut'n'paste error
+  * d/copyright: Use correct licenses.
+    As per de56ea6b1e3cfa41981fd4dd349b0eef852aee23 we default to GPL-3+
+    (same as phosh). That's also consistent with the COPYING file.
+    We keep `src/*` separate to respect the copyright notices brought
+    over from rootston and keep the protocols under their initial
+    licenses.
+  * server: Fix method name.
+    We use it as finalize() but called it dispose().
+  * Don't destroy xwayland in phoc_server.
+    We create it in phoc_desktop so it should be destroyed there as well.
+    This also fixes a crash on server shutdown when the desktop wasn't even
+    created.
+  * server: Track multiple setup.
+    We currently track whether the singleton was inited which
+    is broken since we have a weak ref. Rather make sure we
+    don't setup the instance multiple times.
+  * server: Fix error output.
+    We only create the backend, it's started later on in _setup().
+  * tests: Add simple test that runs a main loop
+  * server: Remove wayland source on shutdown
+  * server: Unset envvars on shutdown.
+    It's always better to clean up but this also allows to run
+    two tests using the wayland backend in the same process.
+  * tests: Properly finalize the server.
+    So far we used the same server instance in all the tests
+    which fails when we allow to run init just once.
+  * tests: Pass a phoc.ini.
+    This one disables Xwayland since that causes trouble when
+    restarting it multiple times and we currently don't need it.
+  * server: Use self conistently.
+    We call the first method argument self elsewhere so this consistently in
+    all methods.
+  * server: Move wl_display_destroy_clients() to dispose.
+    This allows clients to shut down properly, we'll call into
+    already freed objects like input.
+    Note that wl_display_destroy() was never run since the wl_display was
+    already NULL when and we were using g_clear_pointer().
+  * server: Call wlr_backend_destroy() in dispose.
+    This allows wlroots to clean up and we can call wl_display_destroy ()
+    in finalize.
+  * input: Guard against NULL input.
+    This one pops up often when wlroots or the server cleans
+    up and this makes it obvious at a glance what's wrong.
+    We can't use PHOC_IS_INPUT yet since it's not a gobject yet.
+  * README: document how to run the tests.
+    This allows us to mention xvfb-run which is needed for screenshot
+    comparison tests.
+  * protocols: Generate client protocols.
+    These are needed by the tests
+  * protocols: Add wlr-screencopy-manager
+  * tests: Add testlib.
+    This allows to run a wayland client against the compositor
+    and to take and compare screenshot of the output. (Closes: #40)
+  * tests: Add simple client test.
+    This validates that clients can connect and find their globals
+    and also demos the library usage.
+  * tests: Add layer shell test.
+    Initial tests to test layer-shell layout (since we had several
+    surprises there). This also demos the screenhost machinery.
+    For tests to succeed they need to run under e.g. xfvb since
+    the mouse cursor might get placed differently otherwise.
+  * gitlab-ci: Don't reset xvfb between test runs.
+    This should avoid connection failures with multiple tests. We
+    do the same with libhandy.
+  * seat: Be consistent with whitespace.
+    Let's not mix tab and spaces in the same function.
+  * seat: Don't notify activity on `set_cursor`
+    Rather notify on tool set_cursor activity where it is important.
+    This avoids setting activity events on `set_cursor` when nothing
+    really changed.
+    To see what thi fixes blank the screen using `lock sreen` in phosh
+    with https://source.puri.sm/Librem5/phosh/-/merge_requests/300
+    applied and see it wake up right away.
+  * desktop: Add getter/setter for maximization
+  * tests: testlib: Add server prepare hook.
+    This allows to tweak the compositor configuration before
+    launching the client
+  * tests: Wire up xdg_wm_base.
+    This will be used in followup commits for xdg-shell testing
+  * tests: Add initial xdg-shell tests
+  * output: Enable new outputs by default.
+    This was done by wlroots but isn't in 'recent' versions (which gives
+    the compositor more room). (Closes: #130)
+  * phosh: Drop xdg-switcher interface.
+    Instead of requiring a phosh/phoc lockstep upgrade post an error if a
+    client wants to bind the protcol. This keeps the code we need carry
+    minimal but we can still be backward compatible (this is not breaking
+    clients that don't use that part of the protocol).
+  * input: Make_device_type() public
+    public. While at that rename to phoc_get_device_type ()
+  * Rename virtual_keyboard.[ch] to virtual_[ch]
+    We handle virtual pointer there as well.
+  * virtual: Use g_return_if_fail () instead of wlr_log ()
+    We can turn this into a type check later on and it makes
+    sure log domains work correctly.
+  * Implement virtual pointer protocol
+
+  [ Arnaud Ferraris ]
+  * d/copyright: fix upstream files list and improve readability
+
+  [ Nícolas F. R. A. Prado ]
+  * Use default switch cases where they make sense.
+    This removes -Wswitch-default warnings.
+  * Use default switch cases to report invalid values.
+    This removes -Wswitch-default warnings.
+  * Add -Wswitch-default to compile flags
+
+  [ Jordi Masip ]
+  * build: add missing dependency 'libdrm' used for 'drmModeModeInfo'
+
+  [ Sebastian Krzyszkowiak ]
+  * cursor: Fix touch point surface attachment.
+    Touch points should remain attached to surface they originate from
+    regardless of the touch point position on screen.
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 10 Jun 2020 17:14:04 +0200
+
 phoc (0.1.7) amber-phone; urgency=medium
 
   [ &t ]
