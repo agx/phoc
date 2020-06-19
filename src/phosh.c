@@ -320,7 +320,7 @@ phosh_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 
   /* FIXME: unsafe, needs client == shell->child.client */
   if (true) {
-    g_warning ("FIXME: allowing every client to bind as phosh");
+    g_info ("FIXME: allowing every client to bind as phosh");
     wl_resource_set_implementation(resource,
 				   &phosh_private_impl,
 				   phosh, phosh_handle_resource_destroy);

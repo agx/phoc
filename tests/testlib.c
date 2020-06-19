@@ -190,6 +190,102 @@ static const struct xdg_wm_base_listener wm_base_listener = {
   xdg_wm_base_ping,
 };
 
+
+static void
+foreign_toplevel_handle_title (void *data,
+			       struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+			       const char* title)
+{
+  PhocTestForeignToplevel *toplevel = data;
+  toplevel->title = g_strdup (title);
+  g_debug ("Got toplevel's title: %p %s", toplevel, title);
+}
+
+static void
+foreign_toplevel_handle_app_id (void *data,
+				struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+				const char* app_id)
+{
+}
+
+static void
+foreign_toplevel_handle_output_enter (void *data,
+				      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+				      struct wl_output *output)
+{
+}
+
+static void
+foreign_toplevel_handle_output_leave (void *data,
+				      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+				      struct wl_output *output)
+{
+}
+
+static void
+foreign_toplevel_handle_state (void *data,
+			       struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+			       struct wl_array *state)
+{
+}
+
+static void
+foreign_toplevel_handle_done (void *data,
+			      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1)
+{
+}
+
+
+static void
+foreign_toplevel_handle_closed (void *data,
+				struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1)
+{
+  PhocTestForeignToplevel *toplevel = data;
+  PhocTestClientGlobals *globals = toplevel->globals;
+  globals->foreign_toplevels = g_slist_remove (globals->foreign_toplevels, toplevel);
+  g_free (toplevel->title);
+  g_free (toplevel);
+}
+
+static const struct zwlr_foreign_toplevel_handle_v1_listener foreign_toplevel_handle_listener = {
+  foreign_toplevel_handle_title,
+  foreign_toplevel_handle_app_id,
+  foreign_toplevel_handle_output_enter,
+  foreign_toplevel_handle_output_leave,
+  foreign_toplevel_handle_state,
+  foreign_toplevel_handle_done,
+  foreign_toplevel_handle_closed
+};
+
+
+static void
+foreign_toplevel_manager_handle_toplevel (void *data,
+					  struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1,
+					  struct zwlr_foreign_toplevel_handle_v1 *handle)
+{
+  PhocTestClientGlobals *globals = data;
+
+  PhocTestForeignToplevel *toplevel = g_malloc0 (sizeof (PhocTestForeignToplevel));
+  toplevel->handle = handle;
+  toplevel->globals = globals;
+  globals->foreign_toplevels = g_slist_append (globals->foreign_toplevels, toplevel);
+  zwlr_foreign_toplevel_handle_v1_add_listener (handle, &foreign_toplevel_handle_listener, toplevel);
+  g_debug ("New toplevel: %p", toplevel);
+}
+
+static void
+foreign_toplevel_manager_handle_finished (void *data,
+					  struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1)
+{
+  g_debug ("wlr_foreign_toplevel_manager_finished");
+}
+
+
+static const struct zwlr_foreign_toplevel_manager_v1_listener foreign_toplevel_manager_listener = {
+  foreign_toplevel_manager_handle_toplevel,
+  foreign_toplevel_manager_handle_finished
+};
+
 static void registry_handle_global(void *data, struct wl_registry *registry,
 				   uint32_t name, const char *interface, uint32_t version)
 {
@@ -198,13 +294,13 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
   if (!g_strcmp0 (interface, wl_compositor_interface.name)) {
     globals->compositor = wl_registry_bind (registry, name, &wl_compositor_interface, 4);
   } else if (!g_strcmp0 (interface, wl_shm_interface.name)) {
-    globals->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
-    wl_shm_add_listener(globals->shm, &shm_listener, globals);
+    globals->shm = wl_registry_bind (registry, name, &wl_shm_interface, 1);
+    wl_shm_add_listener (globals->shm, &shm_listener, globals);
   } else if (!g_strcmp0 (interface, wl_output_interface.name)) {
     /* TODO: only one output atm */
     g_assert_null (globals->output.output);
-    globals->output.output = wl_registry_bind(registry, name,
-					      &wl_output_interface, 3);
+    globals->output.output = wl_registry_bind (registry, name,
+					       &wl_output_interface, 3);
     wl_output_add_listener(globals->output.output, &output_listener, &globals->output);
   } else if (!g_strcmp0 (interface, xdg_wm_base_interface.name)) {
     globals->xdg_shell = wl_registry_bind (registry, name,
@@ -214,8 +310,15 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
     globals->layer_shell = wl_registry_bind (registry, name,
 					     &zwlr_layer_shell_v1_interface, 1);
   } else if (!g_strcmp0 (interface, zwlr_screencopy_manager_v1_interface.name)) {
-    globals->screencopy_manager = wl_registry_bind(registry, name,
-						   &zwlr_screencopy_manager_v1_interface, 1);
+    globals->screencopy_manager = wl_registry_bind (registry, name,
+						    &zwlr_screencopy_manager_v1_interface, 1);
+  } else if (!g_strcmp0 (interface, zwlr_foreign_toplevel_manager_v1_interface.name)) {
+    globals->foreign_toplevel_manager = wl_registry_bind (registry, name,
+							  &zwlr_foreign_toplevel_manager_v1_interface, 2);
+    zwlr_foreign_toplevel_manager_v1_add_listener (globals->foreign_toplevel_manager,
+						   &foreign_toplevel_manager_listener, globals);
+  } else if (!g_strcmp0 (interface, phosh_private_interface.name)) {
+    globals->phosh = wl_registry_bind (registry, name, &phosh_private_interface, 4);
   }
 }
 
@@ -376,7 +479,43 @@ phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
   return TRUE;
 }
 
-static void
+static gint
+foreign_toplevel_compare (gconstpointer data, gconstpointer title)
+{
+  const PhocTestForeignToplevel *toplevel = data;
+  return g_strcmp0 (toplevel->title, title);
+}
+
+/**
+ *
+ * phoc_test_client_get_foreign_toplevel_handle:
+ *
+ * Get the PhocTestForeignToplevel for a toplevel with the given title
+ * using the wlr_foreign_toplevel_management protocol.
+ *
+ * Returns: (transfer-none): The toplevel's handle, or NULL if it doesn't exist.
+ */
+PhocTestForeignToplevel *
+phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
+                                              const char *title)
+{
+  GSList *list = g_slist_find_custom (globals->foreign_toplevels, title, foreign_toplevel_compare);
+  if (!list || !list->data)
+    return NULL;
+
+  return list->data;
+}
+
+
+/**
+ *
+ * phoc_test_client_capture_frame:
+ *
+ * Capture the given wlr_screencopy_frame and return its screenshot buffer
+ *
+ * Returns: (transfer-none): The screenshot buffer.
+ */
+PhocTestBuffer *
 phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
 				PhocTestScreencopyFrame *frame, struct zwlr_screencopy_frame_v1 *handle)
 {
@@ -408,13 +547,15 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
   buffer_to_argb(&frame->buffer);
 
   frame->done = FALSE;
+
+  return &frame->buffer;
 }
 
 /**
  *
  * phoc_test_client_capture_output:
  *
- * Capture the given output and return it's screenshot buffer
+ * Capture the given output and return its screenshot buffer
  *
  * Returns: (transfer-none): The screenshot buffer.
  */

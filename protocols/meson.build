@@ -63,9 +63,11 @@ server_protos = declare_dependency(
 
 client_protocols = [
   [wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
+  ['wlr-foreign-toplevel-management-unstable-v1.xml'],
   ['wlr-layer-shell-unstable-v1.xml'],
   ['wlr-output-power-management-unstable-v1.xml'],
   ['wlr-screencopy-unstable-v1.xml'],
+  ['phosh-private.xml']
 ]
 
 client_protos_src = []
