@@ -445,10 +445,10 @@ gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2)
   guint8 *c2 = buf2->shm_data;
 
   /* TODO: handle different format but same content */
-  if (buf1->width == buf2->width ||
-      buf1->height == buf2->height ||
-      buf1->stride == buf2->stride ||
-      buf1->format == buf2->format) {
+  if (buf1->width != buf2->width ||
+      buf1->height != buf2->height ||
+      buf1->stride != buf2->stride ||
+      buf1->format != buf2->format) {
     return FALSE;
   }
 
