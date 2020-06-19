@@ -444,18 +444,40 @@ gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2)
   guint8 *c1 = buf1->shm_data;
   guint8 *c2 = buf2->shm_data;
 
-  /* TODO: handle different format but same content */
+  g_assert_true (buf1->format == WL_SHM_FORMAT_XRGB8888
+                || buf1->format == WL_SHM_FORMAT_ARGB8888);
+  g_assert_true (buf2->format == WL_SHM_FORMAT_XRGB8888
+                || buf2->format == WL_SHM_FORMAT_ARGB8888);
+
   if (buf1->width != buf2->width ||
-      buf1->height != buf2->height ||
-      buf1->stride != buf2->stride ||
-      buf1->format != buf2->format) {
+      buf1->height != buf2->height) {
     return FALSE;
   }
 
-  for (int i = 0; i < (buf1->height * buf1->stride); i++) {
-    if (c1[i] != c2[i])
-      return FALSE;
+  for (guint y = 0; y < buf1->height; y++) {
+    for (guint x = 0; x < buf1->width; x++) {
+      // B
+      if (c1[y * buf1->stride + x * 4 + 0] != c2[y * buf2->stride + x * 4 + 0])
+          return FALSE;
+      // G
+      if (c1[y * buf1->stride + x * 4 + 1] != c2[y * buf2->stride + x * 4 + 1])
+          return FALSE;
+      // R
+      if (c1[y * buf1->stride + x * 4 + 2] != c2[y * buf2->stride + x * 4 + 2])
+          return FALSE;
+      // A/X
+      if (buf1->format == WL_SHM_FORMAT_ARGB8888 && buf2->format == WL_SHM_FORMAT_ARGB8888)
+        if (c1[y * buf1->stride + x * 4 + 3] != c2[y * buf2->stride + x * 4 + 3])
+          return FALSE;
+      if (buf1->format == WL_SHM_FORMAT_ARGB8888 && buf2->format == WL_SHM_FORMAT_XRGB8888)
+        if (c1[y * buf1->stride + x * 4 + 3] != 255)
+          return FALSE;
+      if (buf1->format == WL_SHM_FORMAT_XRGB8888 && buf2->format == WL_SHM_FORMAT_ARGB8888)
+        if (c2[y * buf2->stride + x * 4 + 3] != 255)
+          return FALSE;
+    }
   }
+
   return TRUE;
 }
 
