@@ -12,6 +12,8 @@
 
 G_BEGIN_DECLS
 
+typedef struct _PhocTestWlGlobals PhocTestClientGlobals;
+
 typedef struct _PhocTestBuffer {
   struct wl_buffer *wl_buffer;
   guint8 *shm_data;
@@ -20,16 +22,18 @@ typedef struct _PhocTestBuffer {
   gboolean valid;
 } PhocTestBuffer;
 
+typedef struct _PhocTestScreencopyFrame {
+  struct zwlr_screencopy_frame_v1 *handle;
+  PhocTestBuffer buffer;
+  gboolean done;
+  uint32_t flags;
+  PhocTestClientGlobals *globals;
+} PhocTestScreencopyFrame;
+
 typedef struct _PhocTestOutput {
   struct wl_output *output;
-
   guint32 width, height;
-
-  /* for screenshots of this output */
-  struct zwlr_screencopy_frame_v1 *screencopy_frame;
-  PhocTestBuffer screenshot;
-  gboolean screenshot_done;
-  uint32_t screencopy_frame_flags;
+  PhocTestScreencopyFrame screenshot;
 } PhocTestOutput;
 
 typedef struct _PhocTestWlGlobals {
@@ -81,7 +85,7 @@ void phoc_test_buffer_free (PhocTestBuffer *buffer);
     PhocTestBuffer *__s = phoc_test_client_capture_output (__g, &__g->output); \
     if (phoc_test_buffer_matches_screenshot (__s, __f)) ; else {         \
       g_autofree gchar *__name = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 0); \
-      phoc_test_buffer_save (&__g->output.screenshot, __name);		 \
+      phoc_test_buffer_save (&__g->output.screenshot.buffer, __name);		 \
       g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC,	 \
 			   "Output content does not match " #f);         \
     }                                                                    \

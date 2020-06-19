@@ -66,42 +66,40 @@ buffer_to_argb(PhocTestBuffer *buffer)
 
 static void
 screencopy_frame_handle_buffer (void *data,
-				struct zwlr_screencopy_frame_v1 *frame,
+				struct zwlr_screencopy_frame_v1 *handle,
 				uint32_t format,
 				uint32_t width,
 				uint32_t height,
 				uint32_t stride)
 {
-  PhocTestClientGlobals *globals = data;
+  PhocTestScreencopyFrame *frame = data;
   gboolean success;
 
-  g_assert_cmpint (globals->output.width, ==, width);
-  g_assert_cmpint (globals->output.height, ==, height);
-  success = phoc_test_client_create_shm_buffer (globals,
-						&globals->output.screenshot,
+  success = phoc_test_client_create_shm_buffer (frame->globals,
+						&frame->buffer,
 						width,
 						height,
 						format);
   g_assert_true (success);
-  zwlr_screencopy_frame_v1_copy(frame, globals->output.screenshot.wl_buffer);
+  zwlr_screencopy_frame_v1_copy(handle, frame->buffer.wl_buffer);
 }
 
 static void
-screencopy_frame_handle_flags(void *data, struct zwlr_screencopy_frame_v1 *frame, uint32_t flags)
+screencopy_frame_handle_flags(void *data, struct zwlr_screencopy_frame_v1 *handle, uint32_t flags)
 {
-  PhocTestClientGlobals *globals = data;
+  PhocTestScreencopyFrame *frame = data;
 
-  globals->output.screencopy_frame_flags = flags;
+  frame->flags = flags;
 }
 
 static void
-screencopy_frame_handle_ready (void *data, struct zwlr_screencopy_frame_v1 *frame,
+screencopy_frame_handle_ready (void *data, struct zwlr_screencopy_frame_v1 *handle,
 			       uint32_t tv_sec_hi, uint32_t tv_sec_lo,
 			       uint32_t tv_nsec)
 {
-  PhocTestClientGlobals *globals = data;
+  PhocTestScreencopyFrame *frame = data;
 
-  globals->output.screenshot_done = TRUE;
+  frame->done = TRUE;
 }
 
 static void
@@ -378,6 +376,40 @@ phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
   return TRUE;
 }
 
+static void
+phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
+				PhocTestScreencopyFrame *frame, struct zwlr_screencopy_frame_v1 *handle)
+{
+  frame->globals = globals;
+  frame->handle = handle;
+  g_assert_false (frame->done);
+
+  zwlr_screencopy_frame_v1_add_listener(handle,
+                                        &screencopy_frame_listener, frame);
+  while (!frame->done && wl_display_dispatch (globals->display) != -1) {
+  }
+  g_assert_true (frame->done);
+
+  /* Reverse captured buffer */
+  if (frame->flags & ZWLR_SCREENCOPY_FRAME_V1_FLAGS_Y_INVERT) {
+    guint32 height = frame->buffer.height;
+    guint32 stride = frame->buffer.stride;
+    guint8 *src = frame->buffer.shm_data;
+    g_autofree guint8 *dst = g_malloc0 (height * stride);
+
+    for (guint i = 0, j = height - 1; i < height; i++, j--)
+      memmove((dst + (i * stride)), (src + (j * stride)), stride);
+
+    memmove (src, dst, height * stride);
+    frame->flags &= ~ZWLR_SCREENCOPY_FRAME_V1_FLAGS_Y_INVERT;
+    /* There shouldn't be any other flags left */
+    g_assert_false (frame->flags);
+  }
+  buffer_to_argb(&frame->buffer);
+
+  frame->done = FALSE;
+}
+
 /**
  *
  * phoc_test_client_capture_output:
@@ -390,35 +422,13 @@ PhocTestBuffer *
 phoc_test_client_capture_output (PhocTestClientGlobals *globals,
 				 PhocTestOutput *output)
 {
-  output->screencopy_frame = zwlr_screencopy_manager_v1_capture_output (
-       globals->screencopy_manager, FALSE, output->output);
+  struct zwlr_screencopy_frame_v1 *handle = zwlr_screencopy_manager_v1_capture_output (globals->screencopy_manager, FALSE, output->output);
+  phoc_test_client_capture_frame (globals, &output->screenshot, handle);
 
-  g_assert_false (globals->output.screenshot_done);
-  zwlr_screencopy_frame_v1_add_listener(output->screencopy_frame,
-					&screencopy_frame_listener, globals);
-  while (!globals->output.screenshot_done && wl_display_dispatch (globals->display) != -1) {
-  }
-  g_assert_true (globals->output.screenshot_done);
+  g_assert_cmpint (output->screenshot.buffer.width, ==, output->width);
+  g_assert_cmpint (output->screenshot.buffer.height, ==, output->height);
 
-  /* Reverse captured buffer */
-  if (globals->output.screencopy_frame_flags & ZWLR_SCREENCOPY_FRAME_V1_FLAGS_Y_INVERT) {
-    guint32 height = globals->output.screenshot.height;
-    guint32 stride = globals->output.screenshot.stride;
-    guint8 *src = globals->output.screenshot.shm_data;
-    g_autofree guint8 *dst = g_malloc0 (height * stride);
-
-    for (int i = 0, j = height - 1; i < height; i++, j--)
-      memmove((dst + (i * stride)), (src + (j * stride)), stride);
-
-    memmove (src, dst, height * stride);
-    globals->output.screencopy_frame_flags &= ~ZWLR_SCREENCOPY_FRAME_V1_FLAGS_Y_INVERT;
-    /* There shouldn't be any other flags left */
-    g_assert_false (globals->output.screencopy_frame_flags);
-  }
-  buffer_to_argb(&globals->output.screenshot);
-
-  globals->output.screenshot_done = FALSE;
-  return &output->screenshot;
+  return &output->screenshot.buffer;
 }
 
 /**
