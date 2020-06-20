@@ -23,6 +23,14 @@
     </request>
 
     <request name="get_thumbnail" since="4">
+      <description summary="request a window thumbnail for a given toplevel">
+        Allows to retrieve a window thumbnail image for a given foreign
+        toplevel via wlr_screencopy protocol.
+        
+        The thumbnail will be scaled down to the size provided by
+        max_width and max_height arguments, preserving original aspect
+        ratio. Pass 0 to leave it unconstrained.
+      </description>
       <arg name="id" type="new_id" interface="zwlr_screencopy_frame_v1"/>
       <arg name="toplevel" type="object" interface="zwlr_foreign_toplevel_handle_v1"/>
       <arg name="max_width" type="uint" />
