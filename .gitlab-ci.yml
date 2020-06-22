@@ -13,6 +13,7 @@ variables:
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
   DEB_BUILD_PROFILES: pkg.phoc.embedwlroots
+  XVFB_RUN: xvfb-run -s -noreset
 
 .tags: &tags
   tags:
@@ -103,7 +104,8 @@ unit-test-with-xwayland-debian-buster:
     - build-with-xwayland-debian-buster
   before_script: *before_script_debian_buster
   script:
-    - xvfb-run -s -noreset ninja -C _build test coverage
+    - ${XVFB_RUN} ninja -C _build test
+    - ${XVFB_RUN} ninja -C _build coverage
   coverage: '/^\s+lines\.+:\s+([\d.]+\%)\s+/'
   artifacts:
     when: always
