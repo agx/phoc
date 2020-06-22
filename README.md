@@ -37,6 +37,27 @@ After making source changes run
 
 to see if anything broke.
 
+# Configuration
+
+phoc's behaviour can be configured via `GSettings`. For your convienience,
+a set of scripts to manipulate config values is available in `helpers`
+directory.
+
+ - `scale-to-fit` toggles automatic scaling of applications that don't fit
+   the screen. This setting is enabled per application using its reported
+   app-id. For instance, to enable scaling of GNOME Maps windows use:
+
+       helpers/scale-to-fit org.gnome.Maps on
+
+ - `auto-maximize` toggles automatic maximization of Wayland windows.
+   Disabling it allows windows to be resized and moved, which may be desired
+   when running phoc on desktop-like setups.
+
+        helpers/auto-maximize off
+
+Outputs are configured via `phoc.ini` config file - see `src/phoc.ini.example`
+for more information.
+
 # Debugging
 
 phoc uses glib so the `G_MESSAGES_DEBUG` environment variable can be

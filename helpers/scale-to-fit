@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+
+export GSETTINGS_SCHEMA_DIR=_build/data/
+
+if [ -z "$1" ]; then
+  echo "Usage: $0 APP-ID VALUE"
+  exit 0
+fi
+
+case "$2" in
+	on|1|ON|true)
+	val=true
+	;;
+	*)
+	val=false
+	;;
+esac
+
+APP_ID="$(echo $1 | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')"
+
+gsettings set sm.puri.phoc.application:/sm/puri/phoc/application/"$APP_ID"/ scale-to-fit "${val}"
+
+echo -n "Scale-to-fit for $1 is now "
+G_MESSAGES_DEBUG= gsettings get sm.puri.phoc.application:/sm/puri/phoc/application/"$APP_ID"/ scale-to-fit

@@ -672,8 +672,41 @@ static void view_handle_new_subsurface(struct wl_listener *listener,
 	subsurface_create(view, wlr_subsurface);
 }
 
+static gchar *
+munge_app_id (const gchar *app_id)
+{
+  gchar *id = g_strdup (app_id);
+  gint i;
+
+  g_strcanon (id,
+              "0123456789"
+              "abcdefghijklmnopqrstuvwxyz"
+              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+              "-",
+              '-');
+  for (i = 0; id[i] != '\0'; i++)
+    id[i] = g_ascii_tolower (id[i]);
+
+  return id;
+}
+
 static void view_update_scale(struct roots_view *view) {
+	PhocServer *server = phoc_server_get_default ();
+
 	if (!view->impl->want_scaling(view)) {
+		return;
+	}
+
+	bool scaling_enabled = false;
+
+	if (view->app_id) {
+		g_autofree gchar *munged_app_id = munge_app_id (view->app_id);
+		g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
+		g_autoptr (GSettings) setting =  g_settings_new_with_path ("sm.puri.phoc.application", path);
+		scaling_enabled = g_settings_get_boolean (setting, "scale-to-fit");
+	}
+
+	if (!scaling_enabled && !phoc_desktop_get_scale_to_fit (server->desktop)) {
 		return;
 	}
 
@@ -886,6 +919,8 @@ void view_set_parent(struct roots_view *view, struct roots_view *parent) {
 void view_set_app_id(struct roots_view *view, const char *app_id) {
 	free(view->app_id);
 	view->app_id = app_id ? strdup(app_id) : NULL;
+
+	view_update_scale(view);
 
 	if (view->toplevel_handle) {
 		wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle, app_id ?: "");

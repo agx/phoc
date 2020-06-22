@@ -110,7 +110,7 @@ struct _PhocDesktop {
 #endif
 
 	GSettings *settings;
-	gboolean maximize;
+	gboolean maximize, scale_to_fit;
 
 	/* Protocols that upstreamable implementations */
 	struct phosh_private *phosh;
@@ -121,6 +121,8 @@ PhocDesktop *phoc_desktop_new (struct roots_config *config);
 void         phoc_desktop_toggle_output_blank (PhocDesktop *self);
 void         phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean on);
 gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);
+void         phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean on);
+gboolean     phoc_desktop_get_scale_to_fit (PhocDesktop *self);
 
 struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,

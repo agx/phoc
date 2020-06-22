@@ -6,7 +6,26 @@
       <summary>Auto maximize applications</summary>
       <description>
         Whether to maximize application windows. This only affects
-	Wayland applications and only their main window.
+        Wayland applications and only their main window.
+      </description>
+    </key>
+    <key name="scale-to-fit" type="b">
+      <default>false</default>
+      <summary>Enable automatic scaling of all oversized windows</summary>
+      <description>
+        Whether to scale-to-fit all windows that are larger than the
+        screen they're on.
+      </description>
+    </key>
+  </schema>
+
+  <schema id="sm.puri.phoc.application">
+    <key name="scale-to-fit" type="b">
+      <default>false</default>
+      <summary>Enable automatic scaling of oversized windows</summary>
+      <description>
+        Whether to scale-to-fit windows belonging to this application
+        that are larger than the screen they're on.
       </description>
     </key>
   </schema>

@@ -390,6 +390,19 @@ auto_maximize_changed_cb (PhocDesktop *self,
   phoc_desktop_set_auto_maximize (self, max);
 }
 
+static void
+scale_to_fit_changed_cb (PhocDesktop *self,
+			  const gchar *key,
+			  GSettings   *settings)
+{
+    gboolean max = g_settings_get_boolean (settings, key);
+
+    g_return_if_fail (PHOC_IS_DESKTOP (self));
+    g_return_if_fail (G_IS_SETTINGS (settings));
+
+    phoc_desktop_set_scale_to_fit (self, max);
+}
+
 
 static void
 phoc_desktop_constructed (GObject *object)
@@ -567,6 +580,9 @@ phoc_desktop_constructed (GObject *object)
   g_signal_connect_swapped(self->settings, "changed::auto-maximize",
 			   G_CALLBACK (auto_maximize_changed_cb), self);
   auto_maximize_changed_cb(self, "auto-maximize", self->settings);
+  g_signal_connect_swapped(self->settings, "changed::scale-to-fit",
+			   G_CALLBACK (scale_to_fit_changed_cb), self);
+  scale_to_fit_changed_cb(self, "scale-to-fit", self->settings);
 }
 
 
@@ -659,4 +675,22 @@ gboolean
 phoc_desktop_get_auto_maximize (PhocDesktop *self)
 {
   return self->maximize;
+}
+
+/**
+ * phoc_desktop_set_scale_to_fit:
+ *
+ * Turn auto scaling of all oversized toplevels on (%TRUE) or off (%FALSE)
+ */
+void
+phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean enable)
+{
+    g_debug ("scale to fit: %d", enable);
+    self->scale_to_fit = enable;
+}
+
+gboolean
+phoc_desktop_get_scale_to_fit (PhocDesktop *self)
+{
+    return self->scale_to_fit;
 }
