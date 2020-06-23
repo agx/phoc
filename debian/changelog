@@ -1,3 +1,26 @@
+phoc (0.1.9) amber-phone; urgency=medium
+
+  [ Arnaud Ferraris ]
+  * gtk-shell: fix typos
+
+  [ Sebastian Krzyszkowiak ]
+  * protocols: Add wlr-foreign-toplevel-management-unstable-v1
+  * Create render.h header to hold declarations from render.c
+  * view: Make view_get_geometry accessible outside of view.c
+  * view: Store a pointer to view in wlr_foreign_toplevel_handle data
+  * meson: Depend on GLESv2
+  * protocols: Update wlr-screencopy-unstable-v1 to version 2
+  * Update wlroots submodule
+  * Implement window thumbnails via phosh-private+wlr-foreign-toplevel-management+wlr-screencopy protocol hybrid
+  * tests: Introduce PhocTestScreencopyFrame and generalize screencopy logic
+  * tests: Fix inverted condition in phoc_test_buffer_equal
+  * tests: phoc_test_client_capture_output: Handle ARGB/XRGB format mismatch
+  * tests: Basic window thumbnail test
+  * protocols: Add a description for thumbnail interface in phosh-private
+  * CI: Move coverage gathering to separate step
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Tue, 23 Jun 2020 13:56:47 +0200
+
 phoc (0.1.8) amber-phone; urgency=medium
 
   [ Guido Günther ]
