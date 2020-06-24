@@ -27,37 +27,5 @@ modeline = 65.13 768 816 896 1024 1024 1025 1028 1060 -HSync +VSync
 mode = 768x1024
 
 [cursor]
-# Restrict cursor movements to single output
-map-to-output = VGA-1
-# Restrict cursor movements to concrete rectangle
-geometry = 2500x800
 # Load a custom XCursor theme
 theme = default
-
-# Single device configuration. String after colon must match device's name.
-[device:PixArt Dell MS116 USB Optical Mouse]
-# Restrict cursor movements for this mouse to single output
-map-to-output = VGA-1
-# Restrict cursor movements for this mouse to concrete rectangle
-geometry = 2500x800
-# tap_enabled=true
-
-[keyboard]
-meta-key = Logo
-
-# Keybindings
-# Maps key combinations with commands to execute
-# Commands include:
-# - "exit" to stop the compositor
-# - "exec" to execute a shell command
-# - "close" to close the current view
-# - "next_window" to cycle through windows
-# - "alpha" to cycle a window's alpha channel
-# - "break_pointer_constraint" to decline and deactivate all pointer constraints
-[bindings]
-Logo+Shift+e = exit
-Logo+q = close
-Logo+m = maximize
-Logo+Escape = break_pointer_constraint
-Alt+Tab = next_window
-Ctrl+Shift+a = alpha
