@@ -252,7 +252,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
     return FALSE;
   }
 
-  g_info("Running compositor on wayland display '%s'", socket);
+  g_print ("Running compositor on wayland display '%s'\n", socket);
   setenv("_WAYLAND_DISPLAY", socket, true);
 
   if (!wlr_backend_start(self->backend)) {
