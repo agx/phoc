@@ -286,6 +286,9 @@ handle_get_thumbnail (struct wl_client *client,
   frame->width *= scale;
   frame->height *= scale;
 
+  frame->width = frame->width ?: 1;
+  frame->height = frame->height ?: 1;
+
   frame->stride = 4 * frame->width;
 
   zwlr_screencopy_frame_v1_send_buffer (frame->resource, frame->format,
