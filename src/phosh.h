@@ -12,7 +12,6 @@
 struct phosh_private {
   struct wl_resource* resource;
   struct wl_global *global;
-  struct wl_list xdg_switchers; // phosh_private_xdg_switchers::link
 
   PhocDesktop *desktop;
   struct {
@@ -20,20 +19,7 @@ struct phosh_private {
     struct wl_listener panel_surface_destroy;
   } listeners;
   struct wlr_layer_surface_v1 *panel;
-  struct wl_list apps;
 };
-
-
-struct phosh_private_xdg_switcher {
-  struct wl_list link;
-  struct wl_resource *resource;
-  struct phosh_private *phosh;
-
-  struct {
-    struct wl_signal destroy;
-  } events;
-};
-
 
 struct phosh_private_screencopy_frame {
   struct wl_resource *resource, *toplevel;

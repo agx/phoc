@@ -355,7 +355,6 @@ phosh_create (PhocDesktop *desktop, struct wl_display *display)
   wl_signal_add (&desktop->layer_shell->events.new_surface,
                  &phosh->listeners.layer_shell_new_surface);
   phosh->listeners.layer_shell_new_surface.notify = handle_phosh_layer_shell_new_surface;
-  wl_list_init (&phosh->xdg_switchers);
 
   g_info ("Initializing phosh private interface");
   phosh->global = wl_global_create (display, &phosh_private_interface, PHOSH_PRIVATE_VERSION, phosh, phosh_bind);
