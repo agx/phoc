@@ -121,6 +121,9 @@ phosh_private_screencopy_frame_handle_resource_destroy (struct wl_resource *reso
     phosh_private_screencopy_frame_from_resource (resource);
 
   g_debug ("Destroying private_screencopy_frame %p (res %p)", frame, frame->resource);
+  if (frame->view) {
+      wl_list_remove (&frame->view_destroy.link);
+  }
   free (frame);
 }
 
@@ -139,8 +142,12 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
                              struct wl_resource *buffer_resource)
 {
   struct phosh_private_screencopy_frame *frame = phosh_private_screencopy_frame_from_resource (frame_resource);
+  g_return_if_fail (frame);
 
-  if (frame == NULL) {
+  if (frame->buffer != NULL) {
+    wl_resource_post_error (frame->resource,
+                           ZWLR_SCREENCOPY_FRAME_V1_ERROR_ALREADY_USED,
+                           "frame already used");
     return;
   }
 
@@ -149,20 +156,19 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
     return;
   }
 
-  wl_list_remove (&frame->view_destroy.link);
+  frame->buffer = wl_shm_buffer_get (buffer_resource);
 
-  struct wl_shm_buffer *buffer = wl_shm_buffer_get (buffer_resource);
-  if (buffer == NULL) {
+  if (frame->buffer == NULL) {
     wl_resource_post_error (frame->resource,
                             ZWLR_SCREENCOPY_FRAME_V1_ERROR_INVALID_BUFFER,
                             "unsupported buffer type");
     return;
   }
 
-  enum wl_shm_format fmt = wl_shm_buffer_get_format (buffer);
-  int32_t width = wl_shm_buffer_get_width (buffer);
-  int32_t height = wl_shm_buffer_get_height (buffer);
-  int32_t stride = wl_shm_buffer_get_stride (buffer);
+  enum wl_shm_format fmt = wl_shm_buffer_get_format (frame->buffer);
+  int32_t width = wl_shm_buffer_get_width (frame->buffer);
+  int32_t height = wl_shm_buffer_get_height (frame->buffer);
+  int32_t stride = wl_shm_buffer_get_stride (frame->buffer);
   if (fmt != frame->format || width != frame->width ||
       height != frame->height || stride != frame->stride) {
     wl_resource_post_error (frame->resource,
@@ -171,22 +177,13 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
     return;
   }
 
-  if (frame->buffer != NULL) {
-    wl_resource_post_error (frame->resource,
-                            ZWLR_SCREENCOPY_FRAME_V1_ERROR_ALREADY_USED,
-                            "frame already used");
-    return;
-  }
-
-  frame->buffer = buffer;
-
-  wl_shm_buffer_begin_access (buffer);
-  void *data = wl_shm_buffer_get_data (buffer);
+  wl_shm_buffer_begin_access (frame->buffer);
+  void *data = wl_shm_buffer_get_data (frame->buffer);
 
   uint32_t flags = 0;
   view_render_to_buffer (frame->view, width, height, stride, &flags, data);
 
-  wl_shm_buffer_end_access (buffer);
+  wl_shm_buffer_end_access (frame->buffer);
 
   zwlr_screencopy_frame_v1_send_flags (frame->resource, flags);
 
@@ -195,6 +192,9 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
   uint32_t tv_sec_hi = (sizeof(now.tv_sec) > 4) ? now.tv_sec >> 32 : 0;
   uint32_t tv_sec_lo = now.tv_sec & 0xFFFFFFFF;
   zwlr_screencopy_frame_v1_send_ready (frame->resource, tv_sec_hi, tv_sec_lo, now.tv_nsec);
+
+  wl_list_remove (&frame->view_destroy.link);
+  frame->view = NULL;
 }
 
 static void
@@ -261,8 +261,8 @@ handle_get_thumbnail (struct wl_client *client,
   frame->toplevel = toplevel;
   frame->view = view;
 
-  wl_signal_add (&frame->view->events.destroy, &frame->view_destroy);
   frame->view_destroy.notify = thumbnail_view_handle_destroy;
+  wl_signal_add (&frame->view->events.destroy, &frame->view_destroy);
 
   // We hold to the current surface size even though it may change before
   // the frame is actually rendered. wlr-screencopy doesn't give much
