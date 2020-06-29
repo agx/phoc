@@ -634,6 +634,7 @@ static void subsurface_handle_map(struct wl_listener *listener, void *data) {
 	subsurface->new_subsurface.notify = subsurface_new_subsurface;
 	wl_signal_add(&subsurface->wlr_subsurface->surface->events.new_subsurface, &subsurface->new_subsurface);
 
+	wlr_surface_send_enter(subsurface->wlr_subsurface->surface, subsurface_get_root_layer(subsurface)->layer_surface->output);
 	subsurface_damage(subsurface, true);
 	input_update_cursor_focus(server->input);
 }

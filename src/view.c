@@ -141,7 +141,19 @@ enum roots_deco_part view_get_deco_part(struct roots_view *view, double sx,
 	return parts;
 }
 
-static void view_update_output(const struct roots_view *view,
+static void surface_send_enter_iterator(struct wlr_surface *surface,
+		int x, int y, void *data) {
+	struct wlr_output *wlr_output = data;
+	wlr_surface_send_enter(surface, wlr_output);
+}
+
+static void surface_send_leave_iterator(struct wlr_surface *surface,
+		int x, int y, void *data) {
+	struct wlr_output *wlr_output = data;
+	wlr_surface_send_leave(surface, wlr_output);
+}
+
+static void view_update_output(struct roots_view *view,
 		const struct wlr_box *before) {
 	PhocDesktop *desktop = view->desktop;
 
@@ -159,14 +171,14 @@ static void view_update_output(const struct roots_view *view,
 		bool intersects = wlr_output_layout_intersects(desktop->layout,
 			output->wlr_output, &box);
 		if (intersected && !intersects) {
-			wlr_surface_send_leave(view->wlr_surface, output->wlr_output);
+			view_for_each_surface(view, surface_send_leave_iterator, output->wlr_output);
 			if (view->toplevel_handle) {
 				wlr_foreign_toplevel_handle_v1_output_leave(
 					view->toplevel_handle, output->wlr_output);
 			}
 		}
 		if (!intersected && intersects) {
-			wlr_surface_send_enter(view->wlr_surface, output->wlr_output);
+			view_for_each_surface(view, surface_send_enter_iterator, output->wlr_output);
 			if (view->toplevel_handle) {
 				wlr_foreign_toplevel_handle_v1_output_enter(
 					view->toplevel_handle, output->wlr_output);
@@ -634,6 +646,17 @@ static void subsurface_handle_map(struct wl_listener *listener,
 	struct roots_view *view = subsurface->view_child.view;
 	view_damage_whole(view);
 	input_update_cursor_focus(server->input);
+
+	struct wlr_box box;
+	view_get_box(view, &box);
+	struct roots_output *output;
+	wl_list_for_each(output, &view->desktop->outputs, link) {
+		bool intersects = wlr_output_layout_intersects(view->desktop->layout,
+			output->wlr_output, &box);
+		if (intersects) {
+			wlr_surface_send_enter (subsurface->wlr_subsurface->surface, output->wlr_output);
+		}
+	}
 }
 
 static void subsurface_handle_unmap(struct wl_listener *listener,
