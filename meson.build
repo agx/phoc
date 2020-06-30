@@ -1,5 +1,5 @@
 project('phoc', 'c',
-          version: '0.1.9',
+          version: '0.4.0',
           license: 'GPLv3+',
     meson_version: '>= 0.47.0',
   default_options: [

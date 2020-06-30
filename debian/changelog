@@ -1,3 +1,20 @@
+phoc (0.4.0) amber-phone; urgency=high
+
+  [ Guido Günther ]
+  * server: Always print socket on startup
+  * phosh: Reindent
+  * phosh: Remove leftovers from the xdg interface
+
+  [ Sebastian Krzyszkowiak ]
+  * Scale down oversized views
+  * Make auto-scaling configurable per application
+  * phoc.ini.example: Drop outdated entries
+  * phosh: Make sure thumbnail dimensions aren't set to zeros
+  * phosh: Remove signal listener from view when destroying screencopy frame
+  * Send wl_surface_{enter,leave} events to subsurfaces
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Tue, 30 Jun 2020 16:52:02 +0200
+
 phoc (0.1.9) amber-phone; urgency=medium
 
   [ Arnaud Ferraris ]
