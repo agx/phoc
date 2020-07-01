@@ -478,20 +478,34 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 		struct wlr_event_touch_down *event) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocDesktop *desktop = server->desktop;
+	struct roots_seat *seat = cursor->seat;
 	double lx, ly;
 	wlr_cursor_absolute_to_layout_coords(cursor->cursor, event->device,
 		event->x, event->y, &lx, &ly);
 
 	double sx, sy;
+	struct roots_view *view;
 	struct wlr_surface *surface = desktop_surface_at(
-		desktop, lx, ly, &sx, &sy, NULL);
+		desktop, lx, ly, &sx, &sy, &view);
 
 	if (surface && !roots_handle_shell_reveal(surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD) &&
-	    roots_seat_allow_input(cursor->seat, surface->resource)) {
-		wlr_seat_touch_notify_down(cursor->seat->seat, surface,
+	    roots_seat_allow_input(seat, surface->resource)) {
+		wlr_seat_touch_notify_down(seat->seat, surface,
 			event->time_msec, event->touch_id, sx, sy);
-		wlr_seat_touch_point_focus(cursor->seat->seat, surface,
+		wlr_seat_touch_point_focus(seat->seat, surface,
 			event->time_msec, event->touch_id, sx, sy);
+
+		if (view) {
+			roots_seat_set_focus(seat, view);
+		}
+
+		if (wlr_surface_is_layer_surface(surface)) {
+			struct wlr_layer_surface_v1 *layer =
+				wlr_layer_surface_v1_from_wlr_surface(surface);
+			if (layer->current.keyboard_interactive) {
+				roots_seat_set_focus_layer(seat, layer);
+			}
+		}
 	}
 
 	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS) {
