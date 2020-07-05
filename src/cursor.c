@@ -511,7 +511,17 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS) {
 		struct roots_output *output;
 		wl_list_for_each(output, &desktop->outputs, link) {
-			output_damage_whole(output);
+			if (wlr_output_layout_contains_point(desktop->layout, output->wlr_output, lx, ly)) {
+				double ox = lx, oy = ly;
+				wlr_output_layout_output_coords(desktop->layout, output->wlr_output, &ox, &oy);
+				struct wlr_box box = {
+					.x = ox,
+					.y = oy,
+					.width = 1,
+					.height = 1
+				};
+				wlr_output_damage_add_box(output->damage, &box);
+			}
 		}
 	}
 }
