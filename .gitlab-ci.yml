@@ -116,6 +116,7 @@ package-deb-with-wlroots:
   <<: *tags
   stage: package
   image: debian:buster
+  dependencies: []
   before_script: *before_script_debian_buster
   script:
     - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
@@ -134,6 +135,7 @@ package-deb-without-wlroots:
   image: debian:buster
   variables:
     DEB_BUILD_PROFILES: ""
+  dependencies: []
   before_script:
     - echo "deb http://deb.debian.org/debian/ sid main" > /etc/apt/sources.list.d/sid.list
     - apt-get -y update
@@ -157,6 +159,7 @@ package-deb-with-wlroots:arm64:
     - librem5:arm64
   stage: package
   image: debian:buster
+  dependencies: []
   before_script: *before_script_debian_buster
   script:
     - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
