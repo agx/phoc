@@ -96,7 +96,7 @@ static void
 collect_touch_points (struct roots_output *output, struct wlr_surface *surface, struct wlr_box box, float scale)
 {
   PhocServer *server = phoc_server_get_default ();
-  if (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)) {
+  if (G_LIKELY (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))) {
     return;
   }
 
@@ -355,7 +355,7 @@ static void
 render_touch_points (struct roots_output *output)
 {
   PhocServer *server = phoc_server_get_default ();
-  if (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)) {
+  if (G_LIKELY (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))) {
     return;
   }
   g_list_foreach (output->debug_touch_points, render_touch_point_cb, output);
@@ -523,7 +523,7 @@ void output_render(struct roots_output *output) {
 	enum wl_output_transform transform =
 		wlr_output_transform_invert(wlr_output->transform);
 
-	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING) {
+	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
 		pixman_region32_union_rect(&buffer_damage, &buffer_damage,
 			0, 0, wlr_output->width, wlr_output->height);
 		wlr_region_transform(&buffer_damage, &buffer_damage,
@@ -614,7 +614,7 @@ renderer_end:
 	wlr_region_transform(&frame_damage, &output->damage->current,
 		transform, width, height);
 
-	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING) {
+	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
 		pixman_region32_t previous_damage;
 		pixman_region32_init(&previous_damage);
 		pixman_region32_subtract(&previous_damage,
