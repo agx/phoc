@@ -26,6 +26,12 @@
 #define TOUCH_POINT_RADIUS 30
 #define TOUCH_POINT_BORDER 0.1
 
+#define COLOR_BLACK                {0.0f, 0.0f, 0.0f, 1.0f}
+#define COLOR_TRANSPARENT          {0.0f, 0.0f, 0.0f, 0.0f}
+#define COLOR_TRANSPARENT_WHITE    {0.5f, 0.5f, 0.5f, 0.5f}
+#define COLOR_TRANSPARENT_YELLOW   {0.5f, 0.5f, 0.0f, 0.5f}
+#define COLOR_TRANSPARENT_MAGENTA  {0.5f, 0.0f, 0.5f, 0.5f}
+
 struct render_data {
 	pixman_region32_t *damage;
 	float alpha;
@@ -348,7 +354,7 @@ render_touch_point_cb (gpointer data, gpointer user_data)
   wlr_render_ellipse (renderer, &point_box, color, wlr_output->transform_matrix);
 
   point_box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale);
-  wlr_render_ellipse(renderer, &point_box, (float[]){0.5, 0.5, 0.5, 0.5}, wlr_output->transform_matrix);
+  wlr_render_ellipse(renderer, &point_box, (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
 }
 
 static void
@@ -435,7 +441,7 @@ view_render_to_buffer (struct roots_view *view, int width, int height, int strid
   glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
 
   wlr_renderer_begin (server->renderer, width, height);
-  wlr_renderer_clear (server->renderer, (float[]){0.0, 0.0, 0.0, 0.0});
+  wlr_renderer_clear (server->renderer, (float[])COLOR_TRANSPARENT);
   wlr_surface_for_each_surface (surface, view_render_iterator, view);
   wlr_renderer_end (server->renderer);
 
@@ -468,7 +474,7 @@ void output_render(struct roots_output *output) {
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
 
-	float clear_color[] = {0.0f, 0.0f, 0.0f, 1.0f};
+	float clear_color[] = COLOR_BLACK;
 
 	const struct wlr_box *output_box =
 		wlr_output_layout_get_box(desktop->layout, wlr_output);
@@ -624,13 +630,13 @@ renderer_end:
 		rects = pixman_region32_rectangles(&previous_damage, &nrects);
 		for (int i = 0; i < nrects; ++i) {
 			wlr_box_from_pixman_box32(&box, rects[i]);
-			wlr_render_rect(renderer, &box, (float[]){0.5, 0.0, 0.5, 0.5}, wlr_output->transform_matrix);
+			wlr_render_rect(renderer, &box, (float[])COLOR_TRANSPARENT_MAGENTA, wlr_output->transform_matrix);
 		}
 
 		rects = pixman_region32_rectangles(&output->damage->current, &nrects);
 		for (int i = 0; i < nrects; ++i) {
 			wlr_box_from_pixman_box32(&box, rects[i]);
-			wlr_render_rect(renderer, &box, (float[]){0.5, 0.5, 0.0, 0.5}, wlr_output->transform_matrix);
+			wlr_render_rect(renderer, &box, (float[])COLOR_TRANSPARENT_YELLOW, wlr_output->transform_matrix);
 		}
 		wlr_output_schedule_frame(output->wlr_output);
 		pixman_region32_fini(&previous_damage);
