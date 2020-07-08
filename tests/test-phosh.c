@@ -26,6 +26,14 @@ typedef struct _PhocTestThumbnail
   guint32 width, height;
 } PhocTestThumbnail;
 
+typedef struct _PhocTestKeyboardEvent
+{
+  char *title;
+  struct phosh_private_keyboard_event *kbevent;
+  gboolean test_grab_successful;
+  gboolean test_grab_unsuccesful;
+} PhocTestKeyboardEvent;
+
 static void
 xdg_surface_handle_configure(void *data, struct xdg_surface *xdg_surface,
 			     uint32_t serial)
@@ -177,11 +185,119 @@ test_phosh_thumbnail_simple (void)
   phoc_test_client_run (3, &iface, GINT_TO_POINTER (FALSE));
 }
 
+static void
+keyboard_event_handle_grab_failed (void *data,
+                                   struct phosh_private_keyboard_event *kbevent,
+                                   const char *accelerator,
+                                   uint32_t error)
+{
+  PhocTestKeyboardEvent *kbe = data;
+
+  g_assert_nonnull (kbevent);
+  g_assert (kbe->kbevent == kbevent);
+
+  kbe->test_grab_unsuccesful = TRUE;
+}
+
+static void
+keyboard_event_handle_grab_success (void *data,
+                                   struct phosh_private_keyboard_event *kbevent,
+                                   const char *accelerator,
+                                   uint32_t action_id)
+{
+  PhocTestKeyboardEvent *kbe = data;
+
+  g_assert_nonnull (kbevent);
+  g_assert (kbe->kbevent == kbevent);
+
+  if (action_id > 0)
+    kbe->test_grab_successful = TRUE;
+}
+
+static const struct phosh_private_keyboard_event_listener keyboard_event_listener = {
+   .grab_failed_event = keyboard_event_handle_grab_failed,
+   .grab_success_event = keyboard_event_handle_grab_success,
+};
+
+static PhocTestKeyboardEvent *
+phoc_test_keyboard_event_new (PhocTestClientGlobals *globals,
+                              char* title)
+{
+  PhocTestKeyboardEvent *kbe = g_malloc0 (sizeof (PhocTestKeyboardEvent));
+
+  g_assert (phosh_private_get_version (globals->phosh) >= 5);
+
+  kbe->kbevent = phosh_private_get_keyboard_event (globals->phosh);
+  kbe->title = title;
+
+  phosh_private_keyboard_event_add_listener (kbe->kbevent, &keyboard_event_listener, kbe);
+
+  return kbe;
+}
+
+static gboolean
+test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unused)
+{
+  PhocTestKeyboardEvent *test1;
+  PhocTestKeyboardEvent *test2;
+  gchar *test_accelerators[] = {
+    "XF86AudioLowerVolume",
+    "XF86AudioRaiseVolume",
+    "<SHIFT>XF86AudioLowerVolume",
+    "F9",
+  };
+
+  test1 = phoc_test_keyboard_event_new (globals, "test-mediakey-grabbing");
+  test2 = phoc_test_keyboard_event_new (globals, "test-invalid-grabbing");
+
+  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent, test_accelerators[0]);
+  phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent, test_accelerators[3]);
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+
+  g_assert_true (test1->test_grab_successful);
+  g_assert_true (test2->test_grab_unsuccesful);
+
+  test1->test_grab_successful = FALSE;
+  test2->test_grab_unsuccesful = FALSE;
+
+  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent, test_accelerators[1]);
+  phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent, test_accelerators[1]);
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+
+  g_assert_true (test1->test_grab_successful);
+  g_assert_true (test2->test_grab_unsuccesful);
+
+  test1->test_grab_successful = FALSE;
+
+  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent, test_accelerators[2]);
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+
+  g_assert_true (test1->test_grab_successful);
+
+  phosh_private_keyboard_event_destroy (test1->kbevent);
+  phosh_private_keyboard_event_destroy (test2->kbevent);
+  return TRUE;
+}
+
+static void
+test_phosh_kbevents_simple (void)
+{
+  PhocTestClientIface iface = {
+   .client_run = test_client_phosh_kbevent_simple,
+  };
+
+  phoc_test_client_run (3, &iface, NULL);
+}
+
 gint
 main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/phosh/thumbnail/simple", test_phosh_thumbnail_simple);
-  return g_test_run();
+  g_test_add_func ("/phoc/phosh/thumbnail/simple", test_phosh_thumbnail_simple);
+  g_test_add_func ("/phoc/phosh/kbevents/simple", test_phosh_kbevents_simple);
+  return g_test_run ();
 }

@@ -14,6 +14,7 @@
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 #include "keyboard.h"
+#include "phosh.h"
 #include "seat.h"
 
 #include <glib.h>
@@ -231,6 +232,29 @@ keyboard_execute_binding(PhocKeyboard *self,
   return false;
 }
 
+
+/**
+ * Forward keyboard bindings.
+ *
+ * Returns true if the keysym was handled by forwarding and false if the event
+ * should be propagated to clients.
+ */
+static bool
+keyboard_execute_subscribed_binding(PhocKeyboard *self,
+                                    xkb_keysym_t *pressed_keysyms, uint32_t modifiers,
+                                    const xkb_keysym_t *keysyms, size_t keysyms_len,
+                                    uint32_t time)
+{
+  bool handled = false;
+  for (size_t i = 0; i < keysyms_len; ++i) {
+    PhocKeyCombo combo = { modifiers, keysyms[i] };
+    handled = handled |
+      phosh_forward_keysym (&combo,
+                            time);
+  }
+  return handled;
+}
+
 /*
  * Get keysyms and modifiers from the keyboard as xkb sees them.
  *
@@ -305,6 +329,13 @@ phoc_keyboard_handle_key(PhocKeyboard *self,
   if (event->state == WLR_KEY_PRESSED && !handled) {
     handled = keyboard_execute_binding(self,
                                        self->pressed_keysyms_raw, modifiers, keysyms, keysyms_len);
+  }
+
+  // Handle subscribed keysyms
+  if (event->state == WLR_KEY_PRESSED && !handled) {
+    handled = keyboard_execute_subscribed_binding (self,
+                                                   self->pressed_keysyms_raw, modifiers,
+                                                   keysyms, keysyms_len, event->time_msec);
   }
 
   if (!handled) {

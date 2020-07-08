@@ -20,17 +20,6 @@
 typedef void (*PhocKeyHandlerFunc) (struct roots_seat *);
 
 
-/**
- * PhocKeyCombo:
- *
- * A combination of modifiers and a key describing a keyboard shortcut
- */
-typedef struct
-{
-  guint32 modifiers;
-  xkb_keysym_t keysym;
-} PhocKeyCombo;
-
 
 typedef struct
 {
@@ -298,7 +287,7 @@ is_keycode (const gchar *string)
           g_ascii_isxdigit (string[3]));
 }
 
-static PhocKeyCombo *
+PhocKeyCombo *
 parse_accelerator (const gchar *accelerator)
 {
   PhocKeyCombo *combo;

@@ -318,7 +318,7 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
     zwlr_foreign_toplevel_manager_v1_add_listener (globals->foreign_toplevel_manager,
 						   &foreign_toplevel_manager_listener, globals);
   } else if (!g_strcmp0 (interface, phosh_private_interface.name)) {
-    globals->phosh = wl_registry_bind (registry, name, &phosh_private_interface, 4);
+    globals->phosh = wl_registry_bind (registry, name, &phosh_private_interface, 5);
   }
 }
 

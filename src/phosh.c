@@ -25,7 +25,15 @@
 #include "phosh.h"
 #include "render.h"
 
-#define PHOSH_PRIVATE_VERSION 4
+struct phosh_private_keyboard_event_data {
+  GHashTable *subscribed_accelerators;
+  struct wl_resource *resource;
+  struct phosh_private *phosh;
+};
+
+static struct phosh_private_keyboard_event_data *phosh_private_keyboard_event_from_resource(struct wl_resource *resource);
+
+#define PHOSH_PRIVATE_VERSION 5
 
 static
 void
@@ -111,6 +119,202 @@ handle_get_xdg_switcher (struct wl_client   *client,
 
   wl_resource_post_error (resource, WL_DISPLAY_ERROR_INVALID_OBJECT,
                           "Use wlr-toplevel-management protocol instead");
+}
+
+static void
+phosh_private_keyboard_event_destroy (struct phosh_private_keyboard_event_data *kbevent)
+{
+  struct phosh_private *phosh;
+
+  if (kbevent == NULL)
+    return;
+
+  g_debug ("Destroying private_keyboard_event %p (res %p)", kbevent, kbevent->resource);
+  phosh = kbevent->phosh;
+  g_hash_table_remove_all (kbevent->subscribed_accelerators);
+  g_hash_table_unref (kbevent->subscribed_accelerators);
+  wl_resource_set_user_data (kbevent->resource, NULL);
+  phosh->keyboard_events = g_list_remove (phosh->keyboard_events, kbevent);
+  g_free (kbevent);
+}
+
+static void
+phosh_private_keyboard_event_handle_resource_destroy (struct wl_resource *resource)
+{
+  struct phosh_private_keyboard_event_data * kbevent =
+    phosh_private_keyboard_event_from_resource (resource);
+
+  phosh_private_keyboard_event_destroy (kbevent);
+}
+
+static bool
+phosh_private_keyboard_event_accelerator_is_registered (PhocKeyCombo                             *combo,
+                                                        struct phosh_private_keyboard_event_data *kbevent)
+{
+  gint64 key = ((gint64) combo->modifiers << 32) | combo->keysym;
+  gpointer ret = g_hash_table_lookup (kbevent->subscribed_accelerators, &key);
+  g_debug ("Accelerator is registered: Lookup -> %p", ret);
+  return (ret != NULL);
+}
+
+static bool
+phosh_private_accelerator_already_subscribed (PhocKeyCombo *combo)
+{
+  GList *l;
+  struct phosh_private_keyboard_event_data *kbevent;
+  PhocServer *server = phoc_server_get_default ();
+
+  struct phosh_private *phosh_private;
+  phosh_private = server->desktop->phosh;
+
+  for (l = phosh_private->keyboard_events; l != NULL; l = l->next) {
+    kbevent = (struct phosh_private_keyboard_event_data *)l->data;
+    if (phosh_private_keyboard_event_accelerator_is_registered (combo, kbevent))
+      return true;
+  }
+
+  return false;
+}
+
+static bool
+keysym_is_media (xkb_keysym_t keysym)
+{
+  switch (keysym) {
+  case XKB_KEY_XF86AudioLowerVolume:
+  case XKB_KEY_XF86AudioRaiseVolume:
+  case XKB_KEY_XF86AudioMute:
+  case XKB_KEY_XF86AudioMicMute:
+  case XKB_KEY_XF86AudioPlay:
+  case XKB_KEY_XF86AudioPause:
+  case XKB_KEY_XF86AudioStop:
+  case XKB_KEY_XF86AudioNext:
+  case XKB_KEY_XF86AudioPrev:
+    return true;
+  default:
+    return false;
+  }
+}
+
+static bool
+keysym_is_subscribeable (xkb_keysym_t keysym)
+{
+  return keysym_is_media (keysym);
+}
+
+static void
+phosh_private_keyboard_event_grab_accelerator_request (struct wl_client   *wl_client,
+                                                       struct wl_resource *resource,
+                                                       const char         *accelerator)
+{
+  guint new_action_id;
+  gint64 *new_key;
+
+  struct phosh_private_keyboard_event_data *kbevent = phosh_private_keyboard_event_from_resource (resource);
+  g_autofree PhocKeyCombo *combo = parse_accelerator (accelerator);
+
+  if (kbevent == NULL)
+    return;
+
+  if (phosh_private_accelerator_already_subscribed (combo)) {
+    g_debug ("Accelerator %s already subscribed to!", accelerator);
+
+    phosh_private_keyboard_event_send_grab_failed_event (resource,
+                                                         accelerator,
+                                                         PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_ALREADY_SUBSCRIBED);
+    return;
+  }
+
+  if (!keysym_is_subscribeable (combo->keysym)) {
+    g_debug ("Requested keysym %s is not subscribeable!", accelerator);
+
+    phosh_private_keyboard_event_send_grab_failed_event (resource,
+                                                         accelerator,
+                                                         PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_INVALID_KEYSYM);
+    return;
+  }
+
+  new_action_id = kbevent->phosh->last_action_id++;
+
+  /* detect wrap-around and make sure we fail from here on out */
+  if (new_action_id == 0) {
+    g_debug ("Action ID wrap-around detected while trying to subscribe %s", accelerator);
+    phosh_private_keyboard_event_send_grab_failed_event (resource,
+                                                         accelerator,
+                                                         PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_MISC_ERROR);
+    kbevent->phosh->last_action_id--;
+    return;
+  }
+
+  new_key = (gint64 *) g_malloc (sizeof (gint64));
+  *new_key = ((gint64) combo->modifiers << 32) | combo->keysym;
+
+  /* subscribed accelerators of kbevent */
+  g_hash_table_insert (kbevent->subscribed_accelerators,
+                       new_key, GUINT_TO_POINTER (new_action_id));
+
+  phosh_private_keyboard_event_send_grab_success_event (resource,
+                                                        accelerator,
+                                                        new_action_id);
+
+  g_debug ("Registered accelerator %s (sym %d mod %d) on phosh_private_keyboard_event %p (client %p)",
+           accelerator, combo->keysym, combo->modifiers, kbevent, wl_client);
+
+}
+
+static void
+phosh_private_keyboard_event_handle_destroy (struct wl_client   *client,
+                                             struct wl_resource *resource)
+{
+  wl_resource_destroy (resource);
+}
+
+static const struct phosh_private_keyboard_event_interface phosh_private_keyboard_event_impl = {
+  .grab_accelerator_request = phosh_private_keyboard_event_grab_accelerator_request,
+  .destroy = phosh_private_keyboard_event_handle_destroy
+};
+
+static void
+handle_get_keyboard_event (struct wl_client   *client,
+                           struct wl_resource *phosh_private_resource,
+                           uint32_t            id)
+{
+  struct phosh_private_keyboard_event_data *kbevent =
+    g_new0 (struct phosh_private_keyboard_event_data, 1);
+
+  if (kbevent == NULL) {
+    wl_client_post_no_memory (client);
+    return;
+  }
+
+  int version = wl_resource_get_version (phosh_private_resource);
+  kbevent->resource = wl_resource_create (client, &phosh_private_keyboard_event_interface, version, id);
+  if (kbevent->resource == NULL) {
+    g_free (kbevent);
+    wl_client_post_no_memory (client);
+    return;
+  }
+
+  kbevent->subscribed_accelerators = g_hash_table_new_full (g_int64_hash,
+                                                            g_int64_equal,
+                                                            g_free, NULL);
+  if (kbevent->subscribed_accelerators == NULL) {
+      wl_resource_destroy (kbevent->resource);
+      g_free (kbevent);
+      wl_client_post_no_memory (client);
+      return;
+    }
+
+  struct phosh_private *phosh_private = phosh_private_from_resource (phosh_private_resource);
+
+  phosh_private->keyboard_events = g_list_append (phosh_private->keyboard_events, kbevent);
+
+  g_debug ("new phosh_private_keyboard_event %p (res %p)", kbevent, kbevent->resource);
+  wl_resource_set_implementation (kbevent->resource,
+                                  &phosh_private_keyboard_event_impl,
+                                  kbevent,
+                                  phosh_private_keyboard_event_handle_resource_destroy);
+
+  kbevent->phosh = phosh_private;
 }
 
 
@@ -301,16 +505,20 @@ phosh_handle_resource_destroy (struct wl_resource *resource)
 {
   struct phosh_private *phosh = wl_resource_get_user_data (resource);
 
+  g_debug ("Destroying phosh %p (res %p)", phosh, resource);
   phosh->resource = NULL;
   phosh->panel = NULL;
-  g_debug ("Destroying phosh %p (res %p)", phosh, resource);
+
+  g_list_free (phosh->keyboard_events);
+  phosh->keyboard_events = NULL;
 }
 
 
 static const struct phosh_private_interface phosh_private_impl = {
   phosh_rotate_display,
   handle_get_xdg_switcher,
-  handle_get_thumbnail
+  handle_get_thumbnail,
+  handle_get_keyboard_event
 };
 
 
@@ -359,6 +567,7 @@ phosh_create (PhocDesktop *desktop, struct wl_display *display)
   g_info ("Initializing phosh private interface");
   phosh->global = wl_global_create (display, &phosh_private_interface, PHOSH_PRIVATE_VERSION, phosh, phosh_bind);
 
+  phosh->last_action_id = 1;
   if (!phosh->global) {
     return NULL;
   }
@@ -390,4 +599,41 @@ phosh_private_screencopy_frame_from_resource (struct wl_resource *resource)
   assert (wl_resource_instance_of (resource, &zwlr_screencopy_frame_v1_interface,
                                    &phosh_private_screencopy_frame_impl));
   return wl_resource_get_user_data (resource);
+}
+
+static struct phosh_private_keyboard_event_data *
+phosh_private_keyboard_event_from_resource (struct wl_resource *resource)
+{
+  assert (wl_resource_instance_of (resource, &phosh_private_keyboard_event_interface,
+                                   &phosh_private_keyboard_event_impl));
+  return wl_resource_get_user_data (resource);
+}
+
+bool
+phosh_forward_keysym (PhocKeyCombo *combo,
+                      uint32_t timestamp)
+{
+  GList *l;
+  struct phosh_private_keyboard_event_data *kbevent;
+  PhocServer *server = phoc_server_get_default ();
+
+  struct phosh_private *phosh_private;
+  phosh_private = server->desktop->phosh;
+  bool forwarded = false;
+
+  for (l = phosh_private->keyboard_events; l != NULL; l = l->next) {
+    kbevent = l->data;
+    g_debug("addr of kbevent and res kbev %p res %p", kbevent, kbevent->resource);
+    /*  forward the keysym if it is has been subscribed to */
+    if (phosh_private_keyboard_event_accelerator_is_registered (combo, kbevent)) {
+        gint64 key = ((gint64)combo->modifiers << 32) | combo->keysym;
+        guint action_id = GPOINTER_TO_UINT (g_hash_table_lookup (kbevent->subscribed_accelerators, &key));
+        phosh_private_keyboard_event_send_accelerator_activated_event (kbevent->resource,
+                                                                       action_id,
+                                                                       timestamp);
+        forwarded = true;
+      }
+  }
+
+  return forwarded;
 }
