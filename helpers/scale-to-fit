@@ -10,7 +10,7 @@ if [ -z "$1" ]; then
 fi
 
 case "$2" in
-	on|1|ON|true)
+	""|on|1|ON|true)
 	val=true
 	;;
 	*)
