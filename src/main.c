@@ -20,6 +20,13 @@
 #include "server.h"
 
 static void
+print_version (void)
+{
+  printf ("Phoc %s - Phone compositor\n", PHOC_VERSION);
+  exit (0);
+}
+
+static void
 setup_signals (void)
 {
   sigset_t mask;
@@ -93,6 +100,7 @@ main(int argc, char **argv)
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
+  gboolean version = FALSE;
 
   setup_signals();
 
@@ -101,6 +109,8 @@ main(int argc, char **argv)
      "Path to the configuration file. (default: phoc.ini).", NULL},
     {"exec", 'E', 0, G_OPTION_ARG_STRING, &exec,
      "Command (session) that will be ran at startup", NULL},
+    {"version", 0, 0, G_OPTION_ARG_NONE, &version,
+     "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
   };
 
@@ -110,6 +120,10 @@ main(int argc, char **argv)
     g_warning ("%s", err->message);
     g_clear_error (&err);
     return 1;
+  }
+
+  if (version) {
+    print_version ();
   }
 
   debug_flags = parse_debug_env ();
