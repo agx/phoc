@@ -395,6 +395,10 @@ damage_touch_points (struct roots_output *output)
 static void
 view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *data)
 {
+  if (!wlr_surface_has_buffer (surface)) {
+    return;
+  }
+
   PhocServer *server = phoc_server_get_default ();
   struct wlr_texture *view_texture = wlr_surface_get_texture (surface);
 
