@@ -1,3 +1,26 @@
+phoc (0.4.1) amber-phone; urgency=high
+
+  [ Sebastian Krzyszkowiak ]
+  * render: Rework damage tracking debug mode
+  * render: Use G_(UN)LIKELY for debug flags
+  * render: Use defines for color values
+  * cursor: Put a touched view into focus
+  * debian: Add sign-tags=true to gbp.conf
+  * gitlab-ci: Un-silence grep invocations
+  * gitlab-ci: Set package jobs dependencies to empty
+  * render: Don't try to render a surface with no texture
+  * cursor: Avoid damaging the whole output in touch points debug mode
+  * render: Catch up with wlroots' wlr_client_buffer
+  * render: Make the EGL context current when rendering to texture
+
+  [ &t ]
+  * Add --version flag
+
+  [ Yann Büchau ]
+  * scale-to-fit: Default to "on" without extra argument
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Wed, 22 Jul 2020 15:47:52 +0200
+
 phoc (0.4.0) amber-phone; urgency=high
 
   [ Guido Günther ]
