@@ -434,7 +434,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *data)
   wlr_render_texture (server->renderer, view_texture, mat, sx * surface->current.scale, sy * surface->current.scale, 1.0);
 }
 
-void
+gboolean
 view_render_to_buffer (struct roots_view *view, int width, int height, int stride, uint32_t *flags, void* data)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -443,7 +443,7 @@ view_render_to_buffer (struct roots_view *view, int width, int height, int strid
   GLuint tex, fbo;
 
   if (!wlr_egl_make_current (egl, EGL_NO_SURFACE, NULL)) {
-    return;
+    return FALSE;
   }
 
   glGenTextures (1, &tex);
@@ -469,6 +469,8 @@ view_render_to_buffer (struct roots_view *view, int width, int height, int strid
 #if WLR_VERSION_MAJOR > 0 || WLR_VERSION_MINOR >= 11
   wlr_egl_unset_current (egl);
 #endif
+
+  return TRUE;
 }
 
 static void surface_send_frame_done_iterator(struct roots_output *output,
