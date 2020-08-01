@@ -442,7 +442,7 @@ view_render_to_buffer (struct roots_view *view, int width, int height, int strid
   struct wlr_egl *egl = wlr_gles2_renderer_get_egl (server->renderer);
   GLuint tex, fbo;
 
-  if (!wlr_egl_make_current (egl, EGL_NO_SURFACE, NULL)) {
+  if (!surface || !wlr_egl_make_current (egl, EGL_NO_SURFACE, NULL)) {
     return FALSE;
   }
 
