@@ -73,6 +73,7 @@ phosh_rotate_display (struct wl_client   *client,
   }
 
   wlr_output_set_transform (phosh->panel->output, transform);
+  output_damage_whole(phosh->panel->output->data);
 }
 
 
