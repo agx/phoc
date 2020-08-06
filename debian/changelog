@@ -1,3 +1,19 @@
+phoc (0.4.2) amber-phone; urgency=medium
+
+  [ Evangelos Ribeiro Tzaras ]
+  * d/control: Use Rules-Requires-Root: no
+  * Implement keyforwarding with a new interface in phosh-private protocol
+
+  [ Guido Günther ]
+  * phosh: Damage output after rotation
+
+  [ Sebastian Krzyszkowiak ]
+  * render: Allow view_render_to_buffer to indicate failure
+  * phosh: Handle view_render_to_buffer failing in thumbnail_frame_handle_copy
+  * render: Check whether the root surface isn't NULL in view_render_to_buffer
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Thu, 06 Aug 2020 14:42:40 +0200
+
 phoc (0.4.1) amber-phone; urgency=high
 
   [ Sebastian Krzyszkowiak ]
