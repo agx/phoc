@@ -24,6 +24,7 @@
 #include "desktop.h"
 #include "phosh.h"
 #include "render.h"
+#include "utils.h"
 
 struct phosh_private_keyboard_event_data {
   GHashTable *subscribed_accelerators;
@@ -66,6 +67,9 @@ phosh_rotate_display (struct wl_client   *client,
                             PHOSH_PRIVATE_ERROR_INVALID_ARGUMENT,
                             "Can only rotate in 90 degree steps");
   }
+
+  /* Make sure we rotate clockwise */
+  phoc_utils_fix_transform(&transform);
 
   if (!phosh->panel) {
     g_warning ("Tried to rotate inexistent panel");

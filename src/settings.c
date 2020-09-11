@@ -18,6 +18,7 @@
 #include <wlr/util/log.h>
 #include "settings.h"
 #include "ini.h"
+#include "utils.h"
 
 static bool parse_modeline(const char *s, drmModeModeInfo *mode) {
 	char hsync[16];
@@ -203,6 +204,8 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 			} else {
 				wlr_log(WLR_ERROR, "got unknown transform value: %s", value);
 			}
+			/* Make sure we rotate clockwise */
+			phoc_utils_fix_transform(&oc->transform);
 		} else if (strcmp(name, "mode") == 0) {
 			char *end;
 			oc->mode.width = strtol(value, &end, 10);
