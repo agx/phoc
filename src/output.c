@@ -14,7 +14,6 @@
 #ifdef PHOC_HAS_WLR_OUTPUT_POWER_MANAGEMENT
 #include <wlr/types/wlr_output_power_management_v1.h>
 #endif
-#include <wlr/types/wlr_xdg_shell_v6.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>

@@ -27,7 +27,6 @@
 #include <wlr/types/wlr_virtual_pointer_v1.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
-#include <wlr/types/wlr_xdg_shell_v6.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
 #include <gio/gio.h>
@@ -60,7 +59,6 @@ struct _PhocDesktop {
 	struct wlr_xcursor_manager *xcursor_manager;
 
 	struct wlr_compositor *compositor;
-	struct wlr_xdg_shell_v6 *xdg_shell_v6;
 	struct wlr_xdg_shell *xdg_shell;
 	struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
 	struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;
@@ -89,7 +87,6 @@ struct _PhocDesktop {
 
 	struct wl_listener new_output;
 	struct wl_listener layout_change;
-	struct wl_listener xdg_shell_v6_surface;
 	struct wl_listener xdg_shell_surface;
 	struct wl_listener layer_shell_surface;
 	struct wl_listener xdg_toplevel_decoration;
@@ -128,7 +125,6 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
 		struct roots_view **view);
 
-void handle_xdg_shell_v6_surface(struct wl_listener *listener, void *data);
 void handle_xdg_shell_surface(struct wl_listener *listener, void *data);
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data);
 void handle_layer_shell_surface(struct wl_listener *listener, void *data);

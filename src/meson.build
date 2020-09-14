@@ -18,7 +18,6 @@ sources = [
   'view.c',
   'virtual.c',
   'xdg_shell.c',
-  'xdg_shell_v6.c',
 ]
 
 if have_xwayland

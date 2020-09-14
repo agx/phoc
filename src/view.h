@@ -9,7 +9,6 @@
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
-#include <wlr/types/wlr_xdg_shell_v6.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
 struct roots_view;
@@ -32,7 +31,6 @@ struct roots_view_interface {
 };
 
 enum roots_view_type {
-	ROOTS_XDG_SHELL_V6_VIEW,
 	ROOTS_XDG_SHELL_VIEW,
 #ifdef PHOC_XWAYLAND
 	ROOTS_XWAYLAND_VIEW,
@@ -102,28 +100,6 @@ struct roots_view {
 		struct wl_signal unmap;
 		struct wl_signal destroy;
 	} events;
-};
-
-struct roots_xdg_surface_v6 {
-	struct roots_view view;
-
-	struct wlr_xdg_surface_v6 *xdg_surface_v6;
-
-	struct wl_listener destroy;
-	struct wl_listener new_popup;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener request_move;
-	struct wl_listener request_resize;
-	struct wl_listener request_maximize;
-	struct wl_listener request_fullscreen;
-	struct wl_listener set_title;
-	struct wl_listener set_app_id;
-	struct wl_listener set_parent;
-
-	struct wl_listener surface_commit;
-
-	uint32_t pending_move_resize_configure_serial;
 };
 
 struct roots_xdg_toplevel_decoration;
@@ -197,15 +173,6 @@ struct roots_subsurface {
 	struct wl_listener unmap;
 };
 
-struct roots_xdg_popup_v6 {
-	struct roots_view_child view_child;
-	struct wlr_xdg_popup_v6 *wlr_popup;
-	struct wl_listener destroy;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener new_popup;
-};
-
 struct roots_xdg_popup {
 	struct roots_view_child view_child;
 	struct wlr_xdg_popup *wlr_popup;
@@ -264,8 +231,6 @@ void view_for_each_surface(struct roots_view *view,
 struct roots_view *roots_view_from_wlr_surface (struct wlr_surface *surface);
 
 struct roots_xdg_surface *roots_xdg_surface_from_view(struct roots_view *view);
-struct roots_xdg_surface_v6 *roots_xdg_surface_v6_from_view(
-	struct roots_view *view);
 struct roots_xwayland_surface *roots_xwayland_surface_from_view(
 	struct roots_view *view);
 
