@@ -28,11 +28,15 @@ static void move(struct roots_view *view, double x, double y) {
 		xwayland_surface->width, xwayland_surface->height);
 }
 
-static void apply_size_constraints(
+static void apply_size_constraints(struct roots_view *view,
 		struct wlr_xwayland_surface *xwayland_surface, uint32_t width,
 		uint32_t height, uint32_t *dest_width, uint32_t *dest_height) {
 	*dest_width = width;
 	*dest_height = height;
+
+	if (view_is_maximized(view)) {
+		return;
+	}
 
 	struct wlr_xwayland_surface_size_hints *size_hints =
 		xwayland_surface->size_hints;
@@ -57,7 +61,7 @@ static void resize(struct roots_view *view, uint32_t width, uint32_t height) {
 		roots_xwayland_surface_from_view(view)->xwayland_surface;
 
 	uint32_t constrained_width, constrained_height;
-	apply_size_constraints(xwayland_surface, width, height, &constrained_width,
+	apply_size_constraints(view, xwayland_surface, width, height, &constrained_width,
 		&constrained_height);
 
 	wlr_xwayland_surface_configure(xwayland_surface, xwayland_surface->x,
@@ -73,7 +77,7 @@ static void move_resize(struct roots_view *view, double x, double y,
 	bool update_y = y != view->box.y;
 
 	uint32_t constrained_width, constrained_height;
-	apply_size_constraints(xwayland_surface, width, height, &constrained_width,
+	apply_size_constraints(view, xwayland_surface, width, height, &constrained_width,
 		&constrained_height);
 
 	if (update_x) {
