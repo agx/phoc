@@ -1579,6 +1579,9 @@ void roots_seat_cycle_focus(struct roots_seat *seat) {
 }
 
 void roots_seat_begin_move(struct roots_seat *seat, struct roots_view *view) {
+	if (view->desktop->maximize)
+		return;
+
 	struct roots_cursor *cursor = seat->cursor;
 	cursor->mode = ROOTS_CURSOR_MOVE;
 	cursor->offs_x = cursor->cursor->x;
@@ -1598,6 +1601,9 @@ void roots_seat_begin_move(struct roots_seat *seat, struct roots_view *view) {
 
 void roots_seat_begin_resize(struct roots_seat *seat, struct roots_view *view,
 		uint32_t edges) {
+	if (view->desktop->maximize)
+		return;
+
 	struct roots_cursor *cursor = seat->cursor;
 	cursor->mode = ROOTS_CURSOR_RESIZE;
 	cursor->offs_x = cursor->cursor->x;
