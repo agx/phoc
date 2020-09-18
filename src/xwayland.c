@@ -137,6 +137,14 @@ static bool want_scaling(struct roots_view *view) {
 }
 
 static bool want_auto_maximize(struct roots_view *view) {
+	struct wlr_xwayland_surface *surface =
+		roots_xwayland_surface_from_view(view)->xwayland_surface;
+
+	if (surface->size_hints &&
+	    (surface->size_hints->min_width > 0 && surface->size_hints->min_width == surface->size_hints->max_width) &&
+	    (surface->size_hints->min_height > 0 && surface->size_hints->min_height == surface->size_hints->max_height))
+		return false;
+
 	return is_moveable(view);
 }
 
