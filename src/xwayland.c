@@ -15,6 +15,24 @@
 #include "view.h"
 #include "xwayland.h"
 
+static
+bool is_moveable(struct roots_view *view)
+{
+	PhocServer *server = phoc_server_get_default ();
+	struct wlr_xwayland_surface *xwayland_surface =
+		roots_xwayland_surface_from_view (view)->xwayland_surface;
+
+	if (xwayland_surface->window_type == NULL)
+		return true;
+
+	for (guint i = 0; i < xwayland_surface->window_type_len; i++)
+		if (xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_NORMAL] &&
+		    xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_DIALOG])
+			return false;
+
+	return true;
+}
+
 static void activate(struct roots_view *view, bool active) {
 	struct wlr_xwayland_surface *xwayland_surface =
 		roots_xwayland_surface_from_view(view)->xwayland_surface;
@@ -24,6 +42,10 @@ static void activate(struct roots_view *view, bool active) {
 static void move(struct roots_view *view, double x, double y) {
 	struct wlr_xwayland_surface *xwayland_surface =
 		roots_xwayland_surface_from_view(view)->xwayland_surface;
+
+	if (!is_moveable (view))
+		return;
+
 	view_update_position(view, x, y);
 	wlr_xwayland_surface_configure(xwayland_surface, x, y,
 		xwayland_surface->width, xwayland_surface->height);
@@ -73,6 +95,11 @@ static void move_resize(struct roots_view *view, double x, double y,
 	struct wlr_xwayland_surface *xwayland_surface =
 		roots_xwayland_surface_from_view(view)->xwayland_surface;
 
+	if (!is_moveable (view)) {
+		x = view->box.x;
+		y = view->box.y;
+	}
+
 	bool update_x = x != view->box.x;
 	bool update_y = y != view->box.y;
 
@@ -110,19 +137,7 @@ static bool want_scaling(struct roots_view *view) {
 }
 
 static bool want_auto_maximize(struct roots_view *view) {
-	PhocServer *server = phoc_server_get_default();
-	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
-
-	if (xwayland_surface->window_type == NULL)
-		return true;
-
-	for (guint i = 0; i < xwayland_surface->window_type_len; i++)
-		if (xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_NORMAL] &&
-		    xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_DIALOG])
-			return false;
-
-	return true;
+	return is_moveable(view);
 }
 
 static void maximize(struct roots_view *view, bool maximized) {
