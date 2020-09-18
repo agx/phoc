@@ -293,6 +293,8 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	wl_signal_add(&surface->surface->events.commit,
 		&roots_surface->surface_commit);
 
+	view_maximize(view, surface->maximized_horz && surface->maximized_vert);
+
 	view_map(view, surface->surface);
 
 	if (!surface->override_redirect) {
@@ -335,6 +337,8 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 	view_init(&roots_surface->view, &view_impl, ROOTS_XWAYLAND_VIEW, desktop);
 	roots_surface->view.box.x = surface->x;
 	roots_surface->view.box.y = surface->y;
+	roots_surface->view.box.width = surface->width;
+	roots_surface->view.box.height = surface->height;
 	roots_surface->xwayland_surface = surface;
 
 	view_set_title(&roots_surface->view, surface->title);
