@@ -13,6 +13,7 @@ Build-Depends:
  meson (>= 0.47.0),
  pkg-config,
  wayland-protocols,
+ libxcb1-dev,
  libwlroots-dev (>= 0.10.0) <!pkg.phoc.embedwlroots>,
 # For wlroots subproject build
  libcap-dev <pkg.phoc.embedwlroots>,
@@ -25,7 +26,6 @@ Build-Depends:
  libpng-dev <pkg.phoc.embedwlroots>,
  libsystemd-dev <pkg.phoc.embedwlroots>,
  libwayland-dev <pkg.phoc.embedwlroots>,
- libxcb1-dev <pkg.phoc.embedwlroots>,
  libxcb-composite0-dev <pkg.phoc.embedwlroots>,
  libxcb-icccm4-dev <pkg.phoc.embedwlroots>,
  libxcb-image0-dev <pkg.phoc.embedwlroots>,

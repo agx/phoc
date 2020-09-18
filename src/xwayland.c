@@ -13,6 +13,7 @@
 #include <wlr/xwayland.h>
 #include "server.h"
 #include "view.h"
+#include "xwayland.h"
 
 static void activate(struct roots_view *view, bool active) {
 	struct wlr_xwayland_surface *xwayland_surface =
@@ -34,9 +35,8 @@ static void apply_size_constraints(struct roots_view *view,
 	*dest_width = width;
 	*dest_height = height;
 
-	if (view_is_maximized(view)) {
+	if (view_is_maximized(view))
 		return;
-	}
 
 	struct wlr_xwayland_surface_size_hints *size_hints =
 		xwayland_surface->size_hints;
@@ -110,7 +110,19 @@ static bool want_scaling(struct roots_view *view) {
 }
 
 static bool want_auto_maximize(struct roots_view *view) {
-	return false;
+	PhocServer *server = phoc_server_get_default();
+	struct wlr_xwayland_surface *xwayland_surface =
+		roots_xwayland_surface_from_view(view)->xwayland_surface;
+
+	if (xwayland_surface->window_type == NULL)
+		return true;
+
+	for (guint i = 0; i < xwayland_surface->window_type_len; i++)
+		if (xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_NORMAL] &&
+		    xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_DIALOG])
+			return false;
+
+	return true;
 }
 
 static void maximize(struct roots_view *view, bool maximized) {
@@ -294,6 +306,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 		&roots_surface->surface_commit);
 
 	view_maximize(view, surface->maximized_horz && surface->maximized_vert);
+	view_auto_maximize(view);
 
 	view_map(view, surface->surface);
 

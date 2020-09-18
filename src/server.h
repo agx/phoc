@@ -8,6 +8,7 @@
 #include <wlr/types/wlr_data_device.h>
 #ifdef PHOC_XWAYLAND
 #include <wlr/xwayland.h>
+#include <xcb/xproto.h>
 #endif
 #include "settings.h"
 #include "desktop.h"

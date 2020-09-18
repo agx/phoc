@@ -33,6 +33,10 @@
 
 #include "settings.h"
 
+#ifdef PHOC_XWAYLAND
+#include "xwayland.h"
+#endif
+
 #define PHOC_TYPE_DESKTOP (phoc_desktop_get_type())
 
 G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
@@ -104,6 +108,8 @@ struct _PhocDesktop {
 #ifdef PHOC_XWAYLAND
 	struct wlr_xwayland *xwayland;
 	struct wl_listener xwayland_surface;
+	struct wl_listener xwayland_ready;
+	xcb_atom_t xwayland_atoms[XWAYLAND_ATOM_LAST];
 #endif
 
 	GSettings *settings;

@@ -21,10 +21,6 @@ sources = [
   'xdg_shell.c',
 ]
 
-if have_xwayland
-  sources += 'xwayland.c'
-endif
-
 phoc_deps = [
   input,
   drm,
@@ -38,6 +34,11 @@ phoc_deps = [
   server_protos,
   xkbcommon,
 ]
+
+if have_xwayland
+  sources += 'xwayland.c'
+  phoc_deps += dependency('xcb')
+endif
 
 phoc_lib = static_library(
   'phoc',
