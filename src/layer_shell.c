@@ -282,6 +282,8 @@ void arrange_layers(struct roots_output *output) {
 	wl_list_for_each(view, &output->desktop->views, link) {
 		if (view_is_maximized(view)) {
 			view_arrange_maximized(view);
+		} else if (output->desktop->maximize) {
+			view_center(view);
 		}
 	}
 
