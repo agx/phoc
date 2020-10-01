@@ -43,41 +43,8 @@ phosh_rotate_display (struct wl_client   *client,
                       struct wl_resource *surface_resource,
                       uint32_t            degrees)
 {
-  struct phosh_private *phosh = wl_resource_get_user_data (resource);
-  enum wl_output_transform transform = WL_OUTPUT_TRANSFORM_NORMAL;
-
-  g_debug ("rotation: %d", degrees);
-  degrees %= 360;
-
-  switch (degrees) {
-  case 0:
-    transform =  WL_OUTPUT_TRANSFORM_NORMAL;
-    break;
-  case 90:
-    transform = WL_OUTPUT_TRANSFORM_90;
-    break;
-  case 180:
-    transform = WL_OUTPUT_TRANSFORM_180;
-    break;
-  case 270:
-    transform = WL_OUTPUT_TRANSFORM_270;
-    break;
-  default:
-    wl_resource_post_error (resource,
-                            PHOSH_PRIVATE_ERROR_INVALID_ARGUMENT,
-                            "Can only rotate in 90 degree steps");
-  }
-
-  /* Make sure we rotate clockwise */
-  phoc_utils_fix_transform(&transform);
-
-  if (!phosh->panel) {
-    g_warning ("Tried to rotate inexistent panel");
-    return;
-  }
-
-  wlr_output_set_transform (phosh->panel->output, transform);
-  output_damage_whole(phosh->panel->output->data);
+  wl_resource_post_error (resource, WL_DISPLAY_ERROR_INVALID_OBJECT,
+                          "Use wlr-output-management protocol instead");
 }
 
 
