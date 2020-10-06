@@ -97,6 +97,19 @@ on_session_exit (GPid pid, gint status, PhocServer *self)
 }
 
 
+static void
+on_child_setup (gpointer unused)
+{
+  sigset_t mask;
+
+  /* phoc wants SIGUSR1 blocked due to wlroots/xwayland but we
+     don't want to inherit that to childs */
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGUSR1);
+  sigprocmask(SIG_UNBLOCK, &mask, NULL);
+}
+
+
 static gboolean
 phoc_startup_session_in_idle(PhocServer *self)
 {
@@ -106,7 +119,7 @@ phoc_startup_session_in_idle(PhocServer *self)
 
   if (g_spawn_async (NULL, cmd, NULL,
 		      G_SPAWN_DO_NOT_REAP_CHILD,
-		      NULL, self, &pid, &err)) {
+		      on_child_setup, self, &pid, &err)) {
     g_child_watch_add (pid, (GChildWatchFunc)on_session_exit, self);
   } else {
     g_warning ("Failed to launch session: %s", err->message);
