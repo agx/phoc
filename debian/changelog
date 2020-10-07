@@ -1,3 +1,31 @@
+phoc (0.4.3) amber-phone; urgency=medium
+
+  [ Guido Günther ]
+  * Drop xdg_shell_V6 support
+  * xdg-shell: Drop mention of v6 protocol
+  * desktop: Adjust to wlr_xcursor_manager_load 0.11.0 API change
+  * server: Unblock SIGUSR1 when spawning child
+  * desktop: Reindent handle_layout_change
+  * desktop: Refresh all outputs on layout changes
+
+  [ Arnaud Ferraris ]
+  * src: add utility function to fix rotation on wlroots v0.11+
+
+  [ Sebastian Krzyszkowiak ]
+  * xwayland: Don't apply size constraints to maximized windows
+  * xwayland: Correctly handle windows that are maximized on map
+  * xwayland: Automaximization support
+  * seat: Check whether moving and resizing is allowed
+  * xwayland: Don't allow to move non-regular windows
+  * xwayland: Don't automaximize non-resizable windows
+  * layer-shell: Recenter non-maximized views when rearranging
+  * Update wlroots submodule
+
+  [ Dorota Czaplejewicz ]
+  * input method: Forward only supported state
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Thu, 08 Oct 2020 01:40:58 +0200
+
 phoc (0.4.2) amber-phone; urgency=medium
 
   [ Evangelos Ribeiro Tzaras ]
