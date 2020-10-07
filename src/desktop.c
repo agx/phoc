@@ -261,32 +261,33 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 	return NULL;
 }
 
-static void handle_layout_change(struct wl_listener *listener, void *data) {
-	PhocDesktop *desktop =
-		wl_container_of(listener, desktop, layout_change);
+static void
+handle_layout_change (struct wl_listener *listener, void *data)
+{
+  PhocDesktop *self;
+  struct wlr_output *center_output;
+  struct wlr_box *center_output_box;
+  double center_x, center_y;
+  struct roots_view *view;
 
-	struct wlr_output *center_output =
-		wlr_output_layout_get_center_output(desktop->layout);
-	if (center_output == NULL) {
-		return;
-	}
+  self = wl_container_of (listener, self, layout_change);
+  center_output = wlr_output_layout_get_center_output (self->layout);
+  if (center_output == NULL)
+    return;
 
-	struct wlr_box *center_output_box =
-		wlr_output_layout_get_box(desktop->layout, center_output);
-	double center_x = center_output_box->x + center_output_box->width/2;
-	double center_y = center_output_box->y + center_output_box->height/2;
+  center_output_box = wlr_output_layout_get_box (self->layout, center_output);
+  center_x = center_output_box->x + center_output_box->width / 2;
+  center_y = center_output_box->y + center_output_box->height / 2;
 
-	struct roots_view *view;
-	wl_list_for_each(view, &desktop->views, link) {
-		struct wlr_box box;
-		view_get_box(view, &box);
+  /* Make sure all views are on an existing output */
+  wl_list_for_each (view, &self->views, link) {
+    struct wlr_box box;
+    view_get_box (view, &box);
 
-		if (wlr_output_layout_intersects(desktop->layout, NULL, &box)) {
-			continue;
-		}
-
-		view_move(view, center_x - box.width/2, center_y - box.height/2);
-	}
+    if (wlr_output_layout_intersects (self->layout, NULL, &box))
+      continue;
+    view_move (view, center_x - box.width / 2, center_y - box.height / 2);
+  }
 }
 
 static void input_inhibit_activate(struct wl_listener *listener, void *data) {
