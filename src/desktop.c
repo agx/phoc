@@ -269,6 +269,7 @@ handle_layout_change (struct wl_listener *listener, void *data)
   struct wlr_box *center_output_box;
   double center_x, center_y;
   struct roots_view *view;
+  struct roots_output *output;
 
   self = wl_container_of (listener, self, layout_change);
   center_output = wlr_output_layout_get_center_output (self->layout);
@@ -288,6 +289,10 @@ handle_layout_change (struct wl_listener *listener, void *data)
       continue;
     view_move (view, center_x - box.width / 2, center_y - box.height / 2);
   }
+
+  /* Damage all outputs since the move above damaged old layout space */
+  wl_list_for_each(output, &self->outputs, link)
+    output_damage_whole(output);
 }
 
 static void input_inhibit_activate(struct wl_listener *listener, void *data) {
