@@ -712,8 +712,17 @@ phoc_desktop_toggle_output_blank (PhocDesktop *self)
 void
 phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
 {
+  struct roots_view *view;
+
   g_debug ("auto-maximize: %d", enable);
   self->maximize = enable;
+
+  /* Disabling auto-maximize leaves all views in their current position */
+  if (!enable)
+    return;
+
+  wl_list_for_each (view, &self->views, link)
+    view_auto_maximize (view);
 }
 
 gboolean
