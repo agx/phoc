@@ -6,7 +6,7 @@
 #include <wlr/types/wlr_seat.h>
 #include "settings.h"
 
-#define PHOC_TYPE_INPUT (phoc_input_get_type())
+#define PHOC_TYPE_INPUT (phoc_input_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocInput, phoc_input, PHOC, INPUT, GObject);
 
@@ -21,24 +21,24 @@ G_DECLARE_FINAL_TYPE (PhocInput, phoc_input, PHOC, INPUT, GObject);
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
 struct _PhocInput {
-	GObject parent;
+  GObject              parent;
 
-	struct wl_listener new_input;
-	struct wl_list seats; // roots_seat::link */
+  struct wl_listener   new_input;
+  struct wl_list       seats; // roots_seat::link */
 
-	/* private */
-	struct roots_config *config;
-	struct xkb_keymap *keymap;
-	uint32_t meta_key;
-	GnomeXkbInfo *xkbinfo;
+  /* private */
+  struct roots_config *config;
+  struct xkb_keymap   *keymap;
+  uint32_t             meta_key;
+  GnomeXkbInfo        *xkbinfo;
 };
 
-PhocInput           *phoc_input_new (struct roots_config *config);
-bool                phoc_input_view_has_focus (PhocInput *self,
-                                               struct roots_view *view);
-const char          *phoc_input_get_device_type (enum wlr_input_device_type type);
-struct roots_seat   *phoc_input_get_seat (PhocInput *self, char *name);
-struct roots_seat   *phoc_input_last_active_seat (PhocInput *self);
-void                 phoc_input_update_cursor_focus (PhocInput *self);
-struct roots_seat   *phoc_input_seat_from_wlr_seat (PhocInput *self,
-                                                    struct wlr_seat *seat);
+PhocInput         *phoc_input_new (struct roots_config *config);
+bool               phoc_input_view_has_focus (PhocInput         *self,
+                                              struct roots_view *view);
+const char        *phoc_input_get_device_type (enum wlr_input_device_type type);
+struct roots_seat *phoc_input_get_seat (PhocInput *self, char *name);
+struct roots_seat *phoc_input_last_active_seat (PhocInput *self);
+void               phoc_input_update_cursor_focus (PhocInput *self);
+struct roots_seat *phoc_input_seat_from_wlr_seat (PhocInput       *self,
+                                                  struct wlr_seat *seat);
