@@ -178,9 +178,16 @@ static void handle_touch_down(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, touch_down);
-	PhocDesktop *desktop = server->desktop;
-	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_touch_down *event = data;
+	PhocDesktop *desktop = server->desktop;
+	PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
+							   event->device->name);
+	if (output && !output->wlr_output->enabled) {
+		g_debug("Touch event ignored since output '%s' is disabled.",
+			output->wlr_output->name);
+		return;
+	}
+	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	roots_cursor_handle_touch_down(cursor, event);
 }
 
@@ -188,20 +195,37 @@ static void handle_touch_up(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, touch_up);
-	PhocDesktop *desktop = server->desktop;
-	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_touch_up *event = data;
+	PhocDesktop *desktop = server->desktop;
+	PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
+							   event->device->name);
+	/* handle touch up regardless of output status so events don't become stuck */
 	roots_cursor_handle_touch_up(cursor, event);
+	if (output && !output->wlr_output->enabled) {
+		g_debug("Touch event ignored since output '%s' is disabled.",
+			output->wlr_output->name);
+		return;
+	}
+	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 }
 
 static void handle_touch_motion(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
 	struct roots_cursor *cursor =
 		wl_container_of(listener, cursor, touch_motion);
-	PhocDesktop *desktop = server->desktop;
-	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_touch_motion *event = data;
+	PhocDesktop *desktop = server->desktop;
+	PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
+							   event->device->name);
+	/* handle touch motion regardless of output status so events don't become
+	   stuck */
 	roots_cursor_handle_touch_motion(cursor, event);
+	if (output && !output->wlr_output->enabled) {
+		g_debug("Touch event ignored since output '%s' is disabled.",
+			output->wlr_output->name);
+		return;
+	}
+	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 }
 
 static void handle_tablet_tool_position(struct roots_cursor *cursor,
