@@ -33,6 +33,7 @@
 #include "layers.h"
 #include "seat.h"
 #include "server.h"
+#include "utils.h"
 #include "view.h"
 #include "virtual.h"
 #include "xcursor.h"
@@ -95,7 +96,7 @@ static bool view_at(struct roots_view *view, double lx, double ly,
 
 	double view_sx = lx - (view->box.x * view->scale);
 	double view_sy = ly - (view->box.y * view->scale);
-	rotate_child_position(&view_sx, &view_sy, 0, 0,
+	phoc_utils_rotate_child_position(&view_sx, &view_sy, 0, 0,
 		view->box.width, view->box.height, -view->rotation);
 	view_sx /= view->scale;
 	view_sy /= view->scale;
@@ -338,7 +339,7 @@ static void handle_constraint_destroy(struct wl_listener *listener,
 			double sy = wlr_constraint->current.cursor_hint.y;
 
 			struct roots_view *view = cursor->pointer_view->view;
-			rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height,
+			phoc_utils_rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height,
 				view->rotation);
 			double lx = view->box.x + sx;
 			double ly = view->box.y + sy;

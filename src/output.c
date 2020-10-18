@@ -20,29 +20,8 @@
 #include "output.h"
 #include "render.h"
 #include "server.h"
+#include "utils.h"
 
-/**
- * Rotate a child's position relative to a parent. The parent size is (pw, ph),
- * the child position is (*sx, *sy) and its size is (sw, sh).
- */
-void
-rotate_child_position (double *sx, double *sy, double sw, double sh,
-                       double pw, double ph, float rotation)
-{
-  if (rotation == 0.0) {
-    return;
-  }
-
-  // Coordinates relative to the center of the subsurface
-  double cx = *sx - pw/2 + sw/2,
-         cy = *sy - ph/2 + sh/2;
-  // Rotated coordinates
-  double rx = cos (rotation)*cx - sin (rotation)*cy,
-         ry = cos (rotation)*cy + sin (rotation)*cx;
-
-  *sx = rx + pw/2 - sw/2;
-  *sy = ry + ph/2 - sh/2;
-}
 
 struct surface_iterator_data {
   roots_surface_iterator_func_t user_iterator;
@@ -71,8 +50,8 @@ get_surface_box (struct surface_iterator_data *data,
   double _sx = sx + surface->sx;
   double _sy = sy + surface->sy;
 
-  rotate_child_position (&_sx, &_sy, sw, sh, data->width, data->height,
-                         data->rotation);
+  phoc_utils_rotate_child_position (&_sx, &_sy, sw, sh, data->width,
+                                    data->height, data->rotation);
 
   struct wlr_box box = {
     .x = data->ox + _sx,
@@ -357,9 +336,10 @@ get_decoration_box (struct roots_view *view,
   double sx = deco_box.x - view->box.x;
   double sy = deco_box.y - view->box.y;
 
-  rotate_child_position (&sx, &sy, deco_box.width, deco_box.height,
-                         view->wlr_surface->current.width,
-                         view->wlr_surface->current.height, view->rotation);
+  phoc_utils_rotate_child_position (&sx, &sy, deco_box.width, deco_box.height,
+                                    view->wlr_surface->current.width,
+                                    view->wlr_surface->current.height,
+                                    view->rotation);
   double x = sx + view->box.x;
   double y = sy + view->box.y;
 

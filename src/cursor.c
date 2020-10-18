@@ -14,6 +14,7 @@
 #include <linux/input-event-codes.h>
 #include "cursor.h"
 #include "desktop.h"
+#include "utils.h"
 #include "view.h"
 #include "xcursor.h"
 
@@ -594,7 +595,8 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 				scale = view->scale;
 				sx = lx / scale - view->box.x;
 				sy = ly / scale - view->box.y;
-				rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height, -view->rotation);
+				phoc_utils_rotate_child_position(&sx, &sy, 0, 0, view->box.width,
+					view->box.height, -view->rotation);
 				found = true;
 			} else {
 				// FIXME: buggy fallback, but at least handles xdg_popups for now...
@@ -772,8 +774,8 @@ void roots_cursor_constrain(struct roots_cursor *cursor,
 			double box_sx = (boxes[0].x1 + boxes[0].x2) / 2.;
 			double box_sy = (boxes[0].y1 + boxes[0].y2) / 2.;
 
-			rotate_child_position(&box_sx, &box_sy, 0, 0, view->box.width, view->box.height,
-				view->rotation);
+			phoc_utils_rotate_child_position(&box_sx, &box_sy, 0, 0, view->box.width,
+				view->box.height, view->rotation);
 
 			double lx = view->box.x + box_sx;
 			double ly = view->box.y + box_sy;
