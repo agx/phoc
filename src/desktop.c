@@ -445,6 +445,21 @@ void handle_xwayland_ready(struct wl_listener *listener, void *data) {
 static void
 handle_output_destroy (PhocOutput *destroyed_output)
 {
+	PhocDesktop *self = destroyed_output->desktop;
+	PhocOutput *output;
+	char *input_name;
+	GHashTableIter iter;
+	g_hash_table_iter_init (&iter, self->input_output_map);
+	while (g_hash_table_iter_next (&iter, (gpointer) &input_name,
+				       (gpointer) &output)){
+		if (destroyed_output == output){
+			g_debug ("Removing mapping for input device '%s' to output '%s'",
+				 input_name, output->wlr_output->name);
+			g_hash_table_remove (self->input_output_map, input_name);
+			break;
+		}
+
+	}
 	g_object_unref (destroyed_output);
 }
 
@@ -656,6 +671,9 @@ phoc_desktop_finalize (GObject *object)
   g_clear_pointer (&self->phosh, phosh_destroy);
   g_clear_pointer (&self->gtk_shell, phoc_gtk_shell_destroy);
 
+  g_hash_table_remove_all (self->input_output_map);
+  g_hash_table_unref (self->input_output_map);
+
   G_OBJECT_CLASS (phoc_desktop_parent_class)->finalize (object);
 }
 
@@ -685,6 +703,10 @@ phoc_desktop_class_init (PhocDesktopClass *klass)
 static void
 phoc_desktop_init (PhocDesktop *self)
 {
+  self->input_output_map = g_hash_table_new_full (g_str_hash,
+                                                  g_str_equal,
+                                                  g_free,
+                                                  NULL);
 }
 
 

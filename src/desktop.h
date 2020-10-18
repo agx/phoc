@@ -111,6 +111,7 @@ struct _PhocDesktop {
 
 	GSettings *settings;
 	gboolean maximize, scale_to_fit;
+	GHashTable *input_output_map;
 
 	/* Protocols that upstreamable implementations */
 	struct phosh_private *phosh;
