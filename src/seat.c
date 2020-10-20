@@ -490,6 +490,12 @@ void roots_seat_configure_cursor(struct roots_seat *seat) {
 		wl_list_for_each(touch, &seat->touch, link) {
 			seat_set_device_output_mappings(seat, touch->device,
 				output);
+			g_debug("Added mapping for touch device '%s' to output '%s'",
+				touch->device->name,
+				output->wlr_output->name);
+			g_hash_table_insert (desktop->input_output_map,
+					     g_strdup (touch->device->name),
+					     output);
 		}
 	}
 }
@@ -911,7 +917,11 @@ static void
 handle_touch_destroy(PhocTouch *touch)
 {
 	struct roots_seat *seat = touch->seat;
+	PhocServer *server = phoc_server_get_default ();
+	PhocDesktop *desktop = server->desktop;
 
+	g_debug("Removing touch device: %s", touch->device->name);
+	g_hash_table_remove (desktop->input_output_map, touch->device->name);
 	wl_list_remove(&touch->link);
 	wlr_cursor_detach_input_device(seat->cursor->cursor, touch->device);
 	g_object_unref (touch);
