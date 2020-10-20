@@ -907,13 +907,13 @@ static void seat_add_switch(struct roots_seat *seat,
 	wl_signal_add(&switch_device->device->switch_device->events.toggle, &switch_device->toggle);
 }
 
-static void handle_touch_destroy(struct wl_listener *listener, void *data) {
-	PhocTouch *touch = wl_container_of(listener, touch, device_destroy);
+static void
+handle_touch_destroy(PhocTouch *touch)
+{
 	struct roots_seat *seat = touch->seat;
 
 	wl_list_remove(&touch->link);
 	wlr_cursor_detach_input_device(seat->cursor->cursor, touch->device);
-	wl_list_remove(&touch->device_destroy.link);
 	g_object_unref (touch);
 
 	seat_update_capabilities(seat);
@@ -925,8 +925,9 @@ static void seat_add_touch(struct roots_seat *seat,
 
 	wl_list_insert(&seat->touch, &touch->link);
 
-	touch->device_destroy.notify = handle_touch_destroy;
-	wl_signal_add(&touch->device->events.destroy, &touch->device_destroy);
+	g_signal_connect(touch, "touch-destroyed",
+			 G_CALLBACK (handle_touch_destroy),
+			 NULL);
 
 	wlr_cursor_attach_input_device(seat->cursor->cursor, device);
 	roots_seat_configure_cursor(seat);
