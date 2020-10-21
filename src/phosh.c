@@ -168,9 +168,12 @@ keysym_is_media (xkb_keysym_t keysym)
 }
 
 static bool
-keysym_is_subscribeable (xkb_keysym_t keysym)
+keysym_is_subscribeable (PhocKeyCombo *combo)
 {
-  return keysym_is_media (keysym);
+  if (combo->modifiers == WLR_MODIFIER_LOGO && combo->keysym >= 'a' && combo->keysym <= 'z')
+    return true;
+
+  return keysym_is_media (combo->keysym);
 }
 
 static void
@@ -196,7 +199,7 @@ phosh_private_keyboard_event_grab_accelerator_request (struct wl_client   *wl_cl
     return;
   }
 
-  if (!keysym_is_subscribeable (combo->keysym)) {
+  if (!keysym_is_subscribeable (combo)) {
     g_debug ("Requested keysym %s is not subscribeable!", accelerator);
 
     phosh_private_keyboard_event_send_grab_failed_event (resource,
