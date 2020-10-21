@@ -274,7 +274,7 @@ handle_get_keyboard_event (struct wl_client   *client,
       g_free (kbevent);
       wl_client_post_no_memory (client);
       return;
-    }
+  }
 
   struct phosh_private *phosh_private = phosh_private_from_resource (phosh_private_resource);
 
