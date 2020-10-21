@@ -233,6 +233,39 @@ phosh_private_keyboard_event_grab_accelerator_request (struct wl_client   *wl_cl
 
 }
 
+
+static void
+phosh_private_keyboard_event_ungrab_accelerator_request (struct wl_client *client,
+							 struct wl_resource *resource,
+							 uint32_t action_id)
+{
+  GHashTableIter iter;
+  gpointer key, value, found = NULL;
+  struct phosh_private_keyboard_event_data *kbevent =
+    phosh_private_keyboard_event_from_resource (resource);
+
+  g_debug ("Ungrabbing accelerator %d", action_id);
+  g_hash_table_iter_init (&iter, kbevent->subscribed_accelerators);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (GPOINTER_TO_INT (value) == action_id) {
+      found = key;
+      break;
+    }
+  }
+
+  if (found) {
+    g_hash_table_remove (kbevent->subscribed_accelerators, key);
+    phosh_private_keyboard_event_send_ungrab_success_event (resource,
+							    action_id);
+
+  } else {
+    phosh_private_keyboard_event_send_ungrab_failed_event (resource,
+							   action_id,
+							   PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_INVALID_ARGUMENT);
+  }
+}
+
+
 static void
 phosh_private_keyboard_event_handle_destroy (struct wl_client   *client,
                                              struct wl_resource *resource)
@@ -242,6 +275,7 @@ phosh_private_keyboard_event_handle_destroy (struct wl_client   *client,
 
 static const struct phosh_private_keyboard_event_interface phosh_private_keyboard_event_impl = {
   .grab_accelerator_request = phosh_private_keyboard_event_grab_accelerator_request,
+  .ungrab_accelerator_request = phosh_private_keyboard_event_ungrab_accelerator_request,
   .destroy = phosh_private_keyboard_event_handle_destroy
 };
 
