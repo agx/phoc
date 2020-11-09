@@ -120,6 +120,11 @@ add_project_arguments(
 
 gnome = import('gnome')
 
+meson.add_install_script(
+  join_paths('build-aux', 'post_install.py'),
+  join_paths(get_option('prefix'), get_option('datadir'))
+)
+
 subdir('protocols')
 subdir('src')
 subdir('tests')
