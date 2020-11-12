@@ -154,31 +154,17 @@ phosh_private_accelerator_already_subscribed (PhocKeyCombo *combo)
 }
 
 static bool
-keysym_is_media (xkb_keysym_t keysym)
-{
-  switch (keysym) {
-  case XKB_KEY_XF86AudioLowerVolume:
-  case XKB_KEY_XF86AudioRaiseVolume:
-  case XKB_KEY_XF86AudioMute:
-  case XKB_KEY_XF86AudioMicMute:
-  case XKB_KEY_XF86AudioPlay:
-  case XKB_KEY_XF86AudioPause:
-  case XKB_KEY_XF86AudioStop:
-  case XKB_KEY_XF86AudioNext:
-  case XKB_KEY_XF86AudioPrev:
-    return true;
-  default:
-    return false;
-  }
-}
-
-static bool
 keysym_is_subscribeable (PhocKeyCombo *combo)
 {
-  if (combo->modifiers == WLR_MODIFIER_LOGO && combo->keysym >= 'a' && combo->keysym <= 'z')
+  /* Allow to bind all keys with modifiers that aren't just shift/caps */
+  if (combo->modifiers >= WLR_MODIFIER_CTRL)
     return true;
 
-  return keysym_is_media (combo->keysym);
+  /* keys on multi media keyboards */
+  if (combo->keysym >= XKB_KEY_XF86MonBrightnessUp && combo->keysym <= XKB_KEY_XF86RotationLockToggle)
+    return true;
+
+  return false;
 }
 
 static void
