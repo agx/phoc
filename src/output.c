@@ -539,7 +539,11 @@ void handle_output_manager_apply(struct wl_listener *listener, void *data) {
 			config_head->state.x, config_head->state.y);
 		wlr_output_set_transform(wlr_output, config_head->state.transform);
 		wlr_output_set_scale(wlr_output, config_head->state.scale);
+		struct roots_output *output = wlr_output->data;
 		ok &= wlr_output_commit(wlr_output);
+		if (output->fullscreen_view) {
+			view_set_fullscreen(output->fullscreen_view, true, wlr_output);
+		}
 	}
 
 	if (ok) {
