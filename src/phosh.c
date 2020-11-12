@@ -26,6 +26,11 @@
 #include "render.h"
 #include "utils.h"
 
+/* help older (0.8.2) libxkbcommon */
+#ifndef XKB_KEY_XF86RotationLockToggle
+# define XKB_KEY_XF86RotationLockToggle 0x1008FFB7
+#endif
+
 struct phosh_private_keyboard_event_data {
   GHashTable *subscribed_accelerators;
   struct wl_resource *resource;
