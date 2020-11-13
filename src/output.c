@@ -513,19 +513,21 @@ void handle_output_manager_apply(struct wl_listener *listener, void *data) {
 	// First disable outputs we need to disable
 	wl_list_for_each(config_head, &config->heads, link) {
 		struct wlr_output *wlr_output = config_head->state.output;
-		if (!config_head->state.enabled) {
-			wlr_output_enable(wlr_output, false);
-			wlr_output_layout_remove(desktop->layout, wlr_output);
-			ok &= wlr_output_commit(wlr_output);
-		}
+		if (config_head->state.enabled)
+			continue;
+
+		wlr_output_enable(wlr_output, false);
+		wlr_output_layout_remove(desktop->layout, wlr_output);
+		ok &= wlr_output_commit(wlr_output);
 	}
 
 	// Then enable outputs that need to
 	wl_list_for_each(config_head, &config->heads, link) {
 		struct wlr_output *wlr_output = config_head->state.output;
-		if (!config_head->state.enabled) {
+
+		if (!config_head->state.enabled)
 			continue;
-		}
+
 		wlr_output_enable(wlr_output, true);
 		if (config_head->state.mode != NULL) {
 			wlr_output_set_mode(wlr_output, config_head->state.mode);
