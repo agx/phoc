@@ -11,9 +11,7 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_output_layout.h>
-#ifdef PHOC_HAS_WLR_OUTPUT_POWER_MANAGEMENT
 #include <wlr/types/wlr_output_power_management_v1.h>
-#endif
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
@@ -568,7 +566,6 @@ void handle_output_manager_test(struct wl_listener *listener, void *data) {
 	wlr_output_configuration_v1_destroy(config);
 }
 
-#ifdef PHOC_HAS_WLR_OUTPUT_POWER_MANAGEMENT
 void
 phoc_output_handle_output_power_manager_set_mode(struct wl_listener *listener, void *data)
 {
@@ -605,7 +602,6 @@ phoc_output_handle_output_power_manager_set_mode(struct wl_listener *listener, v
   if (enable)
     output_damage_whole (self);
 }
-#endif
 
 static void output_destroy(struct roots_output *output) {
 	// TODO: cursor

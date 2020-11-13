@@ -147,7 +147,6 @@ message('\n'.join(summary))
 config_h = configuration_data()
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland)
-config_h.set('PHOC_HAS_WLR_OUTPUT_POWER_MANAGEMENT', wlroots_has_output_power_management)
 
 configure_file(
   input: 'config.h.in',
