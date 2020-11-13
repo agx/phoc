@@ -514,6 +514,9 @@ void handle_output_manager_apply(struct wl_listener *listener, void *data) {
 		if (config_head->state.enabled)
 			continue;
 
+		if (!wlr_output->enabled)
+			continue;
+
 		wlr_output_enable(wlr_output, false);
 		wlr_output_layout_remove(desktop->layout, wlr_output);
 		ok &= wlr_output_commit(wlr_output);
