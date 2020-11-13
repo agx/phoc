@@ -28,6 +28,7 @@ variables:
     - ninja -C _build install
 
 .before_script_debian: &before_script_debian
+  - rm -f ../* || true
   - apt-get -y update
   - apt-get -y install $DEPS
   - apt-get -y build-dep .
