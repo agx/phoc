@@ -446,6 +446,13 @@ void handle_xwayland_ready(struct wl_listener *listener, void *data) {
 #endif
 
 static void
+handle_new_output (struct wl_listener *listener, void *data)
+{
+	PhocDesktop *self = wl_container_of (listener, self, new_output);
+	PhocOutput *output = phoc_output_new (self, (struct wlr_output *)data);
+}
+
+static void
 phoc_desktop_constructed (GObject *object)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
