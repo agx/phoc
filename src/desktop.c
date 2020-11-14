@@ -31,6 +31,7 @@
 #include <wlr/util/log.h>
 #include <wlr/version.h>
 #include "layers.h"
+#include "output.h"
 #include "seat.h"
 #include "server.h"
 #include "utils.h"
@@ -148,8 +149,9 @@ static struct roots_view *desktop_view_at(PhocDesktop *desktop,
 	return NULL;
 }
 
-static struct wlr_surface *layer_surface_at(struct roots_output *output,
-		struct wl_list *layer, double ox, double oy, double *sx, double *sy) {
+static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
+                                             double oy, double *sx, double *sy)
+{
 	struct roots_layer_surface *roots_surface;
 
 	wl_list_for_each_reverse(roots_surface, layer, link) {
@@ -193,29 +195,27 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 	struct wlr_surface *surface = NULL;
 	struct wlr_output *wlr_output =
 		wlr_output_layout_output_at(desktop->layout, lx, ly);
-	struct roots_output *roots_output = NULL;
+	PhocOutput *phoc_output = NULL;
 	double ox = lx, oy = ly;
 	if (view) {
 		*view = NULL;
 	}
 
 	if (wlr_output) {
-		roots_output = wlr_output->data;
+		phoc_output = wlr_output->data;
 		wlr_output_layout_output_coords(desktop->layout, wlr_output, &ox, &oy);
 
-		if ((surface = layer_surface_at(roots_output,
-					&roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
-					ox, oy, sx, sy))) {
+		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+						ox, oy, sx, sy))) {
 			return surface;
 		}
 
-		struct roots_output *output = wlr_output->data;
+		PhocOutput *output = wlr_output->data;
 		if (output != NULL && output->fullscreen_view != NULL) {
 
 			if (output->force_shell_reveal) {
-				if ((surface = layer_surface_at(roots_output,
-						&roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
-						ox, oy, sx, sy))) {
+				if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+								ox, oy, sx, sy))) {
 					return surface;
 				}
 			}
@@ -230,9 +230,8 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 			}
 		}
 
-		if ((surface = layer_surface_at(roots_output,
-					&roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
-					ox, oy, sx, sy))) {
+		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+						ox, oy, sx, sy))) {
 			return surface;
 		}
 	}
@@ -246,14 +245,12 @@ struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
 	}
 
 	if (wlr_output) {
-		if ((surface = layer_surface_at(roots_output,
-					&roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
-					ox, oy, sx, sy))) {
+		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+						ox, oy, sx, sy))) {
 			return surface;
 		}
-		if ((surface = layer_surface_at(roots_output,
-					&roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
-					ox, oy, sx, sy))) {
+		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
+						ox, oy, sx, sy))) {
 			return surface;
 		}
 	}
@@ -268,7 +265,7 @@ handle_layout_change (struct wl_listener *listener, void *data)
   struct wlr_box *center_output_box;
   double center_x, center_y;
   struct roots_view *view;
-  struct roots_output *output;
+  PhocOutput *output;
 
   self = wl_container_of (listener, self, layout_change);
   center_output = wlr_output_layout_get_center_output (self->layout);
@@ -291,7 +288,7 @@ handle_layout_change (struct wl_listener *listener, void *data)
 
   /* Damage all outputs since the move above damaged old layout space */
   wl_list_for_each(output, &self->outputs, link)
-    output_damage_whole(output);
+    phoc_output_damage_whole(output);
 }
 
 static void input_inhibit_activate(struct wl_listener *listener, void *data) {
@@ -706,7 +703,7 @@ phoc_desktop_new (struct roots_config *config)
 void
 phoc_desktop_toggle_output_blank (PhocDesktop *self)
 {
-  struct roots_output *output;
+  PhocOutput *output;
 
   wl_list_for_each(output, &self->outputs, link) {
     gboolean enable = !output->wlr_output->enabled;
@@ -714,7 +711,7 @@ phoc_desktop_toggle_output_blank (PhocDesktop *self)
     wlr_output_enable (output->wlr_output, enable);
     wlr_output_commit (output->wlr_output);
     if (enable)
-      output_damage_whole(output);
+      phoc_output_damage_whole(output);
   }
 }
 

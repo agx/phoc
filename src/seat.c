@@ -435,7 +435,7 @@ static void seat_reset_device_mappings(struct roots_seat *seat,
 }
 
 static void seat_set_device_output_mappings(struct roots_seat *seat,
-		struct wlr_input_device *device, struct roots_output *output) {
+		struct wlr_input_device *device, PhocOutput *output) {
 	struct wlr_cursor *cursor = seat->cursor->cursor;
 
 	switch (device->type) {
@@ -463,7 +463,7 @@ void roots_seat_configure_cursor(struct roots_seat *seat) {
 	struct roots_pointer *pointer;
 	PhocTouch *touch;
 	struct roots_tablet *tablet;
-	struct roots_output *output;
+	PhocOutput *output;
 
 	// reset mappings
 	wlr_cursor_map_to_output(cursor, NULL);
@@ -717,10 +717,10 @@ void roots_drag_icon_update_position(struct roots_drag_icon *icon) {
 
 void roots_drag_icon_damage_whole(struct roots_drag_icon *icon) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_output *output;
+	PhocOutput *output;
 	wl_list_for_each(output, &server->desktop->outputs,
 			link) {
-		output_damage_whole_drag_icon(output, icon);
+		phoc_output_damage_whole_drag_icon(output, icon);
 	}
 }
 
@@ -1191,7 +1191,7 @@ void roots_seat_configure_xcursor(struct roots_seat *seat) {
 		}
 	}
 
-	struct roots_output *output;
+	PhocOutput *output;
 	wl_list_for_each(output, &server->desktop->outputs, link) {
 		float scale = output->wlr_output->scale;
 #if (WLR_VERSION_MAJOR > 0 || WLR_VERSION_MINOR > 10)
@@ -1370,7 +1370,7 @@ void roots_seat_set_focus(struct roots_seat *seat, struct roots_view *view) {
 
 	if (view && unfullscreen) {
 		PhocDesktop *desktop = view->desktop;
-		struct roots_output *output;
+		PhocOutput *output;
 		struct wlr_box box;
 		view_get_box(view, &box);
 		wl_list_for_each(output, &desktop->outputs, link) {
@@ -1517,7 +1517,7 @@ void roots_seat_set_exclusive_client(struct roots_seat *seat,
 		seat->exclusive_client = client;
 		// Triggers a refocus of the topmost surface layer if necessary
 		// TODO: Make layer surface focus per-output based on cursor position
-		struct roots_output *output;
+		PhocOutput *output;
 		wl_list_for_each(output, &server->desktop->outputs, link) {
 			arrange_layers(output);
 		}

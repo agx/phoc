@@ -164,7 +164,7 @@ static void view_update_output(struct roots_view *view,
 	struct wlr_box box;
 	view_get_box(view, &box);
 
-	struct roots_output *output;
+	PhocOutput *output;
 	wl_list_for_each(output, &desktop->outputs, link) {
 		bool intersected = before != NULL && wlr_output_layout_intersects(
 			desktop->layout, output->wlr_output, before);
@@ -274,11 +274,11 @@ void view_arrange_maximized(struct roots_view *view) {
 		return;
 	}
 
-	struct roots_output *roots_output = output->data;
+	PhocOutput *phoc_output = output->data;
 	struct wlr_box *output_box =
 		wlr_output_layout_get_box(view->desktop->layout, output);
 	struct wlr_box usable_area;
-	memcpy(&usable_area, &roots_output->usable_area,
+	memcpy(&usable_area, &phoc_output->usable_area,
 			sizeof(struct wlr_box));
 	usable_area.x += output_box->x;
 	usable_area.y += output_box->y;
@@ -378,8 +378,8 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		if (output == NULL) {
 			output = view_get_output(view);
 		}
-		struct roots_output *roots_output = output->data;
-		if (roots_output == NULL) {
+		PhocOutput *phoc_output = output->data;
+		if (phoc_output == NULL) {
 			return;
 		}
 
@@ -402,10 +402,10 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 			output_box->height);
 		view_rotate(view, 0);
 
-		roots_output->fullscreen_view = view;
-		roots_output->force_shell_reveal = false;
-		view->fullscreen_output = roots_output;
-		output_damage_whole(roots_output);
+		phoc_output->fullscreen_view = view;
+		phoc_output->force_shell_reveal = false;
+		view->fullscreen_output = phoc_output;
+		phoc_output_damage_whole(phoc_output);
 	}
 
 	if (was_fullscreen && !fullscreen) {
@@ -413,7 +413,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 			view->saved.height);
 		view_rotate(view, view->saved.rotation);
 
-		output_damage_whole(view->fullscreen_output);
+		phoc_output_damage_whole(view->fullscreen_output);
 		view->fullscreen_output->fullscreen_view = NULL;
 		view->fullscreen_output = NULL;
 
@@ -443,7 +443,7 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   PhocDesktop *desktop = view->desktop;
   struct wlr_output_layout *layout = view->desktop->layout;
   const struct wlr_output_layout_output *l_output;
-  struct roots_output *roots_output;
+  PhocOutput *phoc_output;
   struct wlr_output *output, *new_output;
   struct wlr_box usable_area;
   double x, y;
@@ -461,8 +461,8 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   if (!new_output)
     return false;
 
-  roots_output = new_output->data;
-  memcpy(&usable_area, &roots_output->usable_area, sizeof(struct wlr_box));
+  phoc_output = new_output->data;
+  memcpy(&usable_area, &phoc_output->usable_area, sizeof(struct wlr_box));
   l_output = wlr_output_layout_get(desktop->layout, new_output);
 
   /* use a proper position on the new output */
@@ -486,7 +486,7 @@ void
 view_tile(struct roots_view *view, PhocViewTileDirection direction)
 {
   struct wlr_output *output = view_get_output(view);
-  struct roots_output *roots_output = output->data;
+  PhocOutput *phoc_output = output->data;
   struct wlr_box *output_box =
     wlr_output_layout_get_box(view->desktop->layout, output);
   struct wlr_box usable_area;
@@ -511,7 +511,7 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction)
   view->saved.width = view->box.width;
   view->saved.height = view->box.height;
 
-  memcpy(&usable_area, &roots_output->usable_area,
+  memcpy(&usable_area, &phoc_output->usable_area,
 	 sizeof(struct wlr_box));
   usable_area.x += output_box->x;
   usable_area.y += output_box->y;
@@ -564,9 +564,9 @@ bool view_center(struct roots_view *view) {
 		wlr_output_layout_get(desktop->layout, output);
 
 	struct wlr_box usable_area;
-	struct roots_output *roots_output = output->data;
+	PhocOutput *phoc_output = output->data;
 
-	memcpy(&usable_area, &roots_output->usable_area, sizeof(struct wlr_box));
+	memcpy(&usable_area, &phoc_output->usable_area, sizeof(struct wlr_box));
 
 	double view_x = (double)(usable_area.width - box.width) / 2 +
 	  usable_area.x + l_output->x - geom.x * view->scale;
@@ -651,7 +651,7 @@ static void subsurface_handle_map(struct wl_listener *listener,
 
 	struct wlr_box box;
 	view_get_box(view, &box);
-	struct roots_output *output;
+	PhocOutput *output;
 	wl_list_for_each(output, &view->desktop->outputs, link) {
 		bool intersects = wlr_output_layout_intersects(view->desktop->layout,
 			output->wlr_output, &box);
@@ -740,11 +740,11 @@ static void view_update_scale(struct roots_view *view) {
 		return;
 	}
 
-	struct roots_output *roots_output = output->data;
+	PhocOutput *phoc_output = output->data;
 
 	float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
-	scalex = roots_output->usable_area.width / (float)view->box.width;
-	scaley = roots_output->usable_area.height / (float)view->box.height;
+	scalex = phoc_output->usable_area.width / (float)view->box.width;
+	scaley = phoc_output->usable_area.height / (float)view->box.height;
 	if (scaley < scalex) {
 		view->scale = scaley;
 	} else {
@@ -802,7 +802,7 @@ void view_unmap(struct roots_view *view) {
 	}
 
 	if (view->fullscreen_output != NULL) {
-		output_damage_whole(view->fullscreen_output);
+		phoc_output_damage_whole(view->fullscreen_output);
 		view->fullscreen_output->fullscreen_view = NULL;
 		view->fullscreen_output = NULL;
 	}
@@ -850,16 +850,16 @@ void view_setup(struct roots_view *view) {
 }
 
 void view_apply_damage(struct roots_view *view) {
-	struct roots_output *output;
+	PhocOutput *output;
 	wl_list_for_each(output, &view->desktop->outputs, link) {
-		output_damage_from_view(output, view);
+		phoc_output_damage_from_view(output, view);
 	}
 }
 
 void view_damage_whole(struct roots_view *view) {
-	struct roots_output *output;
+	PhocOutput *output;
 	wl_list_for_each(output, &view->desktop->outputs, link) {
-		output_damage_whole_view(output, view);
+		phoc_output_damage_whole_view(output, view);
 	}
 }
 

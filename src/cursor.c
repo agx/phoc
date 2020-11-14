@@ -125,7 +125,7 @@ static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, do
 	}
 
 	struct wlr_output *wlr_output = wlr_output_layout_output_at(desktop->layout, lx, ly);
-	struct roots_output *output = wlr_output->data;
+	PhocOutput *output = wlr_output->data;
 	if (!output) {
 		return false;
 	}
@@ -163,13 +163,13 @@ static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, do
 			(right  && lx >= output_box->x + (1.0 - threshold) * output_box->width - 1)) {
 		if (output->fullscreen_view && output->fullscreen_view->wlr_surface == root) {
 			output->force_shell_reveal = true;
-			output_damage_whole(output);
+			phoc_output_damage_whole(output);
 		}
 		return true;
 	} else {
 		if (output->force_shell_reveal) {
 			output->force_shell_reveal = false;
-			output_damage_whole(output);
+			phoc_output_damage_whole(output);
 		}
 	}
 
@@ -510,7 +510,7 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 	}
 
 	if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS) {
-		struct roots_output *output;
+		PhocOutput *output;
 		wl_list_for_each(output, &desktop->outputs, link) {
 			if (wlr_output_layout_contains_point(desktop->layout, output->wlr_output, lx, ly)) {
 				double ox = lx, oy = ly;
@@ -557,7 +557,7 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 	if (!wlr_output) {
 		return;
 	}
-	struct roots_output *roots_output = wlr_output->data;
+	PhocOutput *phoc_output = wlr_output->data;
 
 	double sx, sy;
 	struct wlr_surface *surface = point->focus_surface;
@@ -572,7 +572,7 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 		if (wlr_surface_is_layer_surface(root)) {
 			struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_from_wlr_surface(root);
 			struct roots_layer_surface *layer;
-			wl_list_for_each_reverse(layer, &roots_output->layers[layer_surface->current.layer], link) {
+			wl_list_for_each_reverse(layer, &phoc_output->layers[layer_surface->current.layer], link) {
 				if (layer->layer_surface->surface == root) {
 					sx = lx - layer->geo.x;
 					sy = ly - layer->geo.y;
@@ -581,7 +581,7 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 				}
 			}
 			// try the overlay layer as well since the on-screen keyboard might have been elevated there
-			wl_list_for_each_reverse(layer, &roots_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], link) {
+			wl_list_for_each_reverse(layer, &phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], link) {
 				if (layer->layer_surface->surface == root) {
 					sx = lx - layer->geo.x;
 					sy = ly - layer->geo.y;

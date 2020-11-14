@@ -11,6 +11,8 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
+#include "output.h"
+
 struct roots_view;
 
 struct roots_view_interface {
@@ -68,7 +70,7 @@ struct roots_view {
 	char *app_id;
 
 	PhocViewState state;
-	struct roots_output *fullscreen_output;
+	PhocOutput *fullscreen_output;
 	struct {
 		PhocViewState state;
 		double x, y;
