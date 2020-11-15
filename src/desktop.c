@@ -446,10 +446,20 @@ void handle_xwayland_ready(struct wl_listener *listener, void *data) {
 #endif
 
 static void
+handle_output_destroy (PhocOutput *destroyed_output)
+{
+	g_object_unref (destroyed_output);
+}
+
+static void
 handle_new_output (struct wl_listener *listener, void *data)
 {
 	PhocDesktop *self = wl_container_of (listener, self, new_output);
 	PhocOutput *output = phoc_output_new (self, (struct wlr_output *)data);
+
+	g_signal_connect (output, "output-destroyed",
+			  G_CALLBACK (handle_output_destroy),
+			  NULL);
 }
 
 static void
