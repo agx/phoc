@@ -883,6 +883,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   // Then enable outputs that need to
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
+    PhocOutput *output = wlr_output->data;
 
     if (!config_head->state.enabled)
       continue;
@@ -901,6 +902,9 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     wlr_output_set_transform (wlr_output, config_head->state.transform);
     wlr_output_set_scale (wlr_output, config_head->state.scale);
     ok &= wlr_output_commit (wlr_output);
+    if (output->fullscreen_view) {
+      view_set_fullscreen (output->fullscreen_view, true, wlr_output);
+    }
   }
 
   if (ok) {
