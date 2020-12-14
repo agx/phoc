@@ -192,6 +192,9 @@ void view_move(struct roots_view *view, double x, double y) {
 		return;
 	}
 
+	view->pending_move_resize.update_x = false;
+	view->pending_move_resize.update_y = false;
+
 	struct wlr_box before;
 	view_get_box(view, &before);
 	if (view->impl->move) {
