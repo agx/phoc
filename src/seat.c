@@ -1620,13 +1620,18 @@ void roots_seat_begin_move(struct roots_seat *seat, struct roots_view *view) {
 	cursor->offs_x = cursor->cursor->x;
 	cursor->offs_y = cursor->cursor->y;
 	if (view_is_maximized(view)) {
-		cursor->view_x = view->saved.x;
-		cursor->view_y = view->saved.y;
+		// calculate normalized (0..1) position of cursor in maximized window
+		// and make it stay the same after restoring saved size
+		double x = (cursor->cursor->x - view->box.x) / view->box.width;
+		double y = (cursor->cursor->y - view->box.y) / view->box.height;
+		cursor->view_x = cursor->cursor->x - x * view->saved.width;
+		cursor->view_y = cursor->cursor->y - y * view->saved.height;
+		view_maximize(view, false);
+		view_move(view, cursor->view_x, cursor->view_y);
 	} else {
 		cursor->view_x = view->box.x;
 		cursor->view_y = view->box.y;
 	}
-	view_maximize(view, false);
 	wlr_seat_pointer_clear_focus(seat->seat);
 
 	roots_seat_maybe_set_cursor (seat, ROOTS_XCURSOR_MOVE);
