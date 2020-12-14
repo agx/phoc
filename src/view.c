@@ -323,16 +323,17 @@ void view_maximize(struct roots_view *view) {
 		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle, true);
 	}
 
-	if (!view_is_maximized(view)) {
-		view->state = PHOC_VIEW_STATE_MAXIMIZED;
+	if (!view_is_maximized(view) && !view_is_tiled(view)) {
+		/* backup window state */
 		view->saved.x = view->box.x;
 		view->saved.y = view->box.y;
 		view->saved.rotation = view->rotation;
 		view->saved.width = view->box.width;
 		view->saved.height = view->box.height;
-
-		view_arrange_maximized(view);
 	}
+
+	view->state = PHOC_VIEW_STATE_MAXIMIZED;
+	view_arrange_maximized(view);
 }
 
 /*
@@ -519,13 +520,15 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction)
 	  view->impl->maximize(view, true);
   }
 
-  /* backup window state */
-  view->state = PHOC_VIEW_STATE_TILED;
-  view->saved.x = view->box.x;
-  view->saved.y = view->box.y;
-  view->saved.rotation = view->rotation;
-  view->saved.width = view->box.width;
-  view->saved.height = view->box.height;
+  if (view->state == PHOC_VIEW_STATE_NORMAL) {
+    /* backup window state */
+    view->state = PHOC_VIEW_STATE_TILED;
+    view->saved.x = view->box.x;
+    view->saved.y = view->box.y;
+    view->saved.rotation = view->rotation;
+    view->saved.width = view->box.width;
+    view->saved.height = view->box.height;
+  }
 
   memcpy(&usable_area, &phoc_output->usable_area,
 	 sizeof(struct wlr_box));
