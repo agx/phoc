@@ -364,6 +364,7 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 		if (state == WLR_BUTTON_RELEASED &&
 				cursor->mode != ROOTS_CURSOR_PASSTHROUGH) {
 			cursor->mode = ROOTS_CURSOR_PASSTHROUGH;
+			roots_cursor_update_focus(cursor);
 		}
 
 		if (state == WLR_BUTTON_PRESSED) {
