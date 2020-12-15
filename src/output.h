@@ -81,7 +81,8 @@ void        phoc_output_xwayland_children_for_each_surface (
 #endif
 void        phoc_output_for_each_surface (PhocOutput                   *self,
                                           roots_surface_iterator_func_t iterator,
-                                          void                         *user_data);
+                                          void                         *user_data,
+                                          gboolean                      visible_only);
 
 void        handle_output_manager_apply (struct wl_listener *listener, void *data);
 void        handle_output_manager_test (struct wl_listener *listener, void *data);
