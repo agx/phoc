@@ -189,7 +189,7 @@ static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
 	return NULL;
 }
 
-struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
+struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
 		struct roots_view **view) {
 	struct wlr_surface *surface = NULL;
@@ -402,7 +402,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 	wl_signal_add(&wlr_constraint->events.destroy, &constraint->destroy);
 
 	double sx, sy;
-	struct wlr_surface *surface = desktop_surface_at(
+	struct wlr_surface *surface = phoc_desktop_surface_at(
 		server->desktop,
 		cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 

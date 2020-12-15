@@ -125,7 +125,7 @@ gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);
 void         phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean on);
 gboolean     phoc_desktop_get_scale_to_fit (PhocDesktop *self);
 
-struct wlr_surface *desktop_surface_at(PhocDesktop *desktop,
+struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
 		struct roots_view **view);
 gboolean phoc_desktop_view_is_visible (PhocDesktop *desktop, struct roots_view *view);

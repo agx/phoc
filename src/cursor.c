@@ -183,7 +183,7 @@ static void roots_passthrough_cursor(struct roots_cursor *cursor,
 	struct roots_view *view = NULL;
 	struct roots_seat *seat = cursor->seat;
 	PhocDesktop *desktop = server->desktop;
-	struct wlr_surface *surface = desktop_surface_at(desktop,
+	struct wlr_surface *surface = phoc_desktop_surface_at(desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, &view);
 
 	struct wl_client *client = NULL;
@@ -323,7 +323,7 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 
 	double sx, sy;
 	struct roots_view *view;
-	struct wlr_surface *surface = desktop_surface_at(desktop,
+	struct wlr_surface *surface = phoc_desktop_surface_at(desktop,
 			lx, ly, &sx, &sy, &view);
 
 	if (state == WLR_BUTTON_PRESSED && view &&
@@ -485,7 +485,7 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 
 	double sx, sy;
 	struct roots_view *view;
-	struct wlr_surface *surface = desktop_surface_at(
+	struct wlr_surface *surface = phoc_desktop_surface_at(
 		desktop, lx, ly, &sx, &sy, &view);
 
 	if (surface && !roots_handle_shell_reveal(surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD) &&
@@ -599,7 +599,7 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 				found = true;
 			} else {
 				// FIXME: buggy fallback, but at least handles xdg_popups for now...
-				surface = desktop_surface_at(desktop, lx, ly, &sx, &sy, NULL);
+				surface = phoc_desktop_surface_at(desktop, lx, ly, &sx, &sy, NULL);
 			}
 		}
 
@@ -709,7 +709,7 @@ void roots_cursor_handle_constraint_commit(struct roots_cursor *cursor) {
 	PhocDesktop *desktop = server->desktop;
 
 	double sx, sy;
-	struct wlr_surface *surface = desktop_surface_at(desktop,
+	struct wlr_surface *surface = phoc_desktop_surface_at(desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 	// This should never happen but views move around right when they're
 	// created from (0, 0) to their actual coordinates.

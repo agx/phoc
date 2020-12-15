@@ -93,7 +93,7 @@ static void update_cursors(struct roots_layer_surface *roots_surface,
 		struct roots_cursor *cursor = roots_seat_get_cursor(seat);
 		double sx, sy;
 
-		struct wlr_surface *surface = desktop_surface_at(
+		struct wlr_surface *surface = phoc_desktop_surface_at(
 			server->desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
