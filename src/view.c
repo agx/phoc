@@ -69,6 +69,11 @@ gboolean view_is_maximized(const struct roots_view *view)
 	return view->state == PHOC_VIEW_STATE_MAXIMIZED;
 }
 
+gboolean view_is_tiled(const struct roots_view *view)
+{
+	return view->state == PHOC_VIEW_STATE_TILED;
+}
+
 void view_get_box(const struct roots_view *view, struct wlr_box *box) {
 	box->x = view->box.x;
 	box->y = view->box.y;
