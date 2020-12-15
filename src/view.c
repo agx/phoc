@@ -805,6 +805,14 @@ void view_map(struct roots_view *view, struct wlr_surface *surface) {
 	wl_signal_add(&view->wlr_surface->events.new_subsurface,
 		&view->new_subsurface);
 
+	if (view->desktop->maximize && !wl_list_empty(&view->desktop->views)) {
+		// mapping a new stack may make the old stack disappear, so damage its area
+		struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
+		while (top_view) {
+			view_damage_whole(top_view);
+			top_view = top_view->parent;
+		}
+	}
 	wl_list_insert(&view->desktop->views, &view->link);
 	view_damage_whole(view);
 	phoc_input_update_cursor_focus(server->input);

@@ -610,10 +610,12 @@ void output_render(PhocOutput *output) {
 		render_layer(output, &buffer_damage,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
 
-		// Render all views
 		struct roots_view *view;
+			// Render all views
 		wl_list_for_each_reverse(view, &desktop->views, link) {
-			render_view(output, view, &data);
+			if (phoc_desktop_view_is_visible(desktop, view)) {
+				render_view(output, view, &data);
+			}
 		}
 
 		// Render top layer above views
