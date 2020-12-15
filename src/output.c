@@ -711,7 +711,11 @@ phoc_output_damage_whole (PhocOutput *self)
 static bool
 phoc_view_accept_damage (PhocOutput *self, struct roots_view   *view)
 {
+  PhocServer *server = phoc_server_get_default ();
   if (view->wlr_surface == NULL) {
+    return false;
+  }
+  if (!phoc_desktop_view_is_visible (server->desktop, view)) {
     return false;
   }
   if (self->fullscreen_view == NULL) {
