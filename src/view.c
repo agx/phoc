@@ -296,6 +296,45 @@ void view_arrange_maximized(struct roots_view *view) {
 	view_rotate(view, 0);
 }
 
+void
+view_arrange_tiled (struct roots_view *view)
+{
+  struct wlr_output *output = view_get_output (view);
+  if (!output)
+    return;
+
+  if (view->fullscreen_output)
+    return;
+
+  PhocOutput *phoc_output = output->data;
+  struct wlr_box *output_box = wlr_output_layout_get_box (view->desktop->layout, output);
+  struct wlr_box usable_area = phoc_output->usable_area;
+  int x;
+
+  usable_area.x += output_box->x;
+  usable_area.y += output_box->y;
+
+  switch (view->tile_direction) {
+  case PHOC_VIEW_TILE_LEFT:
+    x = usable_area.x;
+    break;
+  case PHOC_VIEW_TILE_RIGHT:
+    x = usable_area.x + (0.5 * usable_area.width);
+    break;
+  default:
+    g_error ("Invalid tiling direction %d", view->tile_direction);
+  }
+
+  /*
+   * No need to take geometry into account since maximized surfaces
+   * usually don't have drop shadows. It wouldn't be up to date here
+   * yet anyway since a client's configure is not yet processed.
+   */
+  view_move_resize (view, x, usable_area.y,
+                    usable_area.width / 2, usable_area.height);
+  view_rotate (view, 0);
+}
+
 /*
  * Check if a view needs to be maximized
  */
@@ -487,13 +526,14 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   y = usable_area.y + l_output->y;
   g_debug("moving view to %f %f", x, y);
 
+  view->saved.x = x;
+  view->saved.y = y;
+  view_move(view, x, y);
+
   if (view_is_maximized (view)) {
-    view->saved.x = x;
-    view->saved.y = y;
-    view_move(view, x, y);
     view_arrange_maximized (view);
-  } else {
-    view_move(view, x, y);
+  } else if (view_is_tiled (view)) {
+    view_arrange_tiled (view);
   }
 
   return true;
@@ -502,27 +542,15 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
 void
 view_tile(struct roots_view *view, PhocViewTileDirection direction)
 {
-  struct wlr_output *output = view_get_output(view);
-  PhocOutput *phoc_output = output->data;
-  struct wlr_box *output_box =
-    wlr_output_layout_get_box(view->desktop->layout, output);
-  struct wlr_box usable_area;
-  int x;
-
   if (view->fullscreen_output)
     return;
 
-  if (!output)
-    return;
-
   /* Set the maximized flag on the toplevel so it remove it's drop shadows */
-  if (view->impl->maximize) {
-	  view->impl->maximize(view, true);
-  }
+  if (view->impl->maximize)
+    view->impl->maximize(view, true);
 
-  if (view->state == PHOC_VIEW_STATE_NORMAL) {
+  if (!view_is_maximized (view) && !view_is_tiled (view)) {
     /* backup window state */
-    view->state = PHOC_VIEW_STATE_TILED;
     view->saved.x = view->box.x;
     view->saved.y = view->box.y;
     view->saved.rotation = view->rotation;
@@ -530,30 +558,9 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction)
     view->saved.height = view->box.height;
   }
 
-  memcpy(&usable_area, &phoc_output->usable_area,
-	 sizeof(struct wlr_box));
-  usable_area.x += output_box->x;
-  usable_area.y += output_box->y;
-
-  switch (direction) {
-  case PHOC_VIEW_TILE_LEFT:
-    x = usable_area.x;
-    break;
-  case PHOC_VIEW_TILE_RIGHT:
-    x = usable_area.x + (0.5 * usable_area.width);
-    break;
-  default:
-    g_error ("Invalid tiling direction %d", direction);
-  }
-
-  /*
-   * No need to take geometry into account since maximized surfaces
-   * usually don't have drop shadows. It wouldn't be up to date here
-   * yet anyway since a client's configure is not yet processed.
-   */
-  view_move_resize(view, x, usable_area.y,
-		   usable_area.width / 2, usable_area.height);
-  view_rotate(view, 0);
+  view->state = PHOC_VIEW_STATE_TILED;
+  view->tile_direction = direction;
+  view_arrange_tiled (view);
 }
 
 bool view_center(struct roots_view *view) {
@@ -778,6 +785,8 @@ static void view_update_scale(struct roots_view *view) {
 	if (view->scale != oldscale) {
 		if (view_is_maximized(view)) {
 			view_arrange_maximized(view);
+		} else if (view_is_tiled(view)) {
+			view_arrange_tiled(view);
 		} else {
 			view_center(view);
 		}

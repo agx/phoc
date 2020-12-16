@@ -282,6 +282,8 @@ void arrange_layers(PhocOutput *output) {
 	wl_list_for_each(view, &output->desktop->views, link) {
 		if (view_is_maximized(view)) {
 			view_arrange_maximized(view);
+		} else if (view_is_tiled(view)) {
+			view_arrange_tiled(view);
 		} else if (output->desktop->maximize) {
 			view_center(view);
 		}
