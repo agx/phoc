@@ -244,6 +244,8 @@ void roots_cursor_update_focus(struct roots_cursor *cursor) {
 
 void roots_cursor_update_position(struct roots_cursor *cursor,
 		uint32_t time) {
+	PhocServer *server = phoc_server_get_default ();
+	PhocDesktop *desktop = server->desktop;
 	struct roots_seat *seat = cursor->seat;
 	struct roots_view *view;
 	switch (cursor->mode) {
@@ -255,8 +257,22 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 		if (view != NULL) {
 			double dx = cursor->cursor->x - cursor->offs_x;
 			double dy = cursor->cursor->y - cursor->offs_y;
-			view_move(view, cursor->view_x + dx,
-				cursor->view_y + dy);
+
+			struct wlr_output *wlr_output = wlr_output_layout_output_at(desktop->layout, cursor->cursor->x, cursor->cursor->y);
+			struct wlr_box *output_box = wlr_output_layout_get_box(desktop->layout, wlr_output);
+
+			bool output_is_landscape = output_box->width > output_box->height;
+
+			if (cursor->cursor->y < output_box->y + PHOC_EDGE_SNAP_THRESHOLD) {
+				view_maximize(view, wlr_output);
+			} else if (output_is_landscape && cursor->cursor->x < output_box->x + PHOC_EDGE_SNAP_THRESHOLD) {
+				view_tile(view, PHOC_VIEW_TILE_LEFT, wlr_output);
+			} else if (output_is_landscape && cursor->cursor->x > output_box->x + output_box->width - PHOC_EDGE_SNAP_THRESHOLD) {
+				view_tile(view, PHOC_VIEW_TILE_RIGHT, wlr_output);
+			} else {
+				view_restore(view);
+				view_move(view, cursor->view_x + dx, cursor->view_y + dy);
+			}
 		}
 		break;
 	case ROOTS_CURSOR_RESIZE:
