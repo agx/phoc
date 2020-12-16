@@ -1619,14 +1619,15 @@ void roots_seat_begin_move(struct roots_seat *seat, struct roots_view *view) {
 	cursor->mode = ROOTS_CURSOR_MOVE;
 	cursor->offs_x = cursor->cursor->x;
 	cursor->offs_y = cursor->cursor->y;
-	if (view_is_maximized(view)) {
+	if (view_is_maximized(view) || view_is_tiled(view)) {
 		// calculate normalized (0..1) position of cursor in maximized window
 		// and make it stay the same after restoring saved size
 		double x = (cursor->cursor->x - view->box.x) / view->box.width;
 		double y = (cursor->cursor->y - view->box.y) / view->box.height;
 		cursor->view_x = cursor->cursor->x - x * view->saved.width;
 		cursor->view_y = cursor->cursor->y - y * view->saved.height;
-		view_move(view, cursor->view_x, cursor->view_y);
+		view->saved.x = cursor->view_x;
+		view->saved.y = cursor->view_y;
 		view_restore(view);
 	} else {
 		cursor->view_x = view->box.x;
@@ -1646,21 +1647,21 @@ void roots_seat_begin_resize(struct roots_seat *seat, struct roots_view *view,
 	cursor->mode = ROOTS_CURSOR_RESIZE;
 	cursor->offs_x = cursor->cursor->x;
 	cursor->offs_y = cursor->cursor->y;
-	if (view_is_maximized(view)) {
-		cursor->view_x = view->saved.x;
-		cursor->view_y = view->saved.y;
-		cursor->view_width = view->saved.width;
-		cursor->view_height = view->saved.height;
-	} else {
-		cursor->view_x = view->box.x;
-		cursor->view_y = view->box.y;
-		struct wlr_box box;
-		view_get_box(view, &box);
-		cursor->view_width = box.width;
-		cursor->view_height = box.height;
+	if (view_is_maximized(view) || view_is_tiled(view)) {
+		view->saved.x = view->box.x;
+		view->saved.y = view->box.y;
+		view->saved.width = view->box.width;
+		view->saved.height = view->box.height;
+		view_restore(view);
 	}
+
+	cursor->view_x = view->box.x;
+	cursor->view_y = view->box.y;
+	struct wlr_box box;
+	view_get_box(view, &box);
+	cursor->view_width = box.width;
+	cursor->view_height = box.height;
 	cursor->resize_edges = edges;
-	view_restore(view);
 	wlr_seat_pointer_clear_focus(seat->seat);
 
 	const char *resize_name = wlr_xcursor_get_resize_name(edges);
