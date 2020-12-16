@@ -1626,8 +1626,8 @@ void roots_seat_begin_move(struct roots_seat *seat, struct roots_view *view) {
 		double y = (cursor->cursor->y - view->box.y) / view->box.height;
 		cursor->view_x = cursor->cursor->x - x * view->saved.width;
 		cursor->view_y = cursor->cursor->y - y * view->saved.height;
-		view_maximize(view, false);
 		view_move(view, cursor->view_x, cursor->view_y);
+		view_restore(view);
 	} else {
 		cursor->view_x = view->box.x;
 		cursor->view_y = view->box.y;
@@ -1660,7 +1660,7 @@ void roots_seat_begin_resize(struct roots_seat *seat, struct roots_view *view,
 		cursor->view_height = box.height;
 	}
 	cursor->resize_edges = edges;
-	view_maximize(view, false);
+	view_restore(view);
 	wlr_seat_pointer_clear_focus(seat->seat);
 
 	const char *resize_name = wlr_xcursor_get_resize_name(edges);
@@ -1673,7 +1673,7 @@ void roots_seat_begin_rotate(struct roots_seat *seat, struct roots_view *view) {
 	cursor->offs_x = cursor->cursor->x;
 	cursor->offs_y = cursor->cursor->y;
 	cursor->view_rotation = view->rotation;
-	view_maximize(view, false);
+	view_restore(view);
 	wlr_seat_pointer_clear_focus(seat->seat);
 
 	roots_seat_maybe_set_cursor (seat, ROOTS_XCURSOR_ROTATE);

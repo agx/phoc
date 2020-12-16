@@ -216,7 +216,8 @@ void view_move_resize(struct roots_view *view, double x, double y,
 	uint32_t width, uint32_t height);
 void view_auto_maximize(struct roots_view *view);
 void view_tile(struct roots_view *view, PhocViewTileDirection direction);
-void view_maximize(struct roots_view *view, bool maximize);
+void view_maximize(struct roots_view *view);
+void view_restore(struct roots_view *view);
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 	struct wlr_output *output);
 void view_rotate(struct roots_view *view, float rotation);

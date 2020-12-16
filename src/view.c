@@ -310,26 +310,20 @@ want_auto_maximize(struct roots_view *view) {
   return false;
 }
 
-void view_maximize(struct roots_view *view, bool maximize) {
-	if (view_is_maximized (view) == maximize
-	    || view->fullscreen_output != NULL) {
-		return;
-	}
-
-	if (!maximize && want_auto_maximize(view)) {
+void view_maximize(struct roots_view *view) {
+	if (view_is_maximized (view) || view->fullscreen_output != NULL) {
 		return;
 	}
 
 	if (view->impl->maximize) {
-		view->impl->maximize(view, maximize);
+		view->impl->maximize(view, true);
 	}
 
 	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
-			maximize);
+		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle, true);
 	}
 
-	if (!view_is_maximized(view) && maximize) {
+	if (!view_is_maximized(view)) {
 		view->state = PHOC_VIEW_STATE_MAXIMIZED;
 		view->saved.x = view->box.x;
 		view->saved.y = view->box.y;
@@ -338,20 +332,6 @@ void view_maximize(struct roots_view *view, bool maximize) {
 		view->saved.height = view->box.height;
 
 		view_arrange_maximized(view);
-	}
-
-	if (view_is_maximized(view) && !maximize) {
-		if (view->saved.state == PHOC_VIEW_STATE_TILED) {
-			view->state = PHOC_VIEW_STATE_TILED;
-			if (view->impl->maximize) {
-				view->impl->maximize(view, true);
-			}
-		}  else {
-			view->state = PHOC_VIEW_STATE_NORMAL;
-		}
-		view_move_resize(view, view->saved.x, view->saved.y,
-				 view->saved.width, view->saved.height);
-		view_rotate(view, view->saved.rotation);
 	}
 }
 
@@ -362,7 +342,35 @@ void
 view_auto_maximize(struct roots_view *view)
 {
   if (want_auto_maximize (view))
-    view_maximize (view, true);
+    view_maximize (view);
+}
+
+void
+view_restore(struct roots_view *view)
+{
+  if (!view_is_maximized (view) && !view_is_tiled (view))
+    return;
+
+  if (want_auto_maximize (view))
+    return;
+
+  if (view->saved.state == PHOC_VIEW_STATE_TILED) {
+    view->state = PHOC_VIEW_STATE_TILED;
+    if (view->impl->maximize) {
+      view->impl->maximize(view, true);
+    }
+  } else {
+    view->state = PHOC_VIEW_STATE_NORMAL;
+    if (view->impl->maximize) {
+      view->impl->maximize(view, false);
+    }
+  }
+  view_move_resize (view, view->saved.x, view->saved.y,
+                    view->saved.width, view->saved.height);
+  view_rotate (view, view->saved.rotation);
+
+  if (view->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
 }
 
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
@@ -965,7 +973,11 @@ static void handle_toplevel_handle_request_maximize(struct wl_listener *listener
 	struct roots_view *view = wl_container_of(listener, view,
 			toplevel_handle_request_maximize);
 	struct wlr_foreign_toplevel_handle_v1_maximized_event *event = data;
-	view_maximize(view, event->maximized);
+	if (event->maximized) {
+		view_maximize(view);
+	} else {
+		view_restore(view);
+	}
 }
 
 static void handle_toplevel_handle_request_activate(struct wl_listener *listener,
