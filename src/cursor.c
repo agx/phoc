@@ -105,23 +105,21 @@ static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, do
 	PhocServer *server = phoc_server_get_default ();
 	PhocDesktop *desktop = server->desktop;
 
-	if (!surface) {
-		return false;
-	}
+	if (surface) {
+		struct wlr_surface *root = wlr_surface_get_root_surface(surface), *iter = root;
 
-	struct wlr_surface *root = wlr_surface_get_root_surface(surface), *iter = root;
-
-	while (wlr_surface_is_xdg_surface(iter)) {
-		struct wlr_xdg_surface *xdg_surface = wlr_xdg_surface_from_wlr_surface(iter);
-		if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-			iter = xdg_surface->popup->parent;
-		} else {
-			break;
+		while (wlr_surface_is_xdg_surface(iter)) {
+			struct wlr_xdg_surface *xdg_surface = wlr_xdg_surface_from_wlr_surface(iter);
+			if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
+				iter = xdg_surface->popup->parent;
+			} else {
+				break;
+			}
 		}
-	}
 
-	if (wlr_surface_is_layer_surface(iter)) {
-		return false;
+		if (wlr_surface_is_layer_surface(iter)) {
+			return false;
+		}
 	}
 
 	struct wlr_output *wlr_output = wlr_output_layout_output_at(desktop->layout, lx, ly);
@@ -161,7 +159,7 @@ static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, do
 			(bottom && ly >= output_box->y + (1.0 - threshold) * output_box->height - 1) ||
 			(left   && lx <= output_box->x + threshold * output_box->width) ||
 			(right  && lx >= output_box->x + (1.0 - threshold) * output_box->width - 1)) {
-		if (output->fullscreen_view && output->fullscreen_view->wlr_surface == root) {
+		if (output->fullscreen_view) {
 			output->force_shell_reveal = true;
 			phoc_output_damage_whole(output);
 		}
@@ -466,9 +464,9 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 	struct roots_view *view;
 	struct wlr_surface *surface = phoc_desktop_surface_at(
 		desktop, lx, ly, &sx, &sy, &view);
+	bool shell_revealed = roots_handle_shell_reveal(surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
 
-	if (surface && !roots_handle_shell_reveal(surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD) &&
-	    roots_seat_allow_input(seat, surface->resource)) {
+	if (!shell_revealed && surface && roots_seat_allow_input(seat, surface->resource)) {
 		wlr_seat_touch_notify_down(seat->seat, surface,
 			event->time_msec, event->touch_id, sx, sy);
 		wlr_seat_touch_point_focus(seat->seat, surface,
