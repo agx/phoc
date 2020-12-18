@@ -234,8 +234,9 @@ void view_activate(struct roots_view *view, bool activate) {
 			activate);
 	}
 
-	if (activate && view->fullscreen_output) {
+	if (activate && view->fullscreen_output && view->fullscreen_output->force_shell_reveal) {
 		view->fullscreen_output->force_shell_reveal = false;
+		phoc_output_damage_whole(view->fullscreen_output);
 	}
 }
 
