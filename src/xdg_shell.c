@@ -356,7 +356,7 @@ static void handle_request_maximize(struct wl_listener *listener, void *data) {
 	}
 
 	if (surface->toplevel->client_pending.maximized) {
-		view_maximize(view);
+		view_maximize(view, NULL);
 	} else {
 		view_restore(view);
 	}
@@ -508,7 +508,7 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 		view_set_parent(&roots_surface->view, &parent->view);
 	}
 	if (surface->toplevel->client_pending.maximized) {
-		view_maximize(&roots_surface->view);
+		view_maximize(&roots_surface->view, NULL);
 	}
 	view_set_fullscreen(&roots_surface->view, surface->toplevel->client_pending.fullscreen,
 		surface->toplevel->client_pending.fullscreen_output);
