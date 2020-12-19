@@ -276,7 +276,7 @@ void arrange_layers(PhocOutput *output) {
 	arrange_layer(output->wlr_output, &server->input->seats,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
 			&usable_area, true);
-	memcpy(&output->usable_area, &usable_area, sizeof(struct wlr_box));
+	output->usable_area = usable_area;
 
 	struct roots_view *view;
 	wl_list_for_each(view, &output->desktop->views, link) {

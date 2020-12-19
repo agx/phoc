@@ -299,9 +299,7 @@ void view_arrange_maximized(struct roots_view *view) {
 	PhocOutput *phoc_output = output->data;
 	struct wlr_box *output_box =
 		wlr_output_layout_get_box(view->desktop->layout, output);
-	struct wlr_box usable_area;
-	memcpy(&usable_area, &phoc_output->usable_area,
-			sizeof(struct wlr_box));
+	struct wlr_box usable_area = phoc_output->usable_area;
 	usable_area.x += output_box->x;
 	usable_area.y += output_box->y;
 
@@ -506,7 +504,7 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
     return false;
 
   phoc_output = new_output->data;
-  memcpy(&usable_area, &phoc_output->usable_area, sizeof(struct wlr_box));
+  usable_area = phoc_output->usable_area;
   l_output = wlr_output_layout_get(desktop->layout, new_output);
 
   /* use a proper position on the new output */
@@ -570,10 +568,8 @@ bool view_center(struct roots_view *view) {
 	const struct wlr_output_layout_output *l_output =
 		wlr_output_layout_get(desktop->layout, output);
 
-	struct wlr_box usable_area;
 	PhocOutput *phoc_output = output->data;
-
-	memcpy(&usable_area, &phoc_output->usable_area, sizeof(struct wlr_box));
+	struct wlr_box usable_area = phoc_output->usable_area;
 
 	double view_x = (double)(usable_area.width - box.width) / 2 +
 	  usable_area.x + l_output->x - geom.x * view->scale;
