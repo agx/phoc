@@ -196,7 +196,6 @@ static void
 view_save(struct roots_view *view)
 {
   /* backup window state */
-  view->saved.state = view->state;
   view->saved.x = view->box.x;
   view->saved.y = view->box.y;
   view->saved.rotation = view->rotation;
@@ -401,23 +400,16 @@ view_restore(struct roots_view *view)
   if (want_auto_maximize (view))
     return;
 
-  if (view->saved.state == PHOC_VIEW_STATE_TILED) {
-    view->state = PHOC_VIEW_STATE_TILED;
-    if (view->impl->maximize) {
-      view->impl->maximize(view, true);
-    }
-  } else {
-    view->state = PHOC_VIEW_STATE_NORMAL;
-    if (view->impl->maximize) {
-      view->impl->maximize(view, false);
-    }
-  }
+  view->state = PHOC_VIEW_STATE_NORMAL;
   view_move_resize (view, view->saved.x, view->saved.y,
                     view->saved.width, view->saved.height);
   view_rotate (view, view->saved.rotation);
 
   if (view->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
+
+  if (view->impl->maximize)
+    view->impl->maximize (view, false);
 }
 
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,

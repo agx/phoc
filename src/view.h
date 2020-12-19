@@ -73,7 +73,6 @@ struct roots_view {
 	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;
 	struct {
-		PhocViewState state;
 		double x, y;
 		uint32_t width, height;
 		float rotation;
