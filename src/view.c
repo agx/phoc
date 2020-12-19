@@ -192,6 +192,18 @@ static void view_update_output(struct roots_view *view,
 	}
 }
 
+static void
+view_save(struct roots_view *view)
+{
+  /* backup window state */
+  view->saved.state = view->state;
+  view->saved.x = view->box.x;
+  view->saved.y = view->box.y;
+  view->saved.rotation = view->rotation;
+  view->saved.width = view->box.width;
+  view->saved.height = view->box.height;
+}
+
 void view_move(struct roots_view *view, double x, double y) {
 	if (view->box.x == x && view->box.y == y) {
 		return;
@@ -362,13 +374,8 @@ void view_maximize(struct roots_view *view) {
 		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle, true);
 	}
 
-	if (!view_is_maximized(view) && !view_is_tiled(view)) {
-		/* backup window state */
-		view->saved.x = view->box.x;
-		view->saved.y = view->box.y;
-		view->saved.rotation = view->rotation;
-		view->saved.width = view->box.width;
-		view->saved.height = view->box.height;
+	if (!view_is_maximized (view) && !view_is_tiled (view)) {
+		view_save (view);
 	}
 
 	view->state = PHOC_VIEW_STATE_MAXIMIZED;
@@ -446,11 +453,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		struct wlr_box view_box;
 		view_get_box(view, &view_box);
 
-		view->saved.x = view->box.x;
-		view->saved.y = view->box.y;
-		view->saved.rotation = view->rotation;
-		view->saved.width = view_box.width;
-		view->saved.height = view_box.height;
+		view_save (view);
 
 		struct wlr_box *output_box =
 			wlr_output_layout_get_box(view->desktop->layout, output);
@@ -549,14 +552,8 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction)
   if (view->impl->maximize)
     view->impl->maximize(view, true);
 
-  if (!view_is_maximized (view) && !view_is_tiled (view)) {
-    /* backup window state */
-    view->saved.x = view->box.x;
-    view->saved.y = view->box.y;
-    view->saved.rotation = view->rotation;
-    view->saved.width = view->box.width;
-    view->saved.height = view->box.height;
-  }
+  if (!view_is_maximized (view) && !view_is_tiled (view))
+    view_save (view);
 
   view->state = PHOC_VIEW_STATE_TILED;
   view->tile_direction = direction;
