@@ -195,6 +195,9 @@ static void view_update_output(struct roots_view *view,
 static void
 view_save(struct roots_view *view)
 {
+  if (view_is_maximized (view) || view_is_tiled (view))
+    return;
+
   /* backup window state */
   view->saved.x = view->box.x;
   view->saved.y = view->box.y;
@@ -373,9 +376,7 @@ void view_maximize(struct roots_view *view) {
 		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle, true);
 	}
 
-	if (!view_is_maximized (view) && !view_is_tiled (view)) {
-		view_save (view);
-	}
+	view_save (view);
 
 	view->state = PHOC_VIEW_STATE_MAXIMIZED;
 	view_arrange_maximized(view);
@@ -460,13 +461,20 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 	}
 
 	if (was_fullscreen && !fullscreen) {
-		view_move_resize(view, view->saved.x, view->saved.y, view->saved.width,
-			view->saved.height);
-		view_rotate(view, view->saved.rotation);
-
 		phoc_output_damage_whole(view->fullscreen_output);
+
 		view->fullscreen_output->fullscreen_view = NULL;
 		view->fullscreen_output = NULL;
+
+		if (view->state == PHOC_VIEW_STATE_MAXIMIZED) {
+			view_arrange_maximized (view);
+		} else if (view->state == PHOC_VIEW_STATE_TILED) {
+			view_arrange_tiled (view);
+		} else {
+			view_move_resize(view, view->saved.x, view->saved.y,
+			                 view->saved.width, view->saved.height);
+			view_rotate(view, view->saved.rotation);
+		}
 
 		view_auto_maximize(view);
 	}
@@ -544,8 +552,7 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction)
   if (view->impl->maximize)
     view->impl->maximize(view, true);
 
-  if (!view_is_maximized (view) && !view_is_tiled (view))
-    view_save (view);
+  view_save (view);
 
   view->state = PHOC_VIEW_STATE_TILED;
   view->tile_direction = direction;
