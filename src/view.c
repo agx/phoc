@@ -821,10 +821,22 @@ void view_map(struct roots_view *view, struct wlr_surface *surface) {
 void view_unmap(struct roots_view *view) {
 	assert(view->wlr_surface != NULL);
 
+	bool was_visible = phoc_desktop_view_is_visible(view->desktop, view);
+
 	wl_signal_emit(&view->events.unmap, view);
 
 	view_damage_whole(view);
+
 	wl_list_remove(&view->link);
+
+	if (was_visible && view->desktop->maximize && !wl_list_empty(&view->desktop->views)) {
+		// damage the newly activated stack as well since it may have just become visible
+		struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
+		while (top_view) {
+			view_damage_whole(top_view);
+			top_view = top_view->parent;
+		}
+	}
 
 	wl_list_remove(&view->new_subsurface.link);
 
