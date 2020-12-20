@@ -579,6 +579,17 @@ bool view_center(struct roots_view *view) {
 	g_debug ("moving view to %f %f", view_x, view_y);
 	view_move(view, view_x / view->scale, view_y / view->scale);
 
+	if (!desktop->maximize) {
+		// TODO: fitting floating oversized windows requires more work (!228)
+		return true;
+	}
+
+	if (view->box.width > phoc_output->usable_area.width || view->box.height > phoc_output->usable_area.height) {
+		view_resize (view,
+		             (view->box.width > phoc_output->usable_area.width) ? phoc_output->usable_area.width : view->box.width,
+		             (view->box.height > phoc_output->usable_area.height) ? phoc_output->usable_area.height : view->box.height);
+	}
+
 	return true;
 }
 
