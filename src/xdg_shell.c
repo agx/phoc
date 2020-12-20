@@ -440,6 +440,17 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 			roots_surface->pending_move_resize_configure_serial = 0;
 		}
 	}
+
+	struct wlr_box geometry;
+	get_geometry(view, &geometry);
+	if (roots_surface->saved_geometry.x != geometry.x || roots_surface->saved_geometry.y != geometry.y) {
+		if (!view_is_maximized(view) && !view_is_tiled(view) && !view->fullscreen_output) {
+			view_update_position(view,
+			                     view->box.x + (roots_surface->saved_geometry.x - geometry.x) * view->scale,
+			                     view->box.y + (roots_surface->saved_geometry.y - geometry.y) * view->scale);
+		}
+	}
+	roots_surface->saved_geometry = geometry;
 }
 
 static void handle_new_popup(struct wl_listener *listener, void *data) {
@@ -458,6 +469,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	get_size(view, &box);
 	view->box.width = box.width;
 	view->box.height = box.height;
+	get_geometry(view, &roots_xdg_surface->saved_geometry);
 
 	view_map(view, roots_xdg_surface->xdg_surface->surface);
 	view_setup(view);

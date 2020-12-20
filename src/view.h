@@ -109,6 +109,8 @@ struct roots_xdg_surface {
 
 	struct wlr_xdg_surface *xdg_surface;
 
+	struct wlr_box saved_geometry;
+
 	struct wl_listener destroy;
 	struct wl_listener new_popup;
 	struct wl_listener map;
