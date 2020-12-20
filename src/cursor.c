@@ -255,6 +255,8 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 	case ROOTS_CURSOR_MOVE:
 		view = roots_seat_get_focus(seat);
 		if (view != NULL) {
+			struct wlr_box geom;
+			view_get_geometry(view, &geom);
 			double dx = cursor->cursor->x - cursor->offs_x;
 			double dy = cursor->cursor->y - cursor->offs_y;
 
@@ -271,13 +273,16 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 				view_tile(view, PHOC_VIEW_TILE_RIGHT, wlr_output);
 			} else {
 				view_restore(view);
-				view_move(view, cursor->view_x + dx, cursor->view_y + dy);
+				view_move(view, cursor->view_x + dx - geom.x * view->scale,
+				          cursor->view_y + dy - geom.y * view->scale);
 			}
 		}
 		break;
 	case ROOTS_CURSOR_RESIZE:
 		view = roots_seat_get_focus(seat);
 		if (view != NULL) {
+			struct wlr_box geom;
+			view_get_geometry(view, &geom);
 			double dx = cursor->cursor->x - cursor->offs_x;
 			double dy = cursor->cursor->y - cursor->offs_y;
 			double x = view->box.x;
@@ -285,7 +290,7 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 			int width = cursor->view_width;
 			int height = cursor->view_height;
 			if (cursor->resize_edges & WLR_EDGE_TOP) {
-				y = cursor->view_y + dy;
+				y = cursor->view_y + dy - geom.y * view->scale;
 				height -= dy;
 				if (height < 1) {
 					y += height;
@@ -294,7 +299,7 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 				height += dy;
 			}
 			if (cursor->resize_edges & WLR_EDGE_LEFT) {
-				x = cursor->view_x + dx;
+				x = cursor->view_x + dx - geom.x * view->scale;
 				width -= dx;
 				if (width < 1) {
 					x += width;

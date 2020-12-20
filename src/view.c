@@ -199,8 +199,10 @@ view_save(struct roots_view *view)
     return;
 
   /* backup window state */
-  view->saved.x = view->box.x;
-  view->saved.y = view->box.y;
+  struct wlr_box geom;
+  view_get_geometry(view, &geom);
+  view->saved.x = view->box.x + geom.x * view->scale;
+  view->saved.y = view->box.y + geom.y * view->scale;
   view->saved.width = view->box.width;
   view->saved.height = view->box.height;
 }
@@ -403,8 +405,11 @@ view_restore(struct roots_view *view)
   if (want_auto_maximize (view))
     return;
 
+  struct wlr_box geom;
+  view_get_geometry(view, &geom);
+
   view->state = PHOC_VIEW_STATE_NORMAL;
-  view_move_resize (view, view->saved.x, view->saved.y,
+  view_move_resize (view, view->saved.x - geom.x * view->scale, view->saved.y - geom.y * view->scale,
                     view->saved.width, view->saved.height);
 
   if (view->toplevel_handle)
@@ -430,6 +435,9 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 					fullscreen);
 		}
 	}
+
+	struct wlr_box view_geom;
+	view_get_geometry(view, &view_geom);
 
 	if (fullscreen) {
 		if (output == NULL) {
@@ -472,7 +480,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		} else if (view->state == PHOC_VIEW_STATE_TILED) {
 			view_arrange_tiled (view, phoc_output->wlr_output);
 		} else {
-			view_move_resize(view, view->saved.x, view->saved.y,
+			view_move_resize(view, view->saved.x - view_geom.x * view->scale, view->saved.y - view_geom.y * view->scale,
 			                 view->saved.width, view->saved.height);
 		}
 
