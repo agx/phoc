@@ -352,8 +352,6 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 		case BTN_MIDDLE:
 			roots_seat_begin_rotate(seat, view);
 			break;
-		default:
-			g_error("Invalid button %d", button);
 		}
 	} else {
 		if (view && !surface && cursor->pointer_view) {
