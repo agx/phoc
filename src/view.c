@@ -201,7 +201,6 @@ view_save(struct roots_view *view)
   /* backup window state */
   view->saved.x = view->box.x;
   view->saved.y = view->box.y;
-  view->saved.rotation = view->rotation;
   view->saved.width = view->box.width;
   view->saved.height = view->box.height;
 }
@@ -308,7 +307,6 @@ void view_arrange_maximized(struct roots_view *view) {
 
 	view_move_resize(view, usable_area.x / view->scale, usable_area.y / view->scale,
 			usable_area.width / view->scale, usable_area.height / view->scale);
-	view_rotate(view, 0);
 }
 
 void
@@ -347,7 +345,6 @@ view_arrange_tiled (struct roots_view *view)
    */
   view_move_resize (view, x, usable_area.y,
                     usable_area.width / 2, usable_area.height);
-  view_rotate (view, 0);
 }
 
 /*
@@ -405,7 +402,6 @@ view_restore(struct roots_view *view)
   view->state = PHOC_VIEW_STATE_NORMAL;
   view_move_resize (view, view->saved.x, view->saved.y,
                     view->saved.width, view->saved.height);
-  view_rotate (view, view->saved.rotation);
 
   if (view->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
@@ -453,7 +449,6 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 			wlr_output_layout_get_box(view->desktop->layout, output);
 		view_move_resize(view, output_box->x, output_box->y, output_box->width,
 			output_box->height);
-		view_rotate(view, 0);
 
 		phoc_output->fullscreen_view = view;
 		phoc_output->force_shell_reveal = false;
@@ -474,21 +469,10 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		} else {
 			view_move_resize(view, view->saved.x, view->saved.y,
 			                 view->saved.width, view->saved.height);
-			view_rotate(view, view->saved.rotation);
 		}
 
 		view_auto_maximize(view);
 	}
-}
-
-void view_rotate(struct roots_view *view, float rotation) {
-	if (view->rotation == rotation) {
-		return;
-	}
-
-	view_damage_whole(view);
-	view->rotation = rotation;
-	view_damage_whole(view);
 }
 
 void view_close(struct roots_view *view) {

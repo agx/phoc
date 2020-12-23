@@ -95,12 +95,8 @@ static bool view_at(struct roots_view *view, double lx, double ly,
 		return false;
 	}
 
-	double view_sx = lx - (view->box.x * view->scale);
-	double view_sy = ly - (view->box.y * view->scale);
-	phoc_utils_rotate_child_position(&view_sx, &view_sy, 0, 0,
-		view->box.width, view->box.height, -view->rotation);
-	view_sx /= view->scale;
-	view_sy /= view->scale;
+	double view_sx = lx / view->scale - view->box.x;
+	double view_sy = ly / view->scale - view->box.y;
 
 	double _sx, _sy;
 	struct wlr_surface *_surface = NULL;
@@ -371,14 +367,9 @@ static void handle_constraint_destroy(struct wl_listener *listener,
 		if (wlr_constraint->current.committed &
 				WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT &&
 				cursor->pointer_view) {
-			double sx = wlr_constraint->current.cursor_hint.x;
-			double sy = wlr_constraint->current.cursor_hint.y;
-
 			struct roots_view *view = cursor->pointer_view->view;
-			phoc_utils_rotate_child_position(&sx, &sy, 0, 0, view->box.width, view->box.height,
-				view->rotation);
-			double lx = view->box.x + sx;
-			double ly = view->box.y + sy;
+			double lx = view->box.x + wlr_constraint->current.cursor_hint.x;
+			double ly = view->box.y + wlr_constraint->current.cursor_hint.y;
 
 			wlr_cursor_warp(cursor->cursor, NULL, lx, ly);
 		}

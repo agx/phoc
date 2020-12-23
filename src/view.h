@@ -58,7 +58,6 @@ struct roots_view {
 	struct wl_list parent_link; // roots_view::stack
 
 	struct wlr_box box;
-	float rotation;
 	float alpha;
 	float scale;
 
@@ -75,7 +74,6 @@ struct roots_view {
 	struct {
 		double x, y;
 		uint32_t width, height;
-		float rotation;
 	} saved;
 
 	struct {
@@ -221,7 +219,6 @@ void view_maximize(struct roots_view *view);
 void view_restore(struct roots_view *view);
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 	struct wlr_output *output);
-void view_rotate(struct roots_view *view, float rotation);
 void view_close(struct roots_view *view);
 bool view_center(struct roots_view *view);
 void view_setup(struct roots_view *view);

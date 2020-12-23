@@ -167,13 +167,10 @@ static void render_decorations(PhocOutput *output,
 	struct wlr_box box;
 	phoc_output_get_decoration_box(output, view, &box);
 
-	struct wlr_box rotated;
-	wlr_box_rotated_bounds(&rotated, &box, view->rotation);
-
 	pixman_region32_t damage;
 	pixman_region32_init(&damage);
-	pixman_region32_union_rect(&damage, &damage, rotated.x, rotated.y,
-		rotated.width, rotated.height);
+	pixman_region32_union_rect(&damage, &damage, box.x, box.y,
+		box.width, box.height);
 	pixman_region32_intersect(&damage, &damage, data->damage);
 	bool damaged = pixman_region32_not_empty(&damage);
 	if (!damaged) {
@@ -182,7 +179,7 @@ static void render_decorations(PhocOutput *output,
 
 	float matrix[9];
 	wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL,
-		view->rotation, output->wlr_output->transform_matrix);
+		0, output->wlr_output->transform_matrix);
 	float color[] = { 0.2, 0.2, 0.2, view->alpha };
 
 	int nrects;

@@ -506,7 +506,7 @@ phoc_output_view_for_each_surface (PhocOutput *self, struct roots_view *view,
     .oy = view->box.y - output_box->y,
     .width = view->box.width,
     .height = view->box.height,
-    .rotation = view->rotation,
+    .rotation = 0,
     .scale = view->scale
   };
 
@@ -685,15 +685,9 @@ phoc_output_get_decoration_box (PhocOutput *self, struct roots_view *view,
   struct wlr_box deco_box;
 
   view_get_deco_box (view, &deco_box);
-  double sx = deco_box.x - view->box.x;
-  double sy = deco_box.y - view->box.y;
 
-  phoc_utils_rotate_child_position (&sx, &sy, deco_box.width, deco_box.height,
-                                    view->wlr_surface->current.width,
-                                    view->wlr_surface->current.height,
-                                    view->rotation);
-  double x = sx + view->box.x;
-  double y = sy + view->box.y;
+  double x = deco_box.x;
+  double y = deco_box.y;
 
   wlr_output_layout_output_coords (self->desktop->layout,
                                    self->wlr_output, &x, &y);
@@ -806,8 +800,6 @@ damage_whole_decoration (PhocOutput *self, struct roots_view   *view)
   struct wlr_box box;
 
   phoc_output_get_decoration_box (self, view, &box);
-
-  wlr_box_rotated_bounds (&box, &box, view->rotation);
 
   wlr_output_damage_add_box (self->damage, &box);
 }

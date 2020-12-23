@@ -292,21 +292,6 @@ void roots_cursor_update_position(struct roots_cursor *cursor,
 					height < 1 ? 1 : height);
 		}
 		break;
-	case ROOTS_CURSOR_ROTATE:
-		view = roots_seat_get_focus(seat);
-		if (view != NULL) {
-			int ox = view->box.x + view->wlr_surface->current.width/2,
-				oy = view->box.y + view->wlr_surface->current.height/2;
-			int ux = cursor->offs_x - ox,
-				uy = cursor->offs_y - oy;
-			int vx = cursor->cursor->x - ox,
-				vy = cursor->cursor->y - oy;
-			float angle = atan2(ux*vy - uy*vx, vx*ux + vy*uy);
-			int steps = 12;
-			angle = round(angle/M_PI*steps) / (steps/M_PI);
-			view_rotate(view, cursor->view_rotation + angle);
-		}
-		break;
 	default:
 		g_error("Invalid cursor mode %d", cursor->mode);
 	}
@@ -348,9 +333,6 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 				edges |= WLR_EDGE_BOTTOM;
 			}
 			roots_seat_begin_resize(seat, view, edges);
-			break;
-		case BTN_MIDDLE:
-			roots_seat_begin_rotate(seat, view);
 			break;
 		}
 	} else {
@@ -402,29 +384,26 @@ void roots_cursor_handle_motion(struct roots_cursor *cursor,
 		struct roots_view *view = cursor->pointer_view->view;
 		assert(view);
 
-		// TODO: handle rotated views
-		if (view->rotation == 0.0) {
-			double lx1 = cursor->cursor->x;
-			double ly1 = cursor->cursor->y;
+		double lx1 = cursor->cursor->x;
+		double ly1 = cursor->cursor->y;
 
-			double lx2 = lx1 + dx;
-			double ly2 = ly1 + dy;
+		double lx2 = lx1 + dx;
+		double ly2 = ly1 + dy;
 
-			double sx1 = lx1 - view->box.x;
-			double sy1 = ly1 - view->box.y;
+		double sx1 = lx1 - view->box.x;
+		double sy1 = ly1 - view->box.y;
 
-			double sx2 = lx2 - view->box.x;
-			double sy2 = ly2 - view->box.y;
+		double sx2 = lx2 - view->box.x;
+		double sy2 = ly2 - view->box.y;
 
-			double sx2_confined, sy2_confined;
-			if (!wlr_region_confine(&cursor->confine, sx1, sy1, sx2, sy2,
-					&sx2_confined, &sy2_confined)) {
-				return;
-			}
-
-			dx = sx2_confined - sx1;
-			dy = sy2_confined - sy1;
+		double sx2_confined, sy2_confined;
+		if (!wlr_region_confine(&cursor->confine, sx1, sy1, sx2, sy2,
+				&sx2_confined, &sy2_confined)) {
+			return;
 		}
+
+		dx = sx2_confined - sx1;
+		dy = sy2_confined - sy1;
 	}
 
 	wlr_cursor_move(cursor->cursor, event->device, dx, dy);
@@ -594,8 +573,6 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 				scale = view->scale;
 				sx = lx / scale - view->box.x;
 				sy = ly / scale - view->box.y;
-				phoc_utils_rotate_child_position(&sx, &sy, 0, 0, view->box.width,
-					view->box.height, -view->rotation);
 				found = true;
 			} else {
 				// FIXME: buggy fallback, but at least handles xdg_popups for now...
@@ -770,14 +747,8 @@ void roots_cursor_constrain(struct roots_cursor *cursor,
 		if (nboxes > 0) {
 			struct roots_view *view = cursor->pointer_view->view;
 
-			double box_sx = (boxes[0].x1 + boxes[0].x2) / 2.;
-			double box_sy = (boxes[0].y1 + boxes[0].y2) / 2.;
-
-			phoc_utils_rotate_child_position(&box_sx, &box_sy, 0, 0, view->box.width,
-				view->box.height, view->rotation);
-
-			double lx = view->box.x + box_sx;
-			double ly = view->box.y + box_sy;
+			double lx = view->box.x + (boxes[0].x1 + boxes[0].x2) / 2.;
+			double ly = view->box.y + (boxes[0].y1 + boxes[0].y2) / 2.;
 
 			wlr_cursor_warp_closest(cursor->cursor, NULL, lx, ly);
 		}
