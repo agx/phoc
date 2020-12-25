@@ -819,17 +819,6 @@ void view_unmap(struct roots_view *view) {
 
 	view_damage_whole(view);
 
-	wl_list_remove(&view->link);
-
-	if (was_visible && view->desktop->maximize && !wl_list_empty(&view->desktop->views)) {
-		// damage the newly activated stack as well since it may have just become visible
-		struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
-		while (top_view) {
-			view_damage_whole(top_view);
-			top_view = top_view->parent;
-		}
-	}
-
 	wl_list_remove(&view->new_subsurface.link);
 
 	struct roots_view_child *child, *tmp;
@@ -841,6 +830,17 @@ void view_unmap(struct roots_view *view) {
 		phoc_output_damage_whole(view->fullscreen_output);
 		view->fullscreen_output->fullscreen_view = NULL;
 		view->fullscreen_output = NULL;
+	}
+
+	wl_list_remove(&view->link);
+
+	if (was_visible && view->desktop->maximize && !wl_list_empty(&view->desktop->views)) {
+		// damage the newly activated stack as well since it may have just become visible
+		struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
+		while (top_view) {
+			view_damage_whole(top_view);
+			top_view = top_view->parent;
+		}
 	}
 
 	view->wlr_surface = NULL;
