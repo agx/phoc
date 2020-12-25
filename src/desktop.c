@@ -256,6 +256,10 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 gboolean
 phoc_desktop_view_is_visible (PhocDesktop *desktop, struct roots_view *view)
 {
+  if (!view->wlr_surface) {
+    return false;
+  }
+
   g_assert_false (wl_list_empty (&desktop->views));
 
   if (wl_list_length (&desktop->outputs) != 1) {
