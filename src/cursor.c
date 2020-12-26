@@ -123,10 +123,11 @@ static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, do
 	}
 
 	struct wlr_output *wlr_output = wlr_output_layout_output_at(desktop->layout, lx, ly);
-	PhocOutput *output = wlr_output->data;
-	if (!output) {
+	if (!wlr_output) {
 		return false;
 	}
+
+	PhocOutput *output = wlr_output->data;
 
 	struct wlr_box *output_box =
 		wlr_output_layout_get_box(desktop->layout, wlr_output);
