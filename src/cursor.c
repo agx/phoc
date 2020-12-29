@@ -333,6 +333,9 @@ static void roots_cursor_press_button(struct roots_cursor *cursor,
 			}
 			roots_seat_begin_resize(seat, view, edges);
 			break;
+		default:
+			/* don't care */
+			break;
 		}
 	} else {
 		if (view && !surface && cursor->pointer_view) {
