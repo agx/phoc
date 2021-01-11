@@ -101,7 +101,7 @@ unit-test-with-xwayland-debian-buster:
   <<: *tags
   stage: test
   image: debian:buster
-  dependencies:
+  needs:
     - build-with-xwayland-debian-buster
   before_script: *before_script_debian_buster
   script:
@@ -186,12 +186,12 @@ package-deb-without-wlroots:arm64:
       - "${L5_WORKING_DIR}"
 
 autopkgtest-debian-buster-package:
-  dependencies:
+  needs:
     - package-deb-with-wlroots
   extends: .l5-autopkgtest-debian-package
 
 lintian-debian-buster-package:
-  dependencies:
+  needs:
     - package-deb-with-wlroots
   extends: .l5-lintian-debian-package
 
