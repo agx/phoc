@@ -101,7 +101,7 @@ static void seat_view_deco_button(struct roots_seat_view *view, double sx,
 	}
 }
 
-static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, double ly, double threshold) {
+static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, double ly, int threshold) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocDesktop *desktop = server->desktop;
 
@@ -156,10 +156,10 @@ static bool roots_handle_shell_reveal(struct wlr_surface *surface, double lx, do
 		}
 	}
 
-	if ((top    && ly <= output_box->y + threshold * output_box->height) ||
-			(bottom && ly >= output_box->y + (1.0 - threshold) * output_box->height - 1) ||
-			(left   && lx <= output_box->x + threshold * output_box->width) ||
-			(right  && lx >= output_box->x + (1.0 - threshold) * output_box->width - 1)) {
+	if ((top    && ly <= output_box->y + threshold) ||
+			(bottom && ly >= output_box->y + output_box->height - 1 - threshold) ||
+			(left   && lx <= output_box->x + threshold) ||
+			(right  && lx >= output_box->x + output_box->width - 1 - threshold)) {
 		if (output->fullscreen_view) {
 			output->force_shell_reveal = true;
 			phoc_output_damage_whole(output);
