@@ -58,6 +58,9 @@ build-with-xwayland-debian-buster:
   artifacts:
     paths:
       - _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
 
 build-with-xwayland-debian-bullseye:
   stage: build
@@ -67,6 +70,9 @@ build-with-xwayland-debian-bullseye:
      BUILD_ARGS: -Dxwayland=enabled
   <<: *tags
   <<: *build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
 
 build-without-xwayland-debian-buster:
   stage: build
@@ -76,6 +82,9 @@ build-without-xwayland-debian-buster:
      BUILD_ARGS: -Dxwayland=disabled
   <<: *tags
   <<: *build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
 
 build-with-xwayland-alpinelinux-edge:
   stage: build
@@ -86,6 +95,9 @@ build-with-xwayland-alpinelinux-edge:
   <<: *tags
   <<: *build
   allow_failure: true
+  except:
+    variables:
+      - $PKG_ONLY == "1"
 
 build-without-xwayland-alpinelinux-edge:
   stage: build
@@ -96,6 +108,9 @@ build-without-xwayland-alpinelinux-edge:
   <<: *tags
   <<: *build
   allow_failure: true
+  except:
+    variables:
+      - $PKG_ONLY == "1"
 
 
 unit-test-with-xwayland-debian-buster:
@@ -113,3 +128,6 @@ unit-test-with-xwayland-debian-buster:
     when: always
     paths:
       - _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
