@@ -1,5 +1,5 @@
 <protocol name="phosh">
-  <interface name="phosh_private" version="5">
+  <interface name="phosh_private" version="6">
     <description summary="Phone shell extensions">
       Private protocol between phosh and the compositor.
     </description>
@@ -48,6 +48,13 @@
         action id.
       </description>
       <arg name="id" type="new_id" interface="phosh_private_keyboard_event"/>
+    </request>
+
+    <request name="get_startup_tracker" since="6">
+      <description summary="request a keyboard event handler">
+	Allows to track application startup.
+      </description>
+      <arg name="id" type="new_id" interface="phosh_private_startup_tracker"/>
     </request>
 
   </interface>
@@ -163,6 +170,49 @@
       <description summary="close the given xdg surface"/>
       <arg name="app_id" type="string" summary="The app_id of the xdg surface"/>
       <arg name="title" type="string" summary="The title of the xdg surface" allow-null="true"/>
+    </request>
+  </interface>
+
+  <!-- application startup tracking -->
+  <interface name="phosh_private_startup_tracker" version="6">
+    <description summary="Interface to track application startup">
+      Allows shells to track application startup.
+    </description>
+
+    <enum name="flag" bitfield="true">
+      <entry name="none" value="0" summary="no flags"/>
+    </enum>
+
+    <enum name="protocol">
+      <entry name="unknown" value="0" summary="unknown protocol"/>
+      <entry name="x11" value="1" summary="x11 startup notification protocol"/>
+      <entry name="gtk_shell" value="2" summary="gtk_shell protocol"/>
+      <entry name="xdg_activation" value="3" summary="xdg_activation protocol"/>
+    </enum>
+
+    <event name="startup_id">
+      <description summary="Report a startup id">
+        This event indicates that the client sent it's startup id.
+        (which implies the app is running).
+      </description>
+      <arg name="startup_id" type="string" summary="The startup_id"/>
+      <arg name="protocol" type="uint" enum="protocol" summary="The protocol"/>
+      <arg name="flags" type="uint" enum="flags" summary="flags"/>
+    </event>
+
+    <event name="launched">
+      <description summary="Report an application launch">
+	This event indicates that the launcher spawned the app.
+      </description>
+      <arg name="startup_id" type="string" summary="The startup_id"/>
+      <arg name="protocol" type="uint" enum="protocol" summary="The protocol"/>
+      <arg name="flags" type="uint" enum="flags" summary="flags"/>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the startup_tracker interface instance">
+	The Client should invoke this when done using the interface.
+      </description>
     </request>
   </interface>
 </protocol>

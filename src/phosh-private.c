@@ -49,10 +49,12 @@ static GParamSpec *props[PROP_LAST_PROP];
 struct _PhocPhoshPrivate {
   GObject parent;
 
+  guint32 version;
   struct wl_resource* resource;
   struct wl_global *global;
   GList *keyboard_events;
   guint last_action_id;
+  GList *startup_trackers;
 
   PhocDesktop *desktop;
 };
@@ -78,11 +80,17 @@ typedef struct {
   struct roots_view *view;
 } PhocPhoshPrivateScreencopyFrame;
 
+typedef struct {
+  struct wl_resource *resource;
+  PhocPhoshPrivate   *phosh;
+} PhocPhoshPrivateStartupTracker;
+
 static PhocPhoshPrivate *phoc_phosh_private_from_resource (struct wl_resource *resource);
 static PhocPhoshPrivateKeyboardEventData *phoc_phosh_private_keyboard_event_from_resource (struct wl_resource *resource);
 static PhocPhoshPrivateScreencopyFrame *phoc_phosh_private_screencopy_frame_from_resource(struct wl_resource *resource);
+static PhocPhoshPrivateStartupTracker *phoc_phosh_private_startup_tracker_from_resource(struct wl_resource *resource);
 
-#define PHOSH_PRIVATE_VERSION 5
+#define PHOSH_PRIVATE_VERSION 6
 
 
 static void
@@ -573,6 +581,70 @@ handle_get_thumbnail (struct wl_client *client,
 
 
 static void
+phoc_phosh_private_startup_tracker_handle_resource_destroy (struct wl_resource *resource)
+{
+  PhocPhoshPrivateStartupTracker *tracker = phoc_phosh_private_startup_tracker_from_resource (resource);
+  PhocPhoshPrivate *phosh;
+
+  if (tracker == NULL)
+    return;
+
+  g_debug ("Destroying startup_tracker %p (res %p)", tracker, tracker->resource);
+  phosh = tracker->phosh;
+  wl_resource_set_user_data (tracker->resource, NULL);
+  phosh->startup_trackers = g_list_remove (phosh->startup_trackers, tracker);
+  g_free (tracker);
+}
+
+
+static void
+phoc_phosh_private_startup_tracker_handle_destroy (struct wl_client   *client,
+                                                   struct wl_resource *resource)
+{
+  wl_resource_destroy (resource);
+}
+
+
+static const struct phosh_private_startup_tracker_interface phoc_phosh_private_startup_tracker_impl = {
+  .destroy = phoc_phosh_private_startup_tracker_handle_destroy
+};
+
+
+static void
+handle_get_startup_tracker (struct wl_client   *client,
+                            struct wl_resource *phosh_private_resource,
+                            uint32_t            id)
+{
+  PhocPhoshPrivateStartupTracker *tracker = g_new0 (PhocPhoshPrivateStartupTracker, 1);
+  PhocPhoshPrivate *phosh_private;
+
+  if (tracker == NULL) {
+    wl_client_post_no_memory (client);
+    return;
+  }
+
+  int version = wl_resource_get_version (phosh_private_resource);
+
+  tracker->resource = wl_resource_create (client, &phosh_private_startup_tracker_interface, version, id);
+  if (tracker->resource == NULL) {
+    g_free (tracker);
+    wl_client_post_no_memory (client);
+    return;
+  }
+
+  phosh_private = phoc_phosh_private_from_resource (phosh_private_resource);
+  phosh_private->startup_trackers = g_list_append (phosh_private->startup_trackers, tracker);
+  tracker->phosh = phosh_private;
+
+  g_debug ("New phosh_private_startup_tracker %p (res %p)", tracker, tracker->resource);
+  wl_resource_set_implementation (tracker->resource,
+                                  &phoc_phosh_private_startup_tracker_impl,
+                                  tracker,
+                                  phoc_phosh_private_startup_tracker_handle_resource_destroy);
+}
+
+
+static void
 phosh_handle_resource_destroy (struct wl_resource *resource)
 {
   PhocPhoshPrivate *phosh = wl_resource_get_user_data (resource);
@@ -586,10 +658,11 @@ phosh_handle_resource_destroy (struct wl_resource *resource)
 
 
 static const struct phosh_private_interface phosh_private_impl = {
-  handle_rotate_display,
-  handle_get_xdg_switcher,
-  handle_get_thumbnail,
-  handle_get_keyboard_event
+  handle_rotate_display,       /* unused */
+  handle_get_xdg_switcher,     /* unused */
+  handle_get_thumbnail,        /* request */
+  handle_get_keyboard_event,   /* interface */
+  handle_get_startup_tracker,  /* interface */
 };
 
 
@@ -613,6 +686,8 @@ phosh_bind (struct wl_client *client, void *data, uint32_t version, uint32_t id)
                                     &phosh_private_impl,
                                     phosh, phosh_handle_resource_destroy);
     phosh->resource = resource;
+    g_debug ("Bound client %d with version %d", id, version);
+    phosh->version = version;
     return;
   }
 
@@ -644,6 +719,15 @@ phoc_phosh_private_keyboard_event_from_resource (struct wl_resource *resource)
 {
   assert (wl_resource_instance_of (resource, &phosh_private_keyboard_event_interface,
                                    &phoc_phosh_private_keyboard_event_impl));
+  return wl_resource_get_user_data (resource);
+}
+
+
+static PhocPhoshPrivateStartupTracker *
+phoc_phosh_private_startup_tracker_from_resource (struct wl_resource *resource)
+{
+  assert (wl_resource_instance_of (resource, &phosh_private_startup_tracker_interface,
+                                   &phoc_phosh_private_startup_tracker_impl));
   return wl_resource_get_user_data (resource);
 }
 
@@ -734,4 +818,47 @@ phoc_phosh_private_forward_keysym (PhocKeyCombo *combo,
   }
 
   return forwarded;
+}
+
+void
+phoc_phosh_private_notify_startup_id (PhocPhoshPrivate                           *self,
+                                      const char                                 *startup_id,
+                                      enum phosh_private_startup_tracker_protocol proto)
+{
+  g_assert (PHOC_IS_PHOSH_PRIVATE (self));
+
+  /* Nobody bound the protocol */
+  if (!self->resource)
+    return;
+
+  if (self->version < 6)
+    return;
+
+  for (GList *l = self->startup_trackers; l; l = l->next) {
+    PhocPhoshPrivateStartupTracker *tracker = (PhocPhoshPrivateStartupTracker *)l->data;
+
+    phosh_private_startup_tracker_send_startup_id (tracker->resource, startup_id, proto, 0);
+  }
+}
+
+
+void
+phoc_phosh_private_notify_launch (PhocPhoshPrivate                           *self,
+                                  const char                                 *startup_id,
+                                  enum phosh_private_startup_tracker_protocol proto)
+{
+  g_assert (PHOC_IS_PHOSH_PRIVATE (self));
+
+  /* Nobody bound the protocol */
+  if (!self->resource)
+    return;
+
+  if (self->version < 6)
+    return;
+
+  for (GList *l = self->startup_trackers; l; l = l->next) {
+    PhocPhoshPrivateStartupTracker *tracker = (PhocPhoshPrivateStartupTracker *)l->data;
+
+    phosh_private_startup_tracker_send_launched (tracker->resource, startup_id, proto, 0);
+  }
 }

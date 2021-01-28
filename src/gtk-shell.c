@@ -11,6 +11,7 @@
 #include <gtk-shell-protocol.h>
 #include "server.h"
 #include "desktop.h"
+#include "phosh-private.h"
 #include "gtk-shell.h"
 
 /**
@@ -150,6 +151,12 @@ handle_get_gtk_surface(struct wl_client *client,
   wl_signal_add(&wlr_surface->events.destroy,
                 &gtk_surface->wlr_surface_handle_destroy);
 
+  /* Send empty configure */
+  struct wl_array states;
+  wl_array_init (&states);
+  gtk_surface1_send_configure (gtk_surface->resource, &states);
+  wl_array_release (&states);
+
   wl_signal_init(&gtk_surface->events.destroy);
 }
 
@@ -158,7 +165,14 @@ handle_set_startup_id(struct wl_client *client,
                       struct wl_resource *resource,
                       const char *startup_id)
 {
-  g_debug ("%s not implemented", __func__);
+  PhocServer *server = phoc_server_get_default ();
+  g_debug ("%s: %s", __func__, startup_id);
+
+  if (startup_id) {
+    phoc_phosh_private_notify_startup_id (server->desktop->phosh,
+                                          startup_id,
+                                          PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
+  }
 }
 
 static void
@@ -174,7 +188,13 @@ handle_notify_launch(struct wl_client *client,
                      struct wl_resource *resource,
                      const char *startup_id)
 {
-  g_debug ("%s not implemented", __func__);
+  PhocServer *server = phoc_server_get_default ();
+
+  g_debug ("%s: %s", __func__, startup_id);
+  if (startup_id)
+    phoc_phosh_private_notify_launch (server->desktop->phosh,
+                                      startup_id,
+                                      PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
 }
 
 static void
