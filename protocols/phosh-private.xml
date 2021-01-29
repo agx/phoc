@@ -9,16 +9,18 @@
              summary="an invalid argument was provided in a request"/>
     </enum>
 
-    <!-- only primary output for now -->
     <request name="rotate_display" since="1">
       <description summary="rotate output">
-        Rotate the output clockwise 0, 90, 180 or 270 degree.
+	This request is unused, ignore. Use wlr-output-management instead.
       </description>
       <arg name="surface" type="object" interface="wl_surface"/>
       <arg name="degree" type="uint"/>
     </request>
 
     <request name="get_xdg_switcher" since="2">
+      <description summary="rotate output">
+	This request is unused, ignore. Use wlr-foreign-toplevel-management instead.
+      </description>
       <arg name="id" type="new_id" interface="phosh_private_xdg_switcher"/>
     </request>
 
@@ -125,13 +127,7 @@
   <!-- application switch/close handling -->
   <interface name="phosh_private_xdg_switcher" version="3">
     <description summary="Interface to list and raise xdg surfaces">
-      The interface is meant to list xdg surfaces (see the xdg-shell
-      stable wayland protocol) and to raise these surfaces to the top
-      of the window stack.
-
-      It's up to the compositor if it only lists surfaces of the
-      xdg-shell stable protocol or also surfaces using unstable versions of
-      the xdg-shell protocol.
+      This interface is unused, ignore. Use wlr-foreign-toplevel-management instead.
     </description>
     <enum name="error">
       <entry name="invalid_argument" value="0"
@@ -139,9 +135,8 @@
     </enum>
 
     <request name="list_xdg_surfaces" since="2">
-      <description summary="Get current xdg surfaces">
-        Request to list xdg shell toplevels.
-      </description>
+      <description summary="Get current xdg surfaces"/>
+
     </request>
 
     <request name="destroy"  type="destructor" since="2">
@@ -149,8 +144,7 @@
     </request>
 
     <request name="raise_xdg_surface" since="2">
-      <description summary="raise the given xdg surface to the top of the stack">
-      </description>
+      <description summary="raise the given xdg surface to the top of the stack"/>
       <arg name="app_id" type="string" summary="The app_id of the xdg surface"/>
       <arg name="title" type="string" summary="The title of the xdg surface" allow-null="true"/>
     </request>
@@ -166,8 +160,7 @@
     </event>
 
     <request name="close_xdg_surface" since="3">
-      <description summary="close the given xdg surface">
-      </description>
+      <description summary="close the given xdg surface"/>
       <arg name="app_id" type="string" summary="The app_id of the xdg surface"/>
       <arg name="title" type="string" summary="The title of the xdg surface" allow-null="true"/>
     </request>
