@@ -1,5 +1,7 @@
 include:
  - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-definitions.yml'
+ - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-amber-jobs.yml'
+ - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-byzantium-jobs.yml'
 
 stages:
  - build
@@ -111,47 +113,3 @@ unit-test-with-xwayland-debian-buster:
     when: always
     paths:
       - _build
-
-package-deb-without-wlroots:
-  <<: *tags
-  stage: package
-  image: debian:buster
-  dependencies: []
-  before_script: *before_script_debian_buster
-  script:
-    - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
-    - dpkg-buildpackage -b -uc -us
-    # Must be dynamically linked against wlroots
-    - ldd debian/phoc/usr/bin/phoc | grep libwlroots
-    - cp -l ../*.deb ../*.changes ../*.buildinfo "${L5_WORKING_DIR}/"
-  artifacts:
-    paths:
-      - "${L5_WORKING_DIR}"
-
-package-deb-without-wlroots:arm64:
-  tags:
-    - librem5:arm64
-  stage: package
-  image: debian:buster
-  dependencies: []
-  before_script: *before_script_debian_buster
-  script:
-    - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
-    - dpkg-buildpackage -b -uc -us
-    # Must be dynamically linked against wlroots
-    - ldd debian/phoc/usr/bin/phoc | grep libwlroots
-    - cp -l ../*.deb ../*.changes ../*.buildinfo "${L5_WORKING_DIR}/"
-  artifacts:
-    paths:
-      - "${L5_WORKING_DIR}"
-
-autopkgtest-debian-buster-package:
-  needs:
-    - package-deb-without-wlroots
-  extends: .l5-autopkgtest-debian-package
-
-lintian-debian-buster-package:
-  needs:
-    - package-deb-without-wlroots
-  extends: .l5-lintian-debian-package
-
