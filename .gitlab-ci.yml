@@ -12,7 +12,6 @@ variables:
   ALPINE_EDGE_DEPS: |
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
-  DEB_BUILD_PROFILES: pkg.phoc.embedwlroots
   XVFB_RUN: xvfb-run -s -noreset
 
 .tags: &tags
@@ -113,29 +112,10 @@ unit-test-with-xwayland-debian-buster:
     paths:
       - _build
 
-package-deb-with-wlroots:
-  <<: *tags
-  stage: package
-  image: debian:buster
-  dependencies: []
-  before_script: *before_script_debian_buster
-  script:
-    - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
-    - git submodule update --init
-    - dpkg-buildpackage -b -uc -us
-    # Must not be dynamically linked against wlroots
-    - ldd debian/phoc/usr/bin/phoc | grep libwlroots && exit 1 || true
-    - cp -l ../*.deb ../*.changes ../*.buildinfo "${L5_WORKING_DIR}/"
-  artifacts:
-    paths:
-      - "${L5_WORKING_DIR}"
-
 package-deb-without-wlroots:
   <<: *tags
   stage: package
   image: debian:buster
-  variables:
-    DEB_BUILD_PROFILES: ""
   dependencies: []
   before_script: *before_script_debian_buster
   script:
@@ -148,31 +128,11 @@ package-deb-without-wlroots:
     paths:
       - "${L5_WORKING_DIR}"
 
-package-deb-with-wlroots:arm64:
-  tags:
-    - librem5:arm64
-  stage: package
-  image: debian:buster
-  dependencies: []
-  before_script: *before_script_debian_buster
-  script:
-    - rm -rf "${L5_WORKING_DIR}"; mkdir -p "${L5_WORKING_DIR}"
-    - git submodule update --init
-    - dpkg-buildpackage -b -uc -us
-    # Must not be dynamically linked against wlroots
-    - ldd debian/phoc/usr/bin/phoc | grep libwlroots && exit 1 || true
-    - cp -l ../*.deb ../*.changes ../*.buildinfo "${L5_WORKING_DIR}/"
-  artifacts:
-    paths:
-      - "${L5_WORKING_DIR}"
-
 package-deb-without-wlroots:arm64:
   tags:
     - librem5:arm64
   stage: package
   image: debian:buster
-  variables:
-    DEB_BUILD_PROFILES: ""
   dependencies: []
   before_script: *before_script_debian_buster
   script:
@@ -187,11 +147,11 @@ package-deb-without-wlroots:arm64:
 
 autopkgtest-debian-buster-package:
   needs:
-    - package-deb-with-wlroots
+    - package-deb-without-wlroots
   extends: .l5-autopkgtest-debian-package
 
 lintian-debian-buster-package:
   needs:
-    - package-deb-with-wlroots
+    - package-deb-without-wlroots
   extends: .l5-lintian-debian-package
 
