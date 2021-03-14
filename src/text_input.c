@@ -209,7 +209,7 @@ static void handle_pending_focused_surface_destroy(struct wl_listener *listener,
 		pending_focused_surface_destroy);
 	struct wlr_surface *surface = data;
 	assert(text_input->pending_focused_surface == surface);
-	text_input->pending_focused_surface = NULL;
+	text_input_clear_pending_focused_surface(text_input);
 }
 
 struct roots_text_input *roots_text_input_create(
