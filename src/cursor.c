@@ -547,6 +547,11 @@ void roots_cursor_handle_touch_up(struct roots_cursor *cursor,
 		return;
 	}
 
+	if (cursor->mode != ROOTS_CURSOR_PASSTHROUGH) {
+		cursor->mode = ROOTS_CURSOR_PASSTHROUGH;
+		roots_cursor_update_focus(cursor);
+	}
+
 	wlr_seat_touch_notify_up(cursor->seat->seat, event->time_msec,
 		event->touch_id);
 }
@@ -633,6 +638,11 @@ void roots_cursor_handle_touch_motion(struct roots_cursor *cursor,
 	if (event->touch_id == cursor->seat->touch_id) {
 		cursor->seat->touch_x = lx;
 		cursor->seat->touch_y = ly;
+
+		if (cursor->mode != ROOTS_CURSOR_PASSTHROUGH) {
+			wlr_cursor_warp(cursor->cursor, NULL, lx, ly);
+			roots_cursor_update_position(cursor, event->time_msec);
+		}
 	}
 }
 
