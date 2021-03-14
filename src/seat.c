@@ -763,6 +763,8 @@ static void roots_seat_handle_destroy(struct wl_listener *listener,
 	// TODO: probably more to be freed here
 	wl_list_remove(&seat->destroy.link);
 
+	roots_input_method_relay_destroy(&seat->im_relay);
+
 	struct roots_seat_view *view, *nview;
 	wl_list_for_each_safe(view, nview, &seat->views, link) {
 		seat_view_destroy(view);

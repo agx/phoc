@@ -304,6 +304,11 @@ void roots_input_method_relay_init(struct roots_seat *seat,
 		&relay->input_method_new);
 }
 
+void roots_input_method_relay_destroy(struct roots_input_method_relay *relay) {
+	wl_list_remove(&relay->text_input_new.link);
+	wl_list_remove(&relay->input_method_new.link);
+}
+
 void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,
 		struct wlr_surface *surface) {
 	struct roots_text_input *text_input;

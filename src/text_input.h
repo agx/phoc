@@ -52,6 +52,8 @@ struct roots_text_input {
 void roots_input_method_relay_init(struct roots_seat *seat,
 	struct roots_input_method_relay *relay);
 
+void roots_input_method_relay_destroy(struct roots_input_method_relay *relay);
+
 // Updates currently focused surface. Surface must belong to the same seat.
 void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,
 	struct wlr_surface *surface);
