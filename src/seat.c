@@ -1696,6 +1696,7 @@ void roots_seat_end_compositor_grab(struct roots_seat *seat) {
 	}
 
 	cursor->mode = ROOTS_CURSOR_PASSTHROUGH;
+	roots_cursor_update_focus(seat->cursor);
 }
 
 struct roots_seat *input_last_active_seat(PhocInput *input) {
