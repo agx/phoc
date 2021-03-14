@@ -485,6 +485,12 @@ void roots_cursor_handle_touch_down(struct roots_cursor *cursor,
 	wlr_cursor_absolute_to_layout_coords(cursor->cursor, event->device,
 		event->x, event->y, &lx, &ly);
 
+	if (seat->touch_id == -1 && cursor->mode == ROOTS_CURSOR_PASSTHROUGH) {
+		seat->touch_id = event->touch_id;
+		seat->touch_x = lx;
+		seat->touch_y = ly;
+	}
+
 	double sx, sy;
 	struct roots_view *view;
 	struct wlr_surface *surface = phoc_desktop_surface_at(
@@ -532,6 +538,11 @@ void roots_cursor_handle_touch_up(struct roots_cursor *cursor,
 		struct wlr_event_touch_up *event) {
 	struct wlr_touch_point *point =
 		wlr_seat_touch_get_point(cursor->seat->seat, event->touch_id);
+
+	if (cursor->seat->touch_id == event->touch_id) {
+		cursor->seat->touch_id = -1;
+	}
+
 	if (!point) {
 		return;
 	}

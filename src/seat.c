@@ -793,6 +793,8 @@ struct roots_seat *roots_seat_create(PhocInput *input, char *name) {
 
 	seat->input = input;
 
+	seat->touch_id = -1;
+
 	seat->seat = wlr_seat_create(server->wl_display, name);
 	if (!seat->seat) {
 		free(seat);
