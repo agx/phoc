@@ -194,7 +194,7 @@ static void roots_passthrough_cursor(struct roots_cursor *cursor,
 		return;
 	}
 
-	if (cursor->cursor_client != client) {
+	if (cursor->cursor_client != client || !client) {
 		roots_seat_maybe_set_cursor (seat, NULL);
 		cursor->cursor_client = client;
 	}
