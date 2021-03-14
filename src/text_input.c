@@ -71,6 +71,7 @@ static void text_input_clear_pending_focused_surface(
 static void text_input_set_pending_focused_surface(
 		struct roots_text_input *text_input, struct wlr_surface *surface) {
 	text_input_clear_pending_focused_surface(text_input);
+	g_assert(surface);
 	text_input->pending_focused_surface = surface;
 	wl_signal_add(&surface->events.destroy,
 		&text_input->pending_focused_surface_destroy);
