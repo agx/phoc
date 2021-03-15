@@ -288,6 +288,9 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 	}
 #else
 	wlr_output_attach_buffer(wlr_output, &surface->buffer->base);
+	if (!wlr_output_test(wlr_output)) {
+		return false;
+	}
 #endif
 
 	wlr_presentation_surface_sampled_on_output(output->desktop->presentation, surface, output->wlr_output);
