@@ -277,6 +277,7 @@ test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unuse
   g_assert_cmpint (test2->grab_status, ==, GRAB_STATUS_FAILED);
 
   test1->grab_status = GRAB_STATUS_UNKNOWN;
+  test2->grab_status = GRAB_STATUS_UNKNOWN;
 
   /* Allowing to bind a already bound key with an additional accelerator is o.k. */
   phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent,
@@ -285,6 +286,7 @@ test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unuse
   wl_display_roundtrip (globals->display);
 
   g_assert_cmpint (test1->grab_status, ==, GRAB_STATUS_OK);
+  g_assert_cmpint (test2->grab_status, ==, GRAB_STATUS_UNKNOWN);
 
   phosh_private_keyboard_event_destroy (test1->kbevent);
   phosh_private_keyboard_event_destroy (test2->kbevent);
