@@ -240,23 +240,22 @@ phoc_test_keyboard_event_new (PhocTestClientGlobals *globals,
   return kbe;
 }
 
+#define RAISE_VOL_KEY "XF86AudioRaiseVolume"
+
 static gboolean
 test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unused)
 {
   PhocTestKeyboardEvent *test1;
   PhocTestKeyboardEvent *test2;
-  gchar *test_accelerators[] = {
-    "XF86AudioLowerVolume",
-    "XF86AudioRaiseVolume",
-    "<SHIFT>XF86AudioLowerVolume",
-    "F9",
-  };
 
   test1 = phoc_test_keyboard_event_new (globals, "test-mediakey-grabbing");
   test2 = phoc_test_keyboard_event_new (globals, "test-invalid-grabbing");
 
-  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent, test_accelerators[0]);
-  phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent, test_accelerators[3]);
+  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent,
+							 "XF86AudioLowerVolume");
+  /* Not allowed to bind this one: */
+  phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent,
+							 "F9");
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
 
@@ -266,8 +265,11 @@ test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unuse
   test1->grab_status = GRAB_STATUS_UNKNOWN;
   test2->grab_status = GRAB_STATUS_UNKNOWN;
 
-  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent, test_accelerators[1]);
-  phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent, test_accelerators[1]);
+  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent,
+							 RAISE_VOL_KEY);
+  /* Can't bind same key twice: */
+  phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent,
+							 RAISE_VOL_KEY);
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
 
@@ -276,7 +278,9 @@ test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unuse
 
   test1->grab_status = GRAB_STATUS_UNKNOWN;
 
-  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent, test_accelerators[2]);
+  /* Allowing to bind a already bound key with an additional accelerator is o.k. */
+  phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent,
+							 "<SHIFT>" RAISE_VOL_KEY);
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
 
