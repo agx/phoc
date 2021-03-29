@@ -288,6 +288,18 @@ test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unuse
   g_assert_cmpint (test1->grab_status, ==, GRAB_STATUS_OK);
   g_assert_cmpint (test2->grab_status, ==, GRAB_STATUS_UNKNOWN);
 
+  test1->grab_status = GRAB_STATUS_UNKNOWN;
+  test2->grab_status = GRAB_STATUS_UNKNOWN;
+
+  /* Binding non existing key must fail */
+  phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent,
+							 "does-not-exist");
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+
+  g_assert_cmpint (test1->grab_status, ==, GRAB_STATUS_UNKNOWN);
+  g_assert_cmpint (test2->grab_status, ==, GRAB_STATUS_FAILED);
+
   phosh_private_keyboard_event_destroy (test1->kbevent);
   phosh_private_keyboard_event_destroy (test2->kbevent);
   return TRUE;

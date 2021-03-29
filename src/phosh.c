@@ -181,6 +181,15 @@ phosh_private_keyboard_event_grab_accelerator_request (struct wl_client   *wl_cl
   if (kbevent == NULL)
     return;
 
+  if (combo == NULL) {
+    g_debug ("Failed to parse accelerator %s", accelerator);
+
+    phosh_private_keyboard_event_send_grab_failed_event (resource,
+                                                         accelerator,
+                                                         PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_INVALID_KEYSYM);
+    return;
+  }
+
   if (phosh_private_accelerator_already_subscribed (combo)) {
     g_debug ("Accelerator %s already subscribed to!", accelerator);
 
