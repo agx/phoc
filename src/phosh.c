@@ -164,6 +164,10 @@ keysym_is_subscribeable (PhocKeyCombo *combo)
   if (combo->keysym >= XKB_KEY_XF86MonBrightnessUp && combo->keysym <= XKB_KEY_XF86RotationLockToggle)
     return true;
 
+  /* misc functions */
+  if (combo->keysym >= XKB_KEY_Select && combo->keysym <= XKB_KEY_Num_Lock)
+    return true;
+
   return false;
 }
 
