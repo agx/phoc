@@ -943,7 +943,7 @@ seat_update_capabilities (PhocSeat *seat)
   if (seat->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
-  if (seat->pointers != NULL || seat->tablets != NULL) {
+  if (seat->pointers != NULL) {
     caps |= WL_SEAT_CAPABILITY_POINTER;
   }
   if (seat->touch != NULL) {
