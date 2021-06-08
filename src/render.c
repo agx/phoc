@@ -36,7 +36,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#define TOUCH_POINT_RADIUS 30
+#define TOUCH_POINT_SIZE 20
 #define TOUCH_POINT_BORDER 0.1
 
 #define COLOR_BLACK                {0.0f, 0.0f, 0.0f, 1.0f}
@@ -411,13 +411,13 @@ color_hsv_to_rgb (float* color)
 }
 
 static struct wlr_box
-wlr_box_from_touch_point (struct touch_point_data *touch_point, int radius)
+wlr_box_from_touch_point (struct touch_point_data *touch_point, int width, int height)
 {
   return (struct wlr_box) {
-    .x = touch_point->x - radius / 2.0,
-    .y = touch_point->y - radius / 2.0,
-    .width = radius,
-    .height = radius
+    .x = touch_point->x - width / 2.0,
+    .y = touch_point->y - height / 2.0,
+    .width = width,
+    .height = height
   };
 }
 
@@ -429,16 +429,23 @@ render_touch_point_cb (gpointer data, gpointer user_data)
   PhocOutput *output = user_data;
   struct wlr_output *wlr_output = output->wlr_output;
 
-  struct wlr_box point_box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * wlr_output->scale);
+  int size = TOUCH_POINT_SIZE * wlr_output->scale;
+  struct wlr_box point_box = wlr_box_from_touch_point (touch_point, size, size);
 
   struct wlr_renderer *renderer = wlr_backend_get_renderer (wlr_output->backend);
 
   float color[4] = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
   color_hsv_to_rgb (color);
-  wlr_render_ellipse (renderer, &point_box, color, wlr_output->transform_matrix);
+  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
 
-  point_box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale);
-  wlr_render_ellipse(renderer, &point_box, (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
+  size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
+  point_box = wlr_box_from_touch_point (touch_point, size, size);
+  wlr_render_rect (renderer, &point_box, (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
+
+  point_box = wlr_box_from_touch_point (touch_point, 8 * wlr_output->scale, 2 * wlr_output->scale);
+  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
+  point_box = wlr_box_from_touch_point (touch_point, 2 * wlr_output->scale, 8 * wlr_output->scale);
+  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
 }
 
 static void
@@ -459,7 +466,8 @@ damage_touch_point_cb (gpointer data, gpointer user_data)
   PhocOutput *output = user_data;
   struct wlr_output *wlr_output = output->wlr_output;
 
-  struct wlr_box box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * wlr_output->scale);
+  int size = TOUCH_POINT_SIZE * wlr_output->scale;
+  struct wlr_box box = wlr_box_from_touch_point (touch_point, size, size);
   pixman_region32_t region;
   pixman_region32_init_rect(&region, box.x, box.y, box.width, box.height);
   wlr_output_damage_add(output->damage, &region);
