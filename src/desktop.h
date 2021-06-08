@@ -10,7 +10,6 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_gtk_primary_selection.h>
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_input_method_v2.h>
@@ -21,6 +20,7 @@
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_pointer_gestures_v1.h>
 #include <wlr/types/wlr_presentation_time.h>
+#include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/types/wlr_text_input_v3.h>
@@ -60,7 +60,7 @@ struct _PhocDesktop {
 	struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;
 	struct wlr_server_decoration_manager *server_decoration_manager;
 	struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
-	struct wlr_gtk_primary_selection_device_manager *primary_selection_device_manager;
+	struct wlr_primary_selection_v1_device_manager *primary_selection_device_manager;
 	struct wlr_idle *idle;
 	struct wlr_input_inhibit_manager *input_inhibit;
 	struct wlr_layer_shell_v1 *layer_shell;
