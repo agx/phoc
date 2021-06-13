@@ -22,6 +22,7 @@
 #include <wlr/version.h>
 #include "cursor.h"
 #include "keyboard.h"
+#include "pointer.h"
 #include "seat.h"
 #include "text_input.h"
 #include "touch.h"
@@ -484,7 +485,7 @@ void roots_seat_configure_cursor(struct roots_seat *seat) {
 	PhocDesktop *desktop = server->desktop;
 	struct wlr_cursor *cursor = seat->cursor->cursor;
 
-	struct roots_pointer *pointer;
+	PhocPointer *pointer;
 	PhocTouch *touch;
 	struct roots_tablet *tablet;
 	PhocOutput *output;
@@ -877,29 +878,21 @@ static void seat_add_keyboard(struct roots_seat *seat,
 }
 
 static void handle_pointer_destroy(struct wl_listener *listener, void *data) {
-	struct roots_pointer *pointer =
-		wl_container_of(listener, pointer, device_destroy);
+	PhocPointer *pointer = wl_container_of(listener, pointer, device_destroy);
 	struct roots_seat *seat = pointer->seat;
 
 	wl_list_remove(&pointer->link);
 	wlr_cursor_detach_input_device(seat->cursor->cursor, pointer->device);
 	wl_list_remove(&pointer->device_destroy.link);
-	free(pointer);
+	g_object_unref (pointer);
 
 	seat_update_capabilities(seat);
 }
 
 static void seat_add_pointer(struct roots_seat *seat,
 		struct wlr_input_device *device) {
-	struct roots_pointer *pointer = calloc(1, sizeof(struct roots_pointer));
-	if (!pointer) {
-		wlr_log(WLR_ERROR, "could not allocate pointer for seat");
-		return;
-	}
+	PhocPointer *pointer = phoc_pointer_new (device, seat);
 
-	device->data = pointer;
-	pointer->device = device;
-	pointer->seat = seat;
 	wl_list_insert(&seat->pointers, &pointer->link);
 
 	pointer->device_destroy.notify = handle_pointer_destroy;

@@ -10,6 +10,7 @@ sources = [
   'layer_shell.c',
   'output.c',
   'phosh.c',
+  'pointer.c',
   'render.c',
   'seat.c',
   'server.c',
