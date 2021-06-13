@@ -29,13 +29,6 @@ struct roots_output_config {
 	struct wl_list modes;
 };
 
-struct roots_device_config {
-	char *name;
-	char *seat;
-	bool tap_enabled;
-	struct wl_list link;
-};
-
 struct roots_cursor_config {
 	char *seat;
 	char *theme;
@@ -58,7 +51,6 @@ struct roots_config {
 	PhocKeybindings *keybindings;
 
 	struct wl_list outputs;
-	struct wl_list devices;
 	struct wl_list cursors;
 	struct wl_list switches;
 
@@ -81,13 +73,6 @@ void roots_config_destroy(struct roots_config *config);
  */
 struct roots_output_config *roots_config_get_output(struct roots_config *config,
 	struct wlr_output *output);
-
-/**
- * Get configuration for the device. If the device is not configured, returns
- * NULL.
- */
-struct roots_device_config *roots_config_get_device(struct roots_config *config,
-	struct wlr_input_device *device);
 
 /**
  * Get configuration for the keyboard. If the keyboard is not configured,

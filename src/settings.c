@@ -238,40 +238,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 		config_handle_cursor(config, ROOTS_CONFIG_DEFAULT_SEAT_NAME, name,
 			value);
 	} else if (strncmp(device_prefix, section, strlen(device_prefix)) == 0) {
-		const char *device_name = section + strlen(device_prefix);
-
-		struct roots_device_config *dc;
-		bool found = false;
-		wl_list_for_each(dc, &config->devices, link) {
-			if (strcmp(dc->name, device_name) == 0) {
-				found = true;
-				break;
-			}
-		}
-
-		if (!found) {
-			dc = calloc(1, sizeof(struct roots_device_config));
-			dc->name = strdup(device_name);
-			dc->seat = strdup(ROOTS_CONFIG_DEFAULT_SEAT_NAME);
-			wl_list_insert(&config->devices, &dc->link);
-		}
-
-		if (strcmp(name, "seat") == 0) {
-			free(dc->seat);
-			dc->seat = strdup(value);
-		} else if (strcmp(name, "tap_enabled") == 0) {
-			if (strcasecmp(value, "true") == 0) {
-				dc->tap_enabled = true;
-			} else if (strcasecmp(value, "false") == 0) {
-				dc->tap_enabled = false;
-			} else {
-				wlr_log(WLR_ERROR,
-					"got unknown tap_enabled value: %s",
-					value);
-			}
-		} else {
-			wlr_log(WLR_ERROR, "got unknown device config: %s", name);
-		}
+		g_warning ("Found unused 'device:' config section. Please remove");
 	} else if (strncmp(switch_prefix, section, strlen(switch_prefix)) == 0) {
 		const char *switch_name = section + strlen(switch_prefix);
 		add_switch_config(&config->switches, switch_name, name, value);
@@ -291,7 +258,6 @@ struct roots_config *roots_config_create(const char *config_path) {
 	config->xwayland = true;
 	config->xwayland_lazy = true;
 	wl_list_init(&config->outputs);
-	wl_list_init(&config->devices);
 	wl_list_init(&config->cursors);
 	wl_list_init(&config->switches);
 
@@ -341,13 +307,6 @@ void roots_config_destroy(struct roots_config *config) {
 		free(oc);
 	}
 
-	struct roots_device_config *dc, *dtmp = NULL;
-	wl_list_for_each_safe(dc, dtmp, &config->devices, link) {
-		free(dc->name);
-		free(dc->seat);
-		free(dc);
-	}
-
 	struct roots_cursor_config *cc, *ctmp = NULL;
 	wl_list_for_each_safe(cc, ctmp, &config->cursors, link) {
 		free(cc->seat);
@@ -373,18 +332,6 @@ struct roots_output_config *roots_config_get_output(struct roots_config *config,
 		if (strcmp(oc->name, output->name) == 0 ||
 				strcmp(oc->name, name) == 0) {
 			return oc;
-		}
-	}
-
-	return NULL;
-}
-
-struct roots_device_config *roots_config_get_device(struct roots_config *config,
-		struct wlr_input_device *device) {
-	struct roots_device_config *d_config;
-	wl_list_for_each(d_config, &config->devices, link) {
-		if (strcmp(d_config->name, device->name) == 0) {
-			return d_config;
 		}
 	}
 

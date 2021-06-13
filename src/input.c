@@ -108,13 +108,6 @@ handle_new_input (struct wl_listener *listener, void *data)
   PhocInput *input = wl_container_of (listener, input, new_input);
 
   char *seat_name = ROOTS_CONFIG_DEFAULT_SEAT_NAME;
-  struct roots_device_config *dc =
-    roots_config_get_device (input->config, device);
-
-  if (dc) {
-    seat_name = dc->seat;
-  }
-
   struct roots_seat *seat = phoc_input_get_seat (input, seat_name);
 
   if (!seat) {
@@ -127,17 +120,6 @@ handle_new_input (struct wl_listener *listener, void *data)
            phoc_input_get_device_type (device->type), seat_name);
 
   roots_seat_add_device (seat, device);
-
-  if (dc && wlr_input_device_is_libinput (device)) {
-    struct libinput_device *libinput_dev =
-      wlr_libinput_get_device_handle (device);
-
-    g_debug ("input has config, tap_enabled: %d\n", dc->tap_enabled);
-    if (dc->tap_enabled) {
-      libinput_device_config_tap_set_enabled (libinput_dev,
-                                              LIBINPUT_CONFIG_TAP_ENABLED);
-    }
-  }
 }
 
 static void
