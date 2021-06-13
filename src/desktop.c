@@ -546,16 +546,6 @@ phoc_desktop_constructed (GObject *object)
 #ifdef PHOC_XWAYLAND
   const char *cursor_default = ROOTS_XCURSOR_DEFAULT;
 #endif
-  struct roots_cursor_config *cc =
-    roots_config_get_cursor(config, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
-  if (cc != NULL) {
-    cursor_theme = cc->theme;
-#ifdef PHOC_XWAYLAND
-    if (cc->default_image != NULL) {
-      cursor_default = cc->default_image;
-    }
-#endif
-  }
 
   char cursor_size_fmt[16];
   snprintf(cursor_size_fmt, sizeof(cursor_size_fmt),

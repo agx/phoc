@@ -29,13 +29,6 @@ struct roots_output_config {
 	struct wl_list modes;
 };
 
-struct roots_cursor_config {
-	char *seat;
-	char *theme;
-	char *default_image;
-	struct wl_list link;
-};
-
 struct roots_switch_config {
 	char *name;
 	enum wlr_switch_type switch_type;
@@ -51,7 +44,6 @@ struct roots_config {
 	PhocKeybindings *keybindings;
 
 	struct wl_list outputs;
-	struct wl_list cursors;
 	struct wl_list switches;
 
 	char *config_path;
