@@ -94,7 +94,7 @@ phoc_input_constructed (GObject *object)
   PhocInput *self = PHOC_INPUT (object);
   PhocServer *server = phoc_server_get_default ();
 
-  g_debug ("Initializing roots input");
+  g_debug ("Initializing phoc input");
   assert (server->desktop);
 
   wl_list_init (&self->seats);
