@@ -1209,21 +1209,12 @@ void roots_seat_add_device(struct roots_seat *seat,
 void roots_seat_configure_xcursor(struct roots_seat *seat) {
 	PhocServer *server = phoc_server_get_default ();
 	const char *cursor_theme = NULL;
-	struct roots_cursor_config *cc =
-		roots_config_get_cursor(seat->input->config, seat->seat->name);
-	if (cc != NULL) {
-		cursor_theme = cc->theme;
-		if (cc->default_image != NULL) {
-			seat->cursor->default_xcursor = cc->default_image;
-		}
-	}
 
 	if (!seat->cursor->xcursor_manager) {
 		seat->cursor->xcursor_manager =
 			wlr_xcursor_manager_create(cursor_theme, ROOTS_XCURSOR_SIZE);
 		if (seat->cursor->xcursor_manager == NULL) {
-			wlr_log(WLR_ERROR, "Cannot create XCursor manager for theme %s",
-					cursor_theme);
+			wlr_log(WLR_ERROR, "Cannot create XCursor manager for theme");
 			return;
 		}
 	}

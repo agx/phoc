@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <wayland-server-core.h>
-#include <wlr/backend/libinput.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/util/log.h>
@@ -20,13 +19,6 @@
 #include "seat.h"
 
 G_DEFINE_TYPE (PhocInput, phoc_input, G_TYPE_OBJECT);
-
-enum {
-  PROP_0,
-  PROP_CONFIG,
-  PROP_LAST_PROP,
-};
-static GParamSpec *props[PROP_LAST_PROP];
 
 const char *
 phoc_input_get_device_type (enum wlr_input_device_type type)
@@ -46,43 +38,6 @@ phoc_input_get_device_type (enum wlr_input_device_type type)
     return "tablet pad";
   default:
     return NULL;
-  }
-}
-
-static void
-phoc_input_set_property (GObject      *object,
-                         guint         property_id,
-                         const GValue *value,
-                         GParamSpec   *pspec)
-{
-  PhocInput *self = PHOC_INPUT (object);
-
-  switch (property_id) {
-  case PROP_CONFIG:
-    self->config = g_value_get_pointer (value);
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_CONFIG]);
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
-  }
-}
-
-static void
-phoc_input_get_property (GObject    *object,
-                         guint       property_id,
-                         GValue     *value,
-                         GParamSpec *pspec)
-{
-  PhocInput *self = PHOC_INPUT (object);
-
-  switch (property_id) {
-  case PROP_CONFIG:
-    g_value_set_pointer (value, self->config);
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
   }
 }
 
@@ -130,9 +85,7 @@ phoc_input_init (PhocInput *self)
 PhocInput *
 phoc_input_new (struct roots_config *config)
 {
-  return g_object_new (PHOC_TYPE_INPUT,
-                       "config", config,
-                       NULL);
+  return g_object_new (PHOC_TYPE_INPUT, NULL);
 }
 
 static void
@@ -163,36 +116,12 @@ phoc_input_finalize (GObject *object)
 }
 
 static void
-phoc_input_dispose (GObject *object)
-{
-  PhocInput *self = PHOC_INPUT (object);
-
-  g_clear_object (&self->config);
-
-  G_OBJECT_CLASS (phoc_input_parent_class)->dispose (object);
-}
-
-static void
 phoc_input_class_init (PhocInputClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
 
-  object_class->set_property = phoc_input_set_property;
-  object_class->get_property = phoc_input_get_property;
-
   object_class->constructed = phoc_input_constructed;
-  object_class->dispose = phoc_input_dispose;
   object_class->finalize = phoc_input_finalize;
-
-  props[PROP_CONFIG] =
-    g_param_spec_pointer (
-      "config",
-      "Config",
-      "The config object",
-      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
-  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
-
 }
 
 struct roots_seat *
