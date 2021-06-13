@@ -7,13 +7,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <wayland-server-core.h>
-#include <wlr/config.h>
-#include <wlr/types/wlr_cursor.h>
-#include <wlr/util/log.h>
-#include <wlr/xcursor.h>
-#ifdef PHOC_XWAYLAND
-#include <wlr/xwayland.h>
-#endif
 #include "input.h"
 #include "keyboard.h"
 #include "seat.h"
