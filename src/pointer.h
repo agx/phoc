@@ -19,7 +19,10 @@ struct _PhocPointer {
   struct wl_list           link;
 
   /* private */
-  struct roots_seat *seat;
+  GSettings               *input_settings;
+  struct roots_seat       *seat;
+  gboolean                 touchpad;
+  GSettings               *touchpad_settings;
 };
 
 PhocPointer *phoc_pointer_new (struct wlr_input_device *device,

@@ -6,6 +6,7 @@
 #include "seat.h"
 
 #include <glib.h>
+#include <wlr/types/wlr_input_device.h>
 
 enum {
   PROP_0,
@@ -16,6 +17,24 @@ enum {
 static GParamSpec *props[PROP_LAST_PROP];
 
 G_DEFINE_TYPE (PhocPointer, phoc_pointer, G_TYPE_OBJECT);
+
+
+static void
+check_touchpad (PhocPointer *self)
+{
+  struct libinput_device *ldev;
+
+  if (!wlr_input_device_is_libinput (self->device))
+    return;
+
+  ldev = wlr_libinput_get_device_handle(self->device);
+  if (libinput_device_config_tap_get_finger_count (ldev) == 0)
+    return;
+
+  g_debug ("%s is a touchpad device", self->device->name);
+  self->touchpad = TRUE;
+}
+
 
 static void
 phoc_pointer_set_property (GObject      *object,
@@ -29,6 +48,7 @@ phoc_pointer_set_property (GObject      *object,
   case PROP_DEVICE:
     self->device = g_value_get_pointer (value);
     self->device->data = self;
+    check_touchpad (self);
     g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DEVICE]);
     break;
   case PROP_SEAT:
@@ -65,12 +85,114 @@ phoc_pointer_get_property (GObject    *object,
 
 
 static void
+on_touchpad_settings_changed (PhocPointer *self,
+			      const gchar *key,
+			      GSettings   *settings)
+{
+  struct libinput_device *ldev;
+  gboolean enabled;
+  gdouble speed;
+  enum libinput_config_scroll_method current, method;
+
+  g_debug ("Setting changed, reloading touchpad settings");
+
+  g_assert (PHOC_IS_POINTER (self));
+  g_assert (G_IS_SETTINGS (settings));
+
+  if (!wlr_input_device_is_libinput (self->device))
+    return;
+
+  ldev = wlr_libinput_get_device_handle(self->device);
+
+  if (libinput_device_config_scroll_has_natural_scroll (ldev)) {
+    enabled = g_settings_get_boolean (settings, "natural-scroll");
+    libinput_device_config_scroll_set_natural_scroll_enabled (ldev, enabled);
+  }
+
+  enabled = g_settings_get_boolean (settings, "tap-to-click");
+  libinput_device_config_tap_set_enabled (ldev, enabled ?
+					  LIBINPUT_CONFIG_TAP_ENABLED :
+					  LIBINPUT_CONFIG_TAP_DISABLED);
+
+  enabled = g_settings_get_boolean (settings, "tap-and-drag");
+  libinput_device_config_tap_set_drag_enabled (ldev,
+					       enabled ?
+					       LIBINPUT_CONFIG_DRAG_ENABLED :
+					       LIBINPUT_CONFIG_DRAG_DISABLED);
+
+  enabled = g_settings_get_boolean (settings, "tap-and-drag-lock");
+  libinput_device_config_tap_set_drag_lock_enabled (ldev,
+						    enabled ?
+						    LIBINPUT_CONFIG_DRAG_LOCK_ENABLED :
+						    LIBINPUT_CONFIG_DRAG_LOCK_DISABLED);
+
+  enabled = g_settings_get_boolean (settings, "disable-while-typing");
+  libinput_device_config_dwt_set_enabled (ldev,
+					  enabled ?
+					  LIBINPUT_CONFIG_DWT_ENABLED :
+					  LIBINPUT_CONFIG_DWT_DISABLED);
+
+  if (libinput_device_config_middle_emulation_is_available (ldev)) {
+    enabled = g_settings_get_boolean (settings, "middle-click-emulation");
+    libinput_device_config_middle_emulation_set_enabled (ldev, enabled);
+  }
+
+  current = libinput_device_config_scroll_get_method (ldev);
+  current &= ~(LIBINPUT_CONFIG_SCROLL_EDGE | LIBINPUT_CONFIG_SCROLL_2FG);
+  enabled = g_settings_get_boolean (settings, "edge-scrolling-enabled");
+  method = enabled ? LIBINPUT_CONFIG_SCROLL_EDGE : LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
+  current |= method;
+  enabled = g_settings_get_boolean (settings, "two-finger-scrolling-enabled");
+  method = enabled ? LIBINPUT_CONFIG_SCROLL_2FG : LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
+  current |= method;
+  libinput_device_config_scroll_set_method (ldev, current | method);
+
+  speed = g_settings_get_double (settings, "speed");
+  libinput_device_config_accel_set_speed (ldev,
+                                          CLAMP (speed, -1, 1));
+}
+
+
+static void
+phoc_pointer_constructed (GObject *object)
+{
+  PhocPointer *self = PHOC_POINTER (object);
+
+  G_OBJECT_CLASS (phoc_pointer_parent_class)->constructed (object);
+
+  if (self->touchpad) {
+    self->touchpad_settings = g_settings_new ("org.gnome.desktop.peripherals.touchpad");
+
+    g_signal_connect_swapped (self->touchpad_settings,
+			      "changed",
+			      G_CALLBACK (on_touchpad_settings_changed),
+			      self);
+    on_touchpad_settings_changed (self, NULL, self->touchpad_settings);
+  }
+}
+
+
+static void
+phoc_pointer_dispose(GObject *object)
+{
+  PhocPointer *self = PHOC_POINTER (object);
+
+  g_clear_object (&self->touchpad_settings);
+
+  G_OBJECT_CLASS (phoc_pointer_parent_class)->dispose (object);
+}
+
+
+static void
 phoc_pointer_class_init (PhocPointerClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
 
   object_class->set_property = phoc_pointer_set_property;
   object_class->get_property = phoc_pointer_get_property;
+
+  object_class->constructed = phoc_pointer_constructed;
+  object_class->dispose = phoc_pointer_dispose;
 
   props[PROP_DEVICE] =
     g_param_spec_pointer ("device",
