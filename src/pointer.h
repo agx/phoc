@@ -23,6 +23,7 @@ struct _PhocPointer {
   struct roots_seat       *seat;
   gboolean                 touchpad;
   GSettings               *touchpad_settings;
+  GSettings               *mouse_settings;
 };
 
 PhocPointer *phoc_pointer_new (struct wlr_input_device *device,

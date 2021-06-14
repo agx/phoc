@@ -6,7 +6,9 @@
 #include "seat.h"
 
 #include <glib.h>
+#include <gdesktop-enums.h>
 #include <wlr/types/wlr_input_device.h>
+#include <wlr/backend/libinput.h>
 
 enum {
   PROP_0,
@@ -86,19 +88,20 @@ phoc_pointer_get_property (GObject    *object,
 
 static void
 on_touchpad_settings_changed (PhocPointer *self,
-			      const gchar *key,
-			      GSettings   *settings)
+			      const gchar *key)
 {
   struct libinput_device *ldev;
   gboolean enabled;
   gdouble speed;
   enum libinput_config_scroll_method current, method;
+  GDesktopTouchpadHandedness handedness;
+  GSettings *settings;
 
   g_debug ("Setting changed, reloading touchpad settings");
 
   g_assert (PHOC_IS_POINTER (self));
-  g_assert (G_IS_SETTINGS (settings));
 
+  settings = self->touchpad_settings;
   if (!wlr_input_device_is_libinput (self->device))
     return;
 
@@ -150,6 +153,21 @@ on_touchpad_settings_changed (PhocPointer *self,
   speed = g_settings_get_double (settings, "speed");
   libinput_device_config_accel_set_speed (ldev,
                                           CLAMP (speed, -1, 1));
+
+  handedness = g_settings_get_enum (self->touchpad_settings, "left-handed");
+  switch (handedness) {
+  case G_DESKTOP_TOUCHPAD_HANDEDNESS_RIGHT:
+    enabled = FALSE;
+    break;
+  case G_DESKTOP_TOUCHPAD_HANDEDNESS_LEFT:
+    enabled = TRUE;
+    break;
+  case G_DESKTOP_TOUCHPAD_HANDEDNESS_MOUSE:
+    enabled = g_settings_get_boolean (self->mouse_settings, "left-handed");
+    break;
+  default:
+    g_assert_not_reached ();
+  }
 }
 
 
@@ -160,6 +178,7 @@ phoc_pointer_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_pointer_parent_class)->constructed (object);
 
+  self->mouse_settings = g_settings_new ("org.gnome.desktop.peripherals.mouse");
   if (self->touchpad) {
     self->touchpad_settings = g_settings_new ("org.gnome.desktop.peripherals.touchpad");
 
@@ -167,7 +186,12 @@ phoc_pointer_constructed (GObject *object)
 			      "changed",
 			      G_CALLBACK (on_touchpad_settings_changed),
 			      self);
-    on_touchpad_settings_changed (self, NULL, self->touchpad_settings);
+    /* "left-handed" is read from mouse settings */
+    g_signal_connect_swapped (self->mouse_settings,
+			      "changed::left-handed",
+			      G_CALLBACK (on_touchpad_settings_changed),
+			      self);
+    on_touchpad_settings_changed (self, NULL);
   }
 }
 
@@ -178,6 +202,7 @@ phoc_pointer_dispose(GObject *object)
   PhocPointer *self = PHOC_POINTER (object);
 
   g_clear_object (&self->touchpad_settings);
+  g_clear_object (&self->mouse_settings);
 
   G_OBJECT_CLASS (phoc_pointer_parent_class)->dispose (object);
 }
