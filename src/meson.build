@@ -29,6 +29,7 @@ phoc_deps = [
   gio,
   glesv2,
   gnome_desktop,
+  gsettings_desktop_schemas_dep,
   math,
   pixman,
   wayland_server,
