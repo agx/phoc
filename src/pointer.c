@@ -87,6 +87,45 @@ phoc_pointer_get_property (GObject    *object,
 
 
 static void
+on_mouse_settings_changed (PhocPointer *self,
+			   const gchar *key,
+			   GSettings   *settings)
+{
+  struct libinput_device *ldev;
+  gboolean enabled;
+  gdouble speed;
+
+  g_debug ("Setting changed, reloading mouse settings");
+
+  g_assert (PHOC_IS_POINTER (self));
+  g_assert (G_IS_SETTINGS (settings));
+
+  if (!wlr_input_device_is_libinput (self->device))
+    return;
+
+  ldev = wlr_libinput_get_device_handle(self->device);
+  if (libinput_device_config_scroll_has_natural_scroll (ldev)) {
+    enabled = g_settings_get_boolean (settings, "natural-scroll");
+    libinput_device_config_scroll_set_natural_scroll_enabled (ldev, enabled);
+  }
+
+  if (libinput_device_config_middle_emulation_is_available (ldev)) {
+    enabled = g_settings_get_boolean (settings, "middle-click-emulation");
+    libinput_device_config_middle_emulation_set_enabled (ldev, enabled);
+  }
+
+  speed = g_settings_get_double (settings, "speed");
+  libinput_device_config_accel_set_speed (ldev,
+                                          CLAMP (speed, -1, 1));
+
+  if (libinput_device_config_left_handed_is_available (ldev)) {
+    enabled = g_settings_get_boolean (self->mouse_settings, "left-handed");
+    libinput_device_config_left_handed_set (ldev, enabled);
+  }
+}
+
+
+static void
 on_touchpad_settings_changed (PhocPointer *self,
 			      const gchar *key)
 {
@@ -168,6 +207,8 @@ on_touchpad_settings_changed (PhocPointer *self,
   default:
     g_assert_not_reached ();
   }
+  if (libinput_device_config_left_handed_is_available (ldev))
+    libinput_device_config_left_handed_set (ldev, enabled);
 }
 
 
@@ -192,6 +233,12 @@ phoc_pointer_constructed (GObject *object)
 			      G_CALLBACK (on_touchpad_settings_changed),
 			      self);
     on_touchpad_settings_changed (self, NULL);
+  } else {
+    g_signal_connect_swapped (self->mouse_settings,
+			      "changed",
+			      G_CALLBACK (on_mouse_settings_changed),
+			      self);
+    on_mouse_settings_changed (self, NULL, self->mouse_settings);
   }
 }
 
