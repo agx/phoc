@@ -29,14 +29,6 @@ struct roots_output_config {
 	struct wl_list modes;
 };
 
-struct roots_switch_config {
-	char *name;
-	enum wlr_switch_type switch_type;
-	enum wlr_switch_state switch_state;
-	char *command;
-	struct wl_list link;
-};
-
 struct roots_config {
 	bool xwayland;
 	bool xwayland_lazy;
@@ -44,7 +36,6 @@ struct roots_config {
 	PhocKeybindings *keybindings;
 
 	struct wl_list outputs;
-	struct wl_list switches;
 
 	char *config_path;
 };

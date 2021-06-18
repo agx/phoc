@@ -65,37 +65,6 @@ static bool parse_modeline(const char *s, drmModeModeInfo *mode) {
 	return true;
 }
 
-static void add_switch_config(struct wl_list *switches, const char *switch_name,
-		const char *action, const char *command) {
-	struct roots_switch_config *sc =
-		calloc(1, sizeof(struct roots_switch_config));
-
-	if (strcmp(switch_name, "tablet") == 0) {
-		sc->switch_type = WLR_SWITCH_TYPE_TABLET_MODE;
-	} else if (strcmp(switch_name, "lid") == 0) {
-		sc->switch_type = WLR_SWITCH_TYPE_LID;
-	} else {
-		sc->switch_type = -1;
-		sc->name = strdup(switch_name);
-	}
-
-	if (strcmp(action, "on") == 0) {
-		sc->switch_state = WLR_SWITCH_STATE_ON;
-	} else if (strcmp(action, "off") == 0) {
-		sc->switch_state = WLR_SWITCH_STATE_OFF;
-	} else if (strcmp(action, "toggle") == 0) {
-		sc->switch_state = WLR_SWITCH_STATE_TOGGLE;
-	} else {
-		wlr_log(WLR_ERROR, "Invalid switch action %s for switch %s:%s",
-			action, switch_name, action);
-		free(sc);
-		return;
-	}
-
-	sc->command = strdup(command);
-	wl_list_insert(switches, &sc->link);
-}
-
 static const char *output_prefix = "output:";
 static const char *device_prefix = "device:";
 static const char *cursor_prefix = "cursor:";
@@ -210,8 +179,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 	} else if (strncmp(device_prefix, section, strlen(device_prefix)) == 0) {
 		g_warning ("Found unused 'device:' config section. Please remove");
 	} else if (strncmp(switch_prefix, section, strlen(switch_prefix)) == 0) {
-		const char *switch_name = section + strlen(switch_prefix);
-		add_switch_config(&config->switches, switch_name, name, value);
+		g_warning ("Found unused 'switch:' config section. Please remove");
 	} else {
 		wlr_log(WLR_ERROR, "got unknown config section: %s", section);
 	}
@@ -228,7 +196,6 @@ struct roots_config *roots_config_create(const char *config_path) {
 	config->xwayland = true;
 	config->xwayland_lazy = true;
 	wl_list_init(&config->outputs);
-	wl_list_init(&config->switches);
 
 	config->config_path = g_strdup(config_path);
 
