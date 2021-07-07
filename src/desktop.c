@@ -15,7 +15,6 @@
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_gtk_primary_selection.h>
-#include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -610,7 +609,6 @@ phoc_desktop_constructed (GObject *object)
   wlr_server_decoration_manager_set_default_mode(self->server_decoration_manager,
 						 WLR_SERVER_DECORATION_MANAGER_MODE_CLIENT);
   self->idle = wlr_idle_create(server->wl_display);
-  self->idle_inhibit = wlr_idle_inhibit_v1_create(server->wl_display);
   self->primary_selection_device_manager =
     wlr_gtk_primary_selection_device_manager_create(server->wl_display);
   self->input_inhibit =
