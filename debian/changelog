@@ -1,3 +1,21 @@
+phoc (0.8.0) byzantium; urgency=medium
+
+  [ Guido Günther ]
+  * desktop: Don't create idle-inhibit
+  * settings: Drop device configuration from config file
+  * input: Drop references to config file
+  * input: s/roots/phoc/
+  * settings: Drop cursor handling
+  * Make pointers proper GObjects
+  * input: Remove unused headers
+  * pointer: Handle some touchpad configuration (Closes: #70)
+  * build: Require gsettings-desktop-schemas
+  * pointer: Handle left-right mode on touchpads
+  * pointer: Handle mouse settings
+  * settings: Drop switch configuration
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Sat, 10 Jul 2021 02:02:33 +0200
+
 phoc (0.7.1) byzantium; urgency=medium
 
   * cursor: g_assert on NULL cursor.
