@@ -11,7 +11,10 @@
 
 #include <errno.h>
 
-G_DEFINE_TYPE(PhocServer, phoc_server, G_TYPE_OBJECT);
+static void phoc_server_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PhocServer, phoc_server, G_TYPE_OBJECT,
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_server_initable_iface_init));
 
 typedef struct {
   GSource source;
@@ -138,28 +141,49 @@ phoc_startup_session (PhocServer *server)
 }
 
 
-static void
-phoc_server_constructed (GObject *object)
+static gboolean
+phoc_server_initable_init (GInitable    *initable,
+			   GCancellable *cancellable,
+			   GError      **error)
 {
-  PhocServer *self = PHOC_SERVER (object);
+  PhocServer *self = PHOC_SERVER (initable);
 
   self->wl_display = wl_display_create();
-  if (self->wl_display == NULL)
-    g_error("Could not create wayland display");
+  if (self->wl_display == NULL) {
+    g_set_error (error,
+                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		 "Could not create wayland display");
+    return FALSE;
+  }
 
   self->backend = wlr_backend_autocreate(self->wl_display, NULL);
-  if (self->backend == NULL)
-    g_error("Could not create backend");
+  if (self->backend == NULL) {
+    g_set_error (error,
+                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		 "Could not create backend");
+    return FALSE;
+  }
 
   self->renderer = wlr_backend_get_renderer(self->backend);
-  if (self->renderer == NULL)
-    g_error("Could not create renderer");
+  if (self->renderer == NULL) {
+    g_set_error (error,
+                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		 "Could not create renderer");
+    return FALSE;
+  }
 
   self->data_device_manager =
     wlr_data_device_manager_create(self->wl_display);
   wlr_renderer_init_wl_display(self->renderer, self->wl_display);
 
-  G_OBJECT_CLASS (phoc_server_parent_class)->constructed (object);
+  return TRUE;
+}
+
+
+static void
+phoc_server_initable_iface_init (GInitableIface *iface)
+{
+  iface->init = phoc_server_initable_init;
 }
 
 
@@ -204,7 +228,6 @@ phoc_server_class_init (PhocServerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->constructed = phoc_server_constructed;
   object_class->finalize = phoc_server_finalize;
   object_class->dispose = phoc_server_dispose;
 }
@@ -220,8 +243,14 @@ phoc_server_get_default (void)
   static PhocServer *instance;
 
   if (G_UNLIKELY (instance == NULL)) {
+    g_autoptr (GError) err = NULL;
     g_debug("Creating server");
-    instance = g_object_new (PHOC_TYPE_SERVER, NULL);
+    instance = g_initable_new (PHOC_TYPE_SERVER, NULL, &err, NULL);
+    if (instance == NULL) {
+      g_critical ("Failed to create server: %s", err->message);
+      return NULL;
+    }
+
     g_object_add_weak_pointer (G_OBJECT (instance), (gpointer *)&instance);
   }
 

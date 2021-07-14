@@ -129,6 +129,10 @@ main(int argc, char **argv)
   debug_flags = parse_debug_env ();
   wlr_log_init(WLR_DEBUG, log_glib);
   server = phoc_server_get_default ();
+  if (server == NULL) {
+    /* phoc_server_get_default already printed an error */
+    return 1;
+  }
 
   loop = g_main_loop_new (NULL, FALSE);
   if (!phoc_server_setup (server, config_path, exec, loop, debug_flags))
