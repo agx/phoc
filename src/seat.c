@@ -509,7 +509,6 @@ static void roots_seat_init_cursor(struct roots_seat *seat) {
 	PhocServer *server = phoc_server_get_default ();
 	seat->cursor = phoc_cursor_new (seat);
 
-	seat->cursor->seat = seat;
 	struct wlr_cursor *wlr_cursor = seat->cursor->cursor;
 	PhocDesktop *desktop = server->desktop;
 	wlr_cursor_attach_output_layout(wlr_cursor, desktop->layout);
