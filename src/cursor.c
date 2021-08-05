@@ -816,7 +816,7 @@ phoc_cursor_handle_request_set_cursor (PhocCursor                               
   }
   if (event->seat_client->client != focused_client ||
       self->mode != PHOC_CURSOR_PASSTHROUGH) {
-    wlr_log (WLR_DEBUG, "Denying request to set cursor from unfocused client");
+    g_debug ("Denying request to set cursor from unfocused client");
     return;
   }
 
@@ -836,7 +836,7 @@ phoc_cursor_handle_focus_change (PhocCursor                                 *sel
   double lx = self->cursor->x;
   double ly = self->cursor->y;
 
-  wlr_log (WLR_DEBUG, "entered surface %p, lx: %f, ly: %f, sx: %f, sy: %f",
+  g_debug ("entered surface %p, lx: %f, ly: %f, sx: %f, sy: %f",
            event->new_surface, lx, ly, sx, sy);
 
   phoc_cursor_constrain (self,
@@ -884,9 +884,9 @@ phoc_cursor_constrain (PhocCursor *self,
   if (self->active_constraint == constraint)
     return;
 
-  wlr_log (WLR_DEBUG, "phoc_cursor_constrain(%p, %p)",
+  g_debug ("phoc_cursor_constrain(%p, %p)",
            self, constraint);
-  wlr_log (WLR_DEBUG, "self->active_constraint: %p",
+  g_debug ("self->active_constraint: %p",
            self->active_constraint);
 
   wl_list_remove (&self->constraint_commit.link);
