@@ -753,6 +753,7 @@ static void roots_seat_handle_destroy(struct wl_listener *listener,
 void roots_seat_destroy(struct roots_seat *seat) {
 	roots_seat_handle_destroy(&seat->destroy, seat->seat);
 	wlr_seat_destroy(seat->seat);
+	g_object_unref (seat->cursor);
 }
 
 struct roots_seat *roots_seat_create(PhocInput *input, char *name) {
