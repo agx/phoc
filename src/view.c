@@ -574,7 +574,7 @@ bool view_center(struct roots_view *view) {
 	PhocDesktop *desktop = view->desktop;
 	PhocInput *input = server->input;
 	struct roots_seat *seat = input_last_active_seat(input);
-	struct roots_cursor *cursor;
+	PhocCursor *cursor;
 
 	if (!seat) {
 		return false;

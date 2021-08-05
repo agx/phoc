@@ -358,7 +358,7 @@ static void handle_constraint_destroy(struct wl_listener *listener,
 		wl_container_of(listener, constraint, destroy);
 	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
 	struct roots_seat *seat = wlr_constraint->seat->data;
-	struct roots_cursor *cursor = roots_seat_get_cursor (seat);
+	PhocCursor *cursor = roots_seat_get_cursor (seat);
 
 	wl_list_remove(&constraint->destroy.link);
 
@@ -386,7 +386,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 	PhocServer *server = phoc_server_get_default ();
 	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
 	struct roots_seat *seat = wlr_constraint->seat->data;
-	struct roots_cursor *cursor = roots_seat_get_cursor (seat);
+	PhocCursor *cursor = roots_seat_get_cursor (seat);
 
 	struct roots_pointer_constraint *constraint =
 		calloc(1, sizeof(struct roots_pointer_constraint));
@@ -402,7 +402,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 
 	if (surface == wlr_constraint->surface) {
 		assert(!cursor->active_constraint);
-		roots_cursor_constrain(cursor, wlr_constraint, sx, sy);
+		phoc_cursor_constrain(cursor, wlr_constraint, sx, sy);
 	}
 }
 

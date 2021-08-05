@@ -8,10 +8,12 @@
 #include "switch.h"
 #include "text_input.h"
 
+typedef struct _PhocCursor PhocCursor;
+
 struct roots_seat {
 	PhocInput *input;
 	struct wlr_seat *seat;
-	struct roots_cursor *cursor;
+	PhocCursor *cursor;
 	struct wl_list link; // PhocInput::seats
 
 	// coordinates of the first touch point if it exists
@@ -130,7 +132,7 @@ void roots_seat_add_device(struct roots_seat *seat,
 		struct wlr_input_device *device);
 
 void roots_seat_configure_cursor(struct roots_seat *seat);
-struct roots_cursor *roots_seat_get_cursor (struct roots_seat *seat);
+PhocCursor *roots_seat_get_cursor (struct roots_seat *seat);
 
 void roots_seat_configure_xcursor(struct roots_seat *seat);
 

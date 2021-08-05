@@ -322,7 +322,7 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 	struct roots_seat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
 
 	// TODO verify event serial
-	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
+	if (!seat || roots_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
 		return;
 	}
 	roots_seat_begin_move(seat, view);
@@ -339,7 +339,7 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 
 	// TODO verify event serial
 	assert(seat);
-	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
+	if (!seat || roots_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
 		return;
 	}
 	roots_seat_begin_resize(seat, view, e->edges);

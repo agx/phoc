@@ -227,7 +227,7 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 	struct roots_view *view = &roots_surface->view;
 	struct roots_seat *seat = guess_seat_for_view(view);
 
-	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
+	if (!seat || roots_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
 		return;
 	}
 
@@ -241,7 +241,7 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 	struct roots_seat *seat = guess_seat_for_view(view);
 	struct wlr_xwayland_resize_event *e = data;
 
-	if (!seat || roots_seat_get_cursor(seat)->mode != ROOTS_CURSOR_PASSTHROUGH) {
+	if (!seat || roots_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
 		return;
 	}
 	roots_seat_begin_resize(seat, view, e->edges);

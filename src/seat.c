@@ -50,58 +50,52 @@ static void handle_keyboard_modifiers(struct wl_listener *listener,
 
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, motion);
+	PhocCursor *cursor = wl_container_of(listener, cursor, motion);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_motion *event = data;
-	roots_cursor_handle_motion(cursor, event);
+	phoc_cursor_handle_motion(cursor, event);
 }
 
 static void handle_cursor_motion_absolute(struct wl_listener *listener,
 		void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, motion_absolute);
+	PhocCursor *cursor = wl_container_of(listener, cursor, motion_absolute);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_motion_absolute *event = data;
-	roots_cursor_handle_motion_absolute(cursor, event);
+	phoc_cursor_handle_motion_absolute(cursor, event);
 }
 
 static void handle_cursor_button(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, button);
+	PhocCursor *cursor = wl_container_of(listener, cursor, button);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_button *event = data;
-	roots_cursor_handle_button(cursor, event);
+	phoc_cursor_handle_button(cursor, event);
 }
 
 static void handle_cursor_axis(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, axis);
+	PhocCursor *cursor = wl_container_of(listener, cursor, axis);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_pointer_axis *event = data;
-	roots_cursor_handle_axis(cursor, event);
+	phoc_cursor_handle_axis(cursor, event);
 }
 
 static void handle_cursor_frame(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, frame);
+	PhocCursor *cursor = wl_container_of(listener, cursor, frame);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
-	roots_cursor_handle_frame(cursor);
+	phoc_cursor_handle_frame(cursor);
 }
 
 static void handle_swipe_begin(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, swipe_begin);
+	PhocCursor *cursor = wl_container_of(listener, cursor, swipe_begin);
 	struct wlr_pointer_gestures_v1 *gestures =
 		server->desktop->pointer_gestures;
 	struct wlr_event_pointer_swipe_begin *event = data;
@@ -111,8 +105,7 @@ static void handle_swipe_begin(struct wl_listener *listener, void *data) {
 
 static void handle_swipe_update(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, swipe_update);
+	PhocCursor *cursor = wl_container_of(listener, cursor, swipe_update);
 	struct wlr_pointer_gestures_v1 *gestures =
 		server->desktop->pointer_gestures;
 	struct wlr_event_pointer_swipe_update *event = data;
@@ -122,8 +115,7 @@ static void handle_swipe_update(struct wl_listener *listener, void *data) {
 
 static void handle_swipe_end(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, swipe_end);
+	PhocCursor *cursor = wl_container_of(listener, cursor, swipe_end);
 	struct wlr_pointer_gestures_v1 *gestures =
 		server->desktop->pointer_gestures;
 	struct wlr_event_pointer_swipe_end *event = data;
@@ -133,8 +125,7 @@ static void handle_swipe_end(struct wl_listener *listener, void *data) {
 
 static void handle_pinch_begin(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, pinch_begin);
+	PhocCursor *cursor = wl_container_of(listener, cursor, pinch_begin);
 	struct wlr_pointer_gestures_v1 *gestures =
 		server->desktop->pointer_gestures;
 	struct wlr_event_pointer_pinch_begin *event = data;
@@ -144,8 +135,7 @@ static void handle_pinch_begin(struct wl_listener *listener, void *data) {
 
 static void handle_pinch_update(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, pinch_update);
+	PhocCursor *cursor = wl_container_of(listener, cursor, pinch_update);
 	struct wlr_pointer_gestures_v1 *gestures =
 		server->desktop->pointer_gestures;
 	struct wlr_event_pointer_pinch_update *event = data;
@@ -156,8 +146,7 @@ static void handle_pinch_update(struct wl_listener *listener, void *data) {
 
 static void handle_pinch_end(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, pinch_end);
+	PhocCursor *cursor = wl_container_of(listener, cursor, pinch_end);
 	struct wlr_pointer_gestures_v1 *gestures =
 		server->desktop->pointer_gestures;
 	struct wlr_event_pointer_pinch_end *event = data;
@@ -177,8 +166,7 @@ static void handle_switch_toggle(struct wl_listener *listener, void *data) {
 
 static void handle_touch_down(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, touch_down);
+	PhocCursor *cursor = wl_container_of(listener, cursor, touch_down);
 	struct wlr_event_touch_down *event = data;
 	PhocDesktop *desktop = server->desktop;
 	PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
@@ -189,19 +177,18 @@ static void handle_touch_down(struct wl_listener *listener, void *data) {
 		return;
 	}
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
-	roots_cursor_handle_touch_down(cursor, event);
+	phoc_cursor_handle_touch_down(cursor, event);
 }
 
 static void handle_touch_up(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, touch_up);
+	PhocCursor *cursor = wl_container_of(listener, cursor, touch_up);
 	struct wlr_event_touch_up *event = data;
 	PhocDesktop *desktop = server->desktop;
 	PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
 							   event->device->name);
 	/* handle touch up regardless of output status so events don't become stuck */
-	roots_cursor_handle_touch_up(cursor, event);
+	phoc_cursor_handle_touch_up(cursor, event);
 	if (output && !output->wlr_output->enabled) {
 		g_debug("Touch event ignored since output '%s' is disabled.",
 			output->wlr_output->name);
@@ -212,15 +199,14 @@ static void handle_touch_up(struct wl_listener *listener, void *data) {
 
 static void handle_touch_motion(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, touch_motion);
+	PhocCursor *cursor = wl_container_of(listener, cursor, touch_motion);
 	struct wlr_event_touch_motion *event = data;
 	PhocDesktop *desktop = server->desktop;
 	PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
 							   event->device->name);
 	/* handle touch motion regardless of output status so events don't become
 	   stuck */
-	roots_cursor_handle_touch_motion(cursor, event);
+	phoc_cursor_handle_touch_motion(cursor, event);
 	if (output && !output->wlr_output->enabled) {
 		g_debug("Touch event ignored since output '%s' is disabled.",
 			output->wlr_output->name);
@@ -229,7 +215,7 @@ static void handle_touch_motion(struct wl_listener *listener, void *data) {
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 }
 
-static void handle_tablet_tool_position(struct roots_cursor *cursor,
+static void handle_tablet_tool_position(PhocCursor *cursor,
 		struct roots_tablet *tablet,
 		struct wlr_tablet_tool *tool,
 		bool change_x, bool change_y,
@@ -275,8 +261,7 @@ static void handle_tablet_tool_position(struct roots_cursor *cursor,
 
 static void handle_tool_axis(struct wl_listener *listener, void *data) {
         PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, tool_axis);
+	PhocCursor *cursor = wl_container_of(listener, cursor, tool_axis);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_axis *event = data;
@@ -338,8 +323,7 @@ static void handle_tool_axis(struct wl_listener *listener, void *data) {
 
 static void handle_tool_tip(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, tool_tip);
+	PhocCursor *cursor = wl_container_of(listener, cursor, tool_tip);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_tip *event = data;
@@ -368,8 +352,7 @@ static void handle_tablet_tool_destroy(struct wl_listener *listener, void *data)
 
 static void handle_tool_button(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, tool_button);
+	PhocCursor *cursor = wl_container_of(listener, cursor, tool_button);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_button *event = data;
@@ -396,13 +379,12 @@ static void handle_tablet_tool_set_cursor(struct wl_listener *listener, void *da
 	};
 
 	wlr_idle_notify_activity(desktop->idle, tool->seat->seat);
-	roots_cursor_handle_request_set_cursor(tool->seat->cursor, &event);
+	phoc_cursor_handle_request_set_cursor(tool->seat->cursor, &event);
 }
 
 static void handle_tool_proximity(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, tool_proximity);
+	PhocCursor *cursor = wl_container_of(listener, cursor, tool_proximity);
 	PhocDesktop *desktop = server->desktop;
 	wlr_idle_notify_activity(desktop->idle, cursor->seat->seat);
 	struct wlr_event_tablet_tool_proximity *event = data;
@@ -439,18 +421,16 @@ static void handle_tool_proximity(struct wl_listener *listener, void *data) {
 
 static void handle_request_set_cursor(struct wl_listener *listener,
 		void *data) {
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, request_set_cursor);
+	PhocCursor *cursor = wl_container_of(listener, cursor, request_set_cursor);
 	struct wlr_seat_pointer_request_set_cursor_event *event = data;
-	roots_cursor_handle_request_set_cursor(cursor, event);
+	phoc_cursor_handle_request_set_cursor(cursor, event);
 }
 
 static void handle_pointer_focus_change(struct wl_listener *listener,
 		void *data) {
-	struct roots_cursor *cursor =
-		wl_container_of(listener, cursor, focus_change);
+	PhocCursor *cursor = wl_container_of(listener, cursor, focus_change);
 	struct wlr_seat_pointer_focus_change_event *event = data;
-	roots_cursor_handle_focus_change(cursor, event);
+	phoc_cursor_handle_focus_change(cursor, event);
 }
 
 static void seat_reset_device_mappings(struct roots_seat *seat,
@@ -527,7 +507,7 @@ void roots_seat_configure_cursor(struct roots_seat *seat) {
 
 static void roots_seat_init_cursor(struct roots_seat *seat) {
 	PhocServer *server = phoc_server_get_default ();
-	seat->cursor = roots_cursor_create(seat);
+	seat->cursor = phoc_cursor_create(seat);
 
 	seat->cursor->seat = seat;
 	struct wlr_cursor *wlr_cursor = seat->cursor->cursor;
@@ -1258,7 +1238,7 @@ static void seat_view_destroy(struct roots_seat_view *seat_view) {
 
 	if (view == roots_seat_get_focus(seat)) {
 		seat->has_focus = false;
-		seat->cursor->mode = ROOTS_CURSOR_PASSTHROUGH;
+		seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
 	}
 
 	if (seat_view == seat->cursor->pointer_view) {
@@ -1438,7 +1418,7 @@ void roots_seat_set_focus(struct roots_seat *seat, struct roots_view *view) {
 	}
 
 	if (view == NULL) {
-		seat->cursor->mode = ROOTS_CURSOR_PASSTHROUGH;
+		seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
 		wlr_seat_keyboard_clear_focus(seat->seat);
 		roots_input_method_relay_set_focus(&seat->im_relay, NULL);
 		return;
@@ -1474,7 +1454,7 @@ void roots_seat_set_focus(struct roots_seat *seat, struct roots_view *view) {
 			NULL, 0, NULL);
 	}
 
-	roots_cursor_update_focus(seat->cursor);
+	phoc_cursor_update_focus(seat->cursor);
 	roots_input_method_relay_set_focus(&seat->im_relay, view->wlr_surface);
 }
 
@@ -1521,7 +1501,7 @@ void roots_seat_set_focus_layer(struct roots_seat *seat,
 			NULL, 0, NULL);
 	}
 
-	roots_cursor_update_focus(seat->cursor);
+	phoc_cursor_update_focus(seat->cursor);
 	roots_input_method_relay_set_focus(&seat->im_relay, layer->surface);
 }
 
@@ -1595,8 +1575,8 @@ void roots_seat_begin_move(struct roots_seat *seat, struct roots_view *view) {
 	if (view->desktop->maximize)
 		return;
 
-	struct roots_cursor *cursor = seat->cursor;
-	cursor->mode = ROOTS_CURSOR_MOVE;
+	PhocCursor *cursor = seat->cursor;
+	cursor->mode = PHOC_CURSOR_MOVE;
 	if (seat->touch_id != -1) {
 		wlr_cursor_warp(cursor->cursor, NULL, seat->touch_x, seat->touch_y);
 	}
@@ -1628,8 +1608,8 @@ void roots_seat_begin_resize(struct roots_seat *seat, struct roots_view *view,
 	if (view->desktop->maximize)
 		return;
 
-	struct roots_cursor *cursor = seat->cursor;
-	cursor->mode = ROOTS_CURSOR_RESIZE;
+	PhocCursor *cursor = seat->cursor;
+	cursor->mode = PHOC_CURSOR_RESIZE;
 	if (seat->touch_id != -1) {
 		wlr_cursor_warp(cursor->cursor, NULL, seat->touch_x, seat->touch_y);
 	}
@@ -1659,7 +1639,7 @@ void roots_seat_begin_resize(struct roots_seat *seat, struct roots_view *view,
 }
 
 void roots_seat_end_compositor_grab(struct roots_seat *seat) {
-	struct roots_cursor *cursor = seat->cursor;
+	PhocCursor *cursor = seat->cursor;
 	struct roots_view *view = roots_seat_get_focus(seat);
 
 	if (view == NULL) {
@@ -1667,20 +1647,20 @@ void roots_seat_end_compositor_grab(struct roots_seat *seat) {
 	}
 
 	switch(cursor->mode) {
-		case ROOTS_CURSOR_MOVE:
+		case PHOC_CURSOR_MOVE:
 			view_move(view, cursor->view_x, cursor->view_y);
 			break;
-		case ROOTS_CURSOR_RESIZE:
+		case PHOC_CURSOR_RESIZE:
 			view_move_resize(view, cursor->view_x, cursor->view_y, cursor->view_width, cursor->view_height);
 			break;
-		case ROOTS_CURSOR_PASSTHROUGH:
+		case PHOC_CURSOR_PASSTHROUGH:
 			break;
 		default:
 			g_error("Invalid cursor mode %d", cursor->mode);
 	}
 
-	cursor->mode = ROOTS_CURSOR_PASSTHROUGH;
-	roots_cursor_update_focus(seat->cursor);
+	cursor->mode = PHOC_CURSOR_PASSTHROUGH;
+	phoc_cursor_update_focus(seat->cursor);
 }
 
 struct roots_seat *input_last_active_seat(PhocInput *input) {
@@ -1724,7 +1704,7 @@ void roots_seat_maybe_set_cursor(struct roots_seat *self, const char *name) {
  *
  * Returns: (transfer none): The current cursor
  */
-struct roots_cursor *roots_seat_get_cursor(struct roots_seat *self) {
+PhocCursor *roots_seat_get_cursor(struct roots_seat *self) {
 	g_return_val_if_fail (self, NULL);
 
 	return self->cursor;

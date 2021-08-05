@@ -165,7 +165,7 @@ phoc_input_update_cursor_focus (PhocInput *self)
   struct roots_seat *seat;
 
   wl_list_for_each (seat, &self->seats, link) {
-    roots_cursor_update_position (roots_seat_get_cursor (seat),
-                                  timespec_to_msec (&now));
+    phoc_cursor_update_position (roots_seat_get_cursor (seat),
+				 timespec_to_msec (&now));
   }
 }
