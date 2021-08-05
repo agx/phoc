@@ -507,7 +507,7 @@ void roots_seat_configure_cursor(struct roots_seat *seat) {
 
 static void roots_seat_init_cursor(struct roots_seat *seat) {
 	PhocServer *server = phoc_server_get_default ();
-	seat->cursor = phoc_cursor_create(seat);
+	seat->cursor = phoc_cursor_new (seat);
 
 	seat->cursor->seat = seat;
 	struct wlr_cursor *wlr_cursor = seat->cursor->cursor;

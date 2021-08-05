@@ -1,7 +1,21 @@
+/*
+ * Copyright (C) 2021 Purism SPC
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 #pragma once
 
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include "seat.h"
+
+#include <glib-object.h>
+
+G_BEGIN_DECLS
+
+#define PHOC_TYPE_CURSOR (phoc_cursor_get_type ())
+
+G_DECLARE_FINAL_TYPE (PhocCursor, phoc_cursor, PHOC, CURSOR, GObject)
 
 #define PHOC_SHELL_REVEAL_TOUCH_THRESHOLD 10
 #define PHOC_SHELL_REVEAL_POINTER_THRESHOLD 0
@@ -14,6 +28,8 @@ typedef enum {
 } PhocCursorMode;
 
 typedef struct _PhocCursor {
+  GObject                           parent;
+
   struct roots_seat                *seat;
   struct wlr_cursor                *cursor;
 
@@ -63,8 +79,7 @@ typedef struct _PhocCursor {
   struct wl_listener                constraint_commit;
 } PhocCursor;
 
-PhocCursor *phoc_cursor_create (struct roots_seat                                        *seat);
-void        phoc_cursor_destroy (PhocCursor                                              *self);
+PhocCursor *phoc_cursor_new (struct roots_seat                                           *seat);
 void        phoc_cursor_handle_motion (PhocCursor                                        *self,
                                        struct wlr_event_pointer_motion                   *event);
 void        phoc_cursor_handle_motion_absolute (PhocCursor                               *self,

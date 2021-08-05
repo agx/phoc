@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2021 Purism SPC
+ *
+ * SPDX-License-Identifier: GPL-3-or-later or MIT
+ */
+
 #define G_LOG_DOMAIN "phoc-cursor"
 
 #include "config.h"
@@ -18,25 +24,54 @@
 #include "view.h"
 #include "xcursor.h"
 
-PhocCursor *
-phoc_cursor_create (struct roots_seat *seat)
+
+enum {
+  PROP_0,
+  PROP_SEAT,
+  PROP_LAST_PROP
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
+
+G_DEFINE_TYPE (PhocCursor, phoc_cursor, G_TYPE_OBJECT)
+
+static void
+phoc_cursor_set_property (GObject      *object,
+			  guint         property_id,
+			  const GValue *value,
+			  GParamSpec   *pspec)
 {
-  PhocCursor *self = calloc (1, sizeof(PhocCursor));
+  PhocCursor *self = PHOC_CURSOR (object);
 
-  g_assert (self);
-
-  self->cursor = wlr_cursor_create ();
-  g_assert (self->cursor);
-
-  self->default_xcursor = ROOTS_XCURSOR_DEFAULT;
-  return self;
+  switch (property_id) {
+  case PROP_SEAT:
+    self->seat = g_value_get_pointer (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
 }
 
-void
-phoc_cursor_destroy (PhocCursor *self)
+
+static void
+phoc_cursor_get_property (GObject    *object,
+			  guint       property_id,
+			  GValue     *value,
+			  GParamSpec *pspec)
 {
-  // TODO
+  PhocCursor *self = PHOC_CURSOR (object);
+
+  switch (property_id) {
+  case PROP_SEAT:
+    g_value_set_pointer (value, self->seat);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
 }
+
 
 static void
 seat_view_deco_motion (struct roots_seat_view *view,
@@ -254,6 +289,33 @@ timespec_to_msec (const struct timespec *a)
 {
   return (int64_t)a->tv_sec * 1000 + a->tv_nsec / 1000000;
 }
+
+
+static void
+phoc_cursor_class_init (PhocCursorClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->get_property = phoc_cursor_get_property;
+  object_class->set_property = phoc_cursor_set_property;
+
+  props[PROP_SEAT] =
+    g_param_spec_pointer ("seat",
+			  "",
+			  "",
+			  G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+}
+
+
+static void
+phoc_cursor_init (PhocCursor *self)
+{
+  self->cursor = wlr_cursor_create ();
+  self->default_xcursor = ROOTS_XCURSOR_DEFAULT;
+}
+
 
 void
 phoc_cursor_update_focus (PhocCursor *self)
@@ -868,4 +930,13 @@ phoc_cursor_constrain (PhocCursor *self,
   if (constraint->type == WLR_POINTER_CONSTRAINT_V1_CONFINED) {
     pixman_region32_copy (&self->confine, region);
   }
+}
+
+
+PhocCursor *
+phoc_cursor_new (struct roots_seat *seat)
+{
+  return PHOC_CURSOR (g_object_new (PHOC_TYPE_CURSOR,
+				    "seat", seat,
+				    NULL));
 }
