@@ -108,7 +108,7 @@ collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wl
     return;
   }
 
-  struct roots_seat *seat;
+  PhocSeat *seat;
   wl_list_for_each(seat, &server->input->seats, link) {
     struct wlr_touch_point *point;
     wl_list_for_each(point, &seat->seat->touch_state.touch_points, link) {
@@ -229,9 +229,9 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	PhocServer *server = phoc_server_get_default ();
 
-	struct roots_seat *seat;
+	PhocSeat *seat;
 	wl_list_for_each(seat, &server->input->seats, link) {
-		struct roots_drag_icon *drag_icon = seat->drag_icon;
+		PhocDragIcon *drag_icon = seat->drag_icon;
 		if (drag_icon && drag_icon->wlr_drag_icon->mapped) {
 			return false;
 		}

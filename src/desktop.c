@@ -332,11 +332,11 @@ handle_layout_change (struct wl_listener *listener, void *data)
 static void input_inhibit_activate(struct wl_listener *listener, void *data) {
 	PhocDesktop *desktop = wl_container_of(
 			listener, desktop, input_inhibit_activate);
-	struct roots_seat *seat;
+	PhocSeat *seat;
 	PhocServer *server = phoc_server_get_default ();
 
 	wl_list_for_each(seat, &server->input->seats, link) {
-		roots_seat_set_exclusive_client(seat,
+		phoc_seat_set_exclusive_client(seat,
 				desktop->input_inhibit->active_client);
 	}
 }
@@ -344,21 +344,21 @@ static void input_inhibit_activate(struct wl_listener *listener, void *data) {
 static void input_inhibit_deactivate(struct wl_listener *listener, void *data) {
 	PhocDesktop *desktop = wl_container_of(
 			listener, desktop, input_inhibit_deactivate);
-	struct roots_seat *seat;
+	PhocSeat *seat;
 	PhocServer *server = phoc_server_get_default ();
 
 	wl_list_for_each(seat, &server->input->seats, link) {
-		roots_seat_set_exclusive_client(seat, NULL);
+		phoc_seat_set_exclusive_client(seat, NULL);
 	}
 }
 
 static void handle_constraint_destroy(struct wl_listener *listener,
 		void *data) {
-	struct roots_pointer_constraint *constraint =
+	PhocPointerConstraint *constraint =
 		wl_container_of(listener, constraint, destroy);
 	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
-	struct roots_seat *seat = wlr_constraint->seat->data;
-	PhocCursor *cursor = roots_seat_get_cursor (seat);
+	PhocSeat *seat = wlr_constraint->seat->data;
+	PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
 	wl_list_remove(&constraint->destroy.link);
 
@@ -385,11 +385,11 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 		void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
-	struct roots_seat *seat = wlr_constraint->seat->data;
-	PhocCursor *cursor = roots_seat_get_cursor (seat);
+	PhocSeat *seat = wlr_constraint->seat->data;
+	PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
-	struct roots_pointer_constraint *constraint =
-		calloc(1, sizeof(struct roots_pointer_constraint));
+	PhocPointerConstraint *constraint =
+		calloc(1, sizeof(PhocPointerConstraint));
 	constraint->constraint = wlr_constraint;
 
 	constraint->destroy.notify = handle_constraint_destroy;

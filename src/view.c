@@ -573,13 +573,13 @@ bool view_center(struct roots_view *view) {
 
 	PhocDesktop *desktop = view->desktop;
 	PhocInput *input = server->input;
-	struct roots_seat *seat = input_last_active_seat(input);
+	PhocSeat *seat = input_last_active_seat(input);
 	PhocCursor *cursor;
 
 	if (!seat) {
 		return false;
 	}
-	cursor = roots_seat_get_cursor (seat);
+	cursor = phoc_seat_get_cursor (seat);
 
 	struct wlr_output *output = wlr_output_layout_output_at(desktop->layout,
 		cursor->cursor->x, cursor->cursor->y);
@@ -885,9 +885,9 @@ void view_initial_focus(struct roots_view *view) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocInput *input = server->input;
 	// TODO what seat gets focus? the one with the last input event?
-	struct roots_seat *seat;
+	PhocSeat *seat;
 	wl_list_for_each(seat, &input->seats, link) {
-		roots_seat_set_focus(seat, view);
+		phoc_seat_set_focus(seat, view);
 	}
 }
 
@@ -1035,10 +1035,10 @@ static void handle_toplevel_handle_request_activate(struct wl_listener *listener
 		wl_container_of(listener, view, toplevel_handle_request_activate);
 	struct wlr_foreign_toplevel_handle_v1_activated_event *event = data;
 
-	struct roots_seat *seat;
+	PhocSeat *seat;
 	wl_list_for_each(seat, &server->input->seats, link) {
 		if (event->seat == seat->seat) {
-			roots_seat_set_focus(seat, view);
+			phoc_seat_set_focus(seat, view);
 		}
 	}
 }

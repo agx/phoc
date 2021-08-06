@@ -305,8 +305,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
   setenv("WAYLAND_DISPLAY", socket, true);
 #ifdef PHOC_XWAYLAND
   if (self->desktop->xwayland != NULL) {
-    struct roots_seat *xwayland_seat =
-      phoc_input_get_seat(self->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
+    PhocSeat *xwayland_seat = phoc_input_get_seat(self->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
     wlr_xwayland_set_seat(self->desktop->xwayland, xwayland_seat->seat);
   }
 #endif

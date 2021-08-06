@@ -27,10 +27,12 @@ typedef enum {
   PHOC_CURSOR_RESIZE = 2,
 } PhocCursorMode;
 
+typedef struct _PhocSeatView PhocSeatView;
+
 typedef struct _PhocCursor {
   GObject                           parent;
 
-  struct roots_seat                *seat;
+  PhocSeat                         *seat;
   struct wlr_cursor                *cursor;
 
   struct wlr_pointer_constraint_v1 *active_constraint;
@@ -48,7 +50,7 @@ typedef struct _PhocCursor {
   int                               view_x, view_y, view_width, view_height;
   uint32_t                          resize_edges;
 
-  struct roots_seat_view           *pointer_view;
+  PhocSeatView                     *pointer_view;
   struct wlr_surface               *wlr_surface;
 
   struct wl_listener                motion;
@@ -79,7 +81,7 @@ typedef struct _PhocCursor {
   struct wl_listener                constraint_commit;
 } PhocCursor;
 
-PhocCursor *phoc_cursor_new (struct roots_seat                                           *seat);
+PhocCursor *phoc_cursor_new (PhocSeat                                                    *seat);
 void        phoc_cursor_handle_motion (PhocCursor                                        *self,
                                        struct wlr_event_pointer_motion                   *event);
 void        phoc_cursor_handle_motion_absolute (PhocCursor                               *self,

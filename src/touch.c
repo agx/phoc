@@ -85,7 +85,7 @@ phoc_touch_init (PhocTouch *self)
 }
 
 PhocTouch *
-phoc_touch_new (struct wlr_input_device *device, struct roots_seat *seat)
+phoc_touch_new (struct wlr_input_device *device, PhocSeat *seat)
 {
   return g_object_new (PHOC_TYPE_TOUCH,
                        "device", device,

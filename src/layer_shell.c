@@ -86,11 +86,11 @@ static void apply_exclusive(struct wlr_box *usable_area,
 }
 
 static void update_cursors(struct roots_layer_surface *roots_surface,
-		struct wl_list *seats /* struct roots_seat */) {
+		struct wl_list *seats /* PhocSeat */) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_seat *seat;
+	PhocSeat *seat;
 	wl_list_for_each(seat, seats, link) {
-		PhocCursor *cursor = roots_seat_get_cursor(seat);
+		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		double sx, sy;
 
 		struct wlr_surface *surface = phoc_desktop_surface_at(
@@ -252,7 +252,7 @@ void arrange_layers(PhocOutput *output) {
 	struct osk_origin osk_place = find_osk(output->layers);
 	if (osk_place.surface) {
 		bool osk_force_overlay = false;
-		struct roots_seat *seat;
+		PhocSeat *seat;
 		wl_list_for_each(seat, &server->input->seats, link) {
 			if (seat->focused_layer && seat->focused_layer->client_pending.layer >=
 					osk_place.surface->layer_surface->client_pending.layer) {
@@ -325,9 +325,9 @@ void arrange_layers(PhocOutput *output) {
 	}
 
 	PhocInput *input = server->input;
-	struct roots_seat *seat;
+	PhocSeat *seat;
 	wl_list_for_each(seat, &input->seats, link) {
-		roots_seat_set_focus_layer(seat,
+		phoc_seat_set_focus_layer(seat,
 				topmost ? topmost->layer_surface : NULL);
 	}
 }
@@ -759,9 +759,9 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 
 	if (!layer_surface->output) {
 		PhocInput *input = server->input;
-		struct roots_seat *seat = input_last_active_seat(input);
+		PhocSeat *seat = input_last_active_seat(input);
 		assert(seat); // Technically speaking we should handle this case
-		PhocCursor *cursor = roots_seat_get_cursor(seat);
+		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		struct wlr_output *output =
 			wlr_output_layout_output_at(desktop->layout,
 					cursor->cursor->x,

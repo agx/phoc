@@ -66,7 +66,7 @@ handle_request_focus(struct wl_client *client,
     gtk_surface_from_resource (resource);
   PhocServer *server = phoc_server_get_default ();
   PhocInput *input = server->input;
-  struct roots_seat *seat = input_last_active_seat(input);
+  PhocSeat *seat = input_last_active_seat(input);
   struct roots_view *view;
 
   g_debug ("Requesting focus for surface %p (res %p)", gtk_surface->wlr_surface, resource);
@@ -75,7 +75,7 @@ handle_request_focus(struct wl_client *client,
 
   view = roots_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
-    roots_seat_set_focus(seat, view);
+    phoc_seat_set_focus(seat, view);
 }
 
 static const struct gtk_surface1_interface gtk_surface1_impl = {

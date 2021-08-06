@@ -319,13 +319,13 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 	struct roots_view *view = &roots_xdg_surface->view;
 	PhocInput *input = server->input;
 	struct wlr_xdg_toplevel_move_event *e = data;
-	struct roots_seat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
+	PhocSeat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
 
 	// TODO verify event serial
-	if (!seat || roots_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
+	if (!seat || phoc_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
 		return;
 	}
-	roots_seat_begin_move(seat, view);
+	phoc_seat_begin_move(seat, view);
 }
 
 static void handle_request_resize(struct wl_listener *listener, void *data) {
@@ -335,14 +335,14 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 	struct roots_view *view = &roots_xdg_surface->view;
 	PhocInput *input = server->input;
 	struct wlr_xdg_toplevel_resize_event *e = data;
-	struct roots_seat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
+	PhocSeat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
 
 	// TODO verify event serial
 	assert(seat);
-	if (!seat || roots_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
+	if (!seat || phoc_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
 		return;
 	}
-	roots_seat_begin_resize(seat, view, e->edges);
+	phoc_seat_begin_resize(seat, view, e->edges);
 }
 
 static void handle_request_maximize(struct wl_listener *listener, void *data) {

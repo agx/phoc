@@ -347,11 +347,10 @@ phoc_output_constructed (GObject *object)
   }
   wlr_output_commit (self->wlr_output);
 
-  struct roots_seat *seat;
-
+  PhocSeat *seat;
   wl_list_for_each (seat, &input->seats, link) {
-    roots_seat_configure_cursor (seat);
-    roots_seat_configure_xcursor (seat);
+    phoc_seat_configure_cursor (seat);
+    phoc_seat_configure_xcursor (seat);
   }
 
   arrange_layers (self);
@@ -607,10 +606,9 @@ phoc_output_drag_icons_for_each_surface (PhocOutput *self, PhocInput *input,
     return;
   }
 
-  struct roots_seat *seat;
-
+  PhocSeat *seat;
   wl_list_for_each (seat, &input->seats, link) {
-    struct roots_drag_icon *drag_icon = seat->drag_icon;
+    PhocDragIcon *drag_icon = seat->drag_icon;
     if (!drag_icon || !drag_icon->wlr_drag_icon->mapped) {
       continue;
     }
@@ -833,8 +831,7 @@ phoc_output_damage_from_view (PhocOutput *self, struct roots_view *view)
 }
 
 void
-phoc_output_damage_whole_drag_icon (PhocOutput *self, struct roots_drag_icon
-                                    *icon)
+phoc_output_damage_whole_drag_icon (PhocOutput *self, PhocDragIcon *icon)
 {
   bool whole = true;
 

@@ -194,7 +194,7 @@ keyboard_execute_compositor_binding(PhocKeyboard *self,
   if (keysym == XKB_KEY_Escape) {
     wlr_seat_pointer_end_grab(self->seat->seat);
     wlr_seat_keyboard_end_grab(self->seat->seat);
-    roots_seat_end_compositor_grab(self->seat);
+    phoc_seat_end_compositor_grab(self->seat);
   }
 
   return false;
@@ -596,7 +596,7 @@ phoc_keyboard_init (PhocKeyboard *self)
 }
 
 PhocKeyboard *
-phoc_keyboard_new (struct wlr_input_device *device, struct roots_seat *seat)
+phoc_keyboard_new (struct wlr_input_device *device, PhocSeat *seat)
 {
   return g_object_new (PHOC_TYPE_KEYBOARD,
                        "device", device,
