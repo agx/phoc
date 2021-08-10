@@ -16,10 +16,6 @@ variables:
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
   XVFB_RUN: xvfb-run -s -noreset
 
-.tags: &tags
-  tags:
-    - librem5
-
 .build: &build
   script:
     - export LC_ALL=C.UTF-8
@@ -53,7 +49,6 @@ build-with-xwayland-debian-buster:
   before_script: *before_script_debian_buster
   variables:
      BUILD_ARGS: -Dxwayland=enabled -Db_coverage=true
-  <<: *tags
   <<: *build
   artifacts:
     paths:
@@ -68,7 +63,6 @@ build-with-xwayland-debian-bullseye:
   before_script: *before_script_debian
   variables:
      BUILD_ARGS: -Dxwayland=enabled
-  <<: *tags
   <<: *build
   except:
     variables:
@@ -80,7 +74,6 @@ build-without-xwayland-debian-buster:
   before_script: *before_script_debian_buster
   variables:
      BUILD_ARGS: -Dxwayland=disabled
-  <<: *tags
   <<: *build
   except:
     variables:
@@ -92,7 +85,6 @@ build-with-xwayland-alpinelinux-edge:
   before_script: *before_script_alpine
   variables:
      BUILD_ARGS: -Dxwayland=enabled
-  <<: *tags
   <<: *build
   allow_failure: true
   except:
@@ -105,7 +97,6 @@ build-without-xwayland-alpinelinux-edge:
   before_script: *before_script_alpine
   variables:
      BUILD_ARGS: -Dxwayland=disabled
-  <<: *tags
   <<: *build
   allow_failure: true
   except:
@@ -114,7 +105,6 @@ build-without-xwayland-alpinelinux-edge:
 
 
 unit-test-with-xwayland-debian-buster:
-  <<: *tags
   stage: test
   image: debian:buster
   needs:
