@@ -1,6 +1,5 @@
 include:
  - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-definitions.yml'
- - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-byzantium-jobs.yml'
 
 stages:
  - build
@@ -40,9 +39,9 @@ build-with-xwayland-debian-bullseye:
   variables:
      BUILD_ARGS: -Dxwayland=enabled -Db_coverage=true
   <<: *build
- artifacts:
-   paths:
-     - _build
+  artifacts:
+    paths:
+      - _build
   except:
     variables:
       - $PKG_ONLY == "1"
@@ -89,3 +88,10 @@ unit-test-with-xwayland-debian-bullseye:
   except:
     variables:
       - $PKG_ONLY == "1"
+
+package-pureos-byzantium:arm64:
+  variables:
+    L5_DOCKER_IMAGE: pureos/byzantium
+  tags:
+    - aarch64
+  extends: .l5-build-debian-package
