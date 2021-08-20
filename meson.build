@@ -62,10 +62,19 @@ if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots_conf = wlroots_proj.get_variable('conf_data')
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
         wlroots_has_output_power_management = true
+        have_wlr_set_startup_id = true
 else
         wlroots = dependency('wlroots', version: '>= 0.9.0')
         wlroots_has_xwayland = cc.get_define('WLR_HAS_XWAYLAND', prefix: '#include <wlr/config.h>', dependencies: wlroots) == '1'
         wlroots_has_output_power_management = cc.has_header('wlr/types/wlr_output_power_management_v1.h', dependencies: wlroots)
+        have_wlr_set_startup_id = false
+        if wlroots_has_xwayland and cc.has_member('struct wlr_xwayland_surface',
+                                                  'events.set_startup_id',
+                                                  prefix: '''#include "wlr/xwayland.h"''',
+                                                  args: '-DWLR_USE_UNSTABLE',
+                                                  dependencies: wlroots)
+          have_wlr_set_startup_id = true
+        endif
 endif
 
 if get_option('xwayland').enabled() and not wlroots_has_xwayland
@@ -153,6 +162,7 @@ message('\n'.join(summary))
 config_h = configuration_data()
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland)
+config_h.set('PHOC_HAVE_WLR_SET_STARTUP_ID', have_wlr_set_startup_id)
 
 configure_file(
   input: 'config.h.in',

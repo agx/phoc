@@ -146,6 +146,7 @@ struct roots_xwayland_surface {
 	struct wl_listener unmap;
 	struct wl_listener set_title;
 	struct wl_listener set_class;
+	struct wl_listener set_startup_id;
 
 	struct wl_listener surface_commit;
 };

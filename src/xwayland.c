@@ -170,6 +170,7 @@ static void destroy(struct roots_view *view) {
 	wl_list_remove(&roots_surface->request_maximize.link);
 	wl_list_remove(&roots_surface->set_title.link);
 	wl_list_remove(&roots_surface->set_class.link);
+	wl_list_remove(&roots_surface->set_startup_id.link);
 	wl_list_remove(&roots_surface->map.link);
 	wl_list_remove(&roots_surface->unmap.link);
 	free(roots_surface);
@@ -289,6 +290,20 @@ static void handle_set_class(struct wl_listener *listener, void *data) {
 	view_set_app_id(&roots_surface->view,
 		roots_surface->xwayland_surface->class);
 }
+
+#ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
+static void handle_set_startup_id(struct wl_listener *listener, void *data) {
+	PhocServer *server = phoc_server_get_default ();
+
+	struct roots_xwayland_surface *roots_surface =
+		wl_container_of(listener, roots_surface, set_startup_id);
+
+	g_debug ("Got startup-id %s", roots_surface->xwayland_surface->startup_id);
+	phoc_phosh_private_notify_startup_id (server->desktop->phosh,
+                                              roots_surface->xwayland_surface->startup_id,
+                                              PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
+}
+#endif /* PHOC_HAVE_WLR_SET_STARTUP_ID */
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	struct roots_xwayland_surface *roots_surface =
@@ -411,6 +426,11 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 	roots_surface->set_class.notify = handle_set_class;
 	wl_signal_add(&surface->events.set_class,
 			&roots_surface->set_class);
+#ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
+	roots_surface->set_startup_id.notify = handle_set_startup_id;
+	wl_signal_add(&surface->events.set_startup_id,
+			&roots_surface->set_startup_id);
+#endif
 }
 
 struct roots_xwayland_surface *roots_xwayland_surface_from_view(
