@@ -249,8 +249,7 @@ keyboard_execute_subscribed_binding(PhocKeyboard *self,
   for (size_t i = 0; i < keysyms_len; ++i) {
     PhocKeyCombo combo = { modifiers, keysyms[i] };
     handled = handled |
-      phosh_forward_keysym (&combo,
-                            time);
+      phoc_phosh_private_forward_keysym (&combo, time);
   }
   return handled;
 }

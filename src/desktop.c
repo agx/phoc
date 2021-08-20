@@ -616,7 +616,7 @@ phoc_desktop_constructed (GObject *object)
   self->text_input = wlr_text_input_manager_v3_create(server->wl_display);
 
   self->gtk_shell = phoc_gtk_shell_create(self, server->wl_display);
-  self->phosh = phosh_create(self, server->wl_display);
+  self->phosh = phoc_phosh_private_new (self);
   self->virtual_keyboard = wlr_virtual_keyboard_manager_v1_create(
 								  server->wl_display);
   wl_signal_add(&self->virtual_keyboard->events.new_virtual_keyboard,
@@ -690,7 +690,7 @@ phoc_desktop_finalize (GObject *object)
   g_clear_pointer (&self->xwayland, wlr_xwayland_destroy);
 #endif
 
-  g_clear_pointer (&self->phosh, phosh_destroy);
+  g_clear_pointer (&self->phosh, g_object_unref);
   g_clear_pointer (&self->gtk_shell, phoc_gtk_shell_destroy);
 
   g_hash_table_remove_all (self->input_output_map);
