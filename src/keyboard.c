@@ -14,7 +14,7 @@
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 #include "keyboard.h"
-#include "phosh.h"
+#include "phosh-private.h"
 #include "seat.h"
 
 #include <glib.h>

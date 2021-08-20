@@ -22,7 +22,7 @@
 #include <wlr-screencopy-unstable-v1-protocol.h>
 #include "server.h"
 #include "desktop.h"
-#include "phosh.h"
+#include "phosh-private.h"
 #include "render.h"
 #include "utils.h"
 

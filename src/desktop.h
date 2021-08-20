@@ -46,7 +46,7 @@ G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
 #include "input.h"
 #include "output.h"
 #include "view.h"
-#include "phosh.h"
+#include "phosh-private.h"
 #include "gtk-shell.h"
 
 struct _PhocDesktop {

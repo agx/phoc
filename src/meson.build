@@ -9,7 +9,7 @@ sources = [
   'keybindings.c',
   'layer_shell.c',
   'output.c',
-  'phosh.c',
+  'phosh-private.c',
   'pointer.c',
   'render.c',
   'seat.c',
