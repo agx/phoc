@@ -69,7 +69,22 @@ typedef struct {
   PhocPhoshPrivate *phosh;
 } PhocPhoshPrivateKeyboardEventData;
 
+typedef struct {
+  struct wl_resource *resource, *toplevel;
+  struct phosh_private *phosh;
+  struct wl_listener view_destroy;
+
+  enum wl_shm_format format;
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+
+  struct wl_shm_buffer *buffer;
+  struct roots_view *view;
+} PhocPhoshPrivateScreencopyFrame;
+
 static PhocPhoshPrivateKeyboardEventData *phoc_phosh_private_keyboard_event_from_resource (struct wl_resource *resource);
+static PhocPhoshPrivateScreencopyFrame *phoc_phosh_private_screencopy_frame_from_resource(struct wl_resource *resource);
 
 #define PHOSH_PRIVATE_VERSION 5
 
@@ -401,8 +416,7 @@ handle_get_keyboard_event (struct wl_client   *client,
 static void
 phosh_private_screencopy_frame_handle_resource_destroy (struct wl_resource *resource)
 {
-  struct phoc_phosh_private_screencopy_frame *frame =
-    phoc_phosh_private_screencopy_frame_from_resource (resource);
+  PhocPhoshPrivateScreencopyFrame *frame = phoc_phosh_private_screencopy_frame_from_resource (resource);
 
   g_debug ("Destroying private_screencopy_frame %p (res %p)", frame, frame->resource);
   if (frame->view) {
@@ -411,21 +425,23 @@ phosh_private_screencopy_frame_handle_resource_destroy (struct wl_resource *reso
   free (frame);
 }
 
+
 static void
 thumbnail_view_handle_destroy (struct wl_listener *listener, void *data)
 {
-  struct phoc_phosh_private_screencopy_frame *frame =
+  PhocPhoshPrivateScreencopyFrame *frame =
     wl_container_of (listener, frame, view_destroy);
 
   frame->view = NULL;
 }
+
 
 static void
 thumbnail_frame_handle_copy (struct wl_client   *wl_client,
                              struct wl_resource *frame_resource,
                              struct wl_resource *buffer_resource)
 {
-  struct phoc_phosh_private_screencopy_frame *frame = phoc_phosh_private_screencopy_frame_from_resource (frame_resource);
+  PhocPhoshPrivateScreencopyFrame *frame = phoc_phosh_private_screencopy_frame_from_resource (frame_resource);
   g_return_if_fail (frame);
 
   if (frame->buffer != NULL) {
@@ -518,8 +534,7 @@ handle_get_thumbnail (struct wl_client *client,
 		      uint32_t max_width,
 		      uint32_t max_height)
 {
-  struct phoc_phosh_private_screencopy_frame *frame =
-    calloc (1, sizeof(struct phoc_phosh_private_screencopy_frame));
+  PhocPhoshPrivateScreencopyFrame *frame = calloc (1, sizeof(PhocPhoshPrivateScreencopyFrame));
 
   if (frame == NULL) {
     wl_client_post_no_memory (client);
@@ -649,7 +664,7 @@ phoc_phosh_private_from_resource (struct wl_resource *resource)
 }
 
 
-struct phoc_phosh_private_screencopy_frame *
+static PhocPhoshPrivateScreencopyFrame *
 phoc_phosh_private_screencopy_frame_from_resource (struct wl_resource *resource)
 {
   assert (wl_resource_instance_of (resource, &zwlr_screencopy_frame_v1_interface,
