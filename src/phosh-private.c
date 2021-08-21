@@ -534,7 +534,7 @@ handle_get_thumbnail (struct wl_client *client,
 		      uint32_t max_width,
 		      uint32_t max_height)
 {
-  PhocPhoshPrivateScreencopyFrame *frame = calloc (1, sizeof(PhocPhoshPrivateScreencopyFrame));
+  PhocPhoshPrivateScreencopyFrame *frame = g_new0 (PhocPhoshPrivateScreencopyFrame, 1);
 
   if (frame == NULL) {
     wl_client_post_no_memory (client);
