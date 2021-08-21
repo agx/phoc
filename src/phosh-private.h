@@ -14,8 +14,6 @@
 
 G_BEGIN_DECLS
 
-#define PHOSH_PRIVATE_XDG_SWITCHER_SINCE_VERSION 2
-
 #define PHOC_TYPE_PHOSH_PRIVATE (phoc_phosh_private_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocPhoshPrivate, phoc_phosh_private, PHOC, PHOSH_PRIVATE, GObject)
