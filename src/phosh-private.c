@@ -55,11 +55,6 @@ struct _PhocPhoshPrivate {
   guint last_action_id;
 
   PhocDesktop *desktop;
-  struct {
-    struct wl_listener layer_shell_new_surface;
-    struct wl_listener panel_surface_destroy;
-  } listeners;
-  struct wlr_layer_surface_v1 *panel;
 };
 G_DEFINE_TYPE (PhocPhoshPrivate, phoc_phosh_private, G_TYPE_OBJECT)
 
@@ -135,35 +130,6 @@ handle_rotate_display (struct wl_client   *client,
 {
   wl_resource_post_error (resource, WL_DISPLAY_ERROR_INVALID_OBJECT,
                           "Use wlr-output-management protocol instead");
-}
-
-
-static void
-handle_phosh_panel_surface_destroy (struct wl_listener *listener, void *data)
-{
-  PhocPhoshPrivate *phosh = wl_container_of (listener, phosh, listeners.panel_surface_destroy);
-
-  if (phosh->panel) {
-    phosh->panel = NULL;
-    wl_list_remove (&phosh->listeners.panel_surface_destroy.link);
-  }
-}
-
-
-static void
-handle_phosh_layer_shell_new_surface (struct wl_listener *listener, void *data)
-{
-  struct wlr_layer_surface_v1 *surface = data;
-  PhocPhoshPrivate *phosh = wl_container_of (listener, phosh, listeners.layer_shell_new_surface);
-
-  /* We're only interested in the panel */
-  if (strcmp (surface->namespace, "phosh"))
-    return;
-
-  phosh->panel = surface;
-  wl_signal_add (&surface->events.destroy,
-                 &phosh->listeners.panel_surface_destroy);
-  phosh->listeners.panel_surface_destroy.notify = handle_phosh_panel_surface_destroy;
 }
 
 
@@ -612,7 +578,6 @@ phosh_handle_resource_destroy (struct wl_resource *resource)
 
   g_debug ("Destroying phosh %p (res %p)", phosh, resource);
   phosh->resource = NULL;
-  phosh->panel = NULL;
 
   g_list_free (phosh->keyboard_events);
   phosh->keyboard_events = NULL;
@@ -690,10 +655,6 @@ phoc_phosh_private_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_phosh_private_parent_class)->constructed (object);
 
-  wl_signal_add (&self->desktop->layer_shell->events.new_surface,
-                 &self->listeners.layer_shell_new_surface);
-  self->listeners.layer_shell_new_surface.notify = handle_phosh_layer_shell_new_surface;
-
   g_info ("Initializing phosh private interface");
   self->global = wl_global_create (display, &phosh_private_interface, PHOSH_PRIVATE_VERSION, self, phosh_bind);
 }
@@ -704,7 +665,6 @@ phoc_phosh_private_finalize (GObject *object)
 {
   PhocPhoshPrivate *self = PHOC_PHOSH_PRIVATE (object);
 
-  wl_list_remove (&self->listeners.layer_shell_new_surface.link);
   wl_global_destroy (self->global);
 
   G_OBJECT_CLASS (phoc_phosh_private_parent_class)->finalize (object);

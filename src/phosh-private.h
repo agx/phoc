@@ -9,7 +9,6 @@
 
 #include "keybindings.h"
 
-#include <wlr/types/wlr_layer_shell_v1.h>
 #include "glib-object.h"
 
 G_BEGIN_DECLS
