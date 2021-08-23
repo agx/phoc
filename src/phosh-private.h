@@ -19,7 +19,6 @@ G_DECLARE_FINAL_TYPE (PhocPhoshPrivate, phoc_phosh_private, PHOC, PHOSH_PRIVATE,
 
 typedef struct _PhocDesktop PhocDesktop;
 PhocPhoshPrivate *phoc_phosh_private_new (PhocDesktop *desktop);
-PhocPhoshPrivate *phoc_phosh_private_from_resource(struct wl_resource *resource);
-bool   phoc_phosh_private_forward_keysym (PhocKeyCombo *combo, uint32_t timestamp);
+bool phoc_phosh_private_forward_keysym (PhocKeyCombo *combo, uint32_t timestamp);
 
 G_END_DECLS

@@ -78,6 +78,7 @@ typedef struct {
   struct roots_view *view;
 } PhocPhoshPrivateScreencopyFrame;
 
+static PhocPhoshPrivate *phoc_phosh_private_from_resource (struct wl_resource *resource);
 static PhocPhoshPrivateKeyboardEventData *phoc_phosh_private_keyboard_event_from_resource (struct wl_resource *resource);
 static PhocPhoshPrivateScreencopyFrame *phoc_phosh_private_screencopy_frame_from_resource(struct wl_resource *resource);
 
@@ -620,7 +621,7 @@ phosh_bind (struct wl_client *client, void *data, uint32_t version, uint32_t id)
 }
 
 
-PhocPhoshPrivate *
+static PhocPhoshPrivate *
 phoc_phosh_private_from_resource (struct wl_resource *resource)
 {
   assert (wl_resource_instance_of (resource, &phosh_private_interface,
