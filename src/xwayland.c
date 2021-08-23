@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <wayland-server-core.h>
 #include <wlr/config.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
+#include <wlr/util/box.h>
 #include <wlr/xwayland.h>
 #include "cursor.h"
 #include "server.h"
@@ -16,6 +16,7 @@
 #include "view.h"
 #include "xwayland.h"
 #include "xwayland-surface.h"
+
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
 	PhocXWaylandSurface *phoc_surface =

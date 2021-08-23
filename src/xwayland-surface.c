@@ -45,6 +45,7 @@ static void set_active(PhocView *view, bool active) {
 	struct wlr_xwayland_surface *xwayland_surface =
 		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_activate(xwayland_surface, active);
+	wlr_xwayland_surface_restack(xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
 }
 
 static void move(PhocView *view, double x, double y) {

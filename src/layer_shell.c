@@ -12,9 +12,9 @@
 #include <string.h>
 #include <time.h>
 #include <wayland-server-core.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/util/box.h>
 #include "cursor.h"
 #include "desktop.h"
 #include "layers.h"
@@ -183,7 +183,7 @@ static void arrange_layer(struct wlr_output *output,
 		}
 		if (box.width < 0 || box.height < 0) {
 			// TODO: Bubble up a protocol error?
-			wlr_layer_surface_v1_close(layer);
+			wlr_layer_surface_v1_destroy(layer);
 			continue;
 		}
 
@@ -195,7 +195,9 @@ static void arrange_layer(struct wlr_output *output,
 					state->margin.top, state->margin.right,
 					state->margin.bottom, state->margin.left);
 		}
-		wlr_layer_surface_v1_configure(layer, box.width, box.height);
+
+		if (box.width != old_geo.width || box.height != old_geo.height)
+			wlr_layer_surface_v1_configure(layer, box.width, box.height);
 
 		// Having a cursor newly end up over the moved layer will not
 		// automatically send a motion event to the surface. The event needs to
@@ -240,9 +242,9 @@ static void change_osk(const struct osk_origin *osk, struct wl_list layers[LAYER
 		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &osk->surface->link);
 	}
 
-	if (!force_overlay && osk->layer != osk->surface->layer_surface->client_pending.layer) {
+	if (!force_overlay && osk->layer != osk->surface->layer_surface->pending.layer) {
 		wl_list_remove(&osk->surface->link);
-		wl_list_insert(&layers[osk->surface->layer_surface->client_pending.layer], &osk->surface->link);
+		wl_list_insert(&layers[osk->surface->layer_surface->pending.layer], &osk->surface->link);
 	}
 }
 
@@ -269,7 +271,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
       PhocSeat *seat = PHOC_SEAT (elem->data);
 
       g_assert (PHOC_IS_SEAT (seat));
-      if (seat->focused_layer && seat->focused_layer->client_pending.layer >= osk_place.surface->layer_surface->client_pending.layer) {
+      if (seat->focused_layer && seat->focused_layer->pending.layer >= osk_place.surface->layer_surface->pending.layer) {
         osk_force_overlay = true;
         break;
       }
@@ -340,7 +342,7 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
 		wl_container_of(listener, layer, output_destroy);
 	layer->layer_surface->output = NULL;
 	wl_list_remove(&layer->output_destroy.link);
-	wlr_layer_surface_v1_close(layer->layer_surface);
+	wlr_layer_surface_v1_destroy(layer->layer_surface);
 }
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
@@ -353,16 +355,20 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		PhocOutput *output = wlr_output->data;
 		struct wlr_box old_geo = layer->geo;
 
-		bool layer_changed = layer->layer != layer_surface->current.layer;
-		if (layer_changed) {
-			wl_list_remove(&layer->link);
-			wl_list_insert(&output->layers[layer_surface->current.layer],
-				&layer->link);
-			layer->layer = layer_surface->current.layer;
-		}
+		bool layer_changed = false;
+		if (layer_surface->current.committed != 0 || layer->mapped != layer_surface->mapped) {
+			layer->mapped = layer_surface->mapped;
+			layer_changed = layer->layer != layer_surface->current.layer;
+			if (layer_changed) {
+				wl_list_remove(&layer->link);
+				wl_list_insert(&output->layers[layer_surface->current.layer],
+					       &layer->link);
+				layer->layer = layer_surface->current.layer;
+			}
 
-		phoc_layer_shell_arrange (output);
-		phoc_layer_shell_update_focus ();
+			phoc_layer_shell_arrange (output);
+			phoc_layer_shell_update_focus ();
+		}
 
 		// Cursor changes which happen as a consequence of resizing a layer
 		// surface are applied in phoc_layer_shell_arrange. Because the resize happens
@@ -438,8 +444,8 @@ static void popup_unconstrain(struct roots_layer_popup *popup) {
 static void popup_damage(struct roots_layer_popup *layer_popup, bool whole) {
 	struct wlr_xdg_popup *popup = layer_popup->wlr_popup;
 	struct wlr_surface *surface = popup->base->surface;
-	int popup_sx = popup->geometry.x - popup->base->geometry.x;
-	int popup_sy = popup->geometry.y - popup->base->geometry.y;
+	int popup_sx = popup->geometry.x - popup->base->current.geometry.x;
+	int popup_sy = popup->geometry.y - popup->base->current.geometry.y;
 	int ox = popup_sx, oy = popup_sy;
 	PhocLayerSurface *layer;
 	while (layer_popup->parent_type == LAYER_PARENT_POPUP) {
@@ -493,13 +499,13 @@ static void popup_handle_map(struct wl_listener *listener, void *data) {
 	}
 
 	struct wlr_subsurface *child;
-	wl_list_for_each(child, &popup->wlr_popup->base->surface->subsurfaces_below, parent_link) {
+	wl_list_for_each(child, &popup->wlr_popup->base->surface->current.subsurfaces_below, current.link) {
 		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
 		new_subsurface->parent_type = LAYER_PARENT_POPUP;
 		new_subsurface->parent_popup = popup;
 		wl_list_insert(&popup->subsurfaces, &new_subsurface->link);
 	}
-	wl_list_for_each(child, &popup->wlr_popup->base->surface->subsurfaces_above, parent_link) {
+	wl_list_for_each(child, &popup->wlr_popup->base->surface->current.subsurfaces_above, current.link) {
 		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
 		new_subsurface->parent_type = LAYER_PARENT_POPUP;
 		new_subsurface->parent_popup = popup;
@@ -620,13 +626,13 @@ static void subsurface_handle_map(struct wl_listener *listener, void *data) {
 	struct roots_layer_subsurface *subsurface = wl_container_of(listener, subsurface, map);
 
 	struct wlr_subsurface *child;
-	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->subsurfaces_below, parent_link) {
+	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->current.subsurfaces_below, current.link) {
 		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
 		new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
 		new_subsurface->parent_subsurface = subsurface;
 		wl_list_insert(&subsurface->subsurfaces, &new_subsurface->link);
 	}
-	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->subsurfaces_above, parent_link) {
+	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->current.subsurfaces_above, current.link) {
 		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
 		new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
 		new_subsurface->parent_subsurface = subsurface;
@@ -707,13 +713,13 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	}
 
 	struct wlr_subsurface *subsurface;
-	wl_list_for_each(subsurface, &layer_surface->surface->subsurfaces_below, parent_link) {
+	wl_list_for_each(subsurface, &layer_surface->surface->current.subsurfaces_below, current.link) {
 		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
 		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
 		roots_subsurface->parent_layer = layer;
 		wl_list_insert(&layer->subsurfaces, &roots_subsurface->link);
 	}
-	wl_list_for_each(subsurface, &layer_surface->surface->subsurfaces_above, parent_link) {
+	wl_list_for_each(subsurface, &layer_surface->surface->current.subsurfaces_above, current.link) {
 		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
 		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
 		roots_subsurface->parent_layer = layer;
@@ -751,14 +757,14 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		wl_container_of(listener, desktop, layer_shell_surface);
 	g_debug ("new layer surface: namespace %s layer %d anchor %d "
 			"size %dx%d margin %d,%d,%d,%d",
-		layer_surface->namespace, layer_surface->client_pending.layer,
-		layer_surface->client_pending.anchor,
-		layer_surface->client_pending.desired_width,
-		layer_surface->client_pending.desired_height,
-		layer_surface->client_pending.margin.top,
-		layer_surface->client_pending.margin.right,
-		layer_surface->client_pending.margin.bottom,
-		layer_surface->client_pending.margin.left);
+		layer_surface->namespace, layer_surface->pending.layer,
+		layer_surface->pending.anchor,
+		layer_surface->pending.desired_width,
+		layer_surface->pending.desired_height,
+		layer_surface->pending.margin.top,
+		layer_surface->pending.margin.right,
+		layer_surface->pending.margin.bottom,
+		layer_surface->pending.margin.left);
 
 	if (!layer_surface->output) {
 		PhocInput *input = server->input;
@@ -778,7 +784,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		if (output) {
 			layer_surface->output = output;
 		} else {
-			wlr_layer_surface_v1_close(layer_surface);
+			wlr_layer_surface_v1_destroy(layer_surface);
 			return;
 		}
 	}
@@ -811,12 +817,12 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	layer_surface->data = roots_surface;
 
 	PhocOutput *output = layer_surface->output->data;
-	wl_list_insert(&output->layers[layer_surface->client_pending.layer], &roots_surface->link);
+	wl_list_insert(&output->layers[layer_surface->pending.layer], &roots_surface->link);
 
-	// Temporarily set the layer's current state to client_pending
+	// Temporarily set the layer's current state to pending
 	// So that we can easily arrange it
 	struct wlr_layer_surface_v1_state old_state = layer_surface->current;
-	layer_surface->current = layer_surface->client_pending;
+	layer_surface->current = layer_surface->pending;
 
 	phoc_layer_shell_arrange (output);
 	phoc_layer_shell_update_focus ();

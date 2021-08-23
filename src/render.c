@@ -16,6 +16,7 @@
 #include "server.h"
 #include "render.h"
 #include "xwayland-surface.h"
+#include "utils.h"
 
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>
@@ -44,6 +45,16 @@ struct wlr_buffer *wlr_allocator_create_buffer (struct wlr_allocator *alloc, int
 void wlr_allocator_destroy (struct wlr_allocator *alloc);
 struct wlr_drm_format *wlr_drm_format_create (uint32_t format);
 /* ----------------------------- */
+
+
+static void wlr_box_from_pixman_box32(struct wlr_box *dest, const pixman_box32_t box) {
+	*dest = (struct wlr_box){
+		.x = box.x1,
+		.y = box.y1,
+		.width = box.x2 - box.x1,
+		.height = box.y2 - box.y1,
+	};
+}
 
 #define TOUCH_POINT_SIZE 20
 #define TOUCH_POINT_BORDER 0.1
@@ -173,12 +184,12 @@ static void render_texture(struct wlr_output *wlr_output,
 	assert(renderer);
 
 	struct wlr_box rotated;
-	wlr_box_rotated_bounds(&rotated, dst_box, rotation);
+	phoc_utils_rotated_bounds(&rotated, dst_box, rotation);
 
 	pixman_region32_t damage;
 	pixman_region32_init(&damage);
-	pixman_region32_union_rect(&damage, &damage, rotated.x, rotated.y,
-		rotated.width, rotated.height);
+	pixman_region32_union_rect(&damage, &damage, dst_box->x, dst_box->y,
+		dst_box->width, dst_box->height);
 	pixman_region32_intersect(&damage, &damage, output_damage);
 	bool damaged = pixman_region32_not_empty(&damage);
 	if (!damaged) {

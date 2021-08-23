@@ -85,7 +85,7 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
 
   struct wlr_box rotated_box;
 
-  wlr_box_rotated_bounds (&rotated_box, &box, data->rotation);
+  phoc_utils_rotated_bounds (&rotated_box, &box, data->rotation);
 
   struct wlr_box output_box = {0};
 
@@ -95,7 +95,7 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
 
   struct wlr_box intersection;
 
-  return wlr_box_intersection (&intersection, &output_box, &rotated_box);
+  return wlr_box_intersection (&intersection, &output_box, &box);
 }
 
 
@@ -614,9 +614,9 @@ phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surf
 
     double popup_sx, popup_sy;
     popup_sx = layer_surface->geo.x;
-    popup_sx += popup->popup->geometry.x - popup->geometry.x;
+    popup_sx += popup->popup->geometry.x - popup->current.geometry.x;
     popup_sy = layer_surface->geo.y;
-    popup_sy += popup->popup->geometry.y - popup->geometry.y;
+    popup_sy += popup->popup->geometry.y - popup->current.geometry.y;
 
     phoc_output_xdg_surface_for_each_surface (self, popup,
                                               popup_sx, popup_sy, iterator, user_data);
@@ -822,7 +822,7 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
   }
 
   if (*whole) {
-    wlr_box_rotated_bounds (&box, &box, rotation);
+    phoc_utils_rotated_bounds (&box, &box, rotation);
     wlr_output_damage_add_box (self->damage, &box);
   }
 

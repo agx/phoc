@@ -5,9 +5,9 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <wayland-server-core.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/box.h>
 
 G_BEGIN_DECLS
 
