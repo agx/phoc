@@ -161,14 +161,14 @@ phoc_test_thumbnail_free (PhocTestScreencopyFrame *frame)
 }
 
 static gboolean
-test_client_phosh_thumbnail_simple (PhocTestClientGlobals *globals, gpointer data)
+test_client_phosh_private_thumbnail_simple (PhocTestClientGlobals *globals, gpointer data)
 {
   PhocTestXdgToplevelSurface *toplevel_green;
   PhocTestScreencopyFrame *green_thumbnail;
 
   toplevel_green = phoc_test_xdg_surface_new (globals, WIDTH, HEIGHT, "green", 0xFF00FF00);
   g_assert_nonnull (toplevel_green);
-  phoc_assert_screenshot (globals, "test-phosh-thumbnail-simple-1.png");
+  phoc_assert_screenshot (globals, "test-phosh-private-thumbnail-simple-1.png");
 
   green_thumbnail = phoc_test_get_thumbnail (globals, toplevel_green->width, toplevel_green->height, toplevel_green->foreign_toplevel);
   phoc_assert_buffer_equal (&toplevel_green->buffer, &green_thumbnail->buffer);
@@ -181,10 +181,10 @@ test_client_phosh_thumbnail_simple (PhocTestClientGlobals *globals, gpointer dat
 }
 
 static void
-test_phosh_thumbnail_simple (void)
+test_phosh_private_thumbnail_simple (void)
 {
   PhocTestClientIface iface = {
-   .client_run = test_client_phosh_thumbnail_simple,
+   .client_run = test_client_phosh_private_thumbnail_simple,
   };
 
   phoc_test_client_run (3, &iface, GINT_TO_POINTER (FALSE));
@@ -243,7 +243,7 @@ phoc_test_keyboard_event_new (PhocTestClientGlobals *globals,
 #define RAISE_VOL_KEY "XF86AudioRaiseVolume"
 
 static gboolean
-test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unused)
+test_client_phosh_private_kbevent_simple (PhocTestClientGlobals *globals, gpointer unused)
 {
   PhocTestKeyboardEvent *test1;
   PhocTestKeyboardEvent *test2;
@@ -306,10 +306,10 @@ test_client_phosh_kbevent_simple (PhocTestClientGlobals *globals, gpointer unuse
 }
 
 static void
-test_phosh_kbevents_simple (void)
+test_phosh_private_kbevents_simple (void)
 {
   PhocTestClientIface iface = {
-   .client_run = test_client_phosh_kbevent_simple,
+   .client_run = test_client_phosh_private_kbevent_simple,
   };
 
   phoc_test_client_run (3, &iface, NULL);
@@ -320,7 +320,7 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func ("/phoc/phosh/thumbnail/simple", test_phosh_thumbnail_simple);
-  g_test_add_func ("/phoc/phosh/kbevents/simple", test_phosh_kbevents_simple);
+  g_test_add_func ("/phoc/phosh/thumbnail/simple", test_phosh_private_thumbnail_simple);
+  g_test_add_func ("/phoc/phosh/kbevents/simple", test_phosh_private_kbevents_simple);
   return g_test_run ();
 }

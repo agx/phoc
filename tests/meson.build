@@ -28,7 +28,7 @@ tests = [
   'client',
   'layer-shell',
   'xdg-shell',
-  'phosh'
+  'phosh-private'
 ]
 
 phoctest_sources = [
