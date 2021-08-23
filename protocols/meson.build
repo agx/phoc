@@ -66,6 +66,7 @@ client_protocols = [
   ['wlr-layer-shell-unstable-v1.xml'],
   ['wlr-output-power-management-unstable-v1.xml'],
   ['wlr-screencopy-unstable-v1.xml'],
+  ['gtk-shell.xml'],
   ['phosh-private.xml']
 ]
 
