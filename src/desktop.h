@@ -28,6 +28,7 @@
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_xdg_activation_v1.h>
 
 #include <gio/gio.h>
 
@@ -73,6 +74,7 @@ struct _PhocDesktop {
 	struct wlr_pointer_gestures_v1 *pointer_gestures;
 	struct wlr_output_manager_v1 *output_manager_v1;
 	struct wlr_output_power_manager_v1 *output_power_manager_v1;
+	struct wlr_xdg_activation_v1 *xdg_activation_v1;
 
 	struct wl_listener new_output;
 	struct wl_listener layout_change;
@@ -87,6 +89,7 @@ struct _PhocDesktop {
 	struct wl_listener output_manager_apply;
 	struct wl_listener output_manager_test;
 	struct wl_listener output_power_manager_set_mode;
+	struct wl_listener xdg_activation_v1_request_activate;
 
 #ifdef PHOC_XWAYLAND
 	struct wlr_xcursor_manager *xcursor_manager;
