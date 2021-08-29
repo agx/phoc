@@ -104,6 +104,7 @@ struct _PhocDesktop {
 	struct wlr_xwayland *xwayland;
 	struct wl_listener xwayland_surface;
 	struct wl_listener xwayland_ready;
+	struct wl_listener xwayland_remove_startup_id;
 	xcb_atom_t xwayland_atoms[XWAYLAND_ATOM_LAST];
 #endif
 
