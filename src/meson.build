@@ -76,6 +76,26 @@ libphoc_dep = declare_dependency(
   link_with: phoc_lib,
   dependencies: phoc_deps)
 
+if get_option('gtk_doc')
+  phoc_gir_extra_args = [
+    '--quiet',
+  ]
+
+  phoc_gir = gnome.generate_gir(phoc_lib,
+                 sources: sources,
+               nsversion: '0',
+               namespace: 'Phoc',
+         export_packages: 'phoc-0',
+           symbol_prefix: 'phoc',
+       identifier_prefix: 'Phoc',
+               link_with: [lib_server_protos],
+                includes: ['Gio-2.0'],
+                 install: false,
+              extra_args: phoc_gir_extra_args,
+            dependencies: [phoc_deps, libphoc_dep],
+   )
+endif
+
 executable(
   'phoc',
   sources: 'main.c',

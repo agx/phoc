@@ -17,6 +17,9 @@ add_project_arguments([
 root_inc = include_directories('.')
 src_inc = include_directories('src')
 
+prefix = get_option('prefix')
+datadir = join_paths(prefix, get_option('datadir'))
+
 cc = meson.get_compiler('c')
 
 gio            = dependency('gio-2.0', version: '>=2.50.0')
@@ -129,6 +132,7 @@ subdir('protocols')
 subdir('src')
 subdir('tests')
 subdir('data')
+subdir('doc')
 
 summary = [
         '',
@@ -138,6 +142,7 @@ summary = [
         '           xwayland: @0@'.format(have_xwayland),
         ' wlroots subproject: @0@'.format(not embed_wlroots.disabled() and wlroots_proj.found()),
         '    wlroots version: @0@'.format(wlroots.version()),
+        '      Documentation: @0@'.format(get_option('gtk_doc')),
         '--------------------------',
         ''
 ]
