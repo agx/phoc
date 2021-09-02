@@ -3,9 +3,10 @@ include:
 
 stages:
  - build
- - test
+ - test+docs
  - package
  - test-package
+ - deploy
 
 variables:
   DEPS: git lcov
@@ -72,7 +73,7 @@ build-without-xwayland-alpinelinux-edge:
 
 
 unit-test-with-xwayland-debian-bullseye:
-  stage: test
+  stage: test+docs
   image: debian:bullseye
   needs:
     - build-with-xwayland-debian-bullseye
@@ -89,9 +90,40 @@ unit-test-with-xwayland-debian-bullseye:
     variables:
       - $PKG_ONLY == "1"
 
+build-gtkdoc:
+  stage: test+docs
+  image: debian:bullseye
+  before_script: *before_script_debian
+  variables:
+    BUILD_ARGS: -Dgtk_doc=true -Dembed-wlroots=disabled
+  script:
+    - git clean -dfx
+    - 'echo "Build opts: ${BUILD_ARGS}"'
+    - meson . _build $BUILD_ARGS
+    - ninja -C _build
+    - mv _build/doc/phoc-*/ _reference/
+  artifacts:
+    paths:
+      - _reference
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
 package-pureos-byzantium:arm64:
   variables:
     L5_DOCKER_IMAGE: pureos/byzantium
   tags:
     - aarch64
   extends: .l5-build-debian-package
+
+pages:
+  stage: deploy
+  needs:
+    - build-gtkdoc
+  script:
+    - mv _reference/ public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
