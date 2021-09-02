@@ -40,20 +40,8 @@ struct roots_config {
 	char *config_path;
 };
 
-/**
- * Create a roots config from the given arguments.
- */
 struct roots_config *roots_config_create(const char *config_path);
-
-/**
- * Destroy the config and free its resources.
- */
 void roots_config_destroy(struct roots_config *config);
-
-/**
- * Get configuration for the output. If the output is not configured, returns
- * NULL.
- */
 struct roots_output_config *roots_config_get_output(struct roots_config *config,
 	struct wlr_output *output);
 
