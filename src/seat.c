@@ -341,7 +341,7 @@ handle_tool_axis (struct wl_listener *listener, void *data)
     return;
   }
 
-  /**
+  /*
    * We need to handle them ourselves, not pass it into the cursor
    * without any consideration
    */
@@ -1672,7 +1672,7 @@ phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
   roots_input_method_relay_set_focus (&seat->im_relay, view->wlr_surface);
 }
 
-/**
+/*
  * Focus semantics of layer surfaces are somewhat detached from the normal focus
  * flow. For layers above the shell layer, for example, you cannot unfocus them.
  * You also cannot alt-tab between layer surfaces and shell surfaces.
