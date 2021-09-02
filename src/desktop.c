@@ -39,6 +39,12 @@
 #include "xcursor.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 
+/**
+ * PhocDesktop:
+ *
+ * Desktop singleton
+ */
+
 enum {
   PROP_0,
   PROP_CONFIG,
