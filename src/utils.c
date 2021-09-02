@@ -34,6 +34,8 @@ phoc_utils_fix_transform (enum wl_output_transform *transform)
 }
 
 /**
+ * phoc_utils_rotate_child_position:
+ *
  * Rotate a child's position relative to a parent. The parent size is (pw, ph),
  * the child position is (*sx, *sy) and its size is (sw, sh).
  */
