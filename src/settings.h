@@ -57,18 +57,4 @@ void roots_config_destroy(struct roots_config *config);
 struct roots_output_config *roots_config_get_output(struct roots_config *config,
 	struct wlr_output *output);
 
-/**
- * Get configuration for the keyboard. If the keyboard is not configured,
- * returns NULL. A NULL device returns the default config for keyboards.
- */
-struct roots_keyboard_config *roots_config_get_keyboard(
-	struct roots_config *config, struct wlr_input_device *device);
-
-/**
- * Get configuration for the cursor. If the cursor is not configured, returns
- * NULL. A NULL seat_name returns the default config for cursors.
- */
-struct roots_cursor_config *roots_config_get_cursor(struct roots_config *config,
-	const char *seat_name);
-
 #endif
