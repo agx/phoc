@@ -6,11 +6,6 @@ project('phoc', 'c',
     'warning_level=1',
     'buildtype=debugoptimized',
     'c_std=gnu11',
-    # Caution: this is an option affecting all libraries built by Meson.
-    # It is needed for wlroots only,
-    # however the option is ignored if placed anywhere but here.
-    # Build with -Ddefault_library=shared to link to a shared libwlroots
-    'default_library=static',
   ],
 )
 
