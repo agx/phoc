@@ -160,7 +160,7 @@ pressed_keysyms_update(xkb_keysym_t *pressed_keysyms,
   }
 }
 
-/**
+/*
  * Execute a built-in, hardcoded compositor binding. These are triggered from a
  * single keysym.
  *
@@ -200,7 +200,7 @@ keyboard_execute_compositor_binding(PhocKeyboard *self,
   return false;
 }
 
-/**
+/*
  * Execute keyboard bindings. These include compositor bindings and user-defined
  * bindings.
  *
@@ -233,7 +233,7 @@ keyboard_execute_binding(PhocKeyboard *self,
 }
 
 
-/**
+/*
  * Forward keyboard bindings.
  *
  * Returns true if the keysym was handled by forwarding and false if the event
