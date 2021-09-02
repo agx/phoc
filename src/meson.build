@@ -70,16 +70,15 @@ phoc_lib = static_library(
   dependencies: phoc_deps,
   install: false,
 )
-phoc_inc = include_directories('.')
 
-phoc_dep = declare_dependency(
-  include_directories: phoc_inc,
+libphoc_dep = declare_dependency(
+  include_directories: include_directories('.'),
   link_with: phoc_lib,
   dependencies: phoc_deps)
 
 executable(
   'phoc',
   sources: 'main.c',
-  dependencies: phoc_dep,
+  dependencies: libphoc_dep,
   install: true,
 )
