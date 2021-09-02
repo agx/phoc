@@ -1922,11 +1922,10 @@ input_last_active_seat (PhocInput *input)
 
 /**
  * phoc_seat_maybe_set_cursor:
- *
- * Show a cursor if the seat has pointer capabilities
- *
  * @self: a PhocSeat
  * @name: (nullable): a cursor name or %NULL for the themes default cursor
+ *
+ * Show a cursor if the seat has pointer capabilities
  */
 void
 phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
@@ -1946,9 +1945,9 @@ phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
 
 /**
  * phoc_seat_get_cursor:
+ * @self: a PhocSeat
  *
  * Get the curent cursor
- * @self: a PhocSeat
  *
  * Returns: (transfer none): The current cursor
  */
