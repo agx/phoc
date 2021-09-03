@@ -1,7 +1,7 @@
 project('phoc', 'c',
           version: '0.8.0',
           license: 'GPLv3+',
-    meson_version: '>= 0.47.0',
+    meson_version: '>= 0.54.0',
   default_options: [
     'warning_level=1',
     'buildtype=debugoptimized',
@@ -16,6 +16,7 @@ add_project_arguments([
 
 root_inc = include_directories('.')
 src_inc = include_directories('src')
+protocol_inc = include_directories('protocols')
 
 prefix = get_option('prefix')
 datadir = join_paths(prefix, get_option('datadir'))

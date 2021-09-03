@@ -43,6 +43,10 @@ sources = files(
   'virtual.h',
   'xdg_shell.c',
 )
+libphoc_generated_sources = [
+  server_protos_headers,
+  server_protos_sources,
+]
 
 phoc_deps = [
   input,
@@ -55,7 +59,6 @@ phoc_deps = [
   pixman,
   wayland_server,
   wlroots,
-  server_protos,
   xkbcommon,
 ]
 
@@ -67,14 +70,16 @@ endif
 phoc_lib = static_library(
   'phoc',
   sources,
+  libphoc_generated_sources,
   dependencies: phoc_deps,
   install: false,
 )
 
 libphoc_dep = declare_dependency(
-  include_directories: include_directories('.'),
+  include_directories: [include_directories('.'), protocol_inc],
   link_with: phoc_lib,
-  dependencies: phoc_deps)
+  dependencies: phoc_deps,
+  sources: libphoc_generated_sources)
 
 if get_option('gtk_doc')
   phoc_gir_extra_args = [
@@ -88,7 +93,6 @@ if get_option('gtk_doc')
          export_packages: 'phoc-0',
            symbol_prefix: 'phoc',
        identifier_prefix: 'Phoc',
-               link_with: [lib_server_protos],
                 includes: ['Gio-2.0'],
                  install: false,
               extra_args: phoc_gir_extra_args,
