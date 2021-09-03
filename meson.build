@@ -47,6 +47,10 @@ if not embed_wlroots.disabled()
    if embed_wlroots.enabled() and not wlroots_proj.found()
         error('Wlroots subproject not found but enabled')
    endif
+
+   if get_option('gtk_doc') != false
+     error('Can\'t generate docs and use embedded wlroots build')
+   endif
 endif
 
 if not embed_wlroots.disabled() and wlroots_proj.found()
