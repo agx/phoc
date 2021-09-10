@@ -33,9 +33,9 @@ variables:
   - apk -q add alpine-sdk
   - apk -q add $ALPINE_EDGE_DEPS
 
-build-with-xwayland-debian-bullseye:
+build-with-xwayland-debian-bookworm:
   stage: build
-  image: debian:bullseye
+  image: debian:bookworm
   before_script: *before_script_debian
   variables:
      BUILD_ARGS: -Dxwayland=enabled -Db_coverage=true
@@ -72,11 +72,11 @@ build-without-xwayland-alpinelinux-edge:
       - $PKG_ONLY == "1"
 
 
-unit-test-with-xwayland-debian-bullseye:
+unit-test-with-xwayland-debian-bookworm:
   stage: test+docs
-  image: debian:bullseye
+  image: debian:bookworm
   needs:
-    - build-with-xwayland-debian-bullseye
+    - build-with-xwayland-debian-bookworm
   before_script: *before_script_debian
   script:
     - ${XVFB_RUN} ninja -C _build test
@@ -92,7 +92,7 @@ unit-test-with-xwayland-debian-bullseye:
 
 build-gtkdoc:
   stage: test+docs
-  image: debian:bullseye
+  image: debian:bookworm
   before_script: *before_script_debian
   variables:
     BUILD_ARGS: -Dgtk_doc=true -Dembed-wlroots=disabled
