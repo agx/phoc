@@ -147,7 +147,7 @@ phoc_touch_class_init (PhocTouchClass *klass)
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
   signals[TOUCH_DESTROY] = g_signal_new ("touch-destroyed",
-                                         G_TYPE_OBJECT,
+                                         G_TYPE_FROM_CLASS (klass),
                                          G_SIGNAL_RUN_LAST,
                                          0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
