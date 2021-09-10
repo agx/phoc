@@ -1,3 +1,11 @@
+phoc_enum_headers = files(
+  [
+    'phosh-private.h',
+  ])
+phoc_enum_sources = gnome.mkenums_simple(
+  'phoc-enums',
+  sources : phoc_enum_headers)
+
 sources = files(
   'settings.c',
   'settings.h',
@@ -44,6 +52,7 @@ sources = files(
   'xdg_shell.c',
 )
 libphoc_generated_sources = [
+  phoc_enum_sources,
   server_protos_headers,
   server_protos_sources,
 ]
