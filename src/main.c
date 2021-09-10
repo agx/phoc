@@ -99,6 +99,7 @@ main(int argc, char **argv)
   g_autoptr(PhocServer) server = NULL;
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
+  PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
   gboolean version = FALSE;
 
@@ -135,7 +136,7 @@ main(int argc, char **argv)
   }
 
   loop = g_main_loop_new (NULL, FALSE);
-  if (!phoc_server_setup (server, config_path, exec, loop, debug_flags))
+  if (!phoc_server_setup (server, config_path, exec, loop, flags, debug_flags))
     return 1;
 
   g_main_loop_run (loop);

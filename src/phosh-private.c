@@ -769,12 +769,13 @@ phoc_phosh_private_class_init (PhocPhoshPrivateClass *klass)
    *
    * The attached shell's state
    */
-  props[PROP_SHELL_STATE] = g_param_spec_object ("shell-state",
-                                                 "",
-                                                 "",
-                                                 PHOC_TYPE_PHOSH_PRIVATE_SHELL_STATE,
-                                                 G_PARAM_READABLE | G_PARAM_STATIC_STRINGS |
-                                                 G_PARAM_EXPLICIT_NOTIFY);
+  props[PROP_SHELL_STATE] = g_param_spec_enum ("shell-state",
+                                               "",
+                                               "",
+                                               PHOC_TYPE_PHOSH_PRIVATE_SHELL_STATE,
+                                               PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN,
+                                               G_PARAM_READABLE | G_PARAM_STATIC_STRINGS |
+                                               G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }

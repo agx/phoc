@@ -288,6 +288,7 @@ phoc_server_get_default (void)
 gboolean
 phoc_server_setup (PhocServer *self, const char *config_path,
 		   const char *session, GMainLoop *mainloop,
+                   PhocServerFlags flags,
 		   PhocServerDebugFlags debug_flags)
 {
   g_assert (!self->inited);
@@ -304,6 +305,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
   self->input = phoc_input_new ();
   self->session = g_strdup (session);
   self->mainloop = mainloop;
+  self->flags = flags;
   self->debug_flags = debug_flags;
 
   const char *socket = wl_display_add_socket_auto(self->wl_display);
