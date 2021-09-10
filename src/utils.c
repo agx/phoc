@@ -12,7 +12,6 @@ phoc_utils_fix_transform (enum wl_output_transform *transform)
    * In order to maintain the same behavior, we need to modify the transform
    * before applying it
    */
-#if (WLR_VERSION_MAJOR > 0 || WLR_VERSION_MINOR > 10)
   switch (*transform) {
   case WL_OUTPUT_TRANSFORM_90:
     *transform = WL_OUTPUT_TRANSFORM_270;
@@ -30,7 +29,6 @@ phoc_utils_fix_transform (enum wl_output_transform *transform)
     /* Nothing to be done */
     break;
   }
-#endif
 }
 
 /**

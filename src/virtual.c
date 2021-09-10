@@ -46,10 +46,8 @@ phoc_handle_virtual_pointer(struct wl_listener *listener, void *data)
 
   phoc_seat_add_device (seat, device);
 
-#if WLR_VERSION_MAJOR > 0 || WLR_VERSION_MINOR >= 11
   if (event->suggested_output) {
     wlr_cursor_map_input_to_output(seat->cursor->cursor, device,
 				   event->suggested_output);
   }
-#endif
 }

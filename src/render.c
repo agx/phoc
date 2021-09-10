@@ -467,9 +467,7 @@ view_render_to_buffer (struct roots_view *view, int width, int height, int strid
   glDeleteTextures (1, &tex);
   glBindFramebuffer (GL_FRAMEBUFFER, 0);
 
-#if WLR_VERSION_MAJOR > 0 || WLR_VERSION_MINOR >= 11
   wlr_egl_unset_current (egl);
-#endif
 
   return TRUE;
 }

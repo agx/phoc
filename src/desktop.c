@@ -601,11 +601,7 @@ phoc_desktop_constructed (GObject *object)
 
     setenv("DISPLAY", self->xwayland->display_name, true);
 
-#if (WLR_VERSION_MAJOR > 0 || WLR_VERSION_MINOR > 10)
     if (!wlr_xcursor_manager_load(self->xcursor_manager, 1)) {
-#else
-    if (wlr_xcursor_manager_load(self->xcursor_manager, 1)) {
-#endif
       wlr_log(WLR_ERROR, "Cannot load XWayland XCursor theme");
     }
     struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor(
