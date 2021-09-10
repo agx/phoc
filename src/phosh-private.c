@@ -652,6 +652,9 @@ phosh_handle_resource_destroy (struct wl_resource *resource)
 
   g_list_free (phosh->keyboard_events);
   phosh->keyboard_events = NULL;
+
+  phosh->state = PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN;
+  g_object_notify_by_pspec (G_OBJECT (phosh), props[PROP_SHELL_STATE]);
 }
 
 
