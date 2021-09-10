@@ -7,6 +7,7 @@
 #define G_LOG_DOMAIN "phoc-server"
 
 #include "config.h"
+#include "render.h"
 #include "server.h"
 
 #include <errno.h>
@@ -148,6 +149,7 @@ phoc_server_initable_init (GInitable    *initable,
 			   GError      **error)
 {
   PhocServer *self = PHOC_SERVER (initable);
+  struct wlr_renderer *wlr_renderer;
 
   self->wl_display = wl_display_create();
   if (self->wl_display == NULL) {
@@ -165,17 +167,21 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-  self->renderer = wlr_backend_get_renderer(self->backend);
-  if (self->renderer == NULL) {
+  wlr_renderer = wlr_backend_get_renderer(self->backend);
+  if (wlr_renderer == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
 		 "Could not create renderer");
     return FALSE;
   }
+  self->renderer = phoc_renderer_new (wlr_renderer);
 
   self->data_device_manager =
     wlr_data_device_manager_create(self->wl_display);
-  wlr_renderer_init_wl_display(self->renderer, self->wl_display);
+  wlr_renderer_init_wl_display(wlr_renderer, self->wl_display);
+
+  self->compositor = wlr_compositor_create(self->wl_display,
+                                           wlr_renderer);
 
   return TRUE;
 }
@@ -198,6 +204,8 @@ phoc_server_dispose (GObject *object)
     wlr_backend_destroy(self->backend);
     self->backend = NULL;
   }
+
+  g_clear_object (&self->renderer);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->dispose (object);
 }

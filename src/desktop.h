@@ -6,7 +6,6 @@
 #include <time.h>
 #include <wayland-server-core.h>
 #include <wlr/config.h>
-#include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_gtk_primary_selection.h>
@@ -61,7 +60,6 @@ struct _PhocDesktop {
 	struct wlr_output_layout *layout;
 	struct wlr_xcursor_manager *xcursor_manager;
 
-	struct wlr_compositor *compositor;
 	struct wlr_xdg_shell *xdg_shell;
 	struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
 	struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;

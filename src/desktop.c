@@ -9,7 +9,6 @@
 #include <time.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_box.h>
-#include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
@@ -549,9 +548,6 @@ phoc_desktop_constructed (GObject *object)
   self->layout_change.notify = handle_layout_change;
   wl_signal_add(&self->layout->events.change, &self->layout_change);
 
-  self->compositor = wlr_compositor_create(server->wl_display,
-					   server->renderer);
-
   self->xdg_shell = wlr_xdg_shell_create(server->wl_display);
   wl_signal_add(&self->xdg_shell->events.new_surface,
 		&self->xdg_shell_surface);
@@ -584,7 +580,7 @@ phoc_desktop_constructed (GObject *object)
 
   if (config->xwayland) {
     self->xwayland = wlr_xwayland_create(server->wl_display,
-					 self->compositor, config->xwayland_lazy);
+					 server->compositor, config->xwayland_lazy);
     wl_signal_add(&self->xwayland->events.new_surface,
 		  &self->xwayland_surface);
     self->xwayland_surface.notify = handle_xwayland_surface;

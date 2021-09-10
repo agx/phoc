@@ -7,6 +7,7 @@
 #define G_LOG_DOMAIN "phoc-cursor"
 
 #include "config.h"
+#include "server.h"
 
 #define _XOPEN_SOURCE 700
 #include <assert.h>

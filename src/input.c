@@ -10,6 +10,7 @@
 #include "input.h"
 #include "keyboard.h"
 #include "seat.h"
+#include "server.h"
 
 G_DEFINE_TYPE (PhocInput, phoc_input, G_TYPE_OBJECT);
 

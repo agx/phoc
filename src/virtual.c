@@ -7,6 +7,8 @@
 #include <wlr/version.h>
 #include "virtual.h"
 #include "seat.h"
+#include "server.h"
+
 
 void
 phoc_handle_virtual_keyboard (struct wl_listener *listener, void *data)

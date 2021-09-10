@@ -15,7 +15,6 @@ G_DECLARE_FINAL_TYPE (PhocInput, phoc_input, PHOC, INPUT, GObject);
  * their members are non-public. */
 #include "output.h"
 #include "cursor.h"
-#include "server.h"
 #include "view.h"
 
 /* TODO: we keep the struct public due to the list links and

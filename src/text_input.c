@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <wlr/util/log.h>
 #include "seat.h"
+#include "server.h"
 #include "text_input.h"
 
 static struct roots_text_input *relay_get_focusable_text_input(

@@ -1,10 +1,12 @@
 #pragma once
 
+#include "render.h"
+
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/backend/session.h>
 #include <wlr/config.h>
-#include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_device.h>
 #ifdef PHOC_XWAYLAND
 #include <wlr/xwayland.h>
@@ -49,8 +51,9 @@ struct _PhocServer {
   guint wl_source;
 
   /* WLR tools */
-  struct wlr_backend *backend;
-  struct wlr_renderer *renderer;
+  struct wlr_compositor *compositor;
+  struct wlr_backend    *backend;
+  PhocRenderer          *renderer;
 
   /* Global resources */
   struct wlr_data_device_manager *data_device_manager;
