@@ -289,7 +289,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
   self->mainloop = mainloop;
   self->exit_status = 1;
   self->desktop = phoc_desktop_new (self->config);
-  self->input = phoc_input_new (self->config);
+  self->input = phoc_input_new ();
   self->session = g_strdup (session);
   self->mainloop = mainloop;
   self->debug_flags = debug_flags;

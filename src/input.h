@@ -27,7 +27,7 @@ struct _PhocInput {
   struct wl_list       seats; // roots_seat::link */
 };
 
-PhocInput         *phoc_input_new (struct roots_config *config);
+PhocInput         *phoc_input_new (void);
 bool               phoc_input_view_has_focus (PhocInput         *self,
                                               struct roots_view *view);
 const char        *phoc_input_get_device_type (enum wlr_input_device_type type);

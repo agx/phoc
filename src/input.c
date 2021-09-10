@@ -76,7 +76,7 @@ phoc_input_init (PhocInput *self)
 }
 
 PhocInput *
-phoc_input_new (struct roots_config *config)
+phoc_input_new (void)
 {
   return g_object_new (PHOC_TYPE_INPUT, NULL);
 }
