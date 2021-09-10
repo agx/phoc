@@ -237,6 +237,13 @@ phoc_server_init (PhocServer *self)
 {
 }
 
+/**
+ * phoc_server_get_default:
+ *
+ * Get the server singleton.
+ *
+ * Returns: (transfer none): The server singleton
+ */
 PhocServer *
 phoc_server_get_default (void)
 {
