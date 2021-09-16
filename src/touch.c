@@ -3,18 +3,10 @@
 #include "config.h"
 
 #define _POSIX_C_SOURCE 200112L
-#include <assert.h>
 #include <stdlib.h>
 #include <time.h>
-#include <wayland-server-core.h>
 #include <wlr/backend/libinput.h>
-#include <wlr/config.h>
-#include <wlr/types/wlr_cursor.h>
-#include <wlr/util/log.h>
-#include <wlr/xcursor.h>
-#ifdef PHOC_XWAYLAND
-#include <wlr/xwayland.h>
-#endif
+
 #include "touch.h"
 #include "seat.h"
 
