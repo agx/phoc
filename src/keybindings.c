@@ -1,10 +1,9 @@
 #define G_LOG_DOMAIN "phoc-keybindings"
 
 /**
- * SECTION:phoc-keybindings
- * @short_description: keybindings
- * @Title: PhocKeybindings
- * @Summary: Handled keybindings stored in gsettings
+ * PhocKeybindings:
+ *
+ * Keybindings stored in gsettings
  */
 #include "config.h"
 #include "keybindings.h"

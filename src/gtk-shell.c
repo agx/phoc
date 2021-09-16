@@ -15,9 +15,9 @@
 #include "gtk-shell.h"
 
 /**
- * SECTION:phoc-gtk-shell
- * @short_description: A minimal implementeation of gtk_shell1 protocol
- * @Title: PhocGtkShell
+ * PhocGtkShell:
+ *
+ * A minimal implementeation of gtk_shell1 protocol
  *
  * Implement just enough to raise windows for GTK based applications
  * until there's an agreed on upstream protocol.

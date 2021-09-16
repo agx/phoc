@@ -32,9 +32,7 @@
 #endif
 
 /**
- * SECTION:phosh-private
- * @short_description: PhocPhoshPrivate
- * @Title: PhocPhoshPrivate
+ * PhocPhoshPrivate:
  *
  * Private protocol to interface with phosh
  */
