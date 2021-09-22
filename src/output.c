@@ -106,7 +106,7 @@ phoc_output_set_property (GObject      *object,
 
   switch (property_id) {
   case PROP_DESKTOP:
-    self->desktop = g_value_get_pointer (value);
+    self->desktop = g_value_dup_object (value);
     g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DESKTOP]);
     break;
   case PROP_WLR_OUTPUT:
@@ -129,7 +129,7 @@ phoc_output_get_property (GObject    *object,
 
   switch (property_id) {
   case PROP_DESKTOP:
-    g_value_set_pointer (value, self->desktop);
+    g_value_set_object (value, self->desktop);
     break;
   case PROP_WLR_OUTPUT:
     g_value_set_pointer (value, self->wlr_output);
@@ -381,13 +381,9 @@ phoc_output_finalize (GObject *object)
     wl_list_remove (&self->layers[i]);
   }
 
-  G_OBJECT_CLASS (phoc_output_parent_class)->finalize (object);
-}
+  g_clear_object (&self->desktop);
 
-static void
-phoc_output_dispose (GObject *object)
-{
-  G_OBJECT_CLASS (phoc_output_parent_class)->dispose (object);
+  G_OBJECT_CLASS (phoc_output_parent_class)->finalize (object);
 }
 
 static void
@@ -399,14 +395,14 @@ phoc_output_class_init (PhocOutputClass *klass)
   object_class->get_property = phoc_output_get_property;
 
   object_class->constructed = phoc_output_constructed;
-  object_class->dispose = phoc_output_dispose;
   object_class->finalize = phoc_output_finalize;
 
   props[PROP_DESKTOP] =
-    g_param_spec_pointer (
+    g_param_spec_object (
       "desktop",
       "Desktop",
       "The desktop object",
+      PHOC_TYPE_DESKTOP,
       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
   props[PROP_WLR_OUTPUT] =
     g_param_spec_pointer (
