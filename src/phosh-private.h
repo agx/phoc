@@ -19,7 +19,8 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (PhocPhoshPrivate, phoc_phosh_private, PHOC, PHOSH_PRIVATE, GObject)
 
 typedef struct _PhocDesktop PhocDesktop;
-PhocPhoshPrivate *phoc_phosh_private_new (PhocDesktop *desktop);
+
+PhocPhoshPrivate *phoc_phosh_private_new (void);
 bool              phoc_phosh_private_forward_keysym (PhocKeyCombo *combo, uint32_t timestamp);
 void              phoc_phosh_private_notify_startup_id (PhocPhoshPrivate                           *self,
                                                         const char                                 *startup_id,

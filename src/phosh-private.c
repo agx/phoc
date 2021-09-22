@@ -37,13 +37,6 @@
  * Private protocol to interface with phosh
  */
 
-enum {
-  PROP_0,
-  PROP_DESKTOP,
-  PROP_LAST_PROP
-};
-static GParamSpec *props[PROP_LAST_PROP];
-
 struct _PhocPhoshPrivate {
   GObject parent;
 
@@ -53,8 +46,6 @@ struct _PhocPhoshPrivate {
   GList *keyboard_events;
   guint last_action_id;
   GList *startup_trackers;
-
-  PhocDesktop *desktop;
 };
 G_DEFINE_TYPE (PhocPhoshPrivate, phoc_phosh_private, G_TYPE_OBJECT)
 
@@ -89,44 +80,6 @@ static PhocPhoshPrivateScreencopyFrame *phoc_phosh_private_screencopy_frame_from
 static PhocPhoshPrivateStartupTracker *phoc_phosh_private_startup_tracker_from_resource(struct wl_resource *resource);
 
 #define PHOSH_PRIVATE_VERSION 6
-
-
-static void
-phoc_phosh_private_set_property (GObject      *object,
-                                 guint         property_id,
-                                 const GValue *value,
-                                 GParamSpec   *pspec)
-{
-  PhocPhoshPrivate *self = PHOC_PHOSH_PRIVATE (object);
-
-  switch (property_id) {
-  case PROP_DESKTOP:
-    self->desktop = g_value_dup_object (value);
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
-  }
-}
-
-
-static void
-phoc_phosh_private_get_property (GObject    *object,
-                                 guint       property_id,
-                                 GValue     *value,
-                                 GParamSpec *pspec)
-{
-  PhocPhoshPrivate *self = PHOC_PHOSH_PRIVATE (object);
-
-  switch (property_id) {
-  case PROP_DESKTOP:
-    g_value_set_object (value, self->desktop);
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
-  }
-}
 
 
 static void
@@ -759,18 +712,8 @@ phoc_phosh_private_class_init (PhocPhoshPrivateClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->get_property = phoc_phosh_private_get_property;
-  object_class->set_property = phoc_phosh_private_set_property;
   object_class->constructed = phoc_phosh_private_constructed;
   object_class->finalize = phoc_phosh_private_finalize;
-
-  props[PROP_DESKTOP] = g_param_spec_object ("desktop",
-                                             "",
-                                             "",
-                                             PHOC_TYPE_DESKTOP,
-                                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
-
-  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 
 
@@ -782,11 +725,9 @@ phoc_phosh_private_init (PhocPhoshPrivate *self)
 
 
 PhocPhoshPrivate *
-phoc_phosh_private_new (PhocDesktop *desktop)
+phoc_phosh_private_new (void)
 {
-  return PHOC_PHOSH_PRIVATE (g_object_new (PHOC_TYPE_PHOSH_PRIVATE,
-                                           "desktop", desktop,
-                                           NULL));
+  return PHOC_PHOSH_PRIVATE (g_object_new (PHOC_TYPE_PHOSH_PRIVATE, NULL));
 }
 
 
