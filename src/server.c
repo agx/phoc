@@ -62,6 +62,7 @@ wayland_event_source_new (struct wl_display *display)
 
   source = (WaylandEventSource *) g_source_new (&wayland_event_source_funcs,
                                                 sizeof (WaylandEventSource));
+  g_source_set_name (&source->source, "[phoc] wayland source");
   source->display = display;
   g_source_add_unix_fd (&source->source,
                         wl_event_loop_get_fd (loop),
