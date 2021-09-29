@@ -170,7 +170,9 @@ static void destroy(struct roots_view *view) {
 	wl_list_remove(&roots_surface->request_maximize.link);
 	wl_list_remove(&roots_surface->set_title.link);
 	wl_list_remove(&roots_surface->set_class.link);
+#ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
 	wl_list_remove(&roots_surface->set_startup_id.link);
+#endif
 	wl_list_remove(&roots_surface->map.link);
 	wl_list_remove(&roots_surface->unmap.link);
 	free(roots_surface);
