@@ -214,6 +214,7 @@ void view_move(struct roots_view *view, double x, double y) {
 
 	view->pending_move_resize.update_x = false;
 	view->pending_move_resize.update_y = false;
+	view->pending_centering = false;
 
 	struct wlr_box before;
 	view_get_box(view, &before);
@@ -421,6 +422,7 @@ view_restore(struct roots_view *view)
                       view->saved.width, view->saved.height);
   } else {
     view_resize (view, 0, 0);
+    view->pending_centering = true;
   }
 
   if (view->toplevel_handle)
@@ -495,6 +497,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 			                 view->saved.width, view->saved.height);
 		} else {
 			view_resize (view, 0, 0);
+			view->pending_centering = true;
 		}
 
 		view_auto_maximize(view);
@@ -962,6 +965,10 @@ void view_update_size(struct roots_view *view, int width, int height) {
 	view_damage_whole(view);
 	view->box.width = width;
 	view->box.height = height;
+	if (view->pending_centering) {
+		view_center (view);
+		view->pending_centering = false;
+	}
 	view_update_scale(view);
 	view_damage_whole(view);
 }

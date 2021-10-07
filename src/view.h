@@ -78,6 +78,7 @@ struct roots_view {
 		double x, y;
 		uint32_t width, height;
 	} pending_move_resize;
+	bool pending_centering;
 
 	struct roots_view *parent;
 	struct wl_list stack; // roots_view::link
