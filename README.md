@@ -82,4 +82,8 @@ details on these environment variables.
 There's also a `PHOC_DEBUG` enviroment variable to turn on some debugging
 features. Use `PHOC_DEBUG=help phoc` to see supported flags.
 
+# API docs
+
+API documentation is available at https://world.pages.gitlab.gnome.org/Phosh/phoc/
+
 [1]: https://github.com/swaywm/wlroots
