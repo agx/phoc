@@ -1838,7 +1838,7 @@ void
 phoc_seat_begin_resize (PhocSeat *seat, struct roots_view *view,
                         uint32_t edges)
 {
-  if (view->desktop->maximize)
+  if (view->desktop->maximize || view->fullscreen_output)
     return;
 
   PhocCursor *cursor = seat->cursor;
