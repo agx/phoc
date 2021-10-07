@@ -785,9 +785,9 @@ phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *su
 }
 
 static void
-damage_whole_decoration (PhocOutput *self, struct roots_view   *view)
+damage_whole_view (PhocOutput *self, struct roots_view   *view)
 {
-  if (!view->decorated || view->wlr_surface == NULL) {
+  if (view->wlr_surface == NULL) {
     return;
   }
 
@@ -805,7 +805,7 @@ phoc_output_damage_whole_view (PhocOutput *self, struct roots_view   *view)
     return;
   }
 
-  damage_whole_decoration (self, view);
+  damage_whole_view (self, view);
 
   bool whole = true;
 
