@@ -352,7 +352,9 @@ phoc_cursor_update_position (PhocCursor *self,
 
       bool output_is_landscape = output_box->width > output_box->height;
 
-      if (self->cursor->y < output_box->y + PHOC_EDGE_SNAP_THRESHOLD) {
+      if (view->fullscreen_output) {
+        view_set_fullscreen (view, true, wlr_output);
+      } else if (self->cursor->y < output_box->y + PHOC_EDGE_SNAP_THRESHOLD) {
         view_maximize (view, wlr_output);
       } else if (output_is_landscape && self->cursor->x < output_box->x + PHOC_EDGE_SNAP_THRESHOLD) {
         view_tile (view, PHOC_VIEW_TILE_LEFT, wlr_output);
