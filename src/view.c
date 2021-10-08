@@ -223,7 +223,6 @@ void view_move(struct roots_view *view, double x, double y) {
 	} else {
 		view_update_position(view, x, y);
 	}
-	view_update_output(view, &before);
 }
 
 void
@@ -256,7 +255,6 @@ void view_resize(struct roots_view *view, uint32_t width, uint32_t height) {
 	if (view->impl->resize) {
 		view->impl->resize(view, width, height);
 	}
-	view_update_output(view, &before);
 }
 
 void view_move_resize(struct roots_view *view, double x, double y,
@@ -950,9 +948,12 @@ void view_update_position(struct roots_view *view, int x, int y) {
 		return;
 	}
 
+	struct wlr_box before;
+	view_get_box(view, &before);
 	view_damage_whole(view);
 	view->box.x = x;
 	view->box.y = y;
+	view_update_output(view, &before);
 	view_damage_whole(view);
 }
 
@@ -962,6 +963,8 @@ void view_update_size(struct roots_view *view, int width, int height) {
 		return;
 	}
 
+	struct wlr_box before;
+	view_get_box(view, &before);
 	view_damage_whole(view);
 	view->box.width = width;
 	view->box.height = height;
@@ -970,6 +973,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 		view->pending_centering = false;
 	}
 	view_update_scale(view);
+	view_update_output(view, &before);
 	view_damage_whole(view);
 }
 
