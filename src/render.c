@@ -267,12 +267,12 @@ buffer_damage_finish:
 static void render_view(PhocOutput *output, struct roots_view *view,
 		struct render_data *data) {
 	// Do not render views fullscreened on other outputs
-	if (view->fullscreen_output != NULL && view->fullscreen_output != output) {
+	if (view_is_fullscreen (view) && view->fullscreen_output != output) {
 		return;
 	}
 
 	data->alpha = view->alpha;
-	if (view->fullscreen_output == NULL) {
+	if (!view_is_fullscreen (view)) {
 		render_decorations(output, view, data);
 	}
 	phoc_output_view_for_each_surface(output, view, render_surface_iterator, data);

@@ -96,8 +96,7 @@ handle_toggle_fullscreen (PhocSeat *seat)
   struct roots_view *focus = phoc_seat_get_focus(seat);
 
   if (focus) {
-    bool is_fullscreen = focus->fullscreen_output != NULL;
-    view_set_fullscreen(focus, !is_fullscreen, NULL);
+    view_set_fullscreen(focus, !view_is_fullscreen (focus), NULL);
   }
 }
 
