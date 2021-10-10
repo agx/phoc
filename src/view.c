@@ -534,9 +534,6 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   struct wlr_box usable_area;
   double x, y;
 
-  if (view_is_fullscreen (view))
-    return false;
-
   output = view_get_output(view);
   if (!output)
     return false;
@@ -558,6 +555,11 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
 
   view->saved.x = x;
   view->saved.y = y;
+
+  if (view_is_fullscreen (view)) {
+    view_set_fullscreen (view, true, new_output);
+    return true;
+  }
 
   if (view_is_maximized (view)) {
     view_arrange_maximized (view, new_output);
