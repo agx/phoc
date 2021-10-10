@@ -548,11 +548,10 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   usable_area = phoc_output->usable_area;
   l_output = wlr_output_layout_get(desktop->layout, new_output);
 
-  /* use a proper position on the new output */
-  x = usable_area.x + l_output->x;
-  y = usable_area.y + l_output->y;
-  g_debug("moving view to %f %f", x, y);
-
+  /* update saved position to the new output */
+  x = usable_area.x + l_output->x + usable_area.width / 2 - view->saved.width / 2;
+  y = usable_area.y + l_output->y + usable_area.height / 2 - view->saved.height / 2;
+  g_debug("moving view's saved position to %f %f", x, y);
   view->saved.x = x;
   view->saved.y = y;
 
@@ -566,7 +565,7 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   } else if (view_is_tiled (view)) {
     view_arrange_tiled (view, new_output);
   } else {
-    view_move(view, x, y);
+    view_center (view, new_output);
   }
 
   return true;
