@@ -436,7 +436,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 
 	// TODO: check if client is focused?
 
-	if (!was_fullscreen) {
+	if (was_fullscreen != fullscreen) {
 		if (view->impl->set_fullscreen) {
 			view->impl->set_fullscreen(view, fullscreen);
 		}
