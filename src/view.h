@@ -45,7 +45,7 @@ typedef enum {
 } PhocViewTileDirection;
 
 typedef enum {
-  PHOC_VIEW_STATE_NORMAL,
+  PHOC_VIEW_STATE_FLOATING,
   PHOC_VIEW_STATE_MAXIMIZED,
   PHOC_VIEW_STATE_TILED,
 } PhocViewState;

@@ -25,6 +25,7 @@ void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 	view->scale = 1.0f;
 	view->title = NULL;
 	view->app_id = NULL;
+	view->state = PHOC_VIEW_STATE_FLOATING;
 	wl_signal_init(&view->events.unmap);
 	wl_signal_init(&view->events.destroy);
 	wl_list_init(&view->child_surfaces);
@@ -414,7 +415,7 @@ view_restore(struct roots_view *view)
   struct wlr_box geom;
   view_get_geometry(view, &geom);
 
-  view->state = PHOC_VIEW_STATE_NORMAL;
+  view->state = PHOC_VIEW_STATE_FLOATING;
   if (!wlr_box_empty(&view->saved)) {
     view_move_resize (view, view->saved.x - geom.x * view->scale, view->saved.y - geom.y * view->scale,
                       view->saved.width, view->saved.height);
