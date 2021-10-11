@@ -896,7 +896,7 @@ void view_setup(struct roots_view *view) {
 	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
 
-	if (view->fullscreen_output == NULL && !view_is_maximized(view)) {
+	if (view->fullscreen_output == NULL && !view_is_maximized(view) && !view_is_tiled(view)) {
 		view_center(view);
 	}
 	view_update_scale(view);
