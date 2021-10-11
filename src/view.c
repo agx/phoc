@@ -214,6 +214,7 @@ void view_move(struct roots_view *view, double x, double y) {
 
 	view->pending_move_resize.update_x = false;
 	view->pending_move_resize.update_y = false;
+	view->pending_centering = false;
 
 	struct wlr_box before;
 	view_get_box(view, &before);
@@ -416,8 +417,13 @@ view_restore(struct roots_view *view)
   view_get_geometry(view, &geom);
 
   view->state = PHOC_VIEW_STATE_NORMAL;
-  view_move_resize (view, view->saved.x - geom.x * view->scale, view->saved.y - geom.y * view->scale,
-                    view->saved.width, view->saved.height);
+  if (!wlr_box_empty(&view->saved)) {
+    view_move_resize (view, view->saved.x - geom.x * view->scale, view->saved.y - geom.y * view->scale,
+                      view->saved.width, view->saved.height);
+  } else {
+    view_resize (view, 0, 0);
+    view->pending_centering = true;
+  }
 
   if (view->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
@@ -486,9 +492,12 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 			view_arrange_maximized (view, phoc_output->wlr_output);
 		} else if (view->state == PHOC_VIEW_STATE_TILED) {
 			view_arrange_tiled (view, phoc_output->wlr_output);
-		} else {
+		} else if (!wlr_box_empty(&view->saved)) {
 			view_move_resize(view, view->saved.x - view_geom.x * view->scale, view->saved.y - view_geom.y * view->scale,
 			                 view->saved.width, view->saved.height);
+		} else {
+			view_resize (view, 0, 0);
+			view->pending_centering = true;
 		}
 
 		view_auto_maximize(view);
@@ -956,6 +965,10 @@ void view_update_size(struct roots_view *view, int width, int height) {
 	view_damage_whole(view);
 	view->box.width = width;
 	view->box.height = height;
+	if (view->pending_centering) {
+		view_center (view);
+		view->pending_centering = false;
+	}
 	view_update_scale(view);
 	view_damage_whole(view);
 }

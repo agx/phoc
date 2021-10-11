@@ -71,16 +71,14 @@ struct roots_view {
 	PhocViewState state;
 	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;
-	struct {
-		double x, y;
-		uint32_t width, height;
-	} saved;
+	struct wlr_box saved;
 
 	struct {
 		bool update_x, update_y;
 		double x, y;
 		uint32_t width, height;
 	} pending_move_resize;
+	bool pending_centering;
 
 	struct roots_view *parent;
 	struct wl_list stack; // roots_view::link
