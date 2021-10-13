@@ -223,9 +223,9 @@ phoc_output_handle_mode (struct wl_listener *listener, void *data)
 }
 
 static void
-phoc_output_handle_transform (struct wl_listener *listener, void *data)
+phoc_output_handle_commit (struct wl_listener *listener, void *data)
 {
-  PhocOutput *self = wl_container_of (listener, self, transform);
+  PhocOutput *self = wl_container_of (listener, self, commit);
 
   phoc_layer_shell_arrange (self);
 }
@@ -296,8 +296,8 @@ phoc_output_constructed (GObject *object)
   wl_signal_add (&self->wlr_output->events.enable, &self->enable);
   self->mode.notify = phoc_output_handle_mode;
   wl_signal_add (&self->wlr_output->events.mode, &self->mode);
-  self->transform.notify = phoc_output_handle_transform;
-  wl_signal_add (&self->wlr_output->events.transform, &self->transform);
+  self->commit.notify = phoc_output_handle_commit;
+  wl_signal_add (&self->wlr_output->events.commit, &self->commit);
 
   self->damage_frame.notify = phoc_output_damage_handle_frame;
   wl_signal_add (&self->damage->events.frame, &self->damage_frame);
@@ -376,7 +376,7 @@ phoc_output_finalize (GObject *object)
   wl_list_remove (&self->output_destroy.link);
   wl_list_remove (&self->enable.link);
   wl_list_remove (&self->mode.link);
-  wl_list_remove (&self->transform.link);
+  wl_list_remove (&self->commit.link);
   wl_list_remove (&self->damage_frame.link);
   wl_list_remove (&self->damage_destroy.link);
   g_list_free_full (self->debug_touch_points, g_free);

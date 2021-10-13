@@ -441,7 +441,7 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
   uint32_t renderer_flags = 0;
   if (!view_render_to_buffer (view, width, height, stride, &renderer_flags, data)) {
     wl_shm_buffer_end_access (frame->buffer);
-    zwlr_screencopy_frame_v1_send_failed (frame_resource);
+    zwlr_screencopy_frame_v1_send_failed (frame->resource);
     return;
   }
   enum zwlr_screencopy_frame_v1_flags flags = (renderer_flags & WLR_RENDERER_READ_PIXELS_Y_INVERT) ? ZWLR_SCREENCOPY_FRAME_V1_FLAGS_Y_INVERT : 0;

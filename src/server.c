@@ -236,7 +236,7 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-  self->backend = wlr_backend_autocreate(self->wl_display, NULL);
+  self->backend = wlr_backend_autocreate(self->wl_display);
   if (self->backend == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,

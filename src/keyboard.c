@@ -123,15 +123,15 @@ keysym_is_modifier(xkb_keysym_t keysym)
 static void
 pressed_keysyms_update(xkb_keysym_t *pressed_keysyms,
                        const xkb_keysym_t *keysyms, size_t keysyms_len,
-                       enum wlr_key_state state)
+                       enum wl_keyboard_key_state state)
 {
   for (size_t i = 0; i < keysyms_len; ++i) {
     if (keysym_is_modifier(keysyms[i])) {
       continue;
     }
-    if (state == WLR_KEY_PRESSED) {
+    if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
       pressed_keysyms_add(pressed_keysyms, keysyms[i]);
-    } else { // WLR_KEY_RELEASED
+    } else { // WL_KEYBOARD_KEY_STATE_RELEASED
       pressed_keysyms_remove(pressed_keysyms, keysyms[i]);
     }
   }
@@ -300,7 +300,7 @@ phoc_keyboard_handle_key(PhocKeyboard *self,
                                             &modifiers);
   pressed_keysyms_update(self->pressed_keysyms_translated, keysyms,
                          keysyms_len, event->state);
-  if (event->state == WLR_KEY_PRESSED) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     handled = keyboard_execute_binding(self,
                                        self->pressed_keysyms_translated, modifiers, keysyms,
                                        keysyms_len);
@@ -310,13 +310,13 @@ phoc_keyboard_handle_key(PhocKeyboard *self,
   keysyms_len = keyboard_keysyms_raw(self, keycode, &keysyms, &modifiers);
   pressed_keysyms_update(self->pressed_keysyms_raw, keysyms, keysyms_len,
                          event->state);
-  if (event->state == WLR_KEY_PRESSED && !handled) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED && !handled) {
     handled = keyboard_execute_binding(self,
                                        self->pressed_keysyms_raw, modifiers, keysyms, keysyms_len);
   }
 
   // Handle subscribed keysyms
-  if (event->state == WLR_KEY_PRESSED && !handled) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED && !handled) {
     handled = keyboard_execute_subscribed_binding (self,
                                                    self->pressed_keysyms_raw, modifiers,
                                                    keysyms, keysyms_len, event->time_msec);
