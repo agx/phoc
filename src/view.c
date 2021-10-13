@@ -25,6 +25,7 @@ void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 	view->scale = 1.0f;
 	view->title = NULL;
 	view->app_id = NULL;
+	view->state = PHOC_VIEW_STATE_FLOATING;
 	wl_signal_init(&view->events.unmap);
 	wl_signal_init(&view->events.destroy);
 	wl_list_init(&view->child_surfaces);
@@ -57,21 +58,31 @@ void view_destroy(struct roots_view *view) {
 	}
 
 	// Can happen if fullscreened while unmapped, and hasn't been mapped
-	if (view->fullscreen_output != NULL) {
+	if (view_is_fullscreen (view)) {
 		view->fullscreen_output->fullscreen_view = NULL;
 	}
 
 	view->impl->destroy(view);
 }
 
+gboolean view_is_floating(const struct roots_view *view)
+{
+	return view->state == PHOC_VIEW_STATE_FLOATING && !view_is_fullscreen (view);
+}
+
 gboolean view_is_maximized(const struct roots_view *view)
 {
-	return view->state == PHOC_VIEW_STATE_MAXIMIZED;
+	return view->state == PHOC_VIEW_STATE_MAXIMIZED && !view_is_fullscreen (view);
 }
 
 gboolean view_is_tiled(const struct roots_view *view)
 {
-	return view->state == PHOC_VIEW_STATE_TILED;
+	return view->state == PHOC_VIEW_STATE_TILED && !view_is_fullscreen (view);
+}
+
+gboolean view_is_fullscreen(const struct roots_view *view)
+{
+	return view->fullscreen_output != NULL;
 }
 
 void view_get_box(const struct roots_view *view, struct wlr_box *box) {
@@ -195,7 +206,7 @@ static void view_update_output(struct roots_view *view,
 static void
 view_save(struct roots_view *view)
 {
-  if (view_is_maximized (view) || view_is_tiled (view))
+  if (!view_is_floating (view))
     return;
 
   /* backup window state */
@@ -242,7 +253,7 @@ void view_activate(struct roots_view *view, bool activate) {
 			activate);
 	}
 
-	if (activate && view->fullscreen_output && view->fullscreen_output->force_shell_reveal) {
+	if (activate && view_is_fullscreen (view) && view->fullscreen_output->force_shell_reveal) {
 		view->fullscreen_output->force_shell_reveal = false;
 		phoc_output_damage_whole(view->fullscreen_output);
 	}
@@ -295,7 +306,7 @@ static struct wlr_output *view_get_output(struct roots_view *view) {
 }
 
 void view_arrange_maximized(struct roots_view *view, struct wlr_output *output) {
-	if (view->fullscreen_output)
+	if (view_is_fullscreen (view))
 		return;
 
 	if (!output)
@@ -318,7 +329,7 @@ void view_arrange_maximized(struct roots_view *view, struct wlr_output *output) 
 void
 view_arrange_tiled (struct roots_view *view, struct wlr_output *output)
 {
-  if (view->fullscreen_output)
+  if (view_is_fullscreen (view))
     return;
 
   if (!output)
@@ -374,7 +385,7 @@ void view_maximize(struct roots_view *view, struct wlr_output *output) {
 		return;
 	}
 
-	if (view->fullscreen_output != NULL) {
+	if (view_is_fullscreen (view)) {
 		return;
 	}
 
@@ -414,7 +425,7 @@ view_restore(struct roots_view *view)
   struct wlr_box geom;
   view_get_geometry(view, &geom);
 
-  view->state = PHOC_VIEW_STATE_NORMAL;
+  view->state = PHOC_VIEW_STATE_FLOATING;
   if (!wlr_box_empty(&view->saved)) {
     view_move_resize (view, view->saved.x - geom.x * view->scale, view->saved.y - geom.y * view->scale,
                       view->saved.width, view->saved.height);
@@ -432,7 +443,7 @@ view_restore(struct roots_view *view)
 
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		struct wlr_output *output) {
-	bool was_fullscreen = view->fullscreen_output != NULL;
+	bool was_fullscreen = view_is_fullscreen (view);
 
 	// TODO: check if client is focused?
 
@@ -519,7 +530,7 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   struct wlr_box usable_area;
   double x, y;
 
-  if (view->fullscreen_output)
+  if (view_is_fullscreen (view))
     return false;
 
   output = view_get_output(view);
@@ -558,7 +569,7 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
 void
 view_tile(struct roots_view *view, PhocViewTileDirection direction, struct wlr_output *output)
 {
-  if (view->fullscreen_output)
+  if (view_is_fullscreen (view))
     return;
 
   /* Set the maximized flag on the toplevel so it remove it's drop shadows */
@@ -797,7 +808,7 @@ static void view_update_scale(struct roots_view *view) {
 	if (view->scale < 0.5f) {
 		view->scale = 0.5f;
 	}
-	if (view->scale > 1.0f || view->fullscreen_output) {
+	if (view->scale > 1.0f || view_is_fullscreen (view)) {
 		view->scale = 1.0f;
 	}
 	if (view->scale != oldscale) {
@@ -861,7 +872,7 @@ void view_unmap(struct roots_view *view) {
 		view_child_destroy(child);
 	}
 
-	if (view->fullscreen_output != NULL) {
+	if (view_is_fullscreen (view)) {
 		phoc_output_damage_whole(view->fullscreen_output);
 		view->fullscreen_output->fullscreen_view = NULL;
 		view->fullscreen_output = NULL;
@@ -903,7 +914,7 @@ void view_setup(struct roots_view *view) {
 	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
 
-	if (view->fullscreen_output == NULL && !view_is_maximized(view) && !view_is_tiled(view)) {
+	if (view_is_floating (view)) {
 		view_center(view);
 	}
 	view_update_scale(view);
@@ -911,7 +922,7 @@ void view_setup(struct roots_view *view) {
 	view_update_output(view, NULL);
 
 	wlr_foreign_toplevel_handle_v1_set_fullscreen(view->toplevel_handle,
-	                                              view->fullscreen_output != NULL);
+	                                              view_is_fullscreen (view));
 	wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
 	                                             view_is_maximized(view));
 	wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle,

@@ -444,7 +444,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	struct wlr_box geometry;
 	get_geometry(view, &geometry);
 	if (roots_surface->saved_geometry.x != geometry.x || roots_surface->saved_geometry.y != geometry.y) {
-		if (!view_is_maximized(view) && !view_is_tiled(view) && !view->fullscreen_output) {
+		if (view_is_floating (view)) {
 			view_update_position(view,
 			                     view->box.x + (roots_surface->saved_geometry.x - geometry.x) * view->scale,
 			                     view->box.y + (roots_surface->saved_geometry.y - geometry.y) * view->scale);
