@@ -33,7 +33,19 @@ handle_set_dbus_properties(struct wl_client *client,
                            const char *application_object_path,
                            const char *unique_bus_name)
 {
-  g_debug ("%s not implemented for %s", __func__, application_id);
+  PhocGtkSurface *gtk_surface = gtk_surface_from_resource (resource);
+  struct roots_view *view;
+
+  g_debug ("Setting app-id %s for surface %p (res %p)", application_id, gtk_surface->wlr_surface, resource);
+  if (!gtk_surface->wlr_surface)
+    return;
+
+  g_free (gtk_surface->app_id);
+  gtk_surface->app_id = g_strdup (application_id);
+
+  view = roots_view_from_wlr_surface (gtk_surface->wlr_surface);
+  if (view)
+    view_set_app_id (view, application_id);
 }
 
 static void
@@ -99,6 +111,9 @@ gtk_surface_handle_resource_destroy(struct wl_resource *resource)
     wl_list_remove(&gtk_surface->wlr_surface_handle_destroy.link);
     gtk_surface->wlr_surface = NULL;
   }
+  gtk_surface->gtk_shell->surfaces = g_slist_remove (gtk_surface->gtk_shell->surfaces,
+                                                     gtk_surface);
+  g_free (gtk_surface->app_id);
   g_free (gtk_surface);
 }
 
@@ -129,6 +144,7 @@ handle_get_gtk_surface(struct wl_client *client,
   }
 
   int version = wl_resource_get_version(gtk_shell_resource);
+  gtk_surface->gtk_shell = phoc_gtk_shell_from_resource (gtk_shell_resource);
   gtk_surface->resource = wl_resource_create(client,
                                              &gtk_surface1_interface, version, id);
   if (gtk_surface->resource == NULL) {
@@ -158,6 +174,9 @@ handle_get_gtk_surface(struct wl_client *client,
   wl_array_release (&states);
 
   wl_signal_init(&gtk_surface->events.destroy);
+
+  gtk_surface->gtk_shell->surfaces = g_slist_prepend (gtk_surface->gtk_shell->surfaces,
+                                                      gtk_surface);
 }
 
 static void
@@ -252,8 +271,22 @@ void
 phoc_gtk_shell_destroy (PhocGtkShell *gtk_shell)
 {
   g_clear_pointer (&gtk_shell->resources, g_slist_free);
+  g_clear_pointer (&gtk_shell->surfaces, g_slist_free);
   wl_global_destroy(gtk_shell->global);
   g_free (gtk_shell);
+}
+
+PhocGtkSurface *
+phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell *self, struct wlr_surface *wlr_surface)
+{
+  GSList *item = self->surfaces;
+  while (item) {
+    PhocGtkSurface *surface = item->data;
+    if (surface->wlr_surface == wlr_surface)
+      return surface;
+    item = item->next;
+  }
+  return NULL;
 }
 
 PhocGtkShell *
