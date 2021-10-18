@@ -51,6 +51,13 @@
  */
 
 enum {
+  RENDER_START,
+  RENDER_END,
+  N_SIGNALS
+};
+static guint signals[N_SIGNALS] = { 0 };
+
+enum {
   PROP_0,
   PROP_WLR_RENDERER,
   PROP_LAST_PROP
@@ -576,6 +583,8 @@ void output_render(PhocOutput *output) {
 	const struct wlr_box *output_box =
 		wlr_output_layout_get_box(desktop->layout, wlr_output);
 
+	g_signal_emit (self, signals[RENDER_START], 0, output);
+
 	// Check if we can delegate the fullscreen surface to the output
 	if (output->fullscreen_view != NULL &&
 			output->fullscreen_view->wlr_surface != NULL) {
@@ -709,6 +718,7 @@ renderer_end:
 	wlr_renderer_scissor(wlr_renderer, NULL);
 
 	render_touch_points (output);
+	g_signal_emit (self, signals[RENDER_END], 0, output);
 
 	int width, height;
 	wlr_output_transformed_resolution(wlr_output, &width, &height);
@@ -792,6 +802,31 @@ phoc_renderer_class_init (PhocRendererClass *klass)
                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+
+  /**
+   * PhocRenderer::render-start
+   * @self: The renderer emitting the signal
+   * @output: The output being rendered on
+   *
+   * This signal is emitted at the start of a render pass
+   */
+  signals[RENDER_START] = g_signal_new ("render-start",
+                                        G_TYPE_FROM_CLASS (klass),
+                                        G_SIGNAL_RUN_LAST,
+                                        0, NULL, NULL, NULL,
+                                        G_TYPE_NONE, 1, PHOC_TYPE_OUTPUT);
+  /**
+   * PhocRenderer::render-end
+   * @self: The renderer emitting the signal
+   * @output: The output being rendered on
+   *
+   * This signal is emitted at the end of a render pass
+   */
+  signals[RENDER_END] = g_signal_new ("render-end",
+                                      G_TYPE_FROM_CLASS (klass),
+                                      G_SIGNAL_RUN_LAST,
+                                      0, NULL, NULL, NULL,
+                                      G_TYPE_NONE, 1, PHOC_TYPE_OUTPUT);
 }
 
 

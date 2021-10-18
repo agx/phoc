@@ -8,6 +8,7 @@
 #define G_LOG_DOMAIN "phoc-phosh-private"
 
 #include "config.h"
+#include "phoc-enums.h"
 #include "phosh-private.h"
 
 #include <assert.h>
@@ -37,6 +38,13 @@
  * Private protocol to interface with phosh
  */
 
+enum {
+  PROP_0,
+  PROP_SHELL_STATE,
+  PROP_LAST_PROP
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
 struct _PhocPhoshPrivate {
   GObject parent;
 
@@ -46,6 +54,7 @@ struct _PhocPhoshPrivate {
   GList *keyboard_events;
   guint last_action_id;
   GList *startup_trackers;
+  PhocPhoshPrivateShellState state;
 };
 G_DEFINE_TYPE (PhocPhoshPrivate, phoc_phosh_private, G_TYPE_OBJECT)
 
@@ -80,6 +89,25 @@ static PhocPhoshPrivateScreencopyFrame *phoc_phosh_private_screencopy_frame_from
 static PhocPhoshPrivateStartupTracker *phoc_phosh_private_startup_tracker_from_resource(struct wl_resource *resource);
 
 #define PHOSH_PRIVATE_VERSION 6
+
+
+static void
+phoc_phosh_private_get_property (GObject    *object,
+                                 guint       property_id,
+                                 GValue     *value,
+                                 GParamSpec *pspec)
+{
+  PhocPhoshPrivate *self = PHOC_PHOSH_PRIVATE (object);
+
+  switch (property_id) {
+  case PROP_SHELL_STATE:
+    g_value_set_enum (value, self->state);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
 
 
 static void
@@ -596,6 +624,25 @@ handle_get_startup_tracker (struct wl_client   *client,
 
 
 static void
+handle_set_shell_state (struct wl_client               *client,
+                        struct wl_resource             *phosh_private_resource,
+                        enum phosh_private_shell_state  state)
+{
+  PhocPhoshPrivate *self = wl_resource_get_user_data (phosh_private_resource);
+
+  g_assert (PHOC_IS_PHOSH_PRIVATE (self));
+
+  g_debug ("Shell state set to %d", state);
+
+  if (self->state == (PhocPhoshPrivateShellState)state)
+    return;
+
+  self->state = state;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SHELL_STATE]);
+}
+
+
+static void
 phosh_handle_resource_destroy (struct wl_resource *resource)
 {
   PhocPhoshPrivate *phosh = wl_resource_get_user_data (resource);
@@ -605,6 +652,9 @@ phosh_handle_resource_destroy (struct wl_resource *resource)
 
   g_list_free (phosh->keyboard_events);
   phosh->keyboard_events = NULL;
+
+  phosh->state = PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN;
+  g_object_notify_by_pspec (G_OBJECT (phosh), props[PROP_SHELL_STATE]);
 }
 
 
@@ -614,6 +664,7 @@ static const struct phosh_private_interface phosh_private_impl = {
   handle_get_thumbnail,        /* request */
   handle_get_keyboard_event,   /* interface */
   handle_get_startup_tracker,  /* interface */
+  handle_set_shell_state,
 };
 
 
@@ -714,6 +765,22 @@ phoc_phosh_private_class_init (PhocPhoshPrivateClass *klass)
 
   object_class->constructed = phoc_phosh_private_constructed;
   object_class->finalize = phoc_phosh_private_finalize;
+  object_class->get_property = phoc_phosh_private_get_property;
+
+  /**
+   * PhoshPhocPrivate:shell-state:
+   *
+   * The attached shell's state
+   */
+  props[PROP_SHELL_STATE] = g_param_spec_enum ("shell-state",
+                                               "",
+                                               "",
+                                               PHOC_TYPE_PHOSH_PRIVATE_SHELL_STATE,
+                                               PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN,
+                                               G_PARAM_READABLE | G_PARAM_STATIC_STRINGS |
+                                               G_PARAM_EXPLICIT_NOTIFY);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 
 
@@ -800,4 +867,12 @@ phoc_phosh_private_notify_launch (PhocPhoshPrivate                           *se
 
     phosh_private_startup_tracker_send_launched (tracker->resource, startup_id, proto, 0);
   }
+}
+
+PhocPhoshPrivateShellState
+phoc_phosh_private_get_shell_state (PhocPhoshPrivate *self)
+{
+  g_assert (PHOC_IS_PHOSH_PRIVATE (self));
+
+  return self->state;
 }

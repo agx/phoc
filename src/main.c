@@ -99,8 +99,9 @@ main(int argc, char **argv)
   g_autoptr(PhocServer) server = NULL;
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
+  PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
-  gboolean version = FALSE;
+  gboolean version = FALSE, shell_mode = FALSE;
 
   setup_signals();
 
@@ -109,6 +110,8 @@ main(int argc, char **argv)
      "Path to the configuration file. (default: phoc.ini).", NULL},
     {"exec", 'E', 0, G_OPTION_ARG_STRING, &exec,
      "Command (session) that will be ran at startup", NULL},
+    {"shell", 'S', 0, G_OPTION_ARG_NONE, &shell_mode,
+     "Whether to expect a shell to attach", NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &version,
      "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -134,8 +137,11 @@ main(int argc, char **argv)
     return 1;
   }
 
+  if (shell_mode)
+    flags |= PHOC_SERVER_FLAG_SHELL_MODE;
+
   loop = g_main_loop_new (NULL, FALSE);
-  if (!phoc_server_setup (server, config_path, exec, loop, debug_flags))
+  if (!phoc_server_setup (server, config_path, exec, loop, flags, debug_flags))
     return 1;
 
   g_main_loop_run (loop);

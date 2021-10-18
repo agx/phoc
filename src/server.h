@@ -22,6 +22,16 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocServer, phoc_server, PHOC, SERVER, GObject);
 
+/**
+ * PhocServerFlags:
+ *
+ * PHOC_SHELL_FLAG_SHELL_MODE: Expect a shell to attach
+ */
+typedef enum _PhocServerFlags {
+  PHOC_SERVER_FLAG_NONE = 0,
+  PHOC_SERVER_FLAG_SHELL_MODE = 1 << 0,
+} PhocServerFlags;
+
 typedef enum _PhocServerDebugFlags {
   PHOC_SERVER_DEBUG_FLAG_NONE = 0,
   PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING = 1 << 0,
@@ -38,6 +48,7 @@ struct _PhocServer {
   struct roots_config *config;
   PhocDesktop *desktop;
   PhocInput *input;
+  PhocServerFlags flags;
   PhocServerDebugFlags debug_flags;
   gboolean inited;
 
@@ -57,11 +68,17 @@ struct _PhocServer {
 
   /* Global resources */
   struct wlr_data_device_manager *data_device_manager;
+
+  /* Fader */
+  gulong render_shield_id;
+  gulong damage_shield_id;
+  float fader_t;
 };
 
 PhocServer *phoc_server_get_default (void);
 gboolean phoc_server_setup (PhocServer *server, const char *config_path,
 			    const char *exec, GMainLoop *mainloop,
+                            PhocServerFlags flags,
 			    PhocServerDebugFlags debug_flags);
 gint phoc_server_get_session_exit_status (PhocServer *self);
 

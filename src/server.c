@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "render.h"
+#include "utils.h"
 #include "server.h"
 
 #include <errno.h>
@@ -147,6 +148,77 @@ phoc_startup_session (PhocServer *server)
 }
 
 
+static void
+render_shield (PhocServer *self, PhocOutput *output, PhocRenderer *renderer)
+{
+  struct wlr_output *wlr_output = output->wlr_output;
+  struct wlr_box box = { 0, 0, wlr_output->width, wlr_output->height };
+  struct wlr_renderer *wlr_renderer = wlr_backend_get_renderer (wlr_output->backend);
+  float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+
+  g_assert (PHOC_IS_RENDERER (renderer));
+
+  color[3] = 1.0 - phoc_ease_in_cubic (self->fader_t);
+  wlr_render_rect (wlr_renderer, &box, color, wlr_output->transform_matrix);
+
+  if (self->fader_t >= 1.0f) {
+    g_debug ("Shield fade done");
+    g_clear_signal_handler (&self->render_shield_id, self->renderer);
+  }
+}
+
+
+#define TICK 50
+static void
+damage_shield (PhocServer *self, PhocOutput *output, PhocRenderer *renderer)
+{
+  g_assert (PHOC_IS_RENDERER (renderer));
+  g_assert (PHOC_IS_SERVER (self));
+
+  phoc_output_damage_whole (output);
+  self->fader_t += ((float)TICK) / 1000.0;
+
+  if (self->fader_t > 1.0)
+    self->fader_t = 1.0;
+
+  if (self->fader_t >= 1.0f)
+    g_clear_signal_handler (&self->damage_shield_id, self->renderer);
+}
+
+
+static void
+on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *phosh)
+{
+  PhocPhoshPrivateShellState state;
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_SERVER (self));
+  g_assert (PHOC_IS_PHOSH_PRIVATE (phosh));
+
+  state = phoc_phosh_private_get_shell_state (phosh);
+  g_debug ("Shell state changed: %d", state);
+
+  switch (state) {
+  case PHOC_PHOSH_PRIVATE_SHELL_STATE_UP:
+    if (self->render_shield_id) {
+      self->damage_shield_id =  g_signal_connect_object (self->renderer, "render-start",
+                                                         G_CALLBACK (damage_shield),
+                                                         self, G_CONNECT_SWAPPED);
+    }
+    break;
+  case PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN:
+  default:
+    /* TODO: prevent input without a shell attached */
+    self->fader_t = 0.0f;
+    self->render_shield_id =  g_signal_connect_object (self->renderer, "render-end",
+                                                       G_CALLBACK (render_shield),
+                                                       self, G_CONNECT_SWAPPED);
+    wl_list_for_each (output, &self->desktop->outputs, link)
+      phoc_output_damage_whole (output);
+  }
+}
+
+
 static gboolean
 phoc_server_initable_init (GInitable    *initable,
 			   GCancellable *cancellable,
@@ -209,6 +281,8 @@ phoc_server_dispose (GObject *object)
     self->backend = NULL;
   }
 
+  g_clear_signal_handler (&self->render_shield_id, self->renderer);
+  g_clear_signal_handler (&self->damage_shield_id, self->renderer);
   g_clear_object (&self->renderer);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->dispose (object);
@@ -218,6 +292,7 @@ static void
 phoc_server_finalize (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
+
 
   if (self->wl_source) {
     g_source_remove (self->wl_source);
@@ -288,6 +363,7 @@ phoc_server_get_default (void)
 gboolean
 phoc_server_setup (PhocServer *self, const char *config_path,
 		   const char *session, GMainLoop *mainloop,
+                   PhocServerFlags flags,
 		   PhocServerDebugFlags debug_flags)
 {
   g_assert (!self->inited);
@@ -304,6 +380,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
   self->input = phoc_input_new ();
   self->session = g_strdup (session);
   self->mainloop = mainloop;
+  self->flags = flags;
   self->debug_flags = debug_flags;
 
   const char *socket = wl_display_add_socket_auto(self->wl_display);
@@ -329,6 +406,15 @@ phoc_server_setup (PhocServer *self, const char *config_path,
     wlr_xwayland_set_seat(self->desktop->xwayland, xwayland_seat->seat);
   }
 #endif
+
+  if (self->flags & PHOC_SERVER_FLAG_SHELL_MODE) {
+    g_message ("Enabling shell mode");
+    g_signal_connect_object (self->desktop->phosh,
+                             "notify::shell-state",
+                             G_CALLBACK (on_shell_state_changed),
+                             self, G_CONNECT_SWAPPED);
+    on_shell_state_changed (self, NULL, self->desktop->phosh);
+  }
 
   phoc_wayland_init (self);
   if (self->session)

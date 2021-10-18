@@ -18,7 +18,10 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocPhoshPrivate, phoc_phosh_private, PHOC, PHOSH_PRIVATE, GObject)
 
-typedef struct _PhocDesktop PhocDesktop;
+typedef enum {
+  PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN = 0,
+  PHOC_PHOSH_PRIVATE_SHELL_STATE_UP      = 1,
+} PhocPhoshPrivateShellState;
 
 PhocPhoshPrivate *phoc_phosh_private_new (void);
 bool              phoc_phosh_private_forward_keysym (PhocKeyCombo *combo, uint32_t timestamp);
@@ -28,5 +31,6 @@ void              phoc_phosh_private_notify_startup_id (PhocPhoshPrivate        
 void              phoc_phosh_private_notify_launch (PhocPhoshPrivate                           *self,
                                                     const char                                 *startup_id,
                                                     enum phosh_private_startup_tracker_protocol proto);
+PhocPhoshPrivateShellState phoc_phosh_private_get_shell_state (PhocPhoshPrivate *self);
 
 G_END_DECLS
