@@ -595,6 +595,9 @@ bool view_center(struct roots_view *view, struct wlr_output *wlr_output) {
 	view_get_box(view, &box);
 	view_get_geometry (view, &geom);
 
+	if (!view_is_floating (view))
+		return false;
+
 	PhocDesktop *desktop = view->desktop;
 	PhocInput *input = server->input;
 	PhocSeat *seat = input_last_active_seat(input);
@@ -919,9 +922,7 @@ void view_setup(struct roots_view *view) {
 	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
 
-	if (view_is_floating (view)) {
-		view_center(view, NULL);
-	}
+	view_center(view, NULL);
 	view_update_scale(view);
 
 	view_update_output(view, NULL);
