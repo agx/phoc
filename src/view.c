@@ -62,6 +62,8 @@ void view_destroy(struct roots_view *view) {
 		view->fullscreen_output->fullscreen_view = NULL;
 	}
 
+	g_clear_object (&view->settings);
+
 	view->impl->destroy(view);
 }
 
@@ -779,11 +781,8 @@ static void view_update_scale(struct roots_view *view) {
 
 	bool scaling_enabled = false;
 
-	if (view->app_id) {
-		g_autofree gchar *munged_app_id = munge_app_id (view->app_id);
-		g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
-		g_autoptr (GSettings) setting =  g_settings_new_with_path ("sm.puri.phoc.application", path);
-		scaling_enabled = g_settings_get_boolean (setting, "scale-to-fit");
+	if (view->settings) {
+		scaling_enabled = g_settings_get_boolean (view->settings, "scale-to-fit");
 	}
 
 	if (!scaling_enabled && !phoc_desktop_get_scale_to_fit (server->desktop)) {
@@ -1036,6 +1035,13 @@ void view_set_parent(struct roots_view *view, struct roots_view *parent) {
 void view_set_app_id(struct roots_view *view, const char *app_id) {
 	free(view->app_id);
 	view->app_id = app_id ? strdup(app_id) : NULL;
+
+	g_clear_object (&view->settings);
+	if (app_id) {
+		g_autofree gchar *munged_app_id = munge_app_id (app_id);
+		g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
+		view->settings = g_settings_new_with_path ("sm.puri.phoc.application", path);
+	}
 
 	view_update_scale(view);
 
