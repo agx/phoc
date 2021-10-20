@@ -7,8 +7,6 @@ phoc_enum_sources = gnome.mkenums_simple(
   sources : phoc_enum_headers)
 
 sources = files(
-  'settings.c',
-  'settings.h',
   'cursor.c',
   'cursor.h',
   'desktop.c',
@@ -37,6 +35,8 @@ sources = files(
   'seat.h',
   'server.c',
   'server.h',
+  'settings.c',
+  'settings.h',
   'switch.c',
   'switch.h',
   'text_input.c',
