@@ -13,6 +13,7 @@
 #include "input-device.h"
 #include "seat.h"
 
+#include <wlr/backend/libinput.h>
 #include <wlr/types/wlr_input_device.h>
 
 enum {
@@ -138,7 +139,7 @@ phoc_input_device_init (PhocInputDevice *self)
  * phoc_input_device_get_seat:
  * @self: The %PhocInputDevice
  *
- * Returns: The seat this input device belongs to.
+ * Returns: (transfer none): The seat this input device belongs to.
  */
 PhocSeat *
 phoc_input_device_get_seat (PhocInputDevice *self)
@@ -169,3 +170,62 @@ phoc_input_device_get_device (PhocInputDevice *self)
   return priv->device;
 }
 
+/**
+ * phoc_input_device_get_is_touchpad:
+ * @self: The %PhocInputDevice
+ *
+ * Returns: %TRUE if this is a touchpad
+ */
+gboolean
+phoc_input_device_get_is_touchpad (PhocInputDevice *self)
+{
+  struct libinput_device *ldev;
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  if (!wlr_input_device_is_libinput (priv->device))
+    return FALSE;
+
+  ldev = phoc_input_device_get_libinput_device_handle (PHOC_INPUT_DEVICE (self));
+  if (libinput_device_config_tap_get_finger_count (ldev) == 0)
+    return FALSE;
+
+  g_debug ("%s is a touchpad device", libinput_device_get_name (ldev));
+  return TRUE;
+}
+
+/**
+ * phoc_input_device_get_is_libinput:
+ * @self: The %PhocInputDevice
+ *
+ * Returns: %TRUE if the device is driven by libinput
+ */
+gboolean
+phoc_input_device_get_is_libinput (PhocInputDevice *self)
+{
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  return wlr_input_device_is_libinput (priv->device);
+}
+
+/**
+ * phoc_input_device_get_libinput_device_handle:
+ * @self: The %PhocInputDevice
+ *
+ * Returns: (nullable): The libinput device
+ */
+struct libinput_device *
+phoc_input_device_get_libinput_device_handle (PhocInputDevice *self)
+{
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  return wlr_libinput_get_device_handle (priv->device);
+}

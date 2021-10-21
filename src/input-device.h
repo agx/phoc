@@ -30,5 +30,8 @@ struct _PhocInputDeviceClass {
 
 PhocSeat                *phoc_input_device_get_seat                       (PhocInputDevice *self);
 struct wlr_input_device *phoc_input_device_get_device                     (PhocInputDevice *self);
+gboolean                 phoc_input_device_get_is_touchpad                (PhocInputDevice *self);
+gboolean                 phoc_input_device_get_is_libinput                (PhocInputDevice *self);
+struct libinput_device  *phoc_input_device_get_libinput_device_handle     (PhocInputDevice *self);
 
 G_END_DECLS

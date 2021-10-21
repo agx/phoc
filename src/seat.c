@@ -625,7 +625,8 @@ phoc_seat_configure_cursor (PhocSeat *seat)
   // reset mappings
   wlr_cursor_map_to_output (cursor, NULL);
   wl_list_for_each (pointer, &seat->pointers, link) {
-    seat_reset_device_mappings (seat, pointer->device);
+    struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
+    seat_reset_device_mappings (seat, device);
   }
   wl_list_for_each (touch, &seat->touch, link) {
     seat_reset_device_mappings (seat, touch->device);
@@ -637,8 +638,8 @@ phoc_seat_configure_cursor (PhocSeat *seat)
   // configure device to output mappings
   wl_list_for_each (output, &desktop->outputs, link) {
     wl_list_for_each (pointer, &seat->pointers, link) {
-      seat_set_device_output_mappings (seat, pointer->device,
-                                       output);
+      struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
+      seat_set_device_output_mappings (seat, device, output);
     }
     wl_list_for_each (tablet, &seat->tablets, link) {
       seat_set_device_output_mappings (seat, tablet->device,
@@ -998,10 +999,11 @@ static void
 handle_pointer_destroy (struct wl_listener *listener, void *data)
 {
   PhocPointer *pointer = wl_container_of (listener, pointer, device_destroy);
-  PhocSeat *seat = pointer->seat;
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (pointer));
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
 
   wl_list_remove (&pointer->link);
-  wlr_cursor_detach_input_device (seat->cursor->cursor, pointer->device);
+  wlr_cursor_detach_input_device (seat->cursor->cursor, device);
   wl_list_remove (&pointer->device_destroy.link);
   g_object_unref (pointer);
 
@@ -1017,7 +1019,7 @@ seat_add_pointer (PhocSeat                *seat,
   wl_list_insert (&seat->pointers, &pointer->link);
 
   pointer->device_destroy.notify = handle_pointer_destroy;
-  wl_signal_add (&pointer->device->events.destroy, &pointer->device_destroy);
+  wl_signal_add (&device->events.destroy, &pointer->device_destroy);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
   phoc_seat_configure_cursor (seat);
