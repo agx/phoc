@@ -10,7 +10,11 @@
 #include <wlr/backend/libinput.h>
 #include <wlr/types/wlr_input_device.h>
 
-
+/**
+ * PhocPointer:
+ *
+ * A pointer input device
+ */
 G_DEFINE_TYPE (PhocPointer, phoc_pointer, PHOC_TYPE_INPUT_DEVICE);
 
 
