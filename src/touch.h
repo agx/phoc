@@ -26,9 +26,6 @@ struct _PhocTouch {
 
   struct wl_list           link; // seat::touch
   struct wl_listener       touch_destroy;
-  PhocSeat                *seat;
-  struct wlr_input_device *device;
-
 };
 
 PhocTouch *phoc_touch_new (struct wlr_input_device *device, PhocSeat *seat);
