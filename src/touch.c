@@ -26,64 +26,6 @@ enum {
 };
 static guint signals[N_SIGNALS] = { 0 };
 
-static void
-phoc_touch_set_property (GObject      *object,
-                         guint         property_id,
-                         const GValue *value,
-                         GParamSpec   *pspec)
-{
-  PhocTouch *self = PHOC_TOUCH (object);
-
-  switch (property_id) {
-  case PROP_DEVICE:
-    self->device = g_value_get_pointer (value);
-    self->device->data = self;
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DEVICE]);
-    break;
-  case PROP_SEAT:
-    self->seat = g_value_get_pointer (value);
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SEAT]);
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
-  }
-}
-
-static void
-phoc_touch_get_property (GObject    *object,
-                         guint       property_id,
-                         GValue     *value,
-                         GParamSpec *pspec)
-{
-  PhocTouch *self = PHOC_TOUCH (object);
-
-  switch (property_id) {
-  case PROP_DEVICE:
-    g_value_set_pointer (value, self->device);
-    break;
-  case PROP_SEAT:
-    g_value_set_pointer (value, self->seat);
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
-  }
-}
-
-static void
-phoc_touch_init (PhocTouch *self)
-{
-}
-
-PhocTouch *
-phoc_touch_new (struct wlr_input_device *device, PhocSeat *seat)
-{
-  return g_object_new (PHOC_TYPE_TOUCH,
-                       "device", device,
-                       "seat", seat,
-                       NULL);
-}
 
 static void
 handle_touch_destroy (struct wl_listener *listener, void *data)
@@ -151,4 +93,20 @@ phoc_touch_class_init (PhocTouchClass *klass)
                                          G_SIGNAL_RUN_LAST,
                                          0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
+}
+
+
+static void
+phoc_touch_init (PhocTouch *self)
+{
+}
+
+
+PhocTouch *
+phoc_touch_new (struct wlr_input_device *device, PhocSeat *seat)
+{
+  return g_object_new (PHOC_TYPE_TOUCH,
+                       "device", device,
+                       "seat", seat,
+                       NULL);
 }
