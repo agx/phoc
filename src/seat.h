@@ -13,11 +13,23 @@
 #include "switch.h"
 #include "text_input.h"
 
+#include <glib-object.h>
+
+G_BEGIN_DECLS
+
+#define PHOC_TYPE_SEAT (phoc_seat_get_type ())
+
+G_DECLARE_FINAL_TYPE (PhocSeat, phoc_seat, PHOC, SEAT, GObject)
+
 typedef struct _PhocCursor PhocCursor;
 typedef struct _PhocDragIcon PhocDragIcon;
 
 typedef struct _PhocSeat {
+  GObject                         parent;
+
   PhocInput                      *input;
+  char                           *name;
+
   struct wlr_seat                *seat;
   PhocCursor                     *cursor;
   struct wl_list                  link; // PhocInput::seats
@@ -130,9 +142,8 @@ typedef struct PhocPointerConstraint {
   struct wl_listener                destroy;
 } PhocPointerConstraint;
 
-PhocSeat          *phoc_seat_create (PhocInput *input, char *name);
 
-void               phoc_seat_destroy (PhocSeat *seat);
+PhocSeat          *phoc_seat_new (PhocInput *input, const char *name);
 
 void               phoc_seat_add_device (PhocSeat                *seat,
                                          struct wlr_input_device *device);
