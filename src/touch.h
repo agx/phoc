@@ -10,15 +10,6 @@
 
 G_DECLARE_FINAL_TYPE (PhocTouch, phoc_touch, PHOC, TOUCH, GObject);
 
-/* These need to know about PhocTouch so we have them after the type definition.
- * This will fix itself once output / view / phosh are gobjects and most of
- * their members are non-public. */
-#include "output.h"
-#include "cursor.h"
-#include "server.h"
-#include "seat.h"
-#include "view.h"
-
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
 struct _PhocTouch {

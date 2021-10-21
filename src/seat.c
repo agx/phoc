@@ -30,6 +30,7 @@
 #include "keyboard.h"
 #include "pointer.h"
 #include "seat.h"
+#include "server.h"
 #include "text_input.h"
 #include "touch.h"
 #include "xcursor.h"
