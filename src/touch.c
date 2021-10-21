@@ -57,12 +57,6 @@ phoc_touch_finalize (GObject *object)
 }
 
 static void
-phoc_touch_dispose (GObject *object)
-{
-  G_OBJECT_CLASS (phoc_touch_parent_class)->dispose (object);
-}
-
-static void
 phoc_touch_class_init (PhocTouchClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
@@ -71,7 +65,6 @@ phoc_touch_class_init (PhocTouchClass *klass)
   object_class->get_property = phoc_touch_get_property;
 
   object_class->constructed = phoc_touch_constructed;
-  object_class->dispose = phoc_touch_dispose;
   object_class->finalize = phoc_touch_finalize;
 
   props[PROP_DEVICE] =
