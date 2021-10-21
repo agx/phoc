@@ -11,6 +11,11 @@
 #include "touch.h"
 #include "seat.h"
 
+/**
+ * PhocTouch:
+ *
+ * A touch input device
+ */
 G_DEFINE_TYPE (PhocTouch, phoc_touch, PHOC_TYPE_INPUT_DEVICE);
 
 enum {
