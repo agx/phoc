@@ -7,6 +7,8 @@
 #include "seat.h"
 
 /**
+ * roots_input_method_relay:
+ *
  * The relay structure manages the relationship between text-input and
  * input_method interfaces on a given seat. Multiple text-input interfaces may
  * be bound to a relay, but at most one will be focused (reveiving events) at
