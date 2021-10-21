@@ -12,6 +12,12 @@
 #include "seat.h"
 #include "server.h"
 
+/**
+ * PhocInput:
+ *
+ * PhocInput handles new input devices and seats
+ */
+
 G_DEFINE_TYPE (PhocInput, phoc_input, G_TYPE_OBJECT);
 
 const char *
