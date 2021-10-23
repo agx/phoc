@@ -526,7 +526,14 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 		surface->toplevel->client_pending.fullscreen_output);
 	view_auto_maximize(&roots_surface->view);
 	view_set_title(&roots_surface->view, surface->toplevel->title);
-	view_set_app_id(&roots_surface->view, surface->toplevel->app_id);
+
+	// Check for app-id override coming from gtk-shell
+	PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (desktop->gtk_shell, surface->surface);
+	if (gtk_surface && gtk_surface->app_id) {
+		view_set_app_id (&roots_surface->view, gtk_surface->app_id);
+	} else {
+		view_set_app_id (&roots_surface->view, surface->toplevel->app_id);
+	}
 
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&surface->surface->events.commit,
