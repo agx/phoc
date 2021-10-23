@@ -186,6 +186,8 @@ static void resize(struct roots_view *view, uint32_t width, uint32_t height) {
 
 	wlr_xdg_toplevel_set_size(xdg_surface, constrained_width,
 		constrained_height);
+
+	view_send_frame_done_if_not_visible (view);
 }
 
 static void move_resize(struct roots_view *view, double x, double y,
@@ -225,6 +227,8 @@ static void move_resize(struct roots_view *view, double x, double y,
 	} else if (xdg_surface->pending_move_resize_configure_serial == 0) {
 		view_update_position(view, x, y);
 	}
+
+	view_send_frame_done_if_not_visible (view);
 }
 
 static bool want_scaling(struct roots_view *view) {
@@ -266,6 +270,8 @@ static void _close(struct roots_view *view) {
 		wlr_xdg_popup_destroy(popup->base);
 	}
 	wlr_xdg_toplevel_send_close(xdg_surface);
+
+	view_send_frame_done_if_not_visible (view);
 }
 
 static void for_each_surface(struct roots_view *view,

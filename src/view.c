@@ -917,6 +917,26 @@ void view_initial_focus(struct roots_view *view) {
 	}
 }
 
+/**
+ * view_send_frame_done_if_not_visible:
+ * @view: The #roots_view
+ *
+ * For views that aren't visible, EGL-Wayland can be stuck
+ * in eglSwapBuffers waiting for frame done event. This function
+ * helps it get unstuck, so further events can actually be processed
+ * by the client. It's worth calling this function when sending
+ * events like `configure` or `close`, as these should get processed
+ * immediately regardless of surface visibility.
+ */
+void
+view_send_frame_done_if_not_visible (struct roots_view *view)
+{
+  if (!phoc_desktop_view_is_visible (view->desktop, view) && view->wlr_surface) {
+    struct timespec now;
+    clock_gettime (CLOCK_MONOTONIC, &now);
+    wlr_surface_send_frame_done (view->wlr_surface, &now);
+  }
+}
 
 void view_setup(struct roots_view *view) {
 	view_create_foreign_toplevel_handle(view);

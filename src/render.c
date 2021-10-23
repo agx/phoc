@@ -766,7 +766,7 @@ buffer_damage_finish:
 	pixman_region32_fini(&buffer_damage);
 
 send_frame_done:
-	// Send frame done events to all surfaces
+	// Send frame done events to all visible surfaces
 	phoc_output_for_each_surface(output, surface_send_frame_done_iterator, &now, true);
 
 	damage_touch_points(output);
