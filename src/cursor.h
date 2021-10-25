@@ -44,7 +44,6 @@ typedef struct _PhocCursor {
 
   // state from input (review if this is necessary)
   struct wlr_xcursor_manager       *xcursor_manager;
-  struct wlr_seat                  *wl_seat;
   struct wl_client                 *cursor_client;
   int                               offs_x, offs_y;
   int                               view_x, view_y, view_width, view_height;
