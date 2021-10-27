@@ -285,7 +285,7 @@ void arrange_layers(PhocOutput *output) {
 		} else if (view_is_tiled(view)) {
 			view_arrange_tiled(view, NULL);
 		} else if (output->desktop->maximize) {
-			view_center(view);
+			view_center(view, NULL);
 		}
 	}
 

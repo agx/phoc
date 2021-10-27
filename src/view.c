@@ -534,9 +534,6 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   struct wlr_box usable_area;
   double x, y;
 
-  if (view_is_fullscreen (view))
-    return false;
-
   output = view_get_output(view);
   if (!output)
     return false;
@@ -551,20 +548,24 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   usable_area = phoc_output->usable_area;
   l_output = wlr_output_layout_get(desktop->layout, new_output);
 
-  /* use a proper position on the new output */
-  x = usable_area.x + l_output->x;
-  y = usable_area.y + l_output->y;
-  g_debug("moving view to %f %f", x, y);
-
+  /* update saved position to the new output */
+  x = usable_area.x + l_output->x + usable_area.width / 2 - view->saved.width / 2;
+  y = usable_area.y + l_output->y + usable_area.height / 2 - view->saved.height / 2;
+  g_debug("moving view's saved position to %f %f", x, y);
   view->saved.x = x;
   view->saved.y = y;
+
+  if (view_is_fullscreen (view)) {
+    view_set_fullscreen (view, true, new_output);
+    return true;
+  }
 
   if (view_is_maximized (view)) {
     view_arrange_maximized (view, new_output);
   } else if (view_is_tiled (view)) {
     view_arrange_tiled (view, new_output);
   } else {
-    view_move(view, x, y);
+    view_center (view, new_output);
   }
 
   return true;
@@ -587,11 +588,14 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction, struct wlr_o
   view_arrange_tiled (view, output);
 }
 
-bool view_center(struct roots_view *view) {
+bool view_center(struct roots_view *view, struct wlr_output *wlr_output) {
         PhocServer *server = phoc_server_get_default ();
 	struct wlr_box box, geom;
 	view_get_box(view, &box);
 	view_get_geometry (view, &geom);
+
+	if (!view_is_floating (view))
+		return false;
 
 	PhocDesktop *desktop = view->desktop;
 	PhocInput *input = server->input;
@@ -603,7 +607,7 @@ bool view_center(struct roots_view *view) {
 	}
 	cursor = phoc_seat_get_cursor (seat);
 
-	struct wlr_output *output = wlr_output_layout_output_at(desktop->layout,
+	struct wlr_output *output = wlr_output ?: wlr_output_layout_output_at(desktop->layout,
 		cursor->cursor->x, cursor->cursor->y);
 	if (!output) {
 		// empty layout
@@ -613,7 +617,9 @@ bool view_center(struct roots_view *view) {
 	const struct wlr_output_layout_output *l_output =
 		wlr_output_layout_get(desktop->layout, output);
 
-	PhocOutput *phoc_output = output->data;
+	PhocOutput *phoc_output = PHOC_OUTPUT (output->data);
+	g_assert (PHOC_IS_OUTPUT (phoc_output));
+
 	struct wlr_box usable_area = phoc_output->usable_area;
 
 	double view_x = (double)(usable_area.width - box.width) / 2 +
@@ -818,7 +824,7 @@ static void view_update_scale(struct roots_view *view) {
 		} else if (view_is_tiled(view)) {
 			view_arrange_tiled(view, NULL);
 		} else {
-			view_center(view);
+			view_center(view, NULL);
 		}
 	}
 }
@@ -915,9 +921,7 @@ void view_setup(struct roots_view *view) {
 	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
 
-	if (view_is_floating (view)) {
-		view_center(view);
-	}
+	view_center(view, NULL);
 	view_update_scale(view);
 
 	view_update_output(view, NULL);
@@ -981,7 +985,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 	view->box.width = width;
 	view->box.height = height;
 	if (view->pending_centering) {
-		view_center (view);
+		view_center (view, NULL);
 		view->pending_centering = false;
 	}
 	view_update_scale(view);
