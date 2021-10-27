@@ -447,9 +447,11 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 		struct wlr_output *output) {
 	bool was_fullscreen = view_is_fullscreen (view);
 
-	// TODO: check if client is focused?
-
 	if (was_fullscreen != fullscreen) {
+		/* don't allow unfocused surfaces to make themselves fullscreen */
+		if (fullscreen && view->wlr_surface)
+			g_return_if_fail (phoc_input_view_has_focus (phoc_server_get_default()->input, view));
+
 		if (view->impl->set_fullscreen) {
 			view->impl->set_fullscreen(view, fullscreen);
 		}
