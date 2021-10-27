@@ -607,10 +607,10 @@ void output_render(PhocOutput *output) {
 		bool scanned_out = scan_out_fullscreen_view(output);
 
 		if (scanned_out && !last_scanned_out) {
-			wlr_log(WLR_DEBUG, "Scanning out fullscreen view");
+			g_debug ("Scanning out fullscreen view");
 		}
 		if (last_scanned_out && !scanned_out) {
-			wlr_log(WLR_DEBUG, "Stopping fullscreen view scan out");
+			g_debug ("Stopping fullscreen view scan out");
 		}
 		last_scanned_out = scanned_out;
 
