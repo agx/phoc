@@ -492,14 +492,14 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 	assert(surface->role != WLR_XDG_SURFACE_ROLE_NONE);
 
 	if (surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-		wlr_log(WLR_DEBUG, "new xdg popup");
+		g_debug ("new xdg popup");
 		return;
 	}
 
 	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, xdg_shell_surface);
 
-	wlr_log(WLR_DEBUG, "new xdg toplevel: title=%s, app_id=%s",
+	g_debug ("new xdg toplevel: title=%s, app_id=%s",
 		surface->toplevel->title, surface->toplevel->app_id);
 
 	wlr_xdg_surface_ping(surface);
@@ -607,7 +607,7 @@ static void decoration_handle_surface_commit(struct wl_listener *listener,
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data) {
 	struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
 
-	wlr_log(WLR_DEBUG, "new xdg toplevel decoration");
+	g_debug ("new xdg toplevel decoration");
 
 	struct roots_xdg_surface *xdg_surface = wlr_decoration->surface->data;
 	assert(xdg_surface != NULL);

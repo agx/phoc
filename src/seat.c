@@ -337,7 +337,7 @@ handle_tool_axis (struct wl_listener *listener, void *data)
   PhocTabletTool *phoc_tool = event->tool->data;
 
   if (!phoc_tool) {       // Should this be an assert?
-    wlr_log (WLR_DEBUG, "Tool Axis, before proximity");
+    g_debug ("Tool Axis, before proximity");
     return;
   }
 
@@ -755,7 +755,7 @@ phoc_seat_handle_request_start_drag (struct wl_listener *listener,
     return;
   }
 
-  wlr_log (WLR_DEBUG, "Ignoring start_drag request: "
+  g_debug ("Ignoring start_drag request: "
            "could not validate pointer or touch serial %" PRIu32, event->serial);
   wlr_data_source_destroy (event->drag->source);
 }
@@ -1137,7 +1137,7 @@ static void
 attach_tablet_pad (PhocTabletPad *pad,
                    PhocTablet     *tool)
 {
-  wlr_log (WLR_DEBUG, "Attaching tablet pad \"%s\" to tablet tool \"%s\"",
+  g_debug ("Attaching tablet pad \"%s\" to tablet tool \"%s\"",
            pad->device->name, tool->device->name);
 
   pad->tablet = tool;

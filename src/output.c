@@ -256,7 +256,7 @@ phoc_output_set_mode (struct wlr_output *output, struct roots_output_config *oc)
     wlr_log (WLR_ERROR, "Configured mode for %s not available",
              output->name);
   } else {
-    wlr_log (WLR_DEBUG, "Assigning configured mode to %s",
+    g_debug ("Assigning configured mode to %s",
              output->name);
     wlr_output_set_mode (output, best);
   }
@@ -274,8 +274,8 @@ phoc_output_constructed (GObject *object)
 
   struct roots_config *config = self->desktop->config;
 
-  wlr_log (WLR_DEBUG, "Output '%s' added", self->wlr_output->name);
-  wlr_log (WLR_DEBUG, "'%s %s %s' %" PRId32 "mm x %" PRId32 "mm",
+  g_debug ("Output '%s' added", self->wlr_output->name);
+  g_debug ("'%s %s %s' %" PRId32 "mm x %" PRId32 "mm",
            self->wlr_output->make, self->wlr_output->model,
            self->wlr_output->serial, self->wlr_output->phys_width,
            self->wlr_output->phys_height);

@@ -746,7 +746,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	struct wlr_layer_surface_v1 *layer_surface = data;
 	PhocDesktop *desktop =
 		wl_container_of(listener, desktop, layer_shell_surface);
-	wlr_log(WLR_DEBUG, "new layer surface: namespace %s layer %d anchor %d "
+	g_debug ("new layer surface: namespace %s layer %d anchor %d "
 			"size %dx%d margin %d,%d,%d,%d",
 		layer_surface->namespace, layer_surface->client_pending.layer,
 		layer_surface->client_pending.anchor,
