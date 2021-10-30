@@ -30,9 +30,66 @@
 #include "keyboard.h"
 #include "pointer.h"
 #include "seat.h"
+#include "server.h"
 #include "text_input.h"
 #include "touch.h"
 #include "xcursor.h"
+
+
+enum {
+  PROP_0,
+  PROP_INPUT,
+  PROP_NAME,
+  PROP_LAST_PROP
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
+G_DEFINE_TYPE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
+
+
+static void
+phoc_seat_set_property (GObject      *object,
+                        guint         property_id,
+                        const GValue *value,
+                         GParamSpec   *pspec)
+{
+  PhocSeat *self = PHOC_SEAT (object);
+
+  switch (property_id) {
+  case PROP_INPUT:
+    self->input = g_value_dup_object (value);
+    break;
+  case PROP_NAME:
+    self->name = g_value_dup_string (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_seat_get_property (GObject    *object,
+                        guint       property_id,
+                        GValue     *value,
+                        GParamSpec *pspec)
+{
+  PhocSeat *self = PHOC_SEAT (object);
+
+  switch (property_id) {
+  case PROP_INPUT:
+    g_value_set_object (value, self->input);
+    break;
+  case PROP_NAME:
+    g_value_set_string (value, self->name);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
 
 static void
 handle_keyboard_key (struct wl_listener *listener, void *data)
@@ -569,10 +626,12 @@ phoc_seat_configure_cursor (PhocSeat *seat)
   // reset mappings
   wlr_cursor_map_to_output (cursor, NULL);
   wl_list_for_each (pointer, &seat->pointers, link) {
-    seat_reset_device_mappings (seat, pointer->device);
+    struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
+    seat_reset_device_mappings (seat, device);
   }
   wl_list_for_each (touch, &seat->touch, link) {
-    seat_reset_device_mappings (seat, touch->device);
+    struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (touch));
+    seat_reset_device_mappings (seat, device);
   }
   wl_list_for_each (tablet, &seat->tablets, link) {
     seat_reset_device_mappings (seat, tablet->device);
@@ -581,21 +640,21 @@ phoc_seat_configure_cursor (PhocSeat *seat)
   // configure device to output mappings
   wl_list_for_each (output, &desktop->outputs, link) {
     wl_list_for_each (pointer, &seat->pointers, link) {
-      seat_set_device_output_mappings (seat, pointer->device,
-                                       output);
+      struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
+      seat_set_device_output_mappings (seat, device, output);
     }
     wl_list_for_each (tablet, &seat->tablets, link) {
       seat_set_device_output_mappings (seat, tablet->device,
                                        output);
     }
     wl_list_for_each (touch, &seat->touch, link) {
-      seat_set_device_output_mappings (seat, touch->device,
-                                       output);
+      struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (touch));
+      seat_set_device_output_mappings (seat, device, output);
       g_debug ("Added mapping for touch device '%s' to output '%s'",
-               touch->device->name,
+               device->name,
                output->wlr_output->name);
       g_hash_table_insert (desktop->input_output_map,
-                           g_strdup (touch->device->name),
+                           g_strdup (device->name),
                            output);
     }
   }
@@ -883,72 +942,6 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
   }
 }
 
-void
-phoc_seat_destroy (PhocSeat *seat)
-{
-  phoc_seat_handle_destroy (&seat->destroy, seat->seat);
-  wlr_seat_destroy (seat->seat);
-  g_object_unref (seat->cursor);
-}
-
-PhocSeat *
-phoc_seat_create (PhocInput *input, char *name)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocSeat *seat = calloc (1, sizeof(PhocSeat));
-
-  if (!seat) {
-    return NULL;
-  }
-
-  wl_list_init (&seat->keyboards);
-  wl_list_init (&seat->pointers);
-  wl_list_init (&seat->touch);
-  wl_list_init (&seat->tablets);
-  wl_list_init (&seat->tablet_pads);
-  wl_list_init (&seat->switches);
-  wl_list_init (&seat->views);
-
-  seat->input = input;
-
-  seat->touch_id = -1;
-
-  seat->seat = wlr_seat_create (server->wl_display, name);
-  if (!seat->seat) {
-    free (seat);
-    return NULL;
-  }
-  seat->seat->data = seat;
-
-  phoc_seat_init_cursor (seat);
-  if (!seat->cursor) {
-    wlr_seat_destroy (seat->seat);
-    free (seat);
-    return NULL;
-  }
-
-  roots_input_method_relay_init (seat, &seat->im_relay);
-
-  wl_list_insert (&input->seats, &seat->link);
-
-  seat->request_set_selection.notify =
-    phoc_seat_handle_request_set_selection;
-  wl_signal_add (&seat->seat->events.request_set_selection,
-                 &seat->request_set_selection);
-  seat->request_set_primary_selection.notify =
-    phoc_seat_handle_request_set_primary_selection;
-  wl_signal_add (&seat->seat->events.request_set_primary_selection,
-                 &seat->request_set_primary_selection);
-  seat->request_start_drag.notify = phoc_seat_handle_request_start_drag;
-  wl_signal_add (&seat->seat->events.request_start_drag,
-                 &seat->request_start_drag);
-  seat->start_drag.notify = phoc_seat_handle_start_drag;
-  wl_signal_add (&seat->seat->events.start_drag, &seat->start_drag);
-  seat->destroy.notify = phoc_seat_handle_destroy;
-  wl_signal_add (&seat->seat->events.destroy, &seat->destroy);
-
-  return seat;
-}
 
 static void
 seat_update_capabilities (PhocSeat *seat)
@@ -1008,10 +1001,11 @@ static void
 handle_pointer_destroy (struct wl_listener *listener, void *data)
 {
   PhocPointer *pointer = wl_container_of (listener, pointer, device_destroy);
-  PhocSeat *seat = pointer->seat;
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (pointer));
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
 
   wl_list_remove (&pointer->link);
-  wlr_cursor_detach_input_device (seat->cursor->cursor, pointer->device);
+  wlr_cursor_detach_input_device (seat->cursor->cursor, device);
   wl_list_remove (&pointer->device_destroy.link);
   g_object_unref (pointer);
 
@@ -1027,7 +1021,7 @@ seat_add_pointer (PhocSeat                *seat,
   wl_list_insert (&seat->pointers, &pointer->link);
 
   pointer->device_destroy.notify = handle_pointer_destroy;
-  wl_signal_add (&pointer->device->events.destroy, &pointer->device_destroy);
+  wl_signal_add (&device->events.destroy, &pointer->device_destroy);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
   phoc_seat_configure_cursor (seat);
@@ -1071,14 +1065,15 @@ seat_add_switch (PhocSeat                *seat,
 static void
 handle_touch_destroy (PhocTouch *touch)
 {
-  PhocSeat *seat = touch->seat;
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (touch));
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (touch));
 
-  g_debug ("Removing touch device: %s", touch->device->name);
-  g_hash_table_remove (desktop->input_output_map, touch->device->name);
+  g_debug ("Removing touch device: %s", device->name);
+  g_hash_table_remove (desktop->input_output_map, device->name);
   wl_list_remove (&touch->link);
-  wlr_cursor_detach_input_device (seat->cursor->cursor, touch->device);
+  wlr_cursor_detach_input_device (seat->cursor->cursor, device);
   g_object_unref (touch);
 
   seat_update_capabilities (seat);
@@ -1954,4 +1949,124 @@ phoc_seat_get_cursor (PhocSeat *self)
   g_return_val_if_fail (self, NULL);
 
   return self->cursor;
+}
+
+
+static void
+phoc_seat_constructed (GObject *object)
+{
+  PhocSeat *self = PHOC_SEAT(object);
+  PhocServer *server = phoc_server_get_default ();
+
+  G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
+
+  wl_list_init (&self->keyboards);
+  wl_list_init (&self->pointers);
+  wl_list_init (&self->touch);
+  wl_list_init (&self->tablets);
+  wl_list_init (&self->tablet_pads);
+  wl_list_init (&self->switches);
+  wl_list_init (&self->views);
+
+  self->touch_id = -1;
+
+  self->seat = wlr_seat_create (server->wl_display, self->name);
+  g_assert (self->seat);
+  self->seat->data = self;
+
+  phoc_seat_init_cursor (self);
+  g_assert (self->cursor);
+
+  roots_input_method_relay_init (self, &self->im_relay);
+
+  wl_list_insert (&self->input->seats, &self->link);
+
+  self->request_set_selection.notify =
+    phoc_seat_handle_request_set_selection;
+  wl_signal_add (&self->seat->events.request_set_selection,
+                 &self->request_set_selection);
+  self->request_set_primary_selection.notify =
+    phoc_seat_handle_request_set_primary_selection;
+  wl_signal_add (&self->seat->events.request_set_primary_selection,
+                 &self->request_set_primary_selection);
+  self->request_start_drag.notify = phoc_seat_handle_request_start_drag;
+  wl_signal_add (&self->seat->events.request_start_drag,
+                 &self->request_start_drag);
+  self->start_drag.notify = phoc_seat_handle_start_drag;
+  wl_signal_add (&self->seat->events.start_drag, &self->start_drag);
+  self->destroy.notify = phoc_seat_handle_destroy;
+  wl_signal_add (&self->seat->events.destroy, &self->destroy);
+}
+
+
+static void
+phoc_seat_dispose (GObject *object)
+{
+  PhocSeat *self = PHOC_SEAT (object);
+
+  g_clear_object (&self->cursor);
+  g_clear_object (&self->input);
+
+  G_OBJECT_CLASS (phoc_seat_parent_class)->dispose (object);
+}
+
+
+static void
+phoc_seat_finalize (GObject *object)
+{
+  PhocSeat *self = PHOC_SEAT (object);
+
+  phoc_seat_handle_destroy (&self->destroy, self->seat);
+  wlr_seat_destroy (self->seat);
+  g_clear_pointer (&self->name, g_free);
+
+  G_OBJECT_CLASS (phoc_seat_parent_class)->finalize (object);
+}
+
+
+static void
+phoc_seat_class_init (PhocSeatClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->get_property = phoc_seat_get_property;
+  object_class->set_property = phoc_seat_set_property;
+  object_class->constructed = phoc_seat_constructed;
+  object_class->dispose = phoc_seat_dispose;
+  object_class->dispose = phoc_seat_finalize;
+
+  /**
+   * PhocSeat:input:
+   *
+   * The %PhocInput that keeps track of all seats
+   */
+  props[PROP_INPUT] = g_param_spec_object ("input", "", "",
+                                           PHOC_TYPE_INPUT,
+                                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+  /**
+   * PhocSeat:name:
+   *
+   * The name of this seat.
+   */
+  props[PROP_NAME] = g_param_spec_string ("name", "", "",
+                                          NULL,
+                                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+}
+
+
+static void
+phoc_seat_init (PhocSeat *self)
+{
+}
+
+
+PhocSeat *
+phoc_seat_new (PhocInput *input, const char *name)
+{
+  return PHOC_SEAT (g_object_new (PHOC_TYPE_SEAT,
+                                  "input", input,
+                                  "name", name,
+                                  NULL));
 }

@@ -17,6 +17,8 @@ sources = files(
   'ini.h',
   'input.c',
   'input.h',
+  'input-device.c',
+  'input-device.h',
   'keyboard.c',
   'keyboard.h',
   'keybindings.c',

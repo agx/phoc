@@ -12,6 +12,12 @@
 #include "seat.h"
 #include "server.h"
 
+/**
+ * PhocInput:
+ *
+ * PhocInput handles new input devices and seats
+ */
+
 G_DEFINE_TYPE (PhocInput, phoc_input, G_TYPE_OBJECT);
 
 const char *
@@ -40,13 +46,15 @@ phoc_input_get_seat (PhocInput *self, char *name)
 {
   PhocSeat *seat = NULL;
 
+  g_assert (PHOC_IS_INPUT (self));
+
   wl_list_for_each (seat, &self->seats, link) {
     if (strcmp (seat->seat->name, name) == 0) {
       return seat;
     }
   }
 
-  seat = phoc_seat_create (self, name);
+  seat = phoc_seat_new (self, name);
   return seat;
 }
 
