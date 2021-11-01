@@ -31,7 +31,7 @@ Environment=XDG_SESSION_DESKTOP=phosh
 Environment=XDG_SESSION_TYPE=wayland
 ExecStart=@devscript@
 TimeoutStartSec=30
-User=1000
+User=@devuid@
 PAMName=login
 WorkingDirectory=~
 Restart=always
