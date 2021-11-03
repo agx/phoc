@@ -1,5 +1,4 @@
-#ifndef ROOTSTON_OUTPUT_H
-#define ROOTSTON_OUTPUT_H
+#pragma once
 
 #include <gio/gio.h>
 #include <glib-object.h>
@@ -7,6 +6,8 @@
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_xdg_shell.h>
+
+G_BEGIN_DECLS
 
 #define PHOC_TYPE_OUTPUT (phoc_output_get_type ())
 
@@ -103,4 +104,4 @@ void        phoc_output_get_decoration_box (PhocOutput *self, struct roots_view 
                                             struct wlr_box *box);
 gboolean    phoc_output_is_builtin (PhocOutput *output);
 
-#endif
+G_END_DECLS
