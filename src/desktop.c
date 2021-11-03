@@ -563,12 +563,12 @@ phoc_desktop_constructed (GObject *object)
 
   const char *cursor_theme = NULL;
 #ifdef PHOC_XWAYLAND
-  const char *cursor_default = ROOTS_XCURSOR_DEFAULT;
+  const char *cursor_default = PHOC_XCURSOR_DEFAULT;
 #endif
 
   char cursor_size_fmt[16];
   snprintf(cursor_size_fmt, sizeof(cursor_size_fmt),
-	   "%d", ROOTS_XCURSOR_SIZE);
+	   "%d", PHOC_XCURSOR_SIZE);
   setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
   if (cursor_theme != NULL) {
     setenv("XCURSOR_THEME", cursor_theme, 1);
@@ -576,7 +576,7 @@ phoc_desktop_constructed (GObject *object)
 
 #ifdef PHOC_XWAYLAND
   self->xcursor_manager = wlr_xcursor_manager_create(cursor_theme,
-						     ROOTS_XCURSOR_SIZE);
+						     PHOC_XCURSOR_SIZE);
   g_return_if_fail (self->xcursor_manager);
 
   if (config->xwayland) {
