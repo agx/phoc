@@ -18,7 +18,7 @@ enum layer_parent {
 struct roots_layer_popup {
 	enum layer_parent parent_type;
 	union {
-		struct roots_layer_surface *parent_layer;
+		PhocLayerSurface *parent_layer;
 		struct roots_layer_popup *parent_popup;
 	};
 
@@ -35,7 +35,7 @@ struct roots_layer_popup {
 struct roots_layer_subsurface {
 	enum layer_parent parent_type;
 	union {
-		struct roots_layer_surface *parent_layer;
+		PhocLayerSurface *parent_layer;
 		struct roots_layer_popup *parent_popup;
 		struct roots_layer_subsurface *parent_subsurface;
 	};
