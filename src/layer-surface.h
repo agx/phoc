@@ -15,9 +15,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocLayerSurface, phoc_layer_surface, PHOC, LAYER_SURFACE, GObject)
 
-/* TODO: Avoid massive renames in other files for now */
-#define roots_layer_surface _PhocLayerSurface
-
 struct _PhocLayerSurface {
     GObject parent;
 
