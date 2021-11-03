@@ -8,15 +8,14 @@
 #include <wayland-server-core.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_output_damage.h>
+#include <wlr/types/wlr_xdg_shell.h>
 
 #define PHOC_TYPE_OUTPUT (phoc_output_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocOutput, phoc_output, PHOC, OUTPUT, GObject);
 
-/* These need to know about PhocOutput so we have them after the type definition.
- * This will fix itself once view / phosh are gobjects and most of
- * their members are non-public. */
-#include "desktop.h"
+typedef struct _PhocDesktop PhocDesktop;
+typedef struct _PhocInput PhocInput;
 
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
