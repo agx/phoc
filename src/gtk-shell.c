@@ -10,7 +10,9 @@
 
 #include <gtk-shell-protocol.h>
 #include "server.h"
+#include "cursor.h"
 #include "desktop.h"
+#include "input.h"
 #include "phosh-private.h"
 #include "gtk-shell.h"
 
