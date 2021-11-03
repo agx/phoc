@@ -12,6 +12,7 @@
 
 #include "config.h"
 #include "layers.h"
+#include "seat.h"
 #include "server.h"
 #include "render.h"
 

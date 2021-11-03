@@ -19,6 +19,7 @@
 #include "layers.h"
 #include "output.h"
 #include "render.h"
+#include "seat.h"
 #include "server.h"
 #include "utils.h"
 

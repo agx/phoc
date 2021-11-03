@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wlr/types/wlr_output_layout.h>
+#include "cursor.h"
 #include "desktop.h"
 #include "input.h"
 #include "seat.h"

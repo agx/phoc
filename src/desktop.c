@@ -28,6 +28,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
 #include <wlr/version.h>
+#include "cursor.h"
 #include "layers.h"
 #include "output.h"
 #include "seat.h"

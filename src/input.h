@@ -5,17 +5,11 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_seat.h>
 #include "settings.h"
+#include "view.h"
 
 #define PHOC_TYPE_INPUT (phoc_input_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocInput, phoc_input, PHOC, INPUT, GObject);
-
-/* These need to know about PhocInput so we have them after the type definition.
- * This will fix itself once output / view / phosh are gobjects and most of
- * their members are non-public. */
-#include "output.h"
-#include "cursor.h"
-#include "view.h"
 
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
