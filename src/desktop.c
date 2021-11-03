@@ -153,7 +153,7 @@ static struct roots_view *desktop_view_at(PhocDesktop *desktop,
 static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
                                              double oy, double *sx, double *sy)
 {
-	struct roots_layer_surface *roots_surface;
+	PhocLayerSurface *roots_surface;
 
 	wl_list_for_each_reverse(roots_surface, layer, link) {
 		if (roots_surface->layer_surface->current.exclusive_zone <= 0) {
