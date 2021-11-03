@@ -411,7 +411,7 @@ static void handle_destroy(struct wl_listener *listener, void *data) {
 		wl_list_remove(&layer->output_destroy.link);
 		arrange_layers((PhocOutput *)layer->layer_surface->output->data);
 	}
-	free(layer);
+	g_object_unref (layer);
 }
 
 static void subsurface_destroy(struct roots_layer_subsurface *subsurface) {
@@ -782,8 +782,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		}
 	}
 
-	struct roots_layer_surface *roots_surface =
-		calloc(1, sizeof(struct roots_layer_surface));
+	PhocLayerSurface *roots_surface = phoc_layer_surface_new ();
 	if (!roots_surface) {
 		return;
 	}

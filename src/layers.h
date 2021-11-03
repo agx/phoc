@@ -5,6 +5,7 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include "output.h"
+#include "layer-surface.h"
 
 G_BEGIN_DECLS
 
@@ -12,23 +13,6 @@ enum layer_parent {
 	LAYER_PARENT_LAYER,
 	LAYER_PARENT_POPUP,
 	LAYER_PARENT_SUBSURFACE
-};
-
-struct roots_layer_surface {
-	struct wlr_layer_surface_v1 *layer_surface;
-	struct wl_list link;
-
-	struct wl_listener destroy;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener surface_commit;
-	struct wl_listener output_destroy;
-	struct wl_listener new_popup;
-	struct wl_listener new_subsurface;
-	struct wl_list subsurfaces; // roots_layer_subsurface::link
-
-	struct wlr_box geo;
-	enum zwlr_layer_shell_v1_layer layer;
 };
 
 struct roots_layer_popup {

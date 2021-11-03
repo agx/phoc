@@ -23,6 +23,8 @@ sources = files(
   'keyboard.h',
   'keybindings.c',
   'keybindings.h',
+  'layer-surface.c',
+  'layer-surface.h',
   'layer_shell.c',
   'layers.h',
   'output.c',
