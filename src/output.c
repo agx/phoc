@@ -539,7 +539,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput *self, struct
 #endif
 
 static void
-phoc_output_layer_handle_surface (PhocOutput *self, struct roots_layer_surface *layer_surface,
+phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surface,
                                   roots_surface_iterator_func_t iterator, void
                                   *user_data)
 {
@@ -576,7 +576,7 @@ phoc_output_layer_for_each_surface (PhocOutput                   *self,
                                     roots_surface_iterator_func_t iterator,
                                     void                         *user_data)
 {
-  struct roots_layer_surface *layer_surface;
+  PhocLayerSurface *layer_surface;
 
   wl_list_for_each_reverse (layer_surface, layer_surfaces, link)
   {
