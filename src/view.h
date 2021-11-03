@@ -1,5 +1,4 @@
-#ifndef ROOTSTON_VIEW_H
-#define ROOTSTON_VIEW_H
+#pragma once
 
 #include <stdbool.h>
 #include <wlr/config.h>
@@ -13,6 +12,8 @@
 #include <gio/gio.h>
 
 #include "output.h"
+
+G_BEGIN_DECLS
 
 struct roots_view;
 typedef struct _PhocDesktop PhocDesktop;
@@ -264,4 +265,4 @@ void view_child_destroy(struct roots_view_child *child);
 struct roots_subsurface *subsurface_create(struct roots_view *view,
 	struct wlr_subsurface *wlr_subsurface);
 
-#endif
+G_END_DECLS
