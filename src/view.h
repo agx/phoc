@@ -1,19 +1,22 @@
 #ifndef ROOTSTON_VIEW_H
 #define ROOTSTON_VIEW_H
 
-#include "desktop.h"
-
 #include <stdbool.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
+#include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
+#include <gio/gio.h>
+
 #include "output.h"
 
 struct roots_view;
+typedef struct _PhocDesktop PhocDesktop;
+typedef struct _PhocOutput PhocOutput;
 
 struct roots_view_interface {
 	void (*activate)(struct roots_view *view, bool active);
