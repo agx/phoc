@@ -122,8 +122,10 @@ static void
 phoc_input_finalize (GObject *object)
 {
   PhocInput *self = PHOC_INPUT (object);
+  PhocSeat *seat, *next;
 
-  wl_list_remove (&self->seats);
+  wl_list_for_each_safe (seat, next, &self->seats, link)
+    g_object_unref (seat);
 
   G_OBJECT_CLASS (phoc_input_parent_class)->finalize (object);
 }
