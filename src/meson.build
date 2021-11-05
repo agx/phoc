@@ -58,7 +58,7 @@ sources = files(
 libphoc_generated_sources = [
   phoc_enum_sources,
   server_protos_headers,
-  server_protos_sources,
+  protos_sources,
 ]
 
 phoc_deps = [
