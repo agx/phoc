@@ -10,6 +10,7 @@
 #include "config.h"
 
 #include "layer-surface.h"
+#include "output.h"
 
 G_DEFINE_TYPE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT)
 
@@ -30,4 +31,27 @@ PhocLayerSurface *
 phoc_layer_surface_new (void)
 {
   return PHOC_LAYER_SURFACE (g_object_new (PHOC_TYPE_LAYER_SURFACE, NULL));
+}
+
+
+/**
+ * phoc_layer_surface_unmap:
+ * @self: The layer surface to unmap
+ *
+ * Unmaps a layer surface
+ */
+void
+phoc_layer_surface_unmap (PhocLayerSurface *self)
+{
+  struct wlr_layer_surface_v1 *layer_surface;
+  struct wlr_output *wlr_output;
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+  layer_surface = self->layer_surface;
+
+  wlr_output = layer_surface->output;
+  if (wlr_output != NULL) {
+    phoc_output_damage_whole_local_surface(wlr_output->data, layer_surface->surface,
+                                           self->geo.x, self->geo.y);
+  }
 }

@@ -42,5 +42,6 @@ struct _PhocLayerSurface {
 };
 
 PhocLayerSurface *phoc_layer_surface_new (void);
+void              phoc_layer_surface_unmap (PhocLayerSurface *self);
 
 G_END_DECLS
