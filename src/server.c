@@ -9,6 +9,7 @@
 #include "config.h"
 #include "render.h"
 #include "utils.h"
+#include "seat.h"
 #include "server.h"
 
 #include <errno.h>

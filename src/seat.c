@@ -1366,7 +1366,7 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
 
   if (!seat->cursor->xcursor_manager) {
     seat->cursor->xcursor_manager =
-      wlr_xcursor_manager_create (cursor_theme, ROOTS_XCURSOR_SIZE);
+      wlr_xcursor_manager_create (cursor_theme, PHOC_XCURSOR_SIZE);
     if (seat->cursor->xcursor_manager == NULL) {
       wlr_log (WLR_ERROR, "Cannot create XCursor manager for theme");
       return;
@@ -1826,7 +1826,7 @@ phoc_seat_begin_move (PhocSeat *seat, struct roots_view *view)
   }
   wlr_seat_pointer_clear_focus (seat->seat);
 
-  phoc_seat_maybe_set_cursor (seat, ROOTS_XCURSOR_MOVE);
+  phoc_seat_maybe_set_cursor (seat, PHOC_XCURSOR_MOVE);
 }
 
 void

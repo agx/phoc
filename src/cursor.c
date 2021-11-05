@@ -312,7 +312,7 @@ static void
 phoc_cursor_init (PhocCursor *self)
 {
   self->cursor = wlr_cursor_create ();
-  self->default_xcursor = ROOTS_XCURSOR_DEFAULT;
+  self->default_xcursor = PHOC_XCURSOR_DEFAULT;
 }
 
 

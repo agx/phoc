@@ -16,9 +16,11 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/util/log.h>
+#include "cursor.h"
 #include "desktop.h"
 #include "layers.h"
 #include "output.h"
+#include "seat.h"
 #include "server.h"
 
 #define LAYER_SHELL_LAYER_COUNT 4

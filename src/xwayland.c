@@ -11,7 +11,9 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/util/log.h>
 #include <wlr/xwayland.h>
+#include "cursor.h"
 #include "server.h"
+#include "seat.h"
 #include "view.h"
 #include "xwayland.h"
 

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <wayland-server-core.h>
+#include "cursor.h"
 #include "input.h"
 #include "keyboard.h"
 #include "seat.h"

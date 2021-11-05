@@ -1,7 +1,9 @@
 #pragma once
 
 #include "config.h"
+#include "gtk-shell.h"
 #include "phosh-private.h"
+#include "view.h"
 
 #include <time.h>
 #include <wayland-server-core.h>
@@ -39,13 +41,6 @@
 #define PHOC_TYPE_DESKTOP (phoc_desktop_get_type())
 
 G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
-
-/* These need to know about PhocDesktop so we have them after the type definition.
- * This will fix itself once output / view / phosh are gobjects and have their
- * most of their members made non-public */
-#include "input.h"
-#include "view.h"
-#include "gtk-shell.h"
 
 struct _PhocDesktop {
 	GObject parent;

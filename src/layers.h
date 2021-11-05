@@ -1,10 +1,12 @@
-#ifndef ROOTSTON_LAYERS_H
-#define ROOTSTON_LAYERS_H
+#pragma once
+
 #include <stdbool.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include "output.h"
+
+G_BEGIN_DECLS
 
 enum layer_parent {
 	LAYER_PARENT_LAYER,
@@ -66,4 +68,4 @@ struct roots_layer_subsurface {
 
 void arrange_layers(PhocOutput *output);
 
-#endif
+G_END_DECLS
