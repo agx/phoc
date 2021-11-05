@@ -57,7 +57,8 @@ phoc_seat_set_property (GObject      *object,
 
   switch (property_id) {
   case PROP_INPUT:
-    self->input = g_value_dup_object (value);
+    /* Don't hold a ref since the input object "owns" the seat */
+    self->input = g_value_get_object (value);
     break;
   case PROP_NAME:
     self->name = g_value_dup_string (value);
