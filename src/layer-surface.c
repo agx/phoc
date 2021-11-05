@@ -10,14 +10,43 @@
 #include "config.h"
 
 #include "layer-surface.h"
+#include "layers.h"
 #include "output.h"
 
 G_DEFINE_TYPE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT)
 
 
 static void
+phoc_layer_surface_finalize (GObject *object)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (object);
+
+  if (self->layer_surface->mapped)
+    phoc_layer_surface_unmap (self);
+
+  wl_list_remove (&self->link);
+  wl_list_remove (&self->destroy.link);
+  wl_list_remove (&self->map.link);
+  wl_list_remove (&self->unmap.link);
+  wl_list_remove (&self->surface_commit.link);
+  if (self->layer_surface->output) {
+    PhocOutput *output = self->layer_surface->output->data;
+
+    g_assert (PHOC_IS_OUTPUT (output));
+    wl_list_remove (&self->output_destroy.link);
+    arrange_layers (output);
+  }
+
+  G_OBJECT_CLASS (phoc_layer_surface_parent_class)->finalize (object);
+}
+
+
+static void
 phoc_layer_surface_class_init (PhocLayerSurfaceClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = phoc_layer_surface_finalize;
 }
 
 
