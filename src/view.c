@@ -1037,7 +1037,7 @@ void view_update_decorated(struct roots_view *view, bool decorated) {
 
 void view_set_title(struct roots_view *view, const char *title) {
 	free(view->title);
-	view->title = title ? strdup(title) : NULL;
+	view->title = g_strdup (title);
 
 	if (view->toplevel_handle) {
 		wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle, title ?: "");
@@ -1069,7 +1069,7 @@ void view_set_parent(struct roots_view *view, struct roots_view *parent) {
 
 void view_set_app_id(struct roots_view *view, const char *app_id) {
 	free(view->app_id);
-	view->app_id = app_id ? strdup(app_id) : NULL;
+	view->app_id = g_strdup (app_id);
 
 	g_clear_object (&view->settings);
 	if (app_id) {
