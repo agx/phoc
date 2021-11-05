@@ -42,6 +42,14 @@ phoc_input_get_device_type (enum wlr_input_device_type type)
   }
 }
 
+
+/**
+ * phoc_input_get_seat:
+ * @self: The input to look up the seat on
+ * @name: The seats name
+ *
+ * Returns: (transfer none): The seat of the given name.
+ */
 PhocSeat *
 phoc_input_get_seat (PhocInput *self, char *name)
 {
