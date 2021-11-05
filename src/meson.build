@@ -1,16 +1,32 @@
 phoc_enum_headers = files(
   [
     'phosh-private.h',
+    'event.h',
   ])
 phoc_enum_sources = gnome.mkenums_simple(
   'phoc-enums',
   sources : phoc_enum_headers)
+
+phoc_marshalers = gnome.genmarshal('phoc-marshalers',
+  sources : 'phoc-marshalers.list',
+  prefix : '_phoc_marshal',
+  valist_marshallers : true)
 
 sources = files(
   'cursor.c',
   'cursor.h',
   'desktop.c',
   'desktop.h',
+  'event.c',
+  'event.h',
+  'gesture.h',
+  'gesture.c',
+  'gesture-drag.h',
+  'gesture-drag.c',
+  'gesture-single.h',
+  'gesture-single.c',
+  'gesture-swipe.h',
+  'gesture-swipe.c',
   'gtk-shell.c',
   'gtk-shell.h',
   'input.c',
@@ -61,6 +77,7 @@ sources = files(
 )
 libphoc_generated_sources = [
   phoc_enum_sources,
+  phoc_marshalers,
   server_protos_headers,
   protos_sources,
 ]
