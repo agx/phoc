@@ -190,6 +190,21 @@ static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
 	return NULL;
 }
 
+/**
+ * phoc_desktop_surface_at:
+ * @desktop: The `PhocDesktop` to look the surface up for
+ * @lx: X coordinate the surface to look up at in layout coordinates
+ * @ly: Y coordinate the surface to look up at in layout coordinates
+ * @sx: (out) (not nullable): Surface-local x coordinate
+ * @sy: (out) (not nullable): Surface-local y coordinate
+ * @view: (out) (optional): The corresponding [struct@Phoc.View]
+ *
+ * Looks up the surface at `lx,ly` and returns the topmost surface at
+ * that position (if any) and the surface-local coordinates of `sx,sy`
+ * on that surface.
+ *
+ * Returns: (nullable): The `struct wlr_surface`
+ */
 struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
 		struct roots_view **view) {
