@@ -26,6 +26,7 @@ variables:
 
 .before_script_debian: &before_script_debian
   - rm -f ../* || true
+  - dpkg -l
 
 .before_script_alpine: &before_script_alpine
   - apk -q add alpine-sdk
