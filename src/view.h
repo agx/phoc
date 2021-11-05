@@ -231,6 +231,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 	struct wlr_output *output);
 void view_close(struct roots_view *view);
 bool view_center(struct roots_view *view, struct wlr_output *output);
+void view_send_frame_done_if_not_visible (struct roots_view *view);
 void view_setup(struct roots_view *view);
 void view_teardown(struct roots_view *view);
 void view_set_title(struct roots_view *view, const char *title);
