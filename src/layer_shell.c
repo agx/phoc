@@ -87,7 +87,7 @@ static void apply_exclusive(struct wlr_box *usable_area,
 	}
 }
 
-static void update_cursors(struct roots_layer_surface *roots_surface,
+static void update_cursors(PhocLayerSurface *roots_surface,
 		struct wl_list *seats /* PhocSeat */) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocSeat *seat;
@@ -114,9 +114,9 @@ static void update_cursors(struct roots_layer_surface *roots_surface,
 
 static void arrange_layer(struct wlr_output *output,
 		struct wl_list *seats /* struct *roots_seat */,
-		struct wl_list *list /* struct *roots_layer_surface */,
+		struct wl_list *list /* PhocLayerSurface */,
 		struct wlr_box *usable_area, bool exclusive) {
-	struct roots_layer_surface *roots_surface;
+	PhocLayerSurface *roots_surface;
 	struct wlr_box full_area = { 0 };
 	wlr_output_effective_resolution(output,
 			&full_area.width, &full_area.height);
@@ -210,7 +210,7 @@ static void arrange_layer(struct wlr_output *output,
 
 struct osk_origin {
 	struct wlr_layer_surface_v1_state state;
-	struct roots_layer_surface *surface;
+	PhocLayerSurface *surface;
 	enum zwlr_layer_shell_v1_layer layer;
 };
 
@@ -218,7 +218,7 @@ static struct osk_origin find_osk(struct wl_list layers[LAYER_SHELL_LAYER_COUNT]
 	struct osk_origin origin = {0};
 	for (unsigned i = 0; i < LAYER_SHELL_LAYER_COUNT; i++) {
 		struct wl_list *list = &layers[i];
-		struct roots_layer_surface *roots_surface;
+		PhocLayerSurface *roots_surface;
 		wl_list_for_each(roots_surface, list, link) {
 			if (strcmp(roots_surface->layer_surface->namespace, "osk") == 0) {
 				origin.state = roots_surface->layer_surface->current;
@@ -311,7 +311,7 @@ void arrange_layers(PhocOutput *output) {
 		ZWLR_LAYER_SHELL_V1_LAYER_TOP,
 	};
 	size_t nlayers = sizeof(layers_above_shell) / sizeof(layers_above_shell[0]);
-	struct roots_layer_surface *layer, *topmost = NULL;
+	PhocLayerSurface *layer, *topmost = NULL;
 	for (size_t i = 0; i < nlayers; ++i) {
 		wl_list_for_each(layer,
 				&output->layers[layers_above_shell[i]], link) {
@@ -335,7 +335,7 @@ void arrange_layers(PhocOutput *output) {
 }
 
 static void handle_output_destroy(struct wl_listener *listener, void *data) {
-	struct roots_layer_surface *layer =
+	PhocLayerSurface *layer =
 		wl_container_of(listener, layer, output_destroy);
 	layer->layer_surface->output = NULL;
 	wl_list_remove(&layer->output_destroy.link);
@@ -344,7 +344,7 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_layer_surface *layer =
+	PhocLayerSurface *layer =
 		wl_container_of(listener, layer, surface_commit);
 	struct wlr_layer_surface_v1 *layer_surface = layer->layer_surface;
 	struct wlr_output *wlr_output = layer_surface->output;
@@ -388,7 +388,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 }
 
 static void unmap(struct wlr_layer_surface_v1 *layer_surface) {
-	struct roots_layer_surface *layer = layer_surface->data;
+	PhocLayerSurface *layer = layer_surface->data;
 	struct wlr_output *wlr_output = layer_surface->output;
 	if (wlr_output != NULL) {
 		phoc_output_damage_whole_local_surface(wlr_output->data, layer_surface->surface,
@@ -397,7 +397,7 @@ static void unmap(struct wlr_layer_surface_v1 *layer_surface) {
 }
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
-	struct roots_layer_surface *layer = wl_container_of(
+	PhocLayerSurface *layer = wl_container_of(
 			listener, layer, destroy);
 	if (layer->layer_surface->mapped) {
 		unmap(layer->layer_surface);
@@ -411,7 +411,7 @@ static void handle_destroy(struct wl_listener *listener, void *data) {
 		wl_list_remove(&layer->output_destroy.link);
 		arrange_layers((PhocOutput *)layer->layer_surface->output->data);
 	}
-	free(layer);
+	g_object_unref (layer);
 }
 
 static void subsurface_destroy(struct roots_layer_subsurface *subsurface) {
@@ -426,7 +426,7 @@ static void subsurface_destroy(struct roots_layer_subsurface *subsurface) {
 static struct roots_layer_popup *popup_create(struct wlr_xdg_popup *wlr_popup);
 static struct roots_layer_subsurface *layer_subsurface_create(struct wlr_subsurface *wlr_subsurface);
 
-static struct roots_layer_surface *popup_get_root_layer(struct roots_layer_popup *popup) {
+static PhocLayerSurface *popup_get_root_layer(struct roots_layer_popup *popup) {
 	while (popup->parent_type == LAYER_PARENT_POPUP) {
 		popup = popup->parent_popup;
 	}
@@ -434,7 +434,7 @@ static struct roots_layer_surface *popup_get_root_layer(struct roots_layer_popup
 }
 
 static void popup_unconstrain(struct roots_layer_popup *popup) {
-	struct roots_layer_surface *layer = popup_get_root_layer(popup);
+	PhocLayerSurface *layer = popup_get_root_layer(popup);
 	struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
 
 	PhocOutput *output = layer->layer_surface->output->data;
@@ -457,7 +457,7 @@ static void popup_damage(struct roots_layer_popup *layer_popup, bool whole) {
 	int popup_sx = popup->geometry.x - popup->base->geometry.x;
 	int popup_sy = popup->geometry.y - popup->base->geometry.y;
 	int ox = popup_sx, oy = popup_sy;
-	struct roots_layer_surface *layer;
+	PhocLayerSurface *layer;
 	while (layer_popup->parent_type == LAYER_PARENT_POPUP) {
 		layer_popup = layer_popup->parent_popup;
 		ox += layer_popup->wlr_popup->geometry.x;
@@ -503,7 +503,7 @@ static void popup_new_subsurface(struct wl_listener *listener, void *data) {
 static void popup_handle_map(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_layer_popup *popup = wl_container_of(listener, popup, map);
-	struct roots_layer_surface *layer = popup_get_root_layer(popup);
+	PhocLayerSurface *layer = popup_get_root_layer(popup);
 	struct wlr_output *wlr_output = layer->layer_surface->output;
 	if (!wlr_output) {
 		return;
@@ -577,7 +577,7 @@ static struct roots_layer_popup *popup_create(struct wlr_xdg_popup *wlr_popup) {
 }
 
 static void handle_new_popup(struct wl_listener *listener, void *data) {
-	struct roots_layer_surface *roots_layer_surface =
+	PhocLayerSurface *roots_layer_surface =
 		wl_container_of(listener, roots_layer_surface, new_popup);
 	struct wlr_xdg_popup *wlr_popup = data;
 	struct roots_layer_popup *popup = popup_create(wlr_popup);
@@ -586,7 +586,7 @@ static void handle_new_popup(struct wl_listener *listener, void *data) {
 	popup_unconstrain(popup);
 }
 
-static struct roots_layer_surface *subsurface_get_root_layer(struct roots_layer_subsurface *subsurface) {
+static PhocLayerSurface *subsurface_get_root_layer(struct roots_layer_subsurface *subsurface) {
 	while (subsurface->parent_type == LAYER_PARENT_SUBSURFACE) {
 		subsurface = subsurface->parent_subsurface;
 	}
@@ -597,7 +597,7 @@ static struct roots_layer_surface *subsurface_get_root_layer(struct roots_layer_
 }
 
 static void subsurface_damage(struct roots_layer_subsurface *subsurface, bool whole) {
-	struct roots_layer_surface *layer = subsurface_get_root_layer(subsurface);
+	PhocLayerSurface *layer = subsurface_get_root_layer(subsurface);
 	struct wlr_output *wlr_output = layer->layer_surface->output;
 	if (!wlr_output) {
 		return;
@@ -693,7 +693,7 @@ static struct roots_layer_subsurface *layer_subsurface_create(struct wlr_subsurf
 }
 
 static void handle_new_subsurface(struct wl_listener *listener, void *data) {
-	struct roots_layer_surface *roots_layer_surface =
+	PhocLayerSurface *roots_layer_surface =
 		wl_container_of(listener, roots_layer_surface, new_subsurface);
 	struct wlr_subsurface *wlr_subsurface = data;
 
@@ -705,7 +705,7 @@ static void handle_new_subsurface(struct wl_listener *listener, void *data) {
 
 static void handle_map(struct wl_listener *listener, void *data) {
 	struct wlr_layer_surface_v1 *layer_surface = data;
-	struct roots_layer_surface *layer = layer_surface->data;
+	PhocLayerSurface *layer = layer_surface->data;
 	struct wlr_output *wlr_output = layer_surface->output;
 	if (!wlr_output) {
 		return;
@@ -730,7 +730,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_layer_surface *layer = wl_container_of(
+	PhocLayerSurface *layer = wl_container_of(
 			listener, layer, unmap);
 
 	struct roots_layer_subsurface *subsurface, *tmp;
@@ -782,8 +782,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		}
 	}
 
-	struct roots_layer_surface *roots_surface =
-		calloc(1, sizeof(struct roots_layer_surface));
+	PhocLayerSurface *roots_surface = phoc_layer_surface_new ();
 	if (!roots_surface) {
 		return;
 	}
