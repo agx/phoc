@@ -63,6 +63,7 @@ void view_destroy(struct roots_view *view) {
 		view->fullscreen_output->fullscreen_view = NULL;
 	}
 
+	g_clear_pointer (&view->title, g_free);
 	g_clear_object (&view->settings);
 
 	view->impl->destroy(view);
