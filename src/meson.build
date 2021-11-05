@@ -99,6 +99,10 @@ if get_option('gtk_doc')
     '--quiet',
   ]
 
+  if have_xwayland
+    phoc_gir_extra_args += '-DPHOC_XWAYLAND'
+  endif
+
   phoc_gir = gnome.generate_gir(phoc_lib,
                  sources: sources,
                nsversion: '0',
