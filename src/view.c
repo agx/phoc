@@ -64,6 +64,7 @@ void view_destroy(struct roots_view *view) {
 	}
 
 	g_clear_pointer (&view->title, g_free);
+	g_clear_pointer (&view->app_id, g_free);
 	g_clear_object (&view->settings);
 
 	view->impl->destroy(view);
