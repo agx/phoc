@@ -56,6 +56,8 @@ phoc_input_get_seat (PhocInput *self, char *name)
   }
 
   seat = phoc_seat_new (self, name);
+  wl_list_insert (&self->seats, &seat->link);
+
   return seat;
 }
 
@@ -69,7 +71,7 @@ handle_new_input (struct wl_listener *listener, void *data)
   PhocSeat *seat = phoc_input_get_seat (input, seat_name);
 
   if (!seat) {
-    g_warning ("could not create roots seat");
+    g_warning ("could not create PhocSeat");
     return;
   }
 

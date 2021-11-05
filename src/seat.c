@@ -1972,8 +1972,6 @@ phoc_seat_constructed (GObject *object)
 
   roots_input_method_relay_init (self, &self->im_relay);
 
-  wl_list_insert (&self->input->seats, &self->link);
-
   self->request_set_selection.notify =
     phoc_seat_handle_request_set_selection;
   wl_signal_add (&self->seat->events.request_set_selection,
