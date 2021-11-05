@@ -15,6 +15,13 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocLayerSurface, phoc_layer_surface, PHOC, LAYER_SURFACE, GObject)
 
+/**
+ * PhocLayerSurface:
+ *
+ * A Layer surface backed by the wlr-layer-surface wayland protocol.
+ *
+ * For details on how to setup a layer surface see `handle_layer_shell_surface`.
+ */
 struct _PhocLayerSurface {
     GObject parent;
 
