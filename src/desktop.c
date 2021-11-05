@@ -720,6 +720,30 @@ phoc_desktop_finalize (GObject *object)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
 
+  /* TODO: currently destroys the backend before the desktop */
+  //wl_list_remove (&self->new_output.link);
+  wl_list_remove (&self->layout_change.link);
+  wl_list_remove (&self->xdg_shell_surface.link);
+  wl_list_remove (&self->layer_shell_surface.link);
+  wl_list_remove (&self->xdg_toplevel_decoration.link);
+  wl_list_remove (&self->input_inhibit_activate.link);
+  wl_list_remove (&self->input_inhibit_deactivate.link);
+  wl_list_remove (&self->virtual_keyboard_new.link);
+  wl_list_remove (&self->virtual_pointer_new.link);
+  wl_list_remove (&self->pointer_constraint.link);
+  wl_list_remove (&self->output_manager_apply.link);
+  wl_list_remove (&self->output_manager_test.link);
+  wl_list_remove (&self->output_power_manager_set_mode.link);
+
+  /* Disconnect XWayland listener before shutting it down */
+#ifdef PHOC_XWAYLAND
+  if (self->config->xwayland) {
+    wl_list_remove (&self->xwayland_surface.link);
+    wl_list_remove (&self->xwayland_ready.link);
+    wl_list_remove (&self->xwayland_remove_startup_id.link);
+  }
+#endif
+
 #ifdef PHOC_XWAYLAND
   // We need to shutdown Xwayland before disconnecting all clients, otherwise
   // wlroots will restart it automatically.
