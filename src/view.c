@@ -1150,10 +1150,13 @@ void view_create_foreign_toplevel_handle(struct roots_view *view) {
 	view->toplevel_handle->data = view;
 }
 
-/*
- * roots_view_from_wlr_surface::
+/**
+ * roots_view_from_wlr_surface:
+ * @wlr_surface: The wlr_surface
  *
  * Given a #wlr_surface return the corresponding view
+ *
+ * Returns: The corresponding view
  */
 struct roots_view *
 roots_view_from_wlr_surface (struct wlr_surface *wlr_surface)
