@@ -17,7 +17,7 @@ struct _PhocInput {
   GObject              parent;
 
   struct wl_listener   new_input;
-  struct wl_list       seats; // roots_seat::link */
+  struct wl_list       seats; // PhocSeat::link */
 };
 
 PhocInput         *phoc_input_new (void);

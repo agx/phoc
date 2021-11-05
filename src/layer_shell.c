@@ -113,7 +113,7 @@ static void update_cursors(PhocLayerSurface *roots_surface,
 }
 
 static void arrange_layer(struct wlr_output *output,
-		struct wl_list *seats /* struct *roots_seat */,
+		struct wl_list *seats /* PhocSeat */,
 		struct wl_list *list /* PhocLayerSurface */,
 		struct wlr_box *usable_area, bool exclusive) {
 	PhocLayerSurface *roots_surface;
