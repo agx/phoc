@@ -294,11 +294,11 @@ phoc_server_finalize (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
 
-
   if (self->wl_source) {
     g_source_remove (self->wl_source);
     self->wl_source = 0;
   }
+  g_clear_object (&self->input);
   g_clear_object (&self->desktop);
   g_clear_pointer (&self->session, g_free);
 
