@@ -935,6 +935,8 @@ void view_setup(struct roots_view *view) {
 	                                         view->title ?: "");
 	wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle,
 	                                          view->app_id ?: "");
+	wlr_foreign_toplevel_handle_v1_set_parent(view->toplevel_handle,
+	                                          view->parent ? view->parent->toplevel_handle : NULL);
 }
 
 void view_apply_damage(struct roots_view *view) {
@@ -1037,6 +1039,10 @@ void view_set_parent(struct roots_view *view, struct roots_view *parent) {
 	if (parent) {
 		wl_list_insert(&parent->stack, &view->parent_link);
 	}
+
+	if (view->toplevel_handle)
+		wlr_foreign_toplevel_handle_v1_set_parent(view->toplevel_handle,
+		                                          view->parent ? view->parent->toplevel_handle : NULL);
 }
 
 void view_set_app_id(struct roots_view *view, const char *app_id) {
