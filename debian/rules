@@ -8,6 +8,10 @@ else
     MESON_OPTS += -Dembed-wlroots=disabled
 endif
 
+ifneq ($(filter pkg.phoc.sanitizers,$(DEB_BUILD_PROFILES)),)
+    MESON_OPTS += -Db_sanitize=address,undefined
+endif
+
 %:
 	dh $@
 
