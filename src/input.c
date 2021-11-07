@@ -145,6 +145,8 @@ phoc_input_seat_from_wlr_seat (PhocInput       *self,
 {
   PhocSeat *seat = NULL;
 
+  g_assert (PHOC_IS_INPUT (self));
+
   wl_list_for_each (seat, &self->seats, link) {
     if (seat->seat == wlr_seat) {
       return seat;
@@ -156,10 +158,11 @@ phoc_input_seat_from_wlr_seat (PhocInput       *self,
 bool
 phoc_input_view_has_focus (PhocInput *self, struct roots_view *view)
 {
-  if (!view) {
-    return false;
-  }
   PhocSeat *seat;
+  g_assert (PHOC_IS_INPUT (self));
+
+  if (!view)
+    return false;
 
   wl_list_for_each (seat, &self->seats, link) {
     if (view == phoc_seat_get_focus (seat)) {
@@ -180,6 +183,8 @@ void
 phoc_input_update_cursor_focus (PhocInput *self)
 {
   struct timespec now;
+
+  g_assert (PHOC_IS_INPUT (self));
 
   clock_gettime (CLOCK_MONOTONIC, &now);
   g_assert_nonnull (self);
