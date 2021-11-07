@@ -165,7 +165,7 @@ phoc_input_seat_from_wlr_seat (PhocInput       *self,
 }
 
 bool
-phoc_input_view_has_focus (PhocInput *self, struct roots_view *view)
+phoc_input_view_has_focus (PhocInput *self, PhocView *view)
 {
   g_assert (PHOC_IS_INPUT (self));
 
