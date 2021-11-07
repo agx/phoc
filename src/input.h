@@ -19,7 +19,6 @@ bool               phoc_input_view_has_focus (PhocInput         *self,
                                               struct roots_view *view);
 const char        *phoc_input_get_device_type (enum wlr_input_device_type type);
 PhocSeat          *phoc_input_get_seat (PhocInput *self, char *name);
-PhocSeat          *phoc_input_last_active_seat (PhocInput *self);
 void               phoc_input_update_cursor_focus (PhocInput *self);
 PhocSeat          *phoc_input_seat_from_wlr_seat (PhocInput       *self,
                                                   struct wlr_seat *seat);
