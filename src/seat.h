@@ -148,7 +148,7 @@ void               phoc_seat_add_device (PhocSeat                *seat,
                                          struct wlr_input_device *device);
 
 void               phoc_seat_configure_cursor (PhocSeat *seat);
-PhocCursor        *phoc_seat_get_cursor (PhocSeat *seat);
+PhocCursor        *phoc_seat_get_cursor (PhocSeat *self);
 
 void               phoc_seat_configure_xcursor (PhocSeat *seat);
 
@@ -183,4 +183,4 @@ void               phoc_seat_set_exclusive_client (PhocSeat         *seat,
 bool               phoc_seat_allow_input (PhocSeat           *seat,
                                           struct wl_resource *resource);
 
-void               phoc_seat_maybe_set_cursor (PhocSeat *seat, const char *name);
+void               phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name);
