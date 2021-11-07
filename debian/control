@@ -11,7 +11,7 @@ Build-Depends:
  libpixman-1-dev,
  libwayland-dev,
  libxkbcommon-dev,
- meson (>= 0.47.0),
+ meson (>= 0.54.0),
  pkg-config,
  wayland-protocols,
  libgirepository1.0-dev <!nodoc>,
