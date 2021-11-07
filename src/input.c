@@ -90,16 +90,6 @@ handle_new_input (struct wl_listener *listener, void *data)
   phoc_seat_add_device (seat, device);
 }
 
-static void
-phoc_input_init (PhocInput *self)
-{
-}
-
-PhocInput *
-phoc_input_new (void)
-{
-  return g_object_new (PHOC_TYPE_INPUT, NULL);
-}
 
 static void
 phoc_input_constructed (GObject *object)
@@ -138,6 +128,19 @@ phoc_input_class_init (PhocInputClass *klass)
   object_class->constructed = phoc_input_constructed;
   object_class->finalize = phoc_input_finalize;
 }
+
+
+static void
+phoc_input_init (PhocInput *self)
+{
+}
+
+PhocInput *
+phoc_input_new (void)
+{
+  return g_object_new (PHOC_TYPE_INPUT, NULL);
+}
+
 
 PhocSeat *
 phoc_input_seat_from_wlr_seat (PhocInput       *self,
