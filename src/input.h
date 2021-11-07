@@ -7,6 +7,8 @@
 #include "settings.h"
 #include "view.h"
 
+G_BEGIN_DECLS
+
 #define PHOC_TYPE_INPUT (phoc_input_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocInput, phoc_input, PHOC, INPUT, GObject);
@@ -30,3 +32,4 @@ PhocSeat          *phoc_input_last_active_seat (PhocInput *self);
 void               phoc_input_update_cursor_focus (PhocInput *self);
 PhocSeat          *phoc_input_seat_from_wlr_seat (PhocInput       *self,
                                                   struct wlr_seat *seat);
+G_END_DECLS
