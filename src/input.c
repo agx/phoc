@@ -57,14 +57,17 @@ phoc_input_get_seat (PhocInput *self, char *name)
 
   g_assert (PHOC_IS_INPUT (self));
 
-  wl_list_for_each (seat, &self->seats, link) {
+  for (GSList *elem = self->seats; elem; elem = elem->next) {
+    seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (seat));
     if (strcmp (seat->seat->name, name) == 0) {
       return seat;
     }
   }
 
   seat = phoc_seat_new (self, name);
-  wl_list_insert (&self->seats, &seat->link);
+  self->seats = g_slist_prepend (self->seats, seat);
 
   return seat;
 }
@@ -100,8 +103,6 @@ phoc_input_constructed (GObject *object)
   g_debug ("Initializing phoc input");
   assert (server->desktop);
 
-  wl_list_init (&self->seats);
-
   self->new_input.notify = handle_new_input;
   wl_signal_add (&server->backend->events.new_input, &self->new_input);
   G_OBJECT_CLASS (phoc_input_parent_class)->constructed (object);
@@ -112,10 +113,8 @@ static void
 phoc_input_finalize (GObject *object)
 {
   PhocInput *self = PHOC_INPUT (object);
-  PhocSeat *seat, *next;
 
-  wl_list_for_each_safe (seat, next, &self->seats, link)
-    g_object_unref (seat);
+  g_clear_slist (&self->seats, g_object_unref);
 
   G_OBJECT_CLASS (phoc_input_parent_class)->finalize (object);
 }
@@ -146,28 +145,31 @@ PhocSeat *
 phoc_input_seat_from_wlr_seat (PhocInput       *self,
                                struct wlr_seat *wlr_seat)
 {
-  PhocSeat *seat = NULL;
-
   g_assert (PHOC_IS_INPUT (self));
 
-  wl_list_for_each (seat, &self->seats, link) {
+  for (GSList *elem = phoc_input_get_seats (self); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (seat));
     if (seat->seat == wlr_seat) {
       return seat;
     }
   }
-  return seat;
+  return NULL;
 }
 
 bool
 phoc_input_view_has_focus (PhocInput *self, struct roots_view *view)
 {
-  PhocSeat *seat;
   g_assert (PHOC_IS_INPUT (self));
 
   if (!view)
     return false;
 
-  wl_list_for_each (seat, &self->seats, link) {
+  for (GSList *elem = phoc_input_get_seats (self); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (seat));
     if (view == phoc_seat_get_focus (seat)) {
       return true;
     }
@@ -192,10 +194,25 @@ phoc_input_update_cursor_focus (PhocInput *self)
   clock_gettime (CLOCK_MONOTONIC, &now);
   g_assert_nonnull (self);
 
-  PhocSeat *seat;
+  for (GSList *elem = phoc_input_get_seats (self); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
 
-  wl_list_for_each (seat, &self->seats, link) {
+    g_assert (PHOC_IS_SEAT (seat));
     phoc_cursor_update_position (phoc_seat_get_cursor (seat),
 				 timespec_to_msec (&now));
   }
+}
+
+/**
+ * phoc_input_get_seats:
+ * @self: The input
+ *
+ * Returns: (elem-type: PhocSeat): a list of seats associated with the input
+ */
+GSList *
+phoc_input_get_seats (PhocInput *self)
+{
+  g_assert (PHOC_IS_INPUT (self));
+
+  return self->seats;
 }

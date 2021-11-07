@@ -348,8 +348,10 @@ phoc_output_constructed (GObject *object)
   }
   wlr_output_commit (self->wlr_output);
 
-  PhocSeat *seat;
-  wl_list_for_each (seat, &input->seats, link) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (seat));
     phoc_seat_configure_cursor (seat);
     phoc_seat_configure_xcursor (seat);
   }
@@ -603,8 +605,10 @@ phoc_output_drag_icons_for_each_surface (PhocOutput *self, PhocInput *input,
     return;
   }
 
-  PhocSeat *seat;
-  wl_list_for_each (seat, &input->seats, link) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (seat));
     PhocDragIcon *drag_icon = seat->drag_icon;
     if (!drag_icon || !drag_icon->wlr_drag_icon->mapped) {
       continue;

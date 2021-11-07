@@ -913,8 +913,10 @@ void view_initial_focus(struct roots_view *view) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocInput *input = server->input;
 	// TODO what seat gets focus? the one with the last input event?
-	PhocSeat *seat;
-	wl_list_for_each(seat, &input->seats, link) {
+	for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
+		PhocSeat *seat = PHOC_SEAT (elem->data);
+
+		g_assert (PHOC_IS_SEAT (seat));
 		phoc_seat_set_focus(seat, view);
 	}
 }
@@ -1104,8 +1106,10 @@ static void handle_toplevel_handle_request_activate(struct wl_listener *listener
 		wl_container_of(listener, view, toplevel_handle_request_activate);
 	struct wlr_foreign_toplevel_handle_v1_activated_event *event = data;
 
-	PhocSeat *seat;
-	wl_list_for_each(seat, &server->input->seats, link) {
+        for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+		PhocSeat *seat = PHOC_SEAT (elem->data);
+
+		g_assert (PHOC_IS_SEAT (seat));
 		if (event->seat == seat->seat) {
 			phoc_seat_set_focus(seat, view);
 		}
