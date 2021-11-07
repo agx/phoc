@@ -14,15 +14,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocInput, phoc_input, PHOC, INPUT, GObject);
 
-/* TODO: we keep the struct public due to the list links and
-   notifiers but we should avoid other member access */
-struct _PhocInput {
-  GObject              parent;
-
-  struct wl_listener   new_input;
-  GSList              *seats; // PhocSeat */
-};
-
 PhocInput         *phoc_input_new (void);
 bool               phoc_input_view_has_focus (PhocInput         *self,
                                               struct roots_view *view);

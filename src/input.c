@@ -18,6 +18,12 @@
  *
  * PhocInput handles new input devices and seats
  */
+struct _PhocInput {
+  GObject              parent;
+
+  struct wl_listener   new_input;
+  GSList              *seats; // PhocSeat
+};
 
 G_DEFINE_TYPE (PhocInput, phoc_input, G_TYPE_OBJECT);
 
