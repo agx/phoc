@@ -46,7 +46,7 @@ typedef struct _PhocSeat {
   // If non-null, only this client can receive input events
   struct wl_client               *exclusive_client;
 
-  struct wl_list                  views; // phoc_seat_view::link
+  struct wl_list                  views; // PhocSeatView::link
   bool                            has_focus;
 
   PhocDragIcon                   *drag_icon; // can be NULL
@@ -73,7 +73,7 @@ typedef struct _PhocSeatView {
   double             grab_sx;
   double             grab_sy;
 
-  struct wl_list     link;   // roots_seat::views
+  struct wl_list     link;   // PhocSeat::views
 
   struct wl_listener view_unmap;
   struct wl_listener view_destroy;

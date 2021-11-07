@@ -54,7 +54,7 @@ typedef enum {
   PHOC_VIEW_STATE_TILED,
 } PhocViewState;
 
-struct roots_view {
+typedef struct roots_view {
 	enum roots_view_type type;
 	const struct roots_view_interface *impl;
 	PhocDesktop *desktop;
@@ -104,11 +104,11 @@ struct roots_view {
 		struct wl_signal unmap;
 		struct wl_signal destroy;
 	} events;
-};
+} PhocView;
 
 struct roots_xdg_toplevel_decoration;
 
-struct roots_xdg_surface {
+typedef struct roots_xdg_surface {
 	struct roots_view view;
 
 	struct wlr_xdg_surface *xdg_surface;
@@ -132,10 +132,10 @@ struct roots_xdg_surface {
 	uint32_t pending_move_resize_configure_serial;
 
 	struct roots_xdg_toplevel_decoration *xdg_toplevel_decoration;
-};
+} PhocXdgSurface;
 
 #ifdef PHOC_XWAYLAND
-struct roots_xwayland_surface {
+typedef struct roots_xwayland_surface {
 	struct roots_view view;
 
 	struct wlr_xwayland_surface *xwayland_surface;
@@ -153,7 +153,7 @@ struct roots_xwayland_surface {
 	struct wl_listener set_startup_id;
 
 	struct wl_listener surface_commit;
-};
+} PhocXWaylandSurface;
 #endif
 
 struct roots_view_child;

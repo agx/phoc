@@ -113,7 +113,7 @@ static void update_cursors(PhocLayerSurface *roots_surface,
 }
 
 static void arrange_layer(struct wlr_output *output,
-		struct wl_list *seats /* struct *roots_seat */,
+		struct wl_list *seats /* PhocSeat */,
 		struct wl_list *list /* PhocLayerSurface */,
 		struct wlr_box *usable_area, bool exclusive) {
 	PhocLayerSurface *roots_surface;
@@ -387,30 +387,10 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	}
 }
 
-static void unmap(struct wlr_layer_surface_v1 *layer_surface) {
-	PhocLayerSurface *layer = layer_surface->data;
-	struct wlr_output *wlr_output = layer_surface->output;
-	if (wlr_output != NULL) {
-		phoc_output_damage_whole_local_surface(wlr_output->data, layer_surface->surface,
-			layer->geo.x, layer->geo.y);
-	}
-}
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
 	PhocLayerSurface *layer = wl_container_of(
 			listener, layer, destroy);
-	if (layer->layer_surface->mapped) {
-		unmap(layer->layer_surface);
-	}
-	wl_list_remove(&layer->link);
-	wl_list_remove(&layer->destroy.link);
-	wl_list_remove(&layer->map.link);
-	wl_list_remove(&layer->unmap.link);
-	wl_list_remove(&layer->surface_commit.link);
-	if (layer->layer_surface->output) {
-		wl_list_remove(&layer->output_destroy.link);
-		arrange_layers((PhocOutput *)layer->layer_surface->output->data);
-	}
 	g_object_unref (layer);
 }
 
@@ -739,7 +719,7 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 	}
 	wl_list_remove(&layer->new_subsurface.link);
 
-	unmap(layer->layer_surface);
+	phoc_layer_surface_unmap (layer);
 	phoc_input_update_cursor_focus(server->input);
 }
 

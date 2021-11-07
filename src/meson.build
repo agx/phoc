@@ -58,7 +58,7 @@ sources = files(
 libphoc_generated_sources = [
   phoc_enum_sources,
   server_protos_headers,
-  server_protos_sources,
+  protos_sources,
 ]
 
 phoc_deps = [
@@ -98,6 +98,10 @@ if get_option('gtk_doc')
   phoc_gir_extra_args = [
     '--quiet',
   ]
+
+  if have_xwayland
+    phoc_gir_extra_args += '-DPHOC_XWAYLAND'
+  endif
 
   phoc_gir = gnome.generate_gir(phoc_lib,
                  sources: sources,

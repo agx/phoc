@@ -63,6 +63,8 @@ void view_destroy(struct roots_view *view) {
 		view->fullscreen_output->fullscreen_view = NULL;
 	}
 
+	g_clear_pointer (&view->title, g_free);
+	g_clear_pointer (&view->app_id, g_free);
 	g_clear_object (&view->settings);
 
 	view->impl->destroy(view);
@@ -1035,7 +1037,7 @@ void view_update_decorated(struct roots_view *view, bool decorated) {
 
 void view_set_title(struct roots_view *view, const char *title) {
 	free(view->title);
-	view->title = title ? strdup(title) : NULL;
+	view->title = g_strdup (title);
 
 	if (view->toplevel_handle) {
 		wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle, title ?: "");
@@ -1067,7 +1069,7 @@ void view_set_parent(struct roots_view *view, struct roots_view *parent) {
 
 void view_set_app_id(struct roots_view *view, const char *app_id) {
 	free(view->app_id);
-	view->app_id = app_id ? strdup(app_id) : NULL;
+	view->app_id = g_strdup (app_id);
 
 	g_clear_object (&view->settings);
 	if (app_id) {
@@ -1150,10 +1152,13 @@ void view_create_foreign_toplevel_handle(struct roots_view *view) {
 	view->toplevel_handle->data = view;
 }
 
-/*
- * roots_view_from_wlr_surface::
+/**
+ * roots_view_from_wlr_surface:
+ * @wlr_surface: The wlr_surface
  *
  * Given a #wlr_surface return the corresponding view
+ *
+ * Returns: The corresponding view
  */
 struct roots_view *
 roots_view_from_wlr_surface (struct wlr_surface *wlr_surface)

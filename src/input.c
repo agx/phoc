@@ -42,6 +42,14 @@ phoc_input_get_device_type (enum wlr_input_device_type type)
   }
 }
 
+
+/**
+ * phoc_input_get_seat:
+ * @self: The input to look up the seat on
+ * @name: The seats name
+ *
+ * Returns: (transfer none): The seat of the given name.
+ */
 PhocSeat *
 phoc_input_get_seat (PhocInput *self, char *name)
 {
@@ -56,6 +64,8 @@ phoc_input_get_seat (PhocInput *self, char *name)
   }
 
   seat = phoc_seat_new (self, name);
+  wl_list_insert (&self->seats, &seat->link);
+
   return seat;
 }
 
@@ -69,7 +79,7 @@ handle_new_input (struct wl_listener *listener, void *data)
   PhocSeat *seat = phoc_input_get_seat (input, seat_name);
 
   if (!seat) {
-    g_warning ("could not create roots seat");
+    g_warning ("could not create PhocSeat");
     return;
   }
 
@@ -112,8 +122,10 @@ static void
 phoc_input_finalize (GObject *object)
 {
   PhocInput *self = PHOC_INPUT (object);
+  PhocSeat *seat, *next;
 
-  wl_list_remove (&self->seats);
+  wl_list_for_each_safe (seat, next, &self->seats, link)
+    g_object_unref (seat);
 
   G_OBJECT_CLASS (phoc_input_parent_class)->finalize (object);
 }

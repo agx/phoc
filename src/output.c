@@ -270,7 +270,7 @@ phoc_output_constructed (GObject *object)
   PhocServer *server = phoc_server_get_default ();
   PhocInput *input = server->input;
 
-  g_debug ("Initializing roots output");
+  g_debug ("Initializing PhocOutput");
   assert (server->desktop);
 
   struct roots_config *config = self->desktop->config;

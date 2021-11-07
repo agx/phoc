@@ -57,7 +57,8 @@ phoc_seat_set_property (GObject      *object,
 
   switch (property_id) {
   case PROP_INPUT:
-    self->input = g_value_dup_object (value);
+    /* Don't hold a ref since the input object "owns" the seat */
+    self->input = g_value_get_object (value);
     break;
   case PROP_NAME:
     self->name = g_value_dup_string (value);
@@ -95,8 +96,7 @@ static void
 handle_keyboard_key (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocKeyboard *keyboard =
-    wl_container_of (listener, keyboard, keyboard_key);
+  PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_key);
   PhocDesktop *desktop = server->desktop;
 
   wlr_idle_notify_activity (desktop->idle, keyboard->seat->seat);
@@ -110,8 +110,7 @@ handle_keyboard_modifiers (struct wl_listener *listener,
                            void               *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocKeyboard *keyboard =
-    wl_container_of (listener, keyboard, keyboard_modifiers);
+  PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_modifiers);
   PhocDesktop *desktop = server->desktop;
 
   wlr_idle_notify_activity (desktop->idle, keyboard->seat->seat);
@@ -187,8 +186,7 @@ handle_swipe_begin (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_begin);
-  struct wlr_pointer_gestures_v1 *gestures =
-    server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
   struct wlr_event_pointer_swipe_begin *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_begin (gestures, cursor->seat->seat,
@@ -200,8 +198,7 @@ handle_swipe_update (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_update);
-  struct wlr_pointer_gestures_v1 *gestures =
-    server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
   struct wlr_event_pointer_swipe_update *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_update (gestures, cursor->seat->seat,
@@ -213,8 +210,7 @@ handle_swipe_end (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_end);
-  struct wlr_pointer_gestures_v1 *gestures =
-    server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
   struct wlr_event_pointer_swipe_end *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_end (gestures, cursor->seat->seat,
@@ -226,8 +222,7 @@ handle_pinch_begin (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_begin);
-  struct wlr_pointer_gestures_v1 *gestures =
-    server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
   struct wlr_event_pointer_pinch_begin *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_begin (gestures, cursor->seat->seat,
@@ -239,8 +234,7 @@ handle_pinch_update (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_update);
-  struct wlr_pointer_gestures_v1 *gestures =
-    server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
   struct wlr_event_pointer_pinch_update *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_update (gestures, cursor->seat->seat,
@@ -1978,8 +1972,6 @@ phoc_seat_constructed (GObject *object)
   g_assert (self->cursor);
 
   roots_input_method_relay_init (self, &self->im_relay);
-
-  wl_list_insert (&self->input->seats, &self->link);
 
   self->request_set_selection.notify =
     phoc_seat_handle_request_set_selection;
