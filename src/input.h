@@ -23,4 +23,6 @@ void               phoc_input_update_cursor_focus (PhocInput *self);
 PhocSeat          *phoc_input_seat_from_wlr_seat (PhocInput       *self,
                                                   struct wlr_seat *seat);
 GSList *           phoc_input_get_seats          (PhocInput *self);
+PhocSeat          *phoc_input_get_last_active_seat (PhocInput *self);
+
 G_END_DECLS

@@ -184,5 +184,3 @@ bool               phoc_seat_allow_input (PhocSeat           *seat,
                                           struct wl_resource *resource);
 
 void               phoc_seat_maybe_set_cursor (PhocSeat *seat, const char *name);
-
-PhocSeat          *input_last_active_seat (PhocInput *input);

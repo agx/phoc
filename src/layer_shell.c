@@ -748,7 +748,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 
 	if (!layer_surface->output) {
 		PhocInput *input = server->input;
-		PhocSeat *seat = input_last_active_seat(input);
+		PhocSeat *seat = phoc_input_get_last_active_seat(input);
 		assert(seat); // Technically speaking we should handle this case
 		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		struct wlr_output *output =

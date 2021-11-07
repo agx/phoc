@@ -602,7 +602,7 @@ bool view_center(struct roots_view *view, struct wlr_output *wlr_output) {
 
 	PhocDesktop *desktop = view->desktop;
 	PhocInput *input = server->input;
-	PhocSeat *seat = input_last_active_seat(input);
+	PhocSeat *seat = phoc_input_get_last_active_seat(input);
 	PhocCursor *cursor;
 
 	if (!seat) {

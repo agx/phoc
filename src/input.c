@@ -222,3 +222,26 @@ phoc_input_get_seats (PhocInput *self)
 
   return self->seats;
 }
+
+/**
+ * phoc_input_get_last_active_seat:
+ * @self: The input
+ *
+ * Returns: (nullable) (transfer-none): The last active seat or %NULL
+ */
+PhocSeat *
+phoc_input_get_last_active_seat (PhocInput *self)
+{
+  PhocSeat *seat = NULL;
+
+  for (GSList *elem = phoc_input_get_seats (self); elem; elem = elem->next) {
+    PhocSeat *_seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (_seat));
+    if (!seat || (seat->seat->last_event.tv_sec > _seat->seat->last_event.tv_sec &&
+                  seat->seat->last_event.tv_nsec > _seat->seat->last_event.tv_nsec)) {
+      seat = _seat;
+    }
+  }
+  return seat;
+}
