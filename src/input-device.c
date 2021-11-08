@@ -229,3 +229,21 @@ phoc_input_device_get_libinput_device_handle (PhocInputDevice *self)
 
   return wlr_libinput_get_device_handle (priv->device);
 }
+
+
+/**
+ * phoc_input_get_name
+ * @self: The %PhocInputDevice
+ *
+ * Returns: (nullable): The input device name
+ */
+const char *
+phoc_input_device_get_name (PhocInputDevice *self)
+{
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  return priv->device->name;
+}
