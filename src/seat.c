@@ -93,33 +93,6 @@ phoc_seat_get_property (GObject    *object,
 
 
 static void
-handle_keyboard_key (struct wl_listener *listener, void *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_key);
-  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (keyboard));
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, seat->seat);
-  struct wlr_event_keyboard_key *event = data;
-
-  phoc_keyboard_handle_key (keyboard, event);
-}
-
-static void
-handle_keyboard_modifiers (struct wl_listener *listener,
-                           void               *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_modifiers);
-  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (keyboard));
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, seat->seat);
-  phoc_keyboard_handle_modifiers (keyboard);
-}
-
-static void
 handle_cursor_motion (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -973,8 +946,6 @@ on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
   g_assert (PHOC_IS_KEYBOARD (keyboard));
 
   wl_list_remove (&keyboard->link);
-  wl_list_remove (&keyboard->keyboard_key.link);
-  wl_list_remove (&keyboard->keyboard_modifiers.link);
   g_object_unref (keyboard);
   seat_update_capabilities (self);
 }
@@ -1009,13 +980,6 @@ seat_add_keyboard (PhocSeat                *seat,
   g_signal_connect_swapped (keyboard, "activity",
                             G_CALLBACK (on_keyboard_activity),
                             seat);
-
-  keyboard->keyboard_key.notify = handle_keyboard_key;
-  wl_signal_add (&device->keyboard->events.key,
-                 &keyboard->keyboard_key);
-  keyboard->keyboard_modifiers.notify = handle_keyboard_modifiers;
-  wl_signal_add (&device->keyboard->events.modifiers,
-                 &keyboard->keyboard_modifiers);
 
   wlr_seat_set_keyboard (seat->seat, device);
 }

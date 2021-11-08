@@ -493,6 +493,31 @@ on_keyboard_setting_changed (PhocKeyboard *self,
 
 
 static void
+handle_keyboard_key (struct wl_listener *listener, void *data)
+{
+  PhocKeyboard *self = wl_container_of (listener, self, keyboard_key);
+  struct wlr_event_keyboard_key *event = data;
+
+  g_assert (PHOC_IS_KEYBOARD (self));
+
+  phoc_keyboard_handle_key (self, event);
+  g_signal_emit (self, signals[ACTIVITY], 0);
+}
+
+
+static void
+handle_keyboard_modifiers (struct wl_listener *listener, void *data)
+{
+  PhocKeyboard *self = wl_container_of (listener, self, keyboard_modifiers);
+
+  g_assert (PHOC_IS_KEYBOARD (self));
+
+  phoc_keyboard_handle_modifiers (self);
+  g_signal_emit (self, signals[ACTIVITY], 0);
+}
+
+
+static void
 phoc_keyboard_dispose(GObject *object)
 {
   PhocKeyboard *self = PHOC_KEYBOARD (object);
@@ -510,6 +535,9 @@ phoc_keyboard_finalize(GObject *object)
 {
   PhocKeyboard *self = PHOC_KEYBOARD (object);
 
+  wl_list_remove (&self->keyboard_key.link);
+  wl_list_remove (&self->keyboard_modifiers.link);
+
   xkb_keymap_unref (self->keymap);
   self->keymap = NULL;
 
@@ -526,6 +554,15 @@ phoc_keyboard_constructed (GObject *object)
 
   device->keyboard->data = self;
 
+  /* wlr listeners */
+  self->keyboard_key.notify = handle_keyboard_key;
+  wl_signal_add (&device->keyboard->events.key,
+                 &self->keyboard_key);
+  self->keyboard_modifiers.notify = handle_keyboard_modifiers;
+  wl_signal_add (&device->keyboard->events.modifiers,
+                 &self->keyboard_modifiers);
+
+  /* Keyboard settings */
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
   self->keyboard_settings = g_settings_new (
     "org.gnome.desktop.peripherals.keyboard");
