@@ -252,6 +252,31 @@ static void set_maximized(struct roots_view *view, bool maximized) {
 	wlr_xdg_toplevel_set_maximized(xdg_surface, maximized);
 }
 
+static void
+set_tiled (struct roots_view *view, bool tiled)
+{
+  struct wlr_xdg_surface *xdg_surface = roots_xdg_surface_from_view(view)->xdg_surface;
+
+  if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    return;
+
+  if (!tiled) {
+    wlr_xdg_toplevel_set_tiled (xdg_surface, WLR_EDGE_NONE);
+    return;
+  }
+
+  switch (view->tile_direction) {
+    case PHOC_VIEW_TILE_LEFT:
+      wlr_xdg_toplevel_set_tiled (xdg_surface, WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT);
+      break;
+    case PHOC_VIEW_TILE_RIGHT:
+      wlr_xdg_toplevel_set_tiled (xdg_surface, WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_RIGHT);
+      break;
+    default:
+      g_warn_if_reached ();
+  }
+}
+
 static void set_fullscreen(struct roots_view *view, bool fullscreen) {
 	struct wlr_xdg_surface *xdg_surface =
 		roots_xdg_surface_from_view(view)->xdg_surface;
@@ -312,6 +337,7 @@ static const struct roots_view_interface view_impl = {
 	.set_active = set_active,
 	.set_fullscreen = set_fullscreen,
 	.set_maximized = set_maximized,
+	.set_tiled = set_tiled,
 	.close = _close,
 	.for_each_surface = for_each_surface,
 	.get_geometry = get_geometry,
