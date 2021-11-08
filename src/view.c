@@ -367,8 +367,8 @@ view_arrange_tiled (struct roots_view *view, struct wlr_output *output)
    * usually don't have drop shadows. It wouldn't be up to date here
    * yet anyway since a client's configure is not yet processed.
    */
-  view_move_resize (view, x, usable_area.y,
-                    usable_area.width / 2, usable_area.height);
+  view_move_resize (view, x / view->scale, usable_area.y / view->scale,
+                    usable_area.width / 2 / view->scale, usable_area.height / view->scale);
 }
 
 /*
