@@ -9,7 +9,6 @@
 #include <wayland-server-core.h>
 #include "cursor.h"
 #include "input.h"
-#include "keyboard.h"
 #include "seat.h"
 #include "server.h"
 
