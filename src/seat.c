@@ -967,18 +967,16 @@ seat_update_capabilities (PhocSeat *seat)
 }
 
 static void
-handle_keyboard_destroy (struct wl_listener *listener, void *data)
+on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
 {
-  PhocKeyboard *keyboard =
-    wl_container_of (listener, keyboard, device_destroy);
-  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (keyboard));
+  g_assert (PHOC_IS_SEAT (self));
+  g_assert (PHOC_IS_KEYBOARD (keyboard));
 
   wl_list_remove (&keyboard->link);
-  wl_list_remove (&keyboard->device_destroy.link);
   wl_list_remove (&keyboard->keyboard_key.link);
   wl_list_remove (&keyboard->keyboard_modifiers.link);
   g_object_unref (keyboard);
-  seat_update_capabilities (seat);
+  seat_update_capabilities (self);
 }
 
 static void
@@ -990,8 +988,10 @@ seat_add_keyboard (PhocSeat                *seat,
 
   wl_list_insert (&seat->keyboards, &keyboard->link);
 
-  keyboard->device_destroy.notify = handle_keyboard_destroy;
-  wl_signal_add (&device->events.destroy, &keyboard->device_destroy);
+  g_signal_connect_swapped (keyboard, "device-destroy",
+                            G_CALLBACK (on_keyboard_destroy),
+                            seat);
+
   keyboard->keyboard_key.notify = handle_keyboard_key;
   wl_signal_add (&device->keyboard->events.key,
                  &keyboard->keyboard_key);

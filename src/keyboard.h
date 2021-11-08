@@ -20,7 +20,6 @@ G_DECLARE_FINAL_TYPE (PhocKeyboard, phoc_keyboard, PHOC, KEYBOARD, PhocInputDevi
 struct _PhocKeyboard {
   PhocInputDevice parent;
 
-  struct wl_listener device_destroy;
   struct wl_listener keyboard_key;
   struct wl_listener keyboard_modifiers;
   struct wl_list link;
