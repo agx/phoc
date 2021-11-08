@@ -13,7 +13,6 @@ G_BEGIN_DECLS
 struct _PhocTablet {
   PhocInputDevice              parent;
 
-  PhocSeat                    *seat;
   struct wlr_input_device     *device;
   struct wlr_tablet_v2_tablet *tablet_v2;
 

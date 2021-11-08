@@ -1254,7 +1254,7 @@ handle_tablet_destroy (struct wl_listener *listener,
 {
   PhocTablet *tablet =
     wl_container_of (listener, tablet, device_destroy);
-  PhocSeat *seat = tablet->seat;
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (tablet));
 
   wlr_cursor_detach_input_device (seat->cursor->cursor, tablet->device);
   wl_list_remove (&tablet->device_destroy.link);
@@ -1281,7 +1281,6 @@ seat_add_tablet_tool (PhocSeat                *seat,
 
   device->data = tablet;
   tablet->device = device;
-  tablet->seat = seat;
   wl_list_insert (&seat->tablets, &tablet->link);
 
   tablet->device_destroy.notify = handle_tablet_destroy;
