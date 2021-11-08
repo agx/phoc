@@ -244,8 +244,8 @@ void view_move(struct roots_view *view, double x, double y) {
 void
 view_appear_activated (struct roots_view *view, bool activated)
 {
-  if (view->impl->activate)
-    view->impl->activate (view, activated);
+  if (view->impl->set_active)
+    view->impl->set_active (view, activated);
 }
 
 void view_activate(struct roots_view *view, bool activate) {
@@ -394,8 +394,8 @@ void view_maximize(struct roots_view *view, struct wlr_output *output) {
 		return;
 	}
 
-	if (view->impl->maximize) {
-		view->impl->maximize(view, true);
+	if (view->impl->set_maximized) {
+		view->impl->set_maximized (view, true);
 	}
 
 	if (view->toplevel_handle) {
@@ -442,8 +442,8 @@ view_restore(struct roots_view *view)
   if (view->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
 
-  if (view->impl->maximize)
-    view->impl->maximize (view, false);
+  if (view->impl->set_maximized)
+    view->impl->set_maximized (view, false);
 }
 
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
@@ -581,8 +581,8 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction, struct wlr_o
     return;
 
   /* Set the maximized flag on the toplevel so it remove it's drop shadows */
-  if (view->impl->maximize)
-    view->impl->maximize(view, true);
+  if (view->impl->set_maximized)
+    view->impl->set_maximized (view, true);
 
   view_save (view);
 

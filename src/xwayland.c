@@ -35,7 +35,7 @@ bool is_moveable(struct roots_view *view)
 	return true;
 }
 
-static void activate(struct roots_view *view, bool active) {
+static void set_active(struct roots_view *view, bool active) {
 	struct wlr_xwayland_surface *xwayland_surface =
 		roots_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_activate(xwayland_surface, active);
@@ -150,7 +150,7 @@ static bool want_auto_maximize(struct roots_view *view) {
 	return is_moveable(view);
 }
 
-static void maximize(struct roots_view *view, bool maximized) {
+static void set_maximized(struct roots_view *view, bool maximized) {
 	struct wlr_xwayland_surface *xwayland_surface =
 		roots_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_set_maximized(xwayland_surface, maximized);
@@ -181,14 +181,14 @@ static void destroy(struct roots_view *view) {
 }
 
 static const struct roots_view_interface view_impl = {
-	.activate = activate,
 	.resize = resize,
 	.move = move,
 	.move_resize = move_resize,
 	.want_scaling = want_scaling,
 	.want_auto_maximize = want_auto_maximize,
-	.maximize = maximize,
+	.set_active = set_active,
 	.set_fullscreen = set_fullscreen,
+	.set_maximized = set_maximized,
 	.close = _close,
 	.destroy = destroy,
 };

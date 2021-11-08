@@ -20,15 +20,15 @@ typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
 
 struct roots_view_interface {
-	void (*activate)(struct roots_view *view, bool active);
 	void (*move)(struct roots_view *view, double x, double y);
 	void (*resize)(struct roots_view *view, uint32_t width, uint32_t height);
 	void (*move_resize)(struct roots_view *view, double x, double y,
 		uint32_t width, uint32_t height);
 	bool (*want_scaling)(struct roots_view *view);
 	bool (*want_auto_maximize)(struct roots_view *view);
-	void (*maximize)(struct roots_view *view, bool maximized);
+	void (*set_active)(struct roots_view *view, bool active);
 	void (*set_fullscreen)(struct roots_view *view, bool fullscreen);
+	void (*set_maximized)(struct roots_view *view, bool maximized);
 	void (*close)(struct roots_view *view);
 	void (*for_each_surface)(struct roots_view *view,
 		wlr_surface_iterator_func_t iterator, void *user_data);

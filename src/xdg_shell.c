@@ -144,7 +144,7 @@ static void get_size(struct roots_view *view, struct wlr_box *box) {
 	box->height = geo_box.height;
 }
 
-static void activate(struct roots_view *view, bool active) {
+static void set_active(struct roots_view *view, bool active) {
 	struct wlr_xdg_surface *xdg_surface =
 		roots_xdg_surface_from_view(view)->xdg_surface;
 	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
@@ -242,7 +242,7 @@ static bool want_auto_maximize(struct roots_view *view) {
 	return surface->toplevel && !surface->toplevel->parent;
 }
 
-static void maximize(struct roots_view *view, bool maximized) {
+static void set_maximized(struct roots_view *view, bool maximized) {
 	struct wlr_xdg_surface *xdg_surface =
 		roots_xdg_surface_from_view(view)->xdg_surface;
 	if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
@@ -305,13 +305,13 @@ static void destroy(struct roots_view *view) {
 }
 
 static const struct roots_view_interface view_impl = {
-	.activate = activate,
 	.resize = resize,
 	.move_resize = move_resize,
 	.want_auto_maximize = want_auto_maximize,
 	.want_scaling = want_scaling,
-	.maximize = maximize,
+	.set_active = set_active,
 	.set_fullscreen = set_fullscreen,
+	.set_maximized = set_maximized,
 	.close = _close,
 	.for_each_surface = for_each_surface,
 	.get_geometry = get_geometry,
