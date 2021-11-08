@@ -15,7 +15,6 @@ struct _PhocTablet {
 
   struct wlr_tablet_v2_tablet *tablet_v2;
 
-  struct wl_listener           device_destroy;
   struct wl_listener           axis;
   struct wl_listener           proximity;
   struct wl_listener           tip;
