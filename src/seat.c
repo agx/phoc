@@ -97,9 +97,10 @@ handle_keyboard_key (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_key);
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (keyboard));
   PhocDesktop *desktop = server->desktop;
 
-  wlr_idle_notify_activity (desktop->idle, keyboard->seat->seat);
+  wlr_idle_notify_activity (desktop->idle, seat->seat);
   struct wlr_event_keyboard_key *event = data;
 
   phoc_keyboard_handle_key (keyboard, event);
@@ -111,9 +112,10 @@ handle_keyboard_modifiers (struct wl_listener *listener,
 {
   PhocServer *server = phoc_server_get_default ();
   PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_modifiers);
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (keyboard));
   PhocDesktop *desktop = server->desktop;
 
-  wlr_idle_notify_activity (desktop->idle, keyboard->seat->seat);
+  wlr_idle_notify_activity (desktop->idle, seat->seat);
   phoc_keyboard_handle_modifiers (keyboard);
 }
 
@@ -969,7 +971,7 @@ handle_keyboard_destroy (struct wl_listener *listener, void *data)
 {
   PhocKeyboard *keyboard =
     wl_container_of (listener, keyboard, device_destroy);
-  PhocSeat *seat = keyboard->seat;
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (keyboard));
 
   wl_list_remove (&keyboard->link);
   wl_list_remove (&keyboard->device_destroy.link);
@@ -989,12 +991,12 @@ seat_add_keyboard (PhocSeat                *seat,
   wl_list_insert (&seat->keyboards, &keyboard->link);
 
   keyboard->device_destroy.notify = handle_keyboard_destroy;
-  wl_signal_add (&keyboard->device->events.destroy, &keyboard->device_destroy);
+  wl_signal_add (&device->events.destroy, &keyboard->device_destroy);
   keyboard->keyboard_key.notify = handle_keyboard_key;
-  wl_signal_add (&keyboard->device->keyboard->events.key,
+  wl_signal_add (&device->keyboard->events.key,
                  &keyboard->keyboard_key);
   keyboard->keyboard_modifiers.notify = handle_keyboard_modifiers;
-  wl_signal_add (&keyboard->device->keyboard->events.modifiers,
+  wl_signal_add (&device->keyboard->events.modifiers,
                  &keyboard->keyboard_modifiers);
 
   wlr_seat_set_keyboard (seat->seat, device);
@@ -1397,8 +1399,11 @@ phoc_seat_has_meta_pressed (PhocSeat *seat)
   PhocKeyboard *keyboard;
 
   wl_list_for_each (keyboard, &seat->keyboards, link) {
+    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (PHOC_KEYBOARD (keyboard));
+    struct wlr_input_device *device = phoc_input_device_get_device (input_device);
+
     uint32_t modifiers =
-      wlr_keyboard_get_modifiers (keyboard->device->keyboard);
+      wlr_keyboard_get_modifiers (device->keyboard);
     if ((modifiers ^ keyboard->meta_key) == 0) {
       return true;
     }
