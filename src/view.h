@@ -29,6 +29,7 @@ struct roots_view_interface {
 	void (*set_active)(struct roots_view *view, bool active);
 	void (*set_fullscreen)(struct roots_view *view, bool fullscreen);
 	void (*set_maximized)(struct roots_view *view, bool maximized);
+	void (*set_tiled)(struct roots_view *view, bool tiled);
 	void (*close)(struct roots_view *view);
 	void (*for_each_surface)(struct roots_view *view,
 		wlr_surface_iterator_func_t iterator, void *user_data);

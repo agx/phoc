@@ -393,6 +393,10 @@ void view_maximize(struct roots_view *view, struct wlr_output *output) {
 		return;
 	}
 
+	if (view->impl->set_tiled) {
+		view->impl->set_tiled (view, false);
+	}
+
 	if (view->impl->set_maximized) {
 		view->impl->set_maximized (view, true);
 	}
@@ -443,6 +447,9 @@ view_restore(struct roots_view *view)
 
   if (view->impl->set_maximized)
     view->impl->set_maximized (view, false);
+
+  if (view->impl->set_tiled)
+    view->impl->set_tiled (view, false);
 }
 
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
@@ -579,14 +586,19 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction, struct wlr_o
   if (view_is_fullscreen (view))
     return;
 
-  /* Set the maximized flag on the toplevel so it remove it's drop shadows */
-  if (view->impl->set_maximized)
-    view->impl->set_maximized (view, true);
-
   view_save (view);
 
   view->state = PHOC_VIEW_STATE_TILED;
   view->tile_direction = direction;
+
+  if (view->impl->set_tiled) {
+    view->impl->set_maximized (view, false);
+    view->impl->set_tiled (view, true);
+  } else if (view->impl->set_maximized) {
+    /* fallback to the maximized flag on the toplevel so it can remove its drop shadows */
+    view->impl->set_maximized (view, true);
+  }
+
   view_arrange_tiled (view, output);
 }
 
