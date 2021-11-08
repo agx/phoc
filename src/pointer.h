@@ -15,8 +15,6 @@ G_DECLARE_FINAL_TYPE (PhocPointer, phoc_pointer, PHOC, POINTER, PhocInputDevice)
 struct _PhocPointer {
   PhocInputDevice          parent;
 
-  struct wl_list           link;
-
   /* private */
   GSettings               *input_settings;
   gboolean                 touchpad;
