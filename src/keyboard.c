@@ -284,7 +284,7 @@ keyboard_keysyms_raw(PhocKeyboard *self,
                                           keycode, layout_index, 0, keysyms);
 }
 
-void
+static void
 phoc_keyboard_handle_key(PhocKeyboard *self,
                          struct wlr_event_keyboard_key *event) {
   xkb_keycode_t keycode = event->keycode + 8;
@@ -333,7 +333,7 @@ phoc_keyboard_handle_key(PhocKeyboard *self,
   }
 }
 
-void
+static void
 phoc_keyboard_handle_modifiers(PhocKeyboard *self)
 {
   PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
