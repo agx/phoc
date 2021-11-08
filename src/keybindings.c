@@ -8,6 +8,7 @@
 #include "config.h"
 #include "keybindings.h"
 #include "seat.h"
+#include "keyboard.h"
 
 #include <wlr/types/wlr_keyboard.h>
 

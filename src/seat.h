@@ -8,7 +8,6 @@
 
 #include <wayland-server-core.h>
 #include "input.h"
-#include "keyboard.h"
 #include "layers.h"
 #include "switch.h"
 #include "text_input.h"
