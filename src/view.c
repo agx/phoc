@@ -327,8 +327,10 @@ void view_arrange_maximized(struct roots_view *view, struct wlr_output *output) 
 	usable_area.x += output_box->x;
 	usable_area.y += output_box->y;
 
-	view_move_resize(view, usable_area.x / view->scale, usable_area.y / view->scale,
-			usable_area.width / view->scale, usable_area.height / view->scale);
+	struct wlr_box geom;
+	view_get_geometry (view, &geom);
+	view_move_resize (view, (usable_area.x - geom.x) / view->scale, (usable_area.y - geom.y) / view->scale,
+	                  usable_area.width / view->scale, usable_area.height / view->scale);
 }
 
 void
@@ -362,12 +364,9 @@ view_arrange_tiled (struct roots_view *view, struct wlr_output *output)
     g_error ("Invalid tiling direction %d", view->tile_direction);
   }
 
-  /*
-   * No need to take geometry into account since maximized surfaces
-   * usually don't have drop shadows. It wouldn't be up to date here
-   * yet anyway since a client's configure is not yet processed.
-   */
-  view_move_resize (view, x / view->scale, usable_area.y / view->scale,
+  struct wlr_box geom;
+  view_get_geometry (view, &geom);
+  view_move_resize (view, (x - geom.x) / view->scale, (usable_area.y - geom.y) / view->scale,
                     usable_area.width / 2 / view->scale, usable_area.height / view->scale);
 }
 
