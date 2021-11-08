@@ -17,8 +17,6 @@ G_DECLARE_FINAL_TYPE (PhocTouch, phoc_touch, PHOC, TOUCH, PhocInputDevice);
    notifiers but we should avoid other member access */
 struct _PhocTouch {
   PhocInputDevice          parent;
-
-  struct wl_list           link; // seat::touch
 };
 
 PhocTouch *phoc_touch_new (struct wlr_input_device *device, PhocSeat *seat);

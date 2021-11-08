@@ -53,7 +53,7 @@ typedef struct _PhocSeat {
   struct wl_list                  keyboards;
   GSList                         *pointers;
   struct wl_list                  switches;
-  struct wl_list                  touch;
+  GSList                         *touch;
   struct wl_list                  tablets;
   struct wl_list                  tablet_pads;
 
