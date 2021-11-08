@@ -12,9 +12,12 @@
 
 #include "input-device.h"
 #include "seat.h"
+#include "utils.h"
 
 #include <wlr/backend/libinput.h>
 #include <wlr/types/wlr_input_device.h>
+
+#define PHOC_INPUT_DEVICE_SELF(p) PHOC_PRIV_CONTAINER(PHOC_INPUT_DEVICE, PhocInputDevice, (p))
 
 enum {
   PROP_0,
@@ -24,6 +27,12 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+enum {
+  DEVICE_DESTROY,
+  N_SIGNALS
+};
+static guint signals [N_SIGNALS];
+
 /**
  * PhocInputDevice:
  *
@@ -32,6 +41,8 @@ static GParamSpec *props[PROP_LAST_PROP];
 typedef struct _PhocInputDevicePrivate {
   struct wlr_input_device *device;
   PhocSeat                *seat;
+
+  struct wl_listener       device_destroy;
 } PhocInputDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocInputDevice, phoc_input_device, G_TYPE_OBJECT)
@@ -85,6 +96,21 @@ phoc_input_device_get_property (GObject    *object,
   }
 }
 
+static void
+handle_device_destroy (struct wl_listener *listener, void *data)
+{
+  PhocInputDevicePrivate *priv = wl_container_of (listener, priv, device_destroy);
+  PhocInputDevice *self = PHOC_INPUT_DEVICE_SELF (priv);
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  g_debug ("Device destroy %p", self);
+
+  /* Prevent further signal emission */
+  wl_list_remove (&priv->device_destroy.link);
+
+  g_signal_emit (self, signals[DEVICE_DESTROY], 0);
+}
+
 
 static void
 phoc_input_device_dispose (GObject *object)
@@ -99,10 +125,27 @@ phoc_input_device_dispose (GObject *object)
 
 
 static void
+phoc_input_device_constructed (GObject *object)
+{
+  PhocInputDevicePrivate *priv;
+  PhocInputDevice *self = PHOC_INPUT_DEVICE (object);
+
+  G_OBJECT_CLASS (phoc_input_device_parent_class)->constructed (object);
+
+  priv = phoc_input_device_get_instance_private (self);
+  if (priv->device) {
+    priv->device_destroy.notify = handle_device_destroy;
+    wl_signal_add (&priv->device->events.destroy, &priv->device_destroy);
+  }
+}
+
+
+static void
 phoc_input_device_class_init (PhocInputDeviceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->constructed = phoc_input_device_constructed;
   object_class->get_property = phoc_input_device_get_property;
   object_class->set_property = phoc_input_device_set_property;
   object_class->dispose = phoc_input_device_dispose;
@@ -125,8 +168,19 @@ phoc_input_device_class_init (PhocInputDeviceClass *klass)
     g_param_spec_object ("seat", "", "",
                          PHOC_TYPE_SEAT,
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+
+  /**
+   * PhocInputDevice::device-destroy:
+   *
+   * The underlying wlr input device is about to be destroyed
+   */
+  signals[DEVICE_DESTROY] = g_signal_new ("device-destroy",
+                                          G_TYPE_FROM_CLASS (klass),
+                                          G_SIGNAL_RUN_LAST,
+                                          G_STRUCT_OFFSET (PhocInputDeviceClass, device_destroy),
+                                          NULL, NULL, NULL,
+                                          G_TYPE_NONE, 0);
 }
 
 

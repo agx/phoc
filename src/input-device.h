@@ -25,7 +25,9 @@ G_DECLARE_DERIVABLE_TYPE (PhocInputDevice, phoc_input_device, PHOC, INPUT_DEVICE
 struct _PhocInputDeviceClass {
   GObjectClass parent_class;
 
-  /* no vfuncs */
+  /* Signals
+   */
+  void (*device_destroy)   (PhocInputDevice    *self);
 };
 
 PhocSeat                *phoc_input_device_get_seat                       (PhocInputDevice *self);
