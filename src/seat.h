@@ -51,7 +51,7 @@ typedef struct _PhocSeat {
 
   PhocDragIcon                   *drag_icon; // can be NULL
 
-  struct wl_list                  keyboards;
+  GSList                         *keyboards;
   GSList                         *pointers;
   struct wl_list                  switches;
   GSList                         *touch;

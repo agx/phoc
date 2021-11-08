@@ -925,7 +925,7 @@ seat_update_capabilities (PhocSeat *seat)
 {
   uint32_t caps = 0;
 
-  if (!wl_list_empty (&seat->keyboards)) {
+  if (seat->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
   if (seat->pointers != NULL || !wl_list_empty (&seat->tablets)) {
@@ -945,7 +945,7 @@ on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
   g_assert (PHOC_IS_SEAT (self));
   g_assert (PHOC_IS_KEYBOARD (keyboard));
 
-  wl_list_remove (&keyboard->link);
+  self->keyboards = g_slist_remove (self->keyboards, keyboard);
   g_object_unref (keyboard);
   seat_update_capabilities (self);
 }
@@ -971,7 +971,7 @@ seat_add_keyboard (PhocSeat                *seat,
   assert (device->type == WLR_INPUT_DEVICE_KEYBOARD);
   PhocKeyboard *keyboard = phoc_keyboard_new (device, seat);
 
-  wl_list_insert (&seat->keyboards, &keyboard->link);
+  seat->keyboards = g_slist_prepend (seat->keyboards, keyboard);
 
   g_signal_connect_swapped (keyboard, "device-destroy",
                             G_CALLBACK (on_keyboard_destroy),
@@ -1378,10 +1378,9 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
 bool
 phoc_seat_has_meta_pressed (PhocSeat *seat)
 {
-  PhocKeyboard *keyboard;
-
-  wl_list_for_each (keyboard, &seat->keyboards, link) {
-    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (PHOC_KEYBOARD (keyboard));
+  for (GSList *elem = seat->keyboards; elem; elem = elem->next) {
+    PhocKeyboard *keyboard = PHOC_KEYBOARD (elem->data);
+    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (keyboard);
     struct wlr_input_device *device = phoc_input_device_get_device (input_device);
 
     uint32_t modifiers =
@@ -1936,7 +1935,6 @@ phoc_seat_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  wl_list_init (&self->keyboards);
   wl_list_init (&self->tablets);
   wl_list_init (&self->tablet_pads);
   wl_list_init (&self->switches);

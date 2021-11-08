@@ -22,7 +22,6 @@ struct _PhocKeyboard {
 
   struct wl_listener keyboard_key;
   struct wl_listener keyboard_modifiers;
-  struct wl_list link;
 
   /* private */
   GSettings *input_settings;
