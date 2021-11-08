@@ -16,6 +16,10 @@
  *
  * A touch input device
  */
+struct _PhocTouch {
+  PhocInputDevice                parent;
+};
+
 G_DEFINE_TYPE (PhocTouch, phoc_touch, PHOC_TYPE_INPUT_DEVICE);
 
 static void
