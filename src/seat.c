@@ -600,7 +600,6 @@ phoc_seat_configure_cursor (PhocSeat *seat)
   PhocDesktop *desktop = server->desktop;
   struct wlr_cursor *cursor = seat->cursor->cursor;
 
-  PhocTablet *tablet;
   PhocOutput *output;
 
   // reset mappings
@@ -608,11 +607,7 @@ phoc_seat_configure_cursor (PhocSeat *seat)
 
   g_slist_foreach (seat->pointers, reset_device_mappings, seat);
   g_slist_foreach (seat->touch, reset_device_mappings, seat);
-  wl_list_for_each (tablet, &seat->tablets, link) {
-    struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
-
-    seat_reset_device_mappings (seat, device);
-  }
+  g_slist_foreach (seat->tablets, reset_device_mappings, seat);
 
   // configure device to output mappings
   wl_list_for_each (output, &desktop->outputs, link) {
@@ -622,9 +617,10 @@ phoc_seat_configure_cursor (PhocSeat *seat)
                                        phoc_input_device_get_device (input_device),
                                        output);
     }
-    wl_list_for_each (tablet, &seat->tablets, link) {
-      struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
-      seat_set_device_output_mappings (seat, device,
+    for (GSList *elem = seat->tablets; elem; elem = elem->next) {
+      PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
+      seat_set_device_output_mappings (seat,
+                                       phoc_input_device_get_device (input_device),
                                        output);
     }
     for (GSList *elem = seat->touch; elem; elem = elem->next) {
@@ -933,7 +929,7 @@ seat_update_capabilities (PhocSeat *seat)
   if (seat->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
-  if (seat->pointers != NULL || !wl_list_empty (&seat->tablets)) {
+  if (seat->pointers != NULL || seat->tablets != NULL) {
     caps |= WL_SEAT_CAPABILITY_POINTER;
   }
   if (seat->touch != NULL) {
@@ -1238,19 +1234,17 @@ seat_add_tablet_pad (PhocSeat                *seat,
 
   struct libinput_device_group *group =
     libinput_device_get_device_group (wlr_libinput_get_device_handle (device));
-  PhocTablet *tool;
 
-  wl_list_for_each (tool, &seat->tablets, link) {
-    struct wlr_input_device *tool_device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tool));
+  for (GSList *elem = seat->tablets; elem; elem = elem->next) {
+    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
+    //struct wlr_input_device *tool_device = phoc_input_device_get_device (input_deviceool);
 
-    if (!wlr_input_device_is_libinput (tool_device)) {
+    if (!phoc_input_device_get_is_libinput (input_device))
       continue;
-    }
 
-    struct libinput_device *li_dev =
-      wlr_libinput_get_device_handle (tool_device);
+    struct libinput_device *li_dev = phoc_input_device_get_libinput_device_handle (input_device);
     if (libinput_device_get_device_group (li_dev) == group) {
-      attach_tablet_pad (tablet_pad, tool);
+      attach_tablet_pad (tablet_pad, PHOC_TABLET (input_device));
       break;
     }
   }
@@ -1262,7 +1256,7 @@ on_tablet_destroy (PhocSeat *seat, PhocTablet *tablet)
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
   wlr_cursor_detach_input_device (seat->cursor->cursor, device);
-  wl_list_remove (&tablet->link);
+  seat->tablets = g_slist_remove (seat->tablets, tablet);
   g_object_unref (tablet);
 
   seat_update_capabilities (seat);
@@ -1283,8 +1277,7 @@ seat_add_tablet_tool (PhocSeat                *seat,
     return;
   }
 
-  wl_list_insert (&seat->tablets, &tablet->link);
-
+  seat->tablets = g_slist_prepend (seat->tablets, tablet);
   g_signal_connect_swapped (tablet, "device-destroy",
                             G_CALLBACK (on_tablet_destroy),
                             seat);
@@ -1936,7 +1929,6 @@ phoc_seat_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  wl_list_init (&self->tablets);
   wl_list_init (&self->tablet_pads);
   wl_list_init (&self->switches);
   wl_list_init (&self->views);
