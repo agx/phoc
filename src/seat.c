@@ -979,6 +979,20 @@ on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
   seat_update_capabilities (self);
 }
 
+
+static void
+on_keyboard_activity (PhocSeat *self, PhocKeyboard *keyboard)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+
+  g_assert (PHOC_IS_SEAT (self));
+  g_assert (PHOC_IS_KEYBOARD (keyboard));
+
+  wlr_idle_notify_activity (desktop->idle, self->seat);
+}
+
+
 static void
 seat_add_keyboard (PhocSeat                *seat,
                    struct wlr_input_device *device)
@@ -990,6 +1004,10 @@ seat_add_keyboard (PhocSeat                *seat,
 
   g_signal_connect_swapped (keyboard, "device-destroy",
                             G_CALLBACK (on_keyboard_destroy),
+                            seat);
+
+  g_signal_connect_swapped (keyboard, "activity",
+                            G_CALLBACK (on_keyboard_activity),
                             seat);
 
   keyboard->keyboard_key.notify = handle_keyboard_key;

@@ -35,6 +35,13 @@
 G_DEFINE_TYPE(PhocKeyboard, phoc_keyboard, PHOC_TYPE_INPUT_DEVICE)
 
 
+enum {
+  ACTIVITY,
+  N_SIGNALS
+};
+static guint signals [N_SIGNALS];
+
+
 static ssize_t
 pressed_keysyms_index(xkb_keysym_t *pressed_keysyms,
                       xkb_keysym_t keysym)
@@ -552,6 +559,17 @@ phoc_keyboard_class_init (PhocKeyboardClass *klass)
   object_class->constructed = phoc_keyboard_constructed;
   object_class->dispose = phoc_keyboard_dispose;
   object_class->finalize = phoc_keyboard_finalize;
+
+  /**
+   * PhocKeyboard::activity
+   *
+   * Emitted whenver there is input activity on this device
+   */
+  signals[ACTIVITY] = g_signal_new ("activity",
+                                    G_TYPE_FROM_CLASS (klass),
+                                    G_SIGNAL_RUN_LAST,
+                                    0, NULL, NULL, NULL,
+                                    G_TYPE_NONE, 0);
 }
 
 static void
