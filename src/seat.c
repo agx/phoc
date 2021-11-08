@@ -971,6 +971,7 @@ handle_keyboard_destroy (struct wl_listener *listener, void *data)
     wl_container_of (listener, keyboard, device_destroy);
   PhocSeat *seat = keyboard->seat;
 
+  wl_list_remove (&keyboard->link);
   wl_list_remove (&keyboard->device_destroy.link);
   wl_list_remove (&keyboard->keyboard_key.link);
   wl_list_remove (&keyboard->keyboard_modifiers.link);

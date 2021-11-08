@@ -523,8 +523,6 @@ phoc_keyboard_finalize(GObject *object)
   xkb_keymap_unref (self->keymap);
   self->keymap = NULL;
 
-  wl_list_remove(&self->link);
-
   G_OBJECT_CLASS (phoc_keyboard_parent_class)->finalize (object);
 }
 
