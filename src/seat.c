@@ -1385,7 +1385,7 @@ phoc_seat_has_meta_pressed (PhocSeat *seat)
 
     uint32_t modifiers =
       wlr_keyboard_get_modifiers (device->keyboard);
-    if ((modifiers ^ keyboard->meta_key) == 0) {
+    if ((modifiers ^ phoc_keyboard_get_meta_key (keyboard)) == 0) {
       return true;
     }
   }

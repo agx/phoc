@@ -40,5 +40,6 @@ void          phoc_keyboard_handle_key(PhocKeyboard *self,
                                        struct wlr_event_keyboard_key *event);
 void          phoc_keyboard_handle_modifiers(PhocKeyboard *self);
 void          phoc_keyboard_next_layout (PhocKeyboard *self);
+uint32_t      phoc_keyboard_get_meta_key (PhocKeyboard *self);
 
 G_END_DECLS
