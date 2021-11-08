@@ -1009,7 +1009,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 	view_damage_whole(view);
 	view->box.width = width;
 	view->box.height = height;
-	if (view->pending_centering) {
+	if (view->pending_centering || (view_is_floating (view) && phoc_desktop_get_auto_maximize (view->desktop))) {
 		view_center (view, NULL);
 		view->pending_centering = false;
 	}
