@@ -22,6 +22,7 @@ G_DECLARE_FINAL_TYPE (PhocSeat, phoc_seat, PHOC, SEAT, GObject)
 
 typedef struct _PhocCursor PhocCursor;
 typedef struct _PhocDragIcon PhocDragIcon;
+typedef struct _PhocTablet PhocTablet;
 
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
@@ -90,19 +91,6 @@ struct _PhocDragIcon {
   struct wl_listener    unmap;
   struct wl_listener    destroy;
 };
-
-typedef struct _PhocTablet {
-  PhocSeat                    *seat;
-  struct wlr_input_device     *device;
-  struct wlr_tablet_v2_tablet *tablet_v2;
-
-  struct wl_listener           device_destroy;
-  struct wl_listener           axis;
-  struct wl_listener           proximity;
-  struct wl_listener           tip;
-  struct wl_listener           button;
-  struct wl_list               link;
-} PhocTablet;
 
 typedef struct _PhocTabletPad {
   struct wl_list                   link;

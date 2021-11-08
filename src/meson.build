@@ -43,6 +43,8 @@ sources = files(
   'settings.h',
   'switch.c',
   'switch.h',
+  'tablet.c',
+  'tablet.h',
   'text_input.c',
   'text_input.h',
   'touch.c',

@@ -31,6 +31,7 @@
 #include "pointer.h"
 #include "seat.h"
 #include "server.h"
+#include "tablet.h"
 #include "text_input.h"
 #include "touch.h"
 #include "xcursor.h"
@@ -1258,7 +1259,7 @@ handle_tablet_destroy (struct wl_listener *listener,
   wlr_cursor_detach_input_device (seat->cursor->cursor, tablet->device);
   wl_list_remove (&tablet->device_destroy.link);
   wl_list_remove (&tablet->link);
-  free (tablet);
+  g_object_unref (tablet);
 
   seat_update_capabilities (seat);
 }
@@ -1272,8 +1273,7 @@ seat_add_tablet_tool (PhocSeat                *seat,
   if (!wlr_input_device_is_libinput (device))
     return;
 
-  PhocTablet *tablet = calloc (1, sizeof(PhocTablet));
-
+  PhocTablet *tablet = phoc_tablet_new (device, seat);
   if (!tablet) {
     wlr_log (WLR_ERROR, "could not allocate tablet for seat");
     return;
