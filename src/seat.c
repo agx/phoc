@@ -992,15 +992,15 @@ seat_add_keyboard (PhocSeat                *seat,
 }
 
 static void
-handle_pointer_destroy (struct wl_listener *listener, void *data)
+handle_pointer_destroy (PhocTouch *pointer)
 {
-  PhocPointer *pointer = wl_container_of (listener, pointer, device_destroy);
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (pointer));
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
 
+  g_assert (PHOC_IS_POINTER (pointer));
+  g_debug ("Removing pointer device: %s", device->name);
   wl_list_remove (&pointer->link);
   wlr_cursor_detach_input_device (seat->cursor->cursor, device);
-  wl_list_remove (&pointer->device_destroy.link);
   g_object_unref (pointer);
 
   seat_update_capabilities (seat);
@@ -1014,8 +1014,9 @@ seat_add_pointer (PhocSeat                *seat,
 
   wl_list_insert (&seat->pointers, &pointer->link);
 
-  pointer->device_destroy.notify = handle_pointer_destroy;
-  wl_signal_add (&device->events.destroy, &pointer->device_destroy);
+  g_signal_connect (pointer, "device-destroy",
+                    G_CALLBACK (handle_pointer_destroy),
+                    NULL);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
   phoc_seat_configure_cursor (seat);

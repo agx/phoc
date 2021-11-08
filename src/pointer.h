@@ -15,7 +15,6 @@ G_DECLARE_FINAL_TYPE (PhocPointer, phoc_pointer, PHOC, POINTER, PhocInputDevice)
 struct _PhocPointer {
   PhocInputDevice          parent;
 
-  struct wl_listener       device_destroy;
   struct wl_list           link;
 
   /* private */
