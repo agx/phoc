@@ -32,6 +32,21 @@
 #define KEYBOARD_DEFAULT_XKB_MODEL "pc105"
 
 
+struct _PhocKeyboard {
+  PhocInputDevice parent;
+
+  struct wl_listener keyboard_key;
+  struct wl_listener keyboard_modifiers;
+
+  GSettings *input_settings;
+  GSettings *keyboard_settings;
+  struct xkb_keymap *keymap;
+  uint32_t meta_key;
+  GnomeXkbInfo *xkbinfo;
+
+  xkb_keysym_t pressed_keysyms_translated[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
+  xkb_keysym_t pressed_keysyms_raw[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
+};
 G_DEFINE_TYPE(PhocKeyboard, phoc_keyboard, PHOC_TYPE_INPUT_DEVICE)
 
 
