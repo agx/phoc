@@ -1064,6 +1064,7 @@ handle_touch_destroy (PhocTouch *touch)
   PhocDesktop *desktop = server->desktop;
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (touch));
 
+  g_assert (PHOC_IS_TOUCH (touch));
   g_debug ("Removing touch device: %s", device->name);
   g_hash_table_remove (desktop->input_output_map, device->name);
   wl_list_remove (&touch->link);
@@ -1081,7 +1082,7 @@ seat_add_touch (PhocSeat                *seat,
 
   wl_list_insert (&seat->touch, &touch->link);
 
-  g_signal_connect (touch, "touch-destroyed",
+  g_signal_connect (touch, "device-destroy",
                     G_CALLBACK (handle_touch_destroy),
                     NULL);
 
