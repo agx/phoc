@@ -313,6 +313,7 @@ handle_tablet_tool_position (PhocCursor *cursor,
                              double x, double y, double dx, double dy)
 {
   PhocServer *server = phoc_server_get_default ();
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
   if (!change_x && !change_y) {
     return;
@@ -321,10 +322,10 @@ handle_tablet_tool_position (PhocCursor *cursor,
   switch (tool->type) {
   case WLR_TABLET_TOOL_TYPE_MOUSE:
     // They are 0 either way when they weren't modified
-    wlr_cursor_move (cursor->cursor, tablet->device, dx, dy);
+    wlr_cursor_move (cursor->cursor, device, dx, dy);
     break;
   default:
-    wlr_cursor_warp_absolute (cursor->cursor, tablet->device,
+    wlr_cursor_warp_absolute (cursor->cursor, device,
                               change_x ? x : NAN, change_y ? y : NAN);
   }
 
@@ -608,7 +609,9 @@ phoc_seat_configure_cursor (PhocSeat *seat)
   g_slist_foreach (seat->pointers, reset_device_mappings, seat);
   g_slist_foreach (seat->touch, reset_device_mappings, seat);
   wl_list_for_each (tablet, &seat->tablets, link) {
-    seat_reset_device_mappings (seat, tablet->device);
+    struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
+
+    seat_reset_device_mappings (seat, device);
   }
 
   // configure device to output mappings
@@ -620,7 +623,8 @@ phoc_seat_configure_cursor (PhocSeat *seat)
                                        output);
     }
     wl_list_for_each (tablet, &seat->tablets, link) {
-      seat_set_device_output_mappings (seat, tablet->device,
+      struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
+      seat_set_device_output_mappings (seat, device,
                                        output);
     }
     for (GSList *elem = seat->touch; elem; elem = elem->next) {
@@ -1120,14 +1124,16 @@ static void
 attach_tablet_pad (PhocTabletPad *pad,
                    PhocTablet     *tool)
 {
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tool));
+
   g_debug ("Attaching tablet pad \"%s\" to tablet tool \"%s\"",
-           pad->device->name, tool->device->name);
+           pad->device->name, device->name);
 
   pad->tablet = tool;
 
   wl_list_remove (&pad->tablet_destroy.link);
   pad->tablet_destroy.notify = handle_pad_tool_destroy;
-  wl_signal_add (&tool->device->events.destroy, &pad->tablet_destroy);
+  wl_signal_add (&device->events.destroy, &pad->tablet_destroy);
 }
 
 static void
@@ -1235,12 +1241,14 @@ seat_add_tablet_pad (PhocSeat                *seat,
   PhocTablet *tool;
 
   wl_list_for_each (tool, &seat->tablets, link) {
-    if (!wlr_input_device_is_libinput (tool->device)) {
+    struct wlr_input_device *tool_device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tool));
+
+    if (!wlr_input_device_is_libinput (tool_device)) {
       continue;
     }
 
     struct libinput_device *li_dev =
-      wlr_libinput_get_device_handle (tool->device);
+      wlr_libinput_get_device_handle (tool_device);
     if (libinput_device_get_device_group (li_dev) == group) {
       attach_tablet_pad (tablet_pad, tool);
       break;
@@ -1255,8 +1263,9 @@ handle_tablet_destroy (struct wl_listener *listener,
   PhocTablet *tablet =
     wl_container_of (listener, tablet, device_destroy);
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (tablet));
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
-  wlr_cursor_detach_input_device (seat->cursor->cursor, tablet->device);
+  wlr_cursor_detach_input_device (seat->cursor->cursor, device);
   wl_list_remove (&tablet->device_destroy.link);
   wl_list_remove (&tablet->link);
   g_object_unref (tablet);
@@ -1279,12 +1288,10 @@ seat_add_tablet_tool (PhocSeat                *seat,
     return;
   }
 
-  device->data = tablet;
-  tablet->device = device;
   wl_list_insert (&seat->tablets, &tablet->link);
 
   tablet->device_destroy.notify = handle_tablet_destroy;
-  wl_signal_add (&tablet->device->events.destroy,
+  wl_signal_add (&device->events.destroy,
                  &tablet->device_destroy);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
