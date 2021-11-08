@@ -6,6 +6,8 @@
 #include <wlr/types/wlr_seat.h>
 #include "settings.h"
 
+G_BEGIN_DECLS
+
 #define PHOC_TYPE_TOUCH (phoc_touch_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocTouch, phoc_touch, PHOC, TOUCH, GObject);
@@ -20,3 +22,5 @@ struct _PhocTouch {
 };
 
 PhocTouch *phoc_touch_new (struct wlr_input_device *device, PhocSeat *seat);
+
+G_END_DECLS
