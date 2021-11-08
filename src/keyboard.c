@@ -604,6 +604,7 @@ phoc_keyboard_new (struct wlr_input_device *device, PhocSeat *seat)
 
 /**
  * phoc_keyboard_next_layout:
+ * @self: the keyboard
  *
  * Switch to next keyboard in the list of available layouts
  */
