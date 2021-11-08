@@ -15,6 +15,16 @@
  *
  * A pointer input device
  */
+struct _PhocPointer {
+  PhocInputDevice          parent;
+
+  /* private */
+  GSettings               *input_settings;
+  gboolean                 touchpad;
+  GSettings               *touchpad_settings;
+  GSettings               *mouse_settings;
+};
+
 G_DEFINE_TYPE (PhocPointer, phoc_pointer, PHOC_TYPE_INPUT_DEVICE);
 
 
