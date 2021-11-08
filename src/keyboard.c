@@ -21,8 +21,8 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-#define KEYBOARD_DEFAULT_XKB_RULES "evdev";
-#define KEYBOARD_DEFAULT_XKB_MODEL "pc105";
+#define KEYBOARD_DEFAULT_XKB_RULES "evdev"
+#define KEYBOARD_DEFAULT_XKB_MODEL "pc105"
 
 enum {
   PROP_0,
