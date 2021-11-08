@@ -6,6 +6,8 @@
 #include <glib-object.h>
 #include <xkbcommon/xkbcommon.h>
 
+G_BEGIN_DECLS
+
 #define PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP 32
 
 #define PHOC_TYPE_KEYBOARD (phoc_keyboard_get_type())
@@ -42,3 +44,5 @@ void          phoc_keyboard_handle_key(PhocKeyboard *self,
                                        struct wlr_event_keyboard_key *event);
 void          phoc_keyboard_handle_modifiers(PhocKeyboard *self);
 void          phoc_keyboard_next_layout (PhocKeyboard *self);
+
+G_END_DECLS
