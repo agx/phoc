@@ -587,6 +587,38 @@ static void surface_send_frame_done_iterator(PhocOutput *output,
 	wlr_surface_send_frame_done(surface, when);
 }
 
+
+static void
+render_damage (PhocRenderer *self, PhocOutput *output)
+{
+  int nrects;
+  pixman_box32_t *rects;
+  struct wlr_box box;
+  pixman_region32_t previous_damage;
+
+  pixman_region32_init(&previous_damage);
+  pixman_region32_subtract(&previous_damage,
+                           &output->damage->previous[output->damage->previous_idx],
+                           &output->damage->current);
+
+  rects = pixman_region32_rectangles(&previous_damage, &nrects);
+  for (int i = 0; i < nrects; ++i) {
+    wlr_box_from_pixman_box32(&box, rects[i]);
+    wlr_render_rect(self->wlr_renderer, &box, (float[])COLOR_TRANSPARENT_MAGENTA,
+                    output->wlr_output->transform_matrix);
+  }
+
+  rects = pixman_region32_rectangles(&output->damage->current, &nrects);
+  for (int i = 0; i < nrects; ++i) {
+    wlr_box_from_pixman_box32(&box, rects[i]);
+    wlr_render_rect(self->wlr_renderer, &box, (float[])COLOR_TRANSPARENT_YELLOW,
+                    output->wlr_output->transform_matrix);
+  }
+  wlr_output_schedule_frame(output->wlr_output);
+  pixman_region32_fini(&previous_damage);
+}
+
+
 void output_render(PhocOutput *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	PhocDesktop *desktop = output->desktop;
@@ -755,27 +787,8 @@ renderer_end:
 	wlr_region_transform(&frame_damage, &output->damage->current,
 		transform, width, height);
 
-	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
-		pixman_region32_t previous_damage;
-		pixman_region32_init(&previous_damage);
-		pixman_region32_subtract(&previous_damage,
-			&output->damage->previous[output->damage->previous_idx], &output->damage->current);
-
-		struct wlr_box box;
-		rects = pixman_region32_rectangles(&previous_damage, &nrects);
-		for (int i = 0; i < nrects; ++i) {
-			wlr_box_from_pixman_box32(&box, rects[i]);
-			wlr_render_rect(wlr_renderer, &box, (float[])COLOR_TRANSPARENT_MAGENTA, wlr_output->transform_matrix);
-		}
-
-		rects = pixman_region32_rectangles(&output->damage->current, &nrects);
-		for (int i = 0; i < nrects; ++i) {
-			wlr_box_from_pixman_box32(&box, rects[i]);
-			wlr_render_rect(wlr_renderer, &box, (float[])COLOR_TRANSPARENT_YELLOW, wlr_output->transform_matrix);
-		}
-		wlr_output_schedule_frame(output->wlr_output);
-		pixman_region32_fini(&previous_damage);
-	}
+	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
+		render_damage (self, output);
 
 	wlr_renderer_end(wlr_renderer);
 
