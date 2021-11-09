@@ -657,9 +657,6 @@ void output_render(PhocOutput *output) {
 			output_box->y;
 		view_move(view, view_x, view_y);
 
-		// Fullscreen views are rendered on a black background
-		clear_color[0] = clear_color[1] = clear_color[2] = 0;
-
 		// Check if we can scan-out the fullscreen view
 		static bool last_scanned_out = false;
 		bool scanned_out = scan_out_fullscreen_view(output);
