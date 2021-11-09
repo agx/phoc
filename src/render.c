@@ -512,9 +512,9 @@ damage_touch_point_cb (gpointer data, gpointer user_data)
 static void
 damage_touch_points (PhocOutput *output)
 {
-  if (!g_list_length (output->debug_touch_points)) {
+  if (output->debug_touch_points == NULL)
     return;
-  }
+
   g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
   wlr_output_schedule_frame(output->wlr_output);
 }
