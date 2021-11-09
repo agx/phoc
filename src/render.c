@@ -795,8 +795,7 @@ send_frame_done:
 	phoc_output_for_each_surface(output, surface_send_frame_done_iterator, &now, true);
 
 	damage_touch_points(output);
-	g_list_free_full(output->debug_touch_points, g_free);
-	output->debug_touch_points = NULL;
+	g_clear_list (&output->debug_touch_points, g_free);
 }
 
 
