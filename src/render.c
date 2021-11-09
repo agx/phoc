@@ -394,6 +394,17 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 		return false;
 	}
 
+	// Make sure the view is centered on screen
+	const struct wlr_box *output_box =
+		wlr_output_layout_get_box(output->desktop->layout, wlr_output);
+	struct wlr_box view_box;
+	view_get_box(view, &view_box);
+	double view_x = (double)(output_box->width - view_box.width) / 2 +
+	  output_box->x;
+	double view_y = (double)(output_box->height - view_box.height) / 2 +
+	  output_box->y;
+	view_move(view, view_x, view_y);
+
 	wlr_presentation_surface_sampled_on_output(output->desktop->presentation, surface, output->wlr_output);
 
 	return wlr_output_commit(wlr_output);
@@ -638,25 +649,11 @@ void output_render(PhocOutput *output) {
 
 	float clear_color[] = COLOR_BLACK;
 
-	const struct wlr_box *output_box =
-		wlr_output_layout_get_box(desktop->layout, wlr_output);
-
 	g_signal_emit (self, signals[RENDER_START], 0, output);
 
 	// Check if we can delegate the fullscreen surface to the output
 	if (output->fullscreen_view != NULL &&
 			output->fullscreen_view->wlr_surface != NULL) {
-		PhocView *view = output->fullscreen_view;
-
-		// Make sure the view is centered on screen
-		struct wlr_box view_box;
-		view_get_box(view, &view_box);
-		double view_x = (double)(output_box->width - view_box.width) / 2 +
-			output_box->x;
-		double view_y = (double)(output_box->height - view_box.height) / 2 +
-			output_box->y;
-		view_move(view, view_x, view_y);
-
 		// Check if we can scan-out the fullscreen view
 		static bool last_scanned_out = false;
 		bool scanned_out = scan_out_fullscreen_view(output);
