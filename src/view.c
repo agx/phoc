@@ -277,8 +277,15 @@ void view_move_resize(struct roots_view *view, double x, double y,
 		uint32_t width, uint32_t height) {
 	bool update_x = x != view->box.x;
 	bool update_y = y != view->box.y;
+	bool update_width = width != view->box.width;
+	bool update_height = height != view->box.height;
 	if (!update_x && !update_y) {
 		view_resize(view, width, height);
+		return;
+	}
+
+	if (!update_width && !update_height) {
+		view_move (view, x, y);
 		return;
 	}
 
