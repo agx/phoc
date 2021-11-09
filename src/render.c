@@ -654,14 +654,12 @@ void output_render(PhocOutput *output) {
 	// Check if we can delegate the fullscreen surface to the output
 	if (output->fullscreen_view != NULL &&
 			output->fullscreen_view->wlr_surface != NULL) {
-		// Check if we can scan-out the fullscreen view
 		static bool last_scanned_out = false;
 		bool scanned_out = scan_out_fullscreen_view(output);
 
 		if (scanned_out && !last_scanned_out) {
-			g_debug ("Scanning out fullscreen view");
-		}
-		if (last_scanned_out && !scanned_out) {
+			g_debug ("Starting fullscreen view scan out");
+		} else if (!scanned_out && last_scanned_out) {
 			g_debug ("Stopping fullscreen view scan out");
 		}
 		last_scanned_out = scanned_out;
