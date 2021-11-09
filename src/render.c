@@ -516,7 +516,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
   }
 
   PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *self = server->renderer;
+  PhocRenderer *self = phoc_server_get_renderer (server);
   struct wlr_texture *view_texture = wlr_surface_get_texture (surface);
 
   struct view_render_data *data = _data;
@@ -548,7 +548,7 @@ gboolean
 view_render_to_buffer (PhocView *view, int width, int height, int stride, uint32_t *flags, void* data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *self = server->renderer;
+  PhocRenderer *self = phoc_server_get_renderer (server);
   struct wlr_surface *surface = view->wlr_surface;
 
   g_return_val_if_fail (surface, false);
@@ -591,7 +591,7 @@ void output_render(PhocOutput *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	PhocDesktop *desktop = output->desktop;
 	PhocServer *server = phoc_server_get_default ();
-	PhocRenderer *self = server->renderer;
+	PhocRenderer *self = phoc_server_get_renderer (server);
 	struct wlr_renderer *wlr_renderer;
 
         g_assert (PHOC_IS_RENDERER (self));

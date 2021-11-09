@@ -76,11 +76,12 @@ struct _PhocServer {
   float fader_t;
 };
 
-PhocServer *phoc_server_get_default (void);
-gboolean phoc_server_setup (PhocServer *server, const char *config_path,
-			    const char *exec, GMainLoop *mainloop,
-                            PhocServerFlags flags,
-			    PhocServerDebugFlags debug_flags);
-gint phoc_server_get_session_exit_status (PhocServer *self);
+PhocServer  *phoc_server_get_default (void);
+gboolean     phoc_server_setup (PhocServer *server, const char *config_path,
+                                const char *exec, GMainLoop *mainloop,
+                                PhocServerFlags flags,
+                                PhocServerDebugFlags debug_flags);
+gint          phoc_server_get_session_exit_status (PhocServer *self);
+PhocRenderer *phoc_server_get_renderer (PhocServer *self);
 
 G_END_DECLS
