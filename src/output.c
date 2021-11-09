@@ -374,10 +374,10 @@ phoc_output_finalize (GObject *object)
   PhocOutput *self = PHOC_OUTPUT (object);
 
   wl_list_remove (&self->link);
-  wl_list_remove (&self->output_destroy.link);
   wl_list_remove (&self->enable.link);
   wl_list_remove (&self->mode.link);
   wl_list_remove (&self->commit.link);
+  wl_list_remove (&self->output_destroy.link);
   g_list_free_full (self->debug_touch_points, g_free);
 
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
