@@ -993,3 +993,18 @@ phoc_output_is_match (PhocOutput *self,
 
   return match;
 }
+
+/*
+ * phoc_output_has_fullscreen_view:
+ * @self: The #PhocOutput
+ *
+ * Returns: %TRUE if the output has a fullscreen view attached,
+ *          %FALSE otherwise.
+ */
+gboolean
+phoc_output_has_fullscreen_view (PhocOutput *self)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  return self->fullscreen_view != NULL && self->fullscreen_view->wlr_surface != NULL;
+}

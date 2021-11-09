@@ -652,8 +652,7 @@ void output_render(PhocOutput *output) {
 	g_signal_emit (self, signals[RENDER_START], 0, output);
 
 	// Check if we can delegate the fullscreen surface to the output
-	if (output->fullscreen_view != NULL &&
-			output->fullscreen_view->wlr_surface != NULL) {
+	if (phoc_output_has_fullscreen_view (output)) {
 		static bool last_scanned_out = false;
 		bool scanned_out = scan_out_fullscreen_view(output);
 
