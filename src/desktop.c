@@ -832,6 +832,13 @@ void
 phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
 {
   struct roots_view *view;
+  PhocServer *server = phoc_server_get_default();
+
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE)) {
+    if (enable == FALSE)
+      g_info ("Not disabling auto-maximize due to `auto-maximize` debug flag");
+    enable = TRUE;
+  }
 
   g_debug ("auto-maximize: %d", enable);
   self->maximize = enable;
