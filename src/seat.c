@@ -986,7 +986,7 @@ seat_add_keyboard (PhocSeat                *seat,
 }
 
 static void
-handle_pointer_destroy (PhocTouch *pointer)
+on_pointer_destroy (PhocTouch *pointer)
 {
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (pointer));
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
@@ -1008,7 +1008,7 @@ seat_add_pointer (PhocSeat                *seat,
 
   seat->pointers = g_slist_prepend (seat->pointers, pointer);
   g_signal_connect (pointer, "device-destroy",
-                    G_CALLBACK (handle_pointer_destroy),
+                    G_CALLBACK (on_pointer_destroy),
                     NULL);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
@@ -1051,7 +1051,7 @@ seat_add_switch (PhocSeat                *seat,
 }
 
 static void
-handle_touch_destroy (PhocTouch *touch)
+on_touch_destroy (PhocTouch *touch)
 {
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (touch));
   PhocServer *server = phoc_server_get_default ();
@@ -1076,7 +1076,7 @@ seat_add_touch (PhocSeat                *seat,
 
   seat->touch = g_slist_prepend (seat->touch, touch);
   g_signal_connect (touch, "device-destroy",
-                    G_CALLBACK (handle_touch_destroy),
+                    G_CALLBACK (on_touch_destroy),
                     NULL);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
