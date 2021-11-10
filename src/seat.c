@@ -1929,12 +1929,6 @@ phoc_seat_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  wl_list_init (&self->tablet_pads);
-  wl_list_init (&self->switches);
-  wl_list_init (&self->views);
-
-  self->touch_id = -1;
-
   self->seat = wlr_seat_create (server->wl_display, self->name);
   g_assert (self->seat);
   self->seat->data = self;
@@ -2022,6 +2016,11 @@ phoc_seat_class_init (PhocSeatClass *klass)
 static void
 phoc_seat_init (PhocSeat *self)
 {
+  wl_list_init (&self->tablet_pads);
+  wl_list_init (&self->switches);
+  wl_list_init (&self->views);
+
+  self->touch_id = -1;
 }
 
 
