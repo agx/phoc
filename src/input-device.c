@@ -301,3 +301,20 @@ phoc_input_device_get_name (PhocInputDevice *self)
 
   return priv->device->name;
 }
+
+/**
+ * phoc_input_device_get_device_type:
+ * @self: The %PhocInputDevice
+ *
+ * Returns: The wlr type of the input device
+ */
+enum wlr_input_device_type
+phoc_input_device_get_device_type (PhocInputDevice *self)
+{
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  return priv->device->type;
+}
