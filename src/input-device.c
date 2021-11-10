@@ -242,7 +242,7 @@ phoc_input_device_get_is_touchpad (PhocInputDevice *self)
   if (!wlr_input_device_is_libinput (priv->device))
     return FALSE;
 
-  ldev = phoc_input_device_get_libinput_device_handle (PHOC_INPUT_DEVICE (self));
+  ldev = phoc_input_device_get_libinput_device_handle (self);
   if (libinput_device_config_tap_get_finger_count (ldev) == 0)
     return FALSE;
 
