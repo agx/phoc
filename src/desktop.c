@@ -879,3 +879,34 @@ phoc_desktop_get_scale_to_fit (PhocDesktop *self)
 {
     return self->scale_to_fit;
 }
+
+
+/**
+ * phoc_desktop_find_output:
+ * @self: The desktop
+ * @make: The output's make / vendor
+ * @model: The output's model / product
+ * @serial: The output's serial number
+ *
+ * Find an output by make, model and serial
+ *
+ * Returns: (transfer none) (nullable): The matching output or
+ *  %NULL if no output matches.
+ */
+PhocOutput *
+phoc_desktop_find_output (PhocDesktop *self,
+                          const char  *make,
+                          const char  *model,
+                          const char  *serial)
+{
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  wl_list_for_each (output, &self->outputs, link) {
+    if (phoc_output_is_match (output, make, model, serial))
+        return output;
+  }
+
+  return NULL;
+}

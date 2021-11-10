@@ -115,6 +115,10 @@ void         phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean on);
 gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);
 void         phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean on);
 gboolean     phoc_desktop_get_scale_to_fit (PhocDesktop *self);
+PhocOutput  *phoc_desktop_find_output (PhocDesktop *self,
+                                       const char  *make,
+                                       const char  *model,
+                                       const char  *serial);
 
 struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
