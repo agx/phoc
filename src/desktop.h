@@ -119,6 +119,7 @@ PhocOutput  *phoc_desktop_find_output (PhocDesktop *self,
                                        const char  *make,
                                        const char  *model,
                                        const char  *serial);
+PhocOutput *phoc_desktop_get_builtin_output (PhocDesktop *self);
 
 struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,

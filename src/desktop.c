@@ -910,3 +910,28 @@ phoc_desktop_find_output (PhocDesktop *self,
 
   return NULL;
 }
+
+
+/**
+ * phoc_desktop_get_builtin_output:
+ *
+ * Get the built-in output. This assumes there's only one
+ * and returns the first.
+ *
+ * Returns: (transfer none) (nullable): The built-in output.
+ *  %NULL if there's no built-in output.
+ */
+PhocOutput *
+phoc_desktop_get_builtin_output (PhocDesktop *self)
+{
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  wl_list_for_each (output, &self->outputs, link) {
+    if (phoc_output_is_builtin (output))
+        return output;
+  }
+
+  return NULL;
+}
