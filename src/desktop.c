@@ -739,16 +739,14 @@ phoc_desktop_finalize (GObject *object)
   wl_list_remove (&self->output_manager_test.link);
   wl_list_remove (&self->output_power_manager_set_mode.link);
 
-  /* Disconnect XWayland listener before shutting it down */
 #ifdef PHOC_XWAYLAND
+  /* Disconnect XWayland listener before shutting it down */
   if (self->config->xwayland) {
     wl_list_remove (&self->xwayland_surface.link);
     wl_list_remove (&self->xwayland_ready.link);
     wl_list_remove (&self->xwayland_remove_startup_id.link);
   }
-#endif
 
-#ifdef PHOC_XWAYLAND
   // We need to shutdown Xwayland before disconnecting all clients, otherwise
   // wlroots will restart it automatically.
   g_clear_pointer (&self->xwayland, wlr_xwayland_destroy);
