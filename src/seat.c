@@ -605,18 +605,11 @@ phoc_seat_configure_cursor (PhocSeat *seat)
   // reset mappings
   wlr_cursor_map_to_output (cursor, NULL);
 
-  g_slist_foreach (seat->pointers, reset_device_mappings, seat);
   g_slist_foreach (seat->touch, reset_device_mappings, seat);
   g_slist_foreach (seat->tablets, reset_device_mappings, seat);
 
   // configure device to output mappings
   wl_list_for_each (output, &desktop->outputs, link) {
-    for (GSList *elem = seat->pointers; elem; elem = elem->next) {
-      PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
-      seat_set_device_output_mappings (seat,
-                                       phoc_input_device_get_device (input_device),
-                                       output);
-    }
     for (GSList *elem = seat->tablets; elem; elem = elem->next) {
       PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
       seat_set_device_output_mappings (seat,
@@ -1012,7 +1005,6 @@ seat_add_pointer (PhocSeat                *seat,
                     NULL);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
-  phoc_seat_configure_cursor (seat);
 }
 
 static void
