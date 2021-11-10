@@ -269,16 +269,18 @@ phoc_output_constructed (GObject *object)
   PhocServer *server = phoc_server_get_default ();
   PhocInput *input = server->input;
 
-  g_debug ("Initializing PhocOutput");
   assert (server->desktop);
 
   struct roots_config *config = self->desktop->config;
 
-  g_debug ("Output '%s' added", self->wlr_output->name);
-  g_debug ("'%s %s %s' %" PRId32 "mm x %" PRId32 "mm",
-           self->wlr_output->make, self->wlr_output->model,
-           self->wlr_output->serial, self->wlr_output->phys_width,
-           self->wlr_output->phys_height);
+  g_message ("Output '%s' added ('%s'/'%s'/'%s'), "
+             "%" PRId32 "mm x %" PRId32 "mm",
+             self->wlr_output->name,
+             self->wlr_output->make,
+             self->wlr_output->model,
+             self->wlr_output->serial,
+             self->wlr_output->phys_width,
+             self->wlr_output->phys_height);
 
   clock_gettime (CLOCK_MONOTONIC, &self->last_frame);
   self->wlr_output->data = self;
