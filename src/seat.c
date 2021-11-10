@@ -551,15 +551,6 @@ handle_pointer_focus_change (struct wl_listener *listener,
 }
 
 static void
-seat_reset_device_mappings (PhocSeat                *seat,
-                            struct wlr_input_device *device)
-{
-  struct wlr_cursor *cursor = seat->cursor->cursor;
-
-  wlr_cursor_map_input_to_output (cursor, device, NULL);
-}
-
-static void
 seat_set_device_output_mappings (PhocSeat *seat,
                                  struct wlr_input_device *device, PhocOutput *output)
 {
@@ -588,8 +579,9 @@ reset_device_mappings (gpointer data, gpointer user_data)
 {
   PhocInputDevice *device = PHOC_INPUT_DEVICE (data);
   PhocSeat *seat = PHOC_SEAT (user_data);
+  struct wlr_cursor *cursor = seat->cursor->cursor;
 
-  seat_reset_device_mappings (seat, phoc_input_device_get_device (device));
+  wlr_cursor_map_input_to_output (cursor, phoc_input_device_get_device (device), NULL);
 }
 
 
