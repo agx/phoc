@@ -983,3 +983,32 @@ phoc_output_is_builtin (PhocOutput *output)
 
   return FALSE;
 }
+
+/**
+ * phoc_output_is_match:
+ * @self: The output
+ * @make: The make / vendor name
+ * @model: The model / product name
+ * @serial: The serial number
+ *
+ * Checks if an output matches the given vendor/product/serial information.
+ * This is usually used to match on an outputs EDID information.
+ *
+ * Returns: %TRUE if the output matches the given information, otherwise %FALSE.
+ */
+gboolean
+phoc_output_is_match (PhocOutput *self,
+                      const char *make,
+                      const char *model,
+                      const char *serial)
+{
+  gboolean match;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  match = (g_strcmp0 (self->wlr_output->make, make) == 0 &&
+           g_strcmp0 (self->wlr_output->model, model) == 0 &&
+           g_strcmp0 (self->wlr_output->serial, serial) == 0);
+
+  return match;
+}
