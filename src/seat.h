@@ -64,6 +64,8 @@ typedef struct _PhocSeat {
   struct wl_listener              request_start_drag;
   struct wl_listener              start_drag;
   struct wl_listener              destroy;
+
+  GHashTable                     *input_mapping_settings;
 } PhocSeat;
 
 typedef struct _PhocSeatView {
