@@ -8,13 +8,15 @@
 
 #include "config.h"
 
-#include <gtk-shell-protocol.h>
 #include "server.h"
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"
 #include "phosh-private.h"
 #include "gtk-shell.h"
+
+#include <gtk-shell-protocol.h>
+#include <wlr/types/wlr_xdg_activation_v1.h>
 
 /**
  * PhocGtkShell:
@@ -212,10 +214,14 @@ handle_notify_launch(struct wl_client *client,
   PhocServer *server = phoc_server_get_default ();
 
   g_debug ("%s: %s", __func__, startup_id);
-  if (startup_id)
+  if (startup_id) {
+#ifdef PHOC_HAVE_WLR_XDG_ACTIVATION_V1_ADD_TOKEN
+    wlr_xdg_activation_v1_add_token (server->desktop->xdg_activation_v1, startup_id);
+#endif
     phoc_phosh_private_notify_launch (server->desktop->phosh,
                                       startup_id,
                                       PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
+  }
 }
 
 static void
