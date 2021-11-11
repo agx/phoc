@@ -254,8 +254,7 @@ phoc_output_set_mode (struct wlr_output *output, struct roots_output_config *oc)
     }
   }
   if (!best) {
-    wlr_log (WLR_ERROR, "Configured mode for %s not available",
-             output->name);
+    g_warning ("Configured mode for %s not available", output->name);
   } else {
     g_debug ("Assigning configured mode to %s",
              output->name);
@@ -323,7 +322,7 @@ phoc_output_constructed (GObject *object)
           wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
         }
       } else if (!wl_list_empty (&output_config->modes)) {
-        wlr_log (WLR_ERROR, "Can only add modes for DRM backend");
+        g_warning ("Can only add modes for DRM backend");
       }
 
       if (output_config->mode.width) {
