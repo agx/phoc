@@ -697,12 +697,14 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
     struct wlr_surface *root = wlr_surface_get_root_surface (surface);
     if (wlr_surface_is_layer_surface (root)) {
       struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_from_wlr_surface (root);
+      struct wlr_box *output_box = wlr_output_layout_get_box (desktop->layout, wlr_output);
+
       PhocLayerSurface *layer;
       wl_list_for_each_reverse (layer, &phoc_output->layers[layer_surface->current.layer], link)
       {
         if (layer->layer_surface->surface == root) {
-          sx = lx - layer->geo.x;
-          sy = ly - layer->geo.y;
+          sx = lx - layer->geo.x - output_box->x;
+          sy = ly - layer->geo.y - output_box->y;
           found = true;
           break;
         }
@@ -711,8 +713,8 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
       wl_list_for_each_reverse (layer, &phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], link)
       {
         if (layer->layer_surface->surface == root) {
-          sx = lx - layer->geo.x;
-          sy = ly - layer->geo.y;
+          sx = lx - layer->geo.x - output_box->x;
+          sy = ly - layer->geo.y - output_box->y;
           found = true;
           break;
         }
