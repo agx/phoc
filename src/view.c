@@ -244,8 +244,8 @@ void view_move(struct roots_view *view, double x, double y) {
 void
 view_appear_activated (struct roots_view *view, bool activated)
 {
-  if (view->impl->activate)
-    view->impl->activate (view, activated);
+  if (view->impl->set_active)
+    view->impl->set_active (view, activated);
 }
 
 void view_activate(struct roots_view *view, bool activate) {
@@ -277,8 +277,15 @@ void view_move_resize(struct roots_view *view, double x, double y,
 		uint32_t width, uint32_t height) {
 	bool update_x = x != view->box.x;
 	bool update_y = y != view->box.y;
+	bool update_width = width != view->box.width;
+	bool update_height = height != view->box.height;
 	if (!update_x && !update_y) {
 		view_resize(view, width, height);
+		return;
+	}
+
+	if (!update_width && !update_height) {
+		view_move (view, x, y);
 		return;
 	}
 
@@ -327,8 +334,10 @@ void view_arrange_maximized(struct roots_view *view, struct wlr_output *output) 
 	usable_area.x += output_box->x;
 	usable_area.y += output_box->y;
 
-	view_move_resize(view, usable_area.x / view->scale, usable_area.y / view->scale,
-			usable_area.width / view->scale, usable_area.height / view->scale);
+	struct wlr_box geom;
+	view_get_geometry (view, &geom);
+	view_move_resize (view, (usable_area.x - geom.x) / view->scale, (usable_area.y - geom.y) / view->scale,
+	                  usable_area.width / view->scale, usable_area.height / view->scale);
 }
 
 void
@@ -362,13 +371,10 @@ view_arrange_tiled (struct roots_view *view, struct wlr_output *output)
     g_error ("Invalid tiling direction %d", view->tile_direction);
   }
 
-  /*
-   * No need to take geometry into account since maximized surfaces
-   * usually don't have drop shadows. It wouldn't be up to date here
-   * yet anyway since a client's configure is not yet processed.
-   */
-  view_move_resize (view, x, usable_area.y,
-                    usable_area.width / 2, usable_area.height);
+  struct wlr_box geom;
+  view_get_geometry (view, &geom);
+  view_move_resize (view, (x - geom.x) / view->scale, (usable_area.y - geom.y) / view->scale,
+                    usable_area.width / 2 / view->scale, usable_area.height / view->scale);
 }
 
 /*
@@ -394,8 +400,12 @@ void view_maximize(struct roots_view *view, struct wlr_output *output) {
 		return;
 	}
 
-	if (view->impl->maximize) {
-		view->impl->maximize(view, true);
+	if (view->impl->set_tiled) {
+		view->impl->set_tiled (view, false);
+	}
+
+	if (view->impl->set_maximized) {
+		view->impl->set_maximized (view, true);
 	}
 
 	if (view->toplevel_handle) {
@@ -442,8 +452,11 @@ view_restore(struct roots_view *view)
   if (view->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
 
-  if (view->impl->maximize)
-    view->impl->maximize (view, false);
+  if (view->impl->set_maximized)
+    view->impl->set_maximized (view, false);
+
+  if (view->impl->set_tiled)
+    view->impl->set_tiled (view, false);
 }
 
 void view_set_fullscreen(struct roots_view *view, bool fullscreen,
@@ -580,14 +593,19 @@ view_tile(struct roots_view *view, PhocViewTileDirection direction, struct wlr_o
   if (view_is_fullscreen (view))
     return;
 
-  /* Set the maximized flag on the toplevel so it remove it's drop shadows */
-  if (view->impl->maximize)
-    view->impl->maximize(view, true);
-
   view_save (view);
 
   view->state = PHOC_VIEW_STATE_TILED;
   view->tile_direction = direction;
+
+  if (view->impl->set_tiled) {
+    view->impl->set_maximized (view, false);
+    view->impl->set_tiled (view, true);
+  } else if (view->impl->set_maximized) {
+    /* fallback to the maximized flag on the toplevel so it can remove its drop shadows */
+    view->impl->set_maximized (view, true);
+  }
+
   view_arrange_tiled (view, output);
 }
 

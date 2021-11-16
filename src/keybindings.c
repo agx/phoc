@@ -62,8 +62,13 @@ handle_tile_right (PhocSeat *seat)
 {
   struct roots_view *view = phoc_seat_get_focus(seat);
 
-  if (view != NULL)
-    view_tile(view, PHOC_VIEW_TILE_RIGHT, NULL);
+  if (!view)
+    return;
+
+  if (view_is_tiled (view) && view->tile_direction == PHOC_VIEW_TILE_RIGHT)
+    view_restore (view);
+  else
+    view_tile (view, PHOC_VIEW_TILE_RIGHT, NULL);
 }
 
 
@@ -72,8 +77,13 @@ handle_tile_left (PhocSeat *seat)
 {
   struct roots_view *view = phoc_seat_get_focus(seat);
 
-  if (view != NULL)
-    view_tile(view, PHOC_VIEW_TILE_LEFT, NULL);
+  if (!view)
+    return;
+
+  if (view_is_tiled (view) && view->tile_direction == PHOC_VIEW_TILE_LEFT)
+    view_restore (view);
+  else
+    view_tile (view, PHOC_VIEW_TILE_LEFT, NULL);
 }
 
 
