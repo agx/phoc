@@ -212,7 +212,7 @@ phoc_input_update_cursor_focus (PhocInput *self)
  * phoc_input_get_seats:
  * @self: The input
  *
- * Returns: (elem-type: PhocSeat): a list of seats associated with the input
+ * Returns: (element-type PhocSeat) (transfer none): a list of seats associated with the input
  */
 GSList *
 phoc_input_get_seats (PhocInput *self)
@@ -226,7 +226,7 @@ phoc_input_get_seats (PhocInput *self)
  * phoc_input_get_last_active_seat:
  * @self: The input
  *
- * Returns: (nullable) (transfer-none): The last active seat or %NULL
+ * Returns: (nullable) (transfer none): The last active seat or %NULL
  */
 PhocSeat *
 phoc_input_get_last_active_seat (PhocInput *self)
