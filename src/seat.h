@@ -32,7 +32,6 @@ typedef struct _PhocSeat {
 
   struct wlr_seat                *seat;
   PhocCursor                     *cursor;
-  struct wl_list                  link; // PhocInput::seats
 
   // coordinates of the first touch point if it exists
   int32_t                         touch_id;
@@ -149,7 +148,7 @@ void               phoc_seat_add_device (PhocSeat                *seat,
                                          struct wlr_input_device *device);
 
 void               phoc_seat_configure_cursor (PhocSeat *seat);
-PhocCursor        *phoc_seat_get_cursor (PhocSeat *seat);
+PhocCursor        *phoc_seat_get_cursor (PhocSeat *self);
 
 void               phoc_seat_configure_xcursor (PhocSeat *seat);
 
@@ -184,6 +183,4 @@ void               phoc_seat_set_exclusive_client (PhocSeat         *seat,
 bool               phoc_seat_allow_input (PhocSeat           *seat,
                                           struct wl_resource *resource);
 
-void               phoc_seat_maybe_set_cursor (PhocSeat *seat, const char *name);
-
-PhocSeat          *input_last_active_seat (PhocInput *input);
+void               phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name);

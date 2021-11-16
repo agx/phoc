@@ -1892,20 +1892,6 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
   phoc_cursor_update_focus (seat->cursor);
 }
 
-PhocSeat *
-input_last_active_seat (PhocInput *input)
-{
-  PhocSeat *seat = NULL, *_seat;
-
-  wl_list_for_each (_seat, &input->seats, link) {
-    if (!seat || (seat->seat->last_event.tv_sec > _seat->seat->last_event.tv_sec &&
-                  seat->seat->last_event.tv_nsec > _seat->seat->last_event.tv_nsec)) {
-      seat = _seat;
-    }
-  }
-  return seat;
-}
-
 /**
  * phoc_seat_maybe_set_cursor:
  * @self: a PhocSeat

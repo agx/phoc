@@ -88,10 +88,13 @@ static void apply_exclusive(struct wlr_box *usable_area,
 }
 
 static void update_cursors(PhocLayerSurface *roots_surface,
-		struct wl_list *seats /* PhocSeat */) {
+		GSList *seats /* PhocSeat */) {
 	PhocServer *server = phoc_server_get_default ();
-	PhocSeat *seat;
-	wl_list_for_each(seat, seats, link) {
+
+	for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+		PhocSeat *seat = PHOC_SEAT (elem->data);
+
+		g_assert (PHOC_IS_SEAT (seat));
 		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		double sx, sy;
 
@@ -113,7 +116,7 @@ static void update_cursors(PhocLayerSurface *roots_surface,
 }
 
 static void arrange_layer(struct wlr_output *output,
-		struct wl_list *seats /* PhocSeat */,
+		GSList *seats /* PhocSeat */,
 		struct wl_list *list /* PhocLayerSurface */,
 		struct wlr_box *usable_area, bool exclusive) {
 	PhocLayerSurface *roots_surface;
@@ -254,8 +257,11 @@ void arrange_layers(PhocOutput *output) {
 	struct osk_origin osk_place = find_osk(output->layers);
 	if (osk_place.surface) {
 		bool osk_force_overlay = false;
-		PhocSeat *seat;
-		wl_list_for_each(seat, &server->input->seats, link) {
+
+		for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+			PhocSeat *seat = PHOC_SEAT (elem->data);
+
+			g_assert (PHOC_IS_SEAT (seat));
 			if (seat->focused_layer && seat->focused_layer->client_pending.layer >=
 					osk_place.surface->layer_surface->client_pending.layer) {
 				osk_force_overlay = true;
@@ -266,16 +272,16 @@ void arrange_layers(PhocOutput *output) {
 	}
 
 	// Arrange exclusive surfaces from top->bottom
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
 			&usable_area, true);
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
 			&usable_area, true);
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
 			&usable_area, true);
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
 			&usable_area, true);
 	output->usable_area = usable_area;
@@ -292,16 +298,16 @@ void arrange_layers(PhocOutput *output) {
 	}
 
 	// Arrange non-exlusive surfaces from top->bottom
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
 			&usable_area, false);
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
 			&usable_area, false);
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
 			&usable_area, false);
-	arrange_layer(output->wlr_output, &server->input->seats,
+	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
 			&usable_area, false);
 
@@ -326,9 +332,10 @@ void arrange_layers(PhocOutput *output) {
 		}
 	}
 
-	PhocInput *input = server->input;
-	PhocSeat *seat;
-	wl_list_for_each(seat, &input->seats, link) {
+	for (GSList *elem = phoc_input_get_seats (server->input);  elem; elem = elem->next) {
+		PhocSeat *seat = PHOC_SEAT (elem->data);
+
+		g_assert (PHOC_IS_SEAT (seat));
 		phoc_seat_set_focus_layer(seat,
 				topmost ? topmost->layer_surface : NULL);
 	}
@@ -363,7 +370,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		struct wlr_surface *surface = layer_surface->surface;
 		if (surface->previous.width != surface->current.width ||
 				surface->previous.height != surface->current.height) {
-			update_cursors(layer, &server->input->seats);
+			update_cursors(layer, phoc_input_get_seats (server->input));
 		}
 
 		bool geo_changed =
@@ -741,7 +748,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 
 	if (!layer_surface->output) {
 		PhocInput *input = server->input;
-		PhocSeat *seat = input_last_active_seat(input);
+		PhocSeat *seat = phoc_input_get_last_active_seat(input);
 		assert(seat); // Technically speaking we should handle this case
 		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		struct wlr_output *output =

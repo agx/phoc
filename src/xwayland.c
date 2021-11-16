@@ -217,8 +217,11 @@ static PhocSeat *guess_seat_for_view(struct roots_view *view) {
 	// for the pointer
 	PhocServer *server = phoc_server_get_default ();
 	PhocInput *input = server->input;
-	PhocSeat *seat;
-	wl_list_for_each(seat, &input->seats, link) {
+
+	for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
+		PhocSeat *seat = PHOC_SEAT (elem->data);
+
+		g_assert (PHOC_IS_SEAT (seat));
 		if (seat->seat->pointer_state.focused_surface == view->wlr_surface) {
 			return seat;
 		}
