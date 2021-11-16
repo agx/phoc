@@ -10,19 +10,4 @@
 
 G_DECLARE_FINAL_TYPE (PhocPointer, phoc_pointer, PHOC, POINTER, PhocInputDevice);
 
-/* TODO: we keep the struct public due to the list links and
-   notifiers but we should avoid other member access */
-struct _PhocPointer {
-  PhocInputDevice          parent;
-
-  struct wl_listener       device_destroy;
-  struct wl_list           link;
-
-  /* private */
-  GSettings               *input_settings;
-  gboolean                 touchpad;
-  GSettings               *touchpad_settings;
-  GSettings               *mouse_settings;
-};
-
 PhocPointer *phoc_pointer_new (struct wlr_input_device *device, PhocSeat *seat);

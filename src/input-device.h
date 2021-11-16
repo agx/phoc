@@ -25,7 +25,9 @@ G_DECLARE_DERIVABLE_TYPE (PhocInputDevice, phoc_input_device, PHOC, INPUT_DEVICE
 struct _PhocInputDeviceClass {
   GObjectClass parent_class;
 
-  /* no vfuncs */
+  /* Signals
+   */
+  void (*device_destroy)   (PhocInputDevice    *self);
 };
 
 PhocSeat                *phoc_input_device_get_seat                       (PhocInputDevice *self);
@@ -33,5 +35,6 @@ struct wlr_input_device *phoc_input_device_get_device                     (PhocI
 gboolean                 phoc_input_device_get_is_touchpad                (PhocInputDevice *self);
 gboolean                 phoc_input_device_get_is_libinput                (PhocInputDevice *self);
 struct libinput_device  *phoc_input_device_get_libinput_device_handle     (PhocInputDevice *self);
+const char              *phoc_input_device_get_name                       (PhocInputDevice *self);
 
 G_END_DECLS
