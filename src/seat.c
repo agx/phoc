@@ -93,31 +93,6 @@ phoc_seat_get_property (GObject    *object,
 
 
 static void
-handle_keyboard_key (struct wl_listener *listener, void *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_key);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, keyboard->seat->seat);
-  struct wlr_event_keyboard_key *event = data;
-
-  phoc_keyboard_handle_key (keyboard, event);
-}
-
-static void
-handle_keyboard_modifiers (struct wl_listener *listener,
-                           void               *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocKeyboard *keyboard = wl_container_of (listener, keyboard, keyboard_modifiers);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, keyboard->seat->seat);
-  phoc_keyboard_handle_modifiers (keyboard);
-}
-
-static void
 handle_cursor_motion (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -950,7 +925,7 @@ seat_update_capabilities (PhocSeat *seat)
 {
   uint32_t caps = 0;
 
-  if (!wl_list_empty (&seat->keyboards)) {
+  if (seat->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
   if (seat->pointers != NULL || !wl_list_empty (&seat->tablets)) {
@@ -965,18 +940,29 @@ seat_update_capabilities (PhocSeat *seat)
 }
 
 static void
-handle_keyboard_destroy (struct wl_listener *listener, void *data)
+on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
 {
-  PhocKeyboard *keyboard =
-    wl_container_of (listener, keyboard, device_destroy);
-  PhocSeat *seat = keyboard->seat;
+  g_assert (PHOC_IS_SEAT (self));
+  g_assert (PHOC_IS_KEYBOARD (keyboard));
 
-  wl_list_remove (&keyboard->device_destroy.link);
-  wl_list_remove (&keyboard->keyboard_key.link);
-  wl_list_remove (&keyboard->keyboard_modifiers.link);
+  self->keyboards = g_slist_remove (self->keyboards, keyboard);
   g_object_unref (keyboard);
-  seat_update_capabilities (seat);
+  seat_update_capabilities (self);
 }
+
+
+static void
+on_keyboard_activity (PhocSeat *self, PhocKeyboard *keyboard)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+
+  g_assert (PHOC_IS_SEAT (self));
+  g_assert (PHOC_IS_KEYBOARD (keyboard));
+
+  wlr_idle_notify_activity (desktop->idle, self->seat);
+}
+
 
 static void
 seat_add_keyboard (PhocSeat                *seat,
@@ -985,16 +971,15 @@ seat_add_keyboard (PhocSeat                *seat,
   assert (device->type == WLR_INPUT_DEVICE_KEYBOARD);
   PhocKeyboard *keyboard = phoc_keyboard_new (device, seat);
 
-  wl_list_insert (&seat->keyboards, &keyboard->link);
+  seat->keyboards = g_slist_prepend (seat->keyboards, keyboard);
 
-  keyboard->device_destroy.notify = handle_keyboard_destroy;
-  wl_signal_add (&keyboard->device->events.destroy, &keyboard->device_destroy);
-  keyboard->keyboard_key.notify = handle_keyboard_key;
-  wl_signal_add (&keyboard->device->keyboard->events.key,
-                 &keyboard->keyboard_key);
-  keyboard->keyboard_modifiers.notify = handle_keyboard_modifiers;
-  wl_signal_add (&keyboard->device->keyboard->events.modifiers,
-                 &keyboard->keyboard_modifiers);
+  g_signal_connect_swapped (keyboard, "device-destroy",
+                            G_CALLBACK (on_keyboard_destroy),
+                            seat);
+
+  g_signal_connect_swapped (keyboard, "activity",
+                            G_CALLBACK (on_keyboard_activity),
+                            seat);
 
   wlr_seat_set_keyboard (seat->seat, device);
 }
@@ -1393,12 +1378,14 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
 bool
 phoc_seat_has_meta_pressed (PhocSeat *seat)
 {
-  PhocKeyboard *keyboard;
+  for (GSList *elem = seat->keyboards; elem; elem = elem->next) {
+    PhocKeyboard *keyboard = PHOC_KEYBOARD (elem->data);
+    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (keyboard);
+    struct wlr_input_device *device = phoc_input_device_get_device (input_device);
 
-  wl_list_for_each (keyboard, &seat->keyboards, link) {
     uint32_t modifiers =
-      wlr_keyboard_get_modifiers (keyboard->device->keyboard);
-    if ((modifiers ^ keyboard->meta_key) == 0) {
+      wlr_keyboard_get_modifiers (device->keyboard);
+    if ((modifiers ^ phoc_keyboard_get_meta_key (keyboard)) == 0) {
       return true;
     }
   }
@@ -1948,7 +1935,6 @@ phoc_seat_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  wl_list_init (&self->keyboards);
   wl_list_init (&self->tablets);
   wl_list_init (&self->tablet_pads);
   wl_list_init (&self->switches);

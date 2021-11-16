@@ -8,7 +8,6 @@
 
 #include <wayland-server-core.h>
 #include "input.h"
-#include "keyboard.h"
 #include "layers.h"
 #include "switch.h"
 #include "text_input.h"
@@ -24,6 +23,8 @@ G_DECLARE_FINAL_TYPE (PhocSeat, phoc_seat, PHOC, SEAT, GObject)
 typedef struct _PhocCursor PhocCursor;
 typedef struct _PhocDragIcon PhocDragIcon;
 
+/* TODO: we keep the struct public due to the list links and
+   notifiers but we should avoid other member access */
 typedef struct _PhocSeat {
   GObject                         parent;
 
@@ -50,7 +51,7 @@ typedef struct _PhocSeat {
 
   PhocDragIcon                   *drag_icon; // can be NULL
 
-  struct wl_list                  keyboards;
+  GSList                         *keyboards;
   GSList                         *pointers;
   struct wl_list                  switches;
   GSList                         *touch;

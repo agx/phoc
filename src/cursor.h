@@ -29,6 +29,8 @@ typedef enum {
 
 typedef struct _PhocSeatView PhocSeatView;
 
+/* TODO: we keep the struct public due to the list links and
+   notifiers but we should avoid other member access */
 typedef struct _PhocCursor {
   GObject                           parent;
 
