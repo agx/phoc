@@ -739,16 +739,14 @@ phoc_desktop_finalize (GObject *object)
   wl_list_remove (&self->output_manager_test.link);
   wl_list_remove (&self->output_power_manager_set_mode.link);
 
-  /* Disconnect XWayland listener before shutting it down */
 #ifdef PHOC_XWAYLAND
+  /* Disconnect XWayland listener before shutting it down */
   if (self->config->xwayland) {
     wl_list_remove (&self->xwayland_surface.link);
     wl_list_remove (&self->xwayland_ready.link);
     wl_list_remove (&self->xwayland_remove_startup_id.link);
   }
-#endif
 
-#ifdef PHOC_XWAYLAND
   // We need to shutdown Xwayland before disconnecting all clients, otherwise
   // wlroots will restart it automatically.
   g_clear_pointer (&self->xwayland, wlr_xwayland_destroy);
@@ -878,4 +876,60 @@ gboolean
 phoc_desktop_get_scale_to_fit (PhocDesktop *self)
 {
     return self->scale_to_fit;
+}
+
+
+/**
+ * phoc_desktop_find_output:
+ * @self: The desktop
+ * @make: The output's make / vendor
+ * @model: The output's model / product
+ * @serial: The output's serial number
+ *
+ * Find an output by make, model and serial
+ *
+ * Returns: (transfer none) (nullable): The matching output or
+ *  %NULL if no output matches.
+ */
+PhocOutput *
+phoc_desktop_find_output (PhocDesktop *self,
+                          const char  *make,
+                          const char  *model,
+                          const char  *serial)
+{
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  wl_list_for_each (output, &self->outputs, link) {
+    if (phoc_output_is_match (output, make, model, serial))
+        return output;
+  }
+
+  return NULL;
+}
+
+
+/**
+ * phoc_desktop_get_builtin_output:
+ *
+ * Get the built-in output. This assumes there's only one
+ * and returns the first.
+ *
+ * Returns: (transfer none) (nullable): The built-in output.
+ *  %NULL if there's no built-in output.
+ */
+PhocOutput *
+phoc_desktop_get_builtin_output (PhocDesktop *self)
+{
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  wl_list_for_each (output, &self->outputs, link) {
+    if (phoc_output_is_builtin (output))
+        return output;
+  }
+
+  return NULL;
 }

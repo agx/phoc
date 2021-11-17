@@ -42,6 +42,9 @@ typedef struct _PhocInputDevicePrivate {
   struct wlr_input_device *device;
   PhocSeat                *seat;
 
+  char                    *vendor;
+  char                    *product;
+
   struct wl_listener       device_destroy;
 } PhocInputDevicePrivate;
 
@@ -119,6 +122,8 @@ phoc_input_device_dispose (GObject *object)
   PhocInputDevicePrivate *priv = phoc_input_device_get_instance_private (self);
 
   g_clear_object (&priv->seat);
+  g_clear_pointer (&priv->vendor, g_free);
+  g_clear_pointer (&priv->product, g_free);
 
   G_OBJECT_CLASS (phoc_input_device_parent_class)->dispose (object);
 }
@@ -136,6 +141,9 @@ phoc_input_device_constructed (GObject *object)
   if (priv->device) {
     priv->device_destroy.notify = handle_device_destroy;
     wl_signal_add (&priv->device->events.destroy, &priv->device_destroy);
+
+    priv->vendor = g_strdup_printf ("%.4x", priv->device->vendor);
+    priv->product = g_strdup_printf ("%.4x", priv->device->product);
   }
 }
 
@@ -242,7 +250,7 @@ phoc_input_device_get_is_touchpad (PhocInputDevice *self)
   if (!wlr_input_device_is_libinput (priv->device))
     return FALSE;
 
-  ldev = phoc_input_device_get_libinput_device_handle (PHOC_INPUT_DEVICE (self));
+  ldev = phoc_input_device_get_libinput_device_handle (self);
   if (libinput_device_config_tap_get_finger_count (ldev) == 0)
     return FALSE;
 
@@ -300,4 +308,61 @@ phoc_input_device_get_name (PhocInputDevice *self)
   priv = phoc_input_device_get_instance_private (self);
 
   return priv->device->name;
+}
+
+/**
+ * phoc_input_device_get_device_type:
+ * @self: The %PhocInputDevice
+ *
+ * Returns: The wlr type of the input device
+ */
+enum wlr_input_device_type
+phoc_input_device_get_device_type (PhocInputDevice *self)
+{
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  return priv->device->type;
+}
+
+/**
+ * phoc_input_device_get_vendor_id:
+ * @self: The %PhocInputDevice
+ *
+ * Gets the vendor id as string. This is often represented by a hex
+ * number corresponding to the usb vendor id.
+ *
+ * Returns: The vendor id
+ */
+const char *
+phoc_input_device_get_vendor_id (PhocInputDevice *self)
+{
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  return priv->vendor;
+}
+
+/**
+ * phoc_input_device_get_product_id:
+ * @self: The %PhocInputDevice
+ *
+ * Gets the product id as string. This is often represented by a hex
+ * number corresponding to the usb product id.
+ *
+ * Returns: The vendor id
+ */
+const char *
+phoc_input_device_get_product_id (PhocInputDevice *self)
+{
+  PhocInputDevicePrivate *priv;
+
+  g_assert (PHOC_IS_INPUT_DEVICE (self));
+  priv = phoc_input_device_get_instance_private (self);
+
+  return priv->product;
 }

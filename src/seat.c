@@ -31,6 +31,7 @@
 #include "pointer.h"
 #include "seat.h"
 #include "server.h"
+#include "tablet.h"
 #include "text_input.h"
 #include "touch.h"
 #include "xcursor.h"
@@ -312,6 +313,7 @@ handle_tablet_tool_position (PhocCursor *cursor,
                              double x, double y, double dx, double dy)
 {
   PhocServer *server = phoc_server_get_default ();
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
   if (!change_x && !change_y) {
     return;
@@ -320,10 +322,10 @@ handle_tablet_tool_position (PhocCursor *cursor,
   switch (tool->type) {
   case WLR_TABLET_TOOL_TYPE_MOUSE:
     // They are 0 either way when they weren't modified
-    wlr_cursor_move (cursor->cursor, tablet->device, dx, dy);
+    wlr_cursor_move (cursor->cursor, device, dx, dy);
     break;
   default:
-    wlr_cursor_warp_absolute (cursor->cursor, tablet->device,
+    wlr_cursor_warp_absolute (cursor->cursor, device,
                               change_x ? x : NAN, change_y ? y : NAN);
   }
 
@@ -548,36 +550,72 @@ handle_pointer_focus_change (struct wl_listener *listener,
   phoc_cursor_handle_focus_change (cursor, event);
 }
 
-static void
-seat_reset_device_mappings (PhocSeat                *seat,
-                            struct wlr_input_device *device)
+
+static PhocOutput *
+get_output_from_settings (PhocSeat *self, PhocInputDevice *device)
 {
-  struct wlr_cursor *cursor = seat->cursor->cursor;
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+  GSettings *settings;
+  g_auto (GStrv) edid = NULL;
 
-  wlr_cursor_map_input_to_output (cursor, device, NULL);
-}
+  settings = g_hash_table_lookup (self->input_mapping_settings, device);
+  g_assert (G_IS_SETTINGS (settings));
 
-static void
-seat_set_device_output_mappings (PhocSeat *seat,
-                                 struct wlr_input_device *device, PhocOutput *output)
-{
-  struct wlr_cursor *cursor = seat->cursor->cursor;
+  edid = g_settings_get_strv (settings, "output");
 
-  switch (device->type) {
-  /* only map devices with absolute posistions */
-  case WLR_INPUT_DEVICE_TOUCH:
-  case WLR_INPUT_DEVICE_TABLET_TOOL:
-  case WLR_INPUT_DEVICE_TABLET_PAD:
-    break;
-  default:
-    return;
+  if (g_strv_length (edid) != 3) {
+    g_warning ("EDID configuration for '%s' does not have 3 values",
+               phoc_input_device_get_name (device));
+    return NULL;
   }
 
-  if (!phoc_output_is_builtin (output))
+  if (!*edid[0] && !*edid[1] && !*edid[2])
+    return NULL;
+
+  g_debug ("Looking up output %s/%s/%s", edid[0], edid[1], edid[2]);
+  return phoc_desktop_find_output (desktop, edid[0], edid[1], edid[2]);
+}
+
+
+static void
+seat_set_device_output_mappings (PhocSeat *self, PhocInputDevice *device)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+  struct wlr_cursor *cursor = self->cursor->cursor;
+  PhocOutput *output;
+  const char *type = "";
+
+  switch (phoc_input_device_get_device_type (device)) {
+  /* only map devices with absolute positions */
+  case WLR_INPUT_DEVICE_TOUCH:
+    type = "touch";
+    break;
+  case WLR_INPUT_DEVICE_TABLET_TOOL:
+    type = "tablet";
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  output = get_output_from_settings (self, device);
+
+  if (!output)
+    output = phoc_desktop_get_builtin_output (desktop);
+
+  if (!output)
     return;
 
-  g_debug ("Mapping %s to %s", device->name, output->wlr_output->name);
-  wlr_cursor_map_input_to_output (cursor, device, output->wlr_output);
+  g_debug ("Mapping %s device %s to %s", type, phoc_input_device_get_name (device),
+           output->wlr_output->name);
+  wlr_cursor_map_input_to_output (cursor,
+                                  phoc_input_device_get_device (device),
+                                  output->wlr_output);
+  g_hash_table_insert (desktop->input_output_map,
+                       g_strdup (phoc_input_device_get_name (device)),
+                       output);
+  return;
 }
 
 
@@ -586,54 +624,31 @@ reset_device_mappings (gpointer data, gpointer user_data)
 {
   PhocInputDevice *device = PHOC_INPUT_DEVICE (data);
   PhocSeat *seat = PHOC_SEAT (user_data);
+  struct wlr_cursor *cursor = seat->cursor->cursor;
 
-  seat_reset_device_mappings (seat, phoc_input_device_get_device (device));
+  wlr_cursor_map_input_to_output (cursor, phoc_input_device_get_device (device), NULL);
 }
 
 
 void
 phoc_seat_configure_cursor (PhocSeat *seat)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
   struct wlr_cursor *cursor = seat->cursor->cursor;
-
-  PhocTablet *tablet;
-  PhocOutput *output;
 
   // reset mappings
   wlr_cursor_map_to_output (cursor, NULL);
 
-  g_slist_foreach (seat->pointers, reset_device_mappings, seat);
   g_slist_foreach (seat->touch, reset_device_mappings, seat);
-  wl_list_for_each (tablet, &seat->tablets, link) {
-    seat_reset_device_mappings (seat, tablet->device);
-  }
+  g_slist_foreach (seat->tablets, reset_device_mappings, seat);
 
   // configure device to output mappings
-  wl_list_for_each (output, &desktop->outputs, link) {
-    for (GSList *elem = seat->pointers; elem; elem = elem->next) {
-      PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
-      seat_set_device_output_mappings (seat,
-                                       phoc_input_device_get_device (input_device),
-                                       output);
-    }
-    wl_list_for_each (tablet, &seat->tablets, link) {
-      seat_set_device_output_mappings (seat, tablet->device,
-                                       output);
-    }
-    for (GSList *elem = seat->touch; elem; elem = elem->next) {
-      PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
-      seat_set_device_output_mappings (seat,
-                                       phoc_input_device_get_device (input_device),
-                                       output);
-      g_debug ("Added mapping for touch device '%s' to output '%s'",
-               phoc_input_device_get_name (input_device),
-               output->wlr_output->name);
-      g_hash_table_insert (desktop->input_output_map,
-                           g_strdup (phoc_input_device_get_name (input_device)),
-                           output);
-    }
+  for (GSList *elem = seat->tablets; elem; elem = elem->next) {
+    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
+    seat_set_device_output_mappings (seat, input_device);
+  }
+  for (GSList *elem = seat->touch; elem; elem = elem->next) {
+    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
+    seat_set_device_output_mappings (seat, input_device);
   }
 }
 
@@ -928,7 +943,7 @@ seat_update_capabilities (PhocSeat *seat)
   if (seat->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
-  if (seat->pointers != NULL || !wl_list_empty (&seat->tablets)) {
+  if (seat->pointers != NULL || seat->tablets != NULL) {
     caps |= WL_SEAT_CAPABILITY_POINTER;
   }
   if (seat->touch != NULL) {
@@ -938,6 +953,51 @@ seat_update_capabilities (PhocSeat *seat)
 
   phoc_seat_maybe_set_cursor (seat, seat->cursor->default_xcursor);
 }
+
+
+static void
+on_settings_output_changed (PhocSeat *seat)
+{
+  g_assert (PHOC_IS_SEAT (seat));
+
+  g_debug ("Input output mappings changed, reloading settings");
+  phoc_seat_configure_cursor (seat);
+}
+
+
+static void
+phoc_seat_add_input_mapping_settings (PhocSeat *self, PhocInputDevice *device)
+{
+  const char *schema, *group, *vendor, *product;
+  g_autofree char *path = NULL;
+  g_autoptr (GSettings) settings = NULL;
+
+  switch (phoc_input_device_get_device_type (device)) {
+  case WLR_INPUT_DEVICE_TOUCH:
+    schema = "org.gnome.desktop.peripherals.touchscreen";
+    group = "touchscreens";
+    break;
+  case WLR_INPUT_DEVICE_TABLET_TOOL:
+    schema = "org.gnome.desktop.peripherals.tablet";
+    group = "tablets";
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  vendor = phoc_input_device_get_vendor_id (device);
+  product = phoc_input_device_get_product_id (device);
+  path = g_strdup_printf ("/org/gnome/desktop/peripherals/%s/%s:%s/",
+                          group, vendor, product);
+
+  g_debug ("Tracking config path %s for %s", path, phoc_input_device_get_name (device));
+  settings = g_settings_new_with_path (schema, path);
+  g_signal_connect_swapped (settings, "changed::output",
+                            G_CALLBACK (on_settings_output_changed), self);
+  g_hash_table_insert (self->input_mapping_settings, device, g_steal_pointer (&settings));
+  on_settings_output_changed (self);
+}
+
 
 static void
 on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
@@ -985,7 +1045,7 @@ seat_add_keyboard (PhocSeat                *seat,
 }
 
 static void
-handle_pointer_destroy (PhocTouch *pointer)
+on_pointer_destroy (PhocTouch *pointer)
 {
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (pointer));
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (pointer));
@@ -1007,11 +1067,10 @@ seat_add_pointer (PhocSeat                *seat,
 
   seat->pointers = g_slist_prepend (seat->pointers, pointer);
   g_signal_connect (pointer, "device-destroy",
-                    G_CALLBACK (handle_pointer_destroy),
+                    G_CALLBACK (on_pointer_destroy),
                     NULL);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
-  phoc_seat_configure_cursor (seat);
 }
 
 static void
@@ -1050,7 +1109,7 @@ seat_add_switch (PhocSeat                *seat,
 }
 
 static void
-handle_touch_destroy (PhocTouch *touch)
+on_touch_destroy (PhocTouch *touch)
 {
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (touch));
   PhocServer *server = phoc_server_get_default ();
@@ -1060,6 +1119,8 @@ handle_touch_destroy (PhocTouch *touch)
   g_assert (PHOC_IS_TOUCH (touch));
   g_debug ("Removing touch device: %s", device->name);
   g_hash_table_remove (desktop->input_output_map, device->name);
+  g_hash_table_remove (seat->input_mapping_settings, touch);
+
   seat->touch = g_slist_remove (seat->touch, touch);
   wlr_cursor_detach_input_device (seat->cursor->cursor, device);
   g_object_unref (touch);
@@ -1075,11 +1136,11 @@ seat_add_touch (PhocSeat                *seat,
 
   seat->touch = g_slist_prepend (seat->touch, touch);
   g_signal_connect (touch, "device-destroy",
-                    G_CALLBACK (handle_touch_destroy),
+                    G_CALLBACK (on_touch_destroy),
                     NULL);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
-  phoc_seat_configure_cursor (seat);
+  phoc_seat_add_input_mapping_settings (seat, PHOC_INPUT_DEVICE (touch));
 }
 
 static void
@@ -1119,14 +1180,16 @@ static void
 attach_tablet_pad (PhocTabletPad *pad,
                    PhocTablet     *tool)
 {
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tool));
+
   g_debug ("Attaching tablet pad \"%s\" to tablet tool \"%s\"",
-           pad->device->name, tool->device->name);
+           pad->device->name, device->name);
 
   pad->tablet = tool;
 
   wl_list_remove (&pad->tablet_destroy.link);
   pad->tablet_destroy.notify = handle_pad_tool_destroy;
-  wl_signal_add (&tool->device->events.destroy, &pad->tablet_destroy);
+  wl_signal_add (&device->events.destroy, &pad->tablet_destroy);
 }
 
 static void
@@ -1231,34 +1294,35 @@ seat_add_tablet_pad (PhocSeat                *seat,
 
   struct libinput_device_group *group =
     libinput_device_get_device_group (wlr_libinput_get_device_handle (device));
-  PhocTablet *tool;
 
-  wl_list_for_each (tool, &seat->tablets, link) {
-    if (!wlr_input_device_is_libinput (tool->device)) {
+  for (GSList *elem = seat->tablets; elem; elem = elem->next) {
+    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
+    //struct wlr_input_device *tool_device = phoc_input_device_get_device (input_deviceool);
+
+    if (!phoc_input_device_get_is_libinput (input_device))
       continue;
-    }
 
-    struct libinput_device *li_dev =
-      wlr_libinput_get_device_handle (tool->device);
+    struct libinput_device *li_dev = phoc_input_device_get_libinput_device_handle (input_device);
     if (libinput_device_get_device_group (li_dev) == group) {
-      attach_tablet_pad (tablet_pad, tool);
+      attach_tablet_pad (tablet_pad, PHOC_TABLET (input_device));
       break;
     }
   }
 }
 
 static void
-handle_tablet_destroy (struct wl_listener *listener,
-                       void               *data)
+on_tablet_destroy (PhocSeat *seat, PhocTablet *tablet)
 {
-  PhocTablet *tablet =
-    wl_container_of (listener, tablet, device_destroy);
-  PhocSeat *seat = tablet->seat;
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+  struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
-  wlr_cursor_detach_input_device (seat->cursor->cursor, tablet->device);
-  wl_list_remove (&tablet->device_destroy.link);
-  wl_list_remove (&tablet->link);
-  free (tablet);
+  wlr_cursor_detach_input_device (seat->cursor->cursor, device);
+  g_hash_table_remove (seat->input_mapping_settings, tablet);
+  g_hash_table_remove (desktop->input_output_map, device->name);
+
+  seat->tablets = g_slist_remove (seat->tablets, tablet);
+  g_object_unref (tablet);
 
   seat_update_capabilities (seat);
 }
@@ -1272,24 +1336,19 @@ seat_add_tablet_tool (PhocSeat                *seat,
   if (!wlr_input_device_is_libinput (device))
     return;
 
-  PhocTablet *tablet = calloc (1, sizeof(PhocTablet));
-
+  PhocTablet *tablet = phoc_tablet_new (device, seat);
   if (!tablet) {
     wlr_log (WLR_ERROR, "could not allocate tablet for seat");
     return;
   }
 
-  device->data = tablet;
-  tablet->device = device;
-  tablet->seat = seat;
-  wl_list_insert (&seat->tablets, &tablet->link);
-
-  tablet->device_destroy.notify = handle_tablet_destroy;
-  wl_signal_add (&tablet->device->events.destroy,
-                 &tablet->device_destroy);
+  seat->tablets = g_slist_prepend (seat->tablets, tablet);
+  g_signal_connect_swapped (tablet, "device-destroy",
+                            G_CALLBACK (on_tablet_destroy),
+                            seat);
 
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
-  phoc_seat_configure_cursor (seat);
+  phoc_seat_add_input_mapping_settings (seat, PHOC_INPUT_DEVICE (tablet));
 
   PhocDesktop *desktop = server->desktop;
 
@@ -1935,13 +1994,6 @@ phoc_seat_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  wl_list_init (&self->tablets);
-  wl_list_init (&self->tablet_pads);
-  wl_list_init (&self->switches);
-  wl_list_init (&self->views);
-
-  self->touch_id = -1;
-
   self->seat = wlr_seat_create (server->wl_display, self->name);
   g_assert (self->seat);
   self->seat->data = self;
@@ -1986,6 +2038,7 @@ phoc_seat_finalize (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT (object);
 
+  g_clear_pointer (&self->input_mapping_settings, g_hash_table_destroy);
   phoc_seat_handle_destroy (&self->destroy, self->seat);
   wlr_seat_destroy (self->seat);
   g_clear_pointer (&self->name, g_free);
@@ -2029,6 +2082,16 @@ phoc_seat_class_init (PhocSeatClass *klass)
 static void
 phoc_seat_init (PhocSeat *self)
 {
+  wl_list_init (&self->tablet_pads);
+  wl_list_init (&self->switches);
+  wl_list_init (&self->views);
+
+  self->touch_id = -1;
+
+  self->input_mapping_settings = g_hash_table_new_full (g_direct_hash,
+                                                        g_direct_equal,
+                                                        NULL,
+                                                        g_object_unref);
 }
 
 

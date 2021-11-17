@@ -103,5 +103,9 @@ void        phoc_output_scale_box (PhocOutput *self, struct wlr_box *box, float 
 void        phoc_output_get_decoration_box (PhocOutput *self, struct roots_view *view,
                                             struct wlr_box *box);
 gboolean    phoc_output_is_builtin (PhocOutput *output);
+gboolean    phoc_output_is_match (PhocOutput *self,
+                                  const char *make,
+                                  const char *model,
+                                  const char *serial);
 
 G_END_DECLS

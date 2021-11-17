@@ -254,8 +254,7 @@ phoc_output_set_mode (struct wlr_output *output, struct roots_output_config *oc)
     }
   }
   if (!best) {
-    wlr_log (WLR_ERROR, "Configured mode for %s not available",
-             output->name);
+    g_warning ("Configured mode for %s not available", output->name);
   } else {
     g_debug ("Assigning configured mode to %s",
              output->name);
@@ -270,16 +269,18 @@ phoc_output_constructed (GObject *object)
   PhocServer *server = phoc_server_get_default ();
   PhocInput *input = server->input;
 
-  g_debug ("Initializing PhocOutput");
   assert (server->desktop);
 
   struct roots_config *config = self->desktop->config;
 
-  g_debug ("Output '%s' added", self->wlr_output->name);
-  g_debug ("'%s %s %s' %" PRId32 "mm x %" PRId32 "mm",
-           self->wlr_output->make, self->wlr_output->model,
-           self->wlr_output->serial, self->wlr_output->phys_width,
-           self->wlr_output->phys_height);
+  g_message ("Output '%s' added ('%s'/'%s'/'%s'), "
+             "%" PRId32 "mm x %" PRId32 "mm",
+             self->wlr_output->name,
+             self->wlr_output->make,
+             self->wlr_output->model,
+             self->wlr_output->serial,
+             self->wlr_output->phys_width,
+             self->wlr_output->phys_height);
 
   clock_gettime (CLOCK_MONOTONIC, &self->last_frame);
   self->wlr_output->data = self;
@@ -323,7 +324,7 @@ phoc_output_constructed (GObject *object)
           wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
         }
       } else if (!wl_list_empty (&output_config->modes)) {
-        wlr_log (WLR_ERROR, "Can only add modes for DRM backend");
+        g_warning ("Can only add modes for DRM backend");
       }
 
       if (output_config->mode.width) {
@@ -982,4 +983,33 @@ phoc_output_is_builtin (PhocOutput *output)
     return TRUE;
 
   return FALSE;
+}
+
+/**
+ * phoc_output_is_match:
+ * @self: The output
+ * @make: The make / vendor name
+ * @model: The model / product name
+ * @serial: The serial number
+ *
+ * Checks if an output matches the given vendor/product/serial information.
+ * This is usually used to match on an outputs EDID information.
+ *
+ * Returns: %TRUE if the output matches the given information, otherwise %FALSE.
+ */
+gboolean
+phoc_output_is_match (PhocOutput *self,
+                      const char *make,
+                      const char *model,
+                      const char *serial)
+{
+  gboolean match;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  match = (g_strcmp0 (self->wlr_output->make, make) == 0 &&
+           g_strcmp0 (self->wlr_output->model, model) == 0 &&
+           g_strcmp0 (self->wlr_output->serial, serial) == 0);
+
+  return match;
 }
