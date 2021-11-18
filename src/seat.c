@@ -523,6 +523,11 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
   if (event->state == WLR_TABLET_TOOL_PROXIMITY_OUT) {
     PhocTabletTool *phoc_tool = tool->data;
     wlr_tablet_v2_tablet_tool_notify_proximity_out (phoc_tool->tablet_v2_tool);
+
+    /* Clear cursor image if there's no pointing device. */
+    if ((cursor->seat->seat->capabilities & WL_SEAT_CAPABILITY_POINTER) == 0)
+      phoc_seat_maybe_set_cursor (cursor->seat, cursor->default_xcursor);
+
     return;
   }
 
@@ -943,7 +948,7 @@ seat_update_capabilities (PhocSeat *seat)
   if (seat->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
-  if (seat->pointers != NULL || seat->tablets != NULL) {
+  if (seat->pointers != NULL) {
     caps |= WL_SEAT_CAPABILITY_POINTER;
   }
   if (seat->touch != NULL) {
