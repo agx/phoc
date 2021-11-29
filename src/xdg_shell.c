@@ -95,14 +95,18 @@ static void popup_unconstrain(struct roots_xdg_popup *popup) {
 
 	struct wlr_box *output_box =
 		wlr_output_layout_get_box(view->desktop->layout, output);
+	PhocOutput *phoc_output = output->data;
+	struct wlr_box usable_area = phoc_output->usable_area;
+	usable_area.x += output_box->x;
+	usable_area.y += output_box->y;
 
 	// the output box expressed in the coordinate system of the toplevel parent
 	// of the popup
 	struct wlr_box output_toplevel_sx_box = {
-		.x = output_box->x - view->box.x,
-		.y = output_box->y - view->box.y,
-		.width = output_box->width,
-		.height = output_box->height,
+		.x = usable_area.x - view->box.x,
+		.y = usable_area.y - view->box.y,
+		.width = usable_area.width,
+		.height = usable_area.height,
 	};
 
 	wlr_xdg_popup_unconstrain_from_box(
