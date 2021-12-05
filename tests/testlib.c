@@ -705,7 +705,7 @@ phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filena
   if (buffer->height != cairo_image_surface_get_height (surface) ||
       buffer->width != cairo_image_surface_get_width (surface) ||
       buffer->stride != cairo_image_surface_get_stride (surface)) {
-    g_debug ("Metadata mismatch");
+    g_test_message ("Metadata mismatch for %s", filename);
     return FALSE;
   }
 
@@ -715,7 +715,7 @@ phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filena
 
   for (int i = 0; i < buffer->height * buffer->stride / 4; i++) {
     if ((l[i] & mask) != (r[i] & mask)) {
-      g_debug ("Mismatch: %d: 0x%x 0x%x", i, l[i], r[i]);
+      g_test_message ("Mismatch: %d: 0x%x 0x%x for %s", i, l[i], r[i], filename);
       return FALSE;
     }
   }
