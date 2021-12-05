@@ -666,6 +666,7 @@ phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filena
   cairo_format_t format;
   guint32 *l, *r;
   guint32 mask = 0xFFFFFFFF;
+  int ret;
 
   g_assert_true (buffer->format == WL_SHM_FORMAT_XRGB8888
 		 || buffer->format == WL_SHM_FORMAT_ARGB8888);
@@ -713,13 +714,14 @@ phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filena
   r = (guint32*)cairo_image_surface_get_data (surface);
   g_assert_nonnull (r);
 
+  ret = TRUE;
   for (int i = 0; i < buffer->height * buffer->stride / 4; i++) {
     if ((l[i] & mask) != (r[i] & mask)) {
       g_test_message ("Mismatch: %d: 0x%x 0x%x for %s", i, l[i], r[i], filename);
-      return FALSE;
+      ret = FALSE;
     }
   }
-  return TRUE;
+  return ret;
 }
 
 void
