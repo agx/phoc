@@ -218,7 +218,7 @@ phoc_output_handle_mode (struct wl_listener *listener, void *data)
 {
   PhocOutput *self = wl_container_of (listener, self, mode);
 
-  arrange_layers (self);
+  phoc_layer_shell_arrange (self);
   update_output_manager_config (self->desktop);
 }
 
@@ -227,7 +227,7 @@ phoc_output_handle_transform (struct wl_listener *listener, void *data)
 {
   PhocOutput *self = wl_container_of (listener, self, transform);
 
-  arrange_layers (self);
+  phoc_layer_shell_arrange (self);
 }
 
 static void
@@ -357,7 +357,8 @@ phoc_output_constructed (GObject *object)
     phoc_seat_configure_xcursor (seat);
   }
 
-  arrange_layers (self);
+  phoc_layer_shell_arrange (self);
+  phoc_layer_shell_update_focus ();
   phoc_output_damage_whole (self);
 
   update_output_manager_config (self->desktop);

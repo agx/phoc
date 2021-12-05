@@ -50,6 +50,7 @@ struct roots_layer_subsurface {
 	struct wl_list subsurfaces; // roots_layer_subsurface::link
 };
 
-void arrange_layers(PhocOutput *output);
+void phoc_layer_shell_arrange (PhocOutput *output);
+void phoc_layer_shell_update_focus (void);
 
 G_END_DECLS
