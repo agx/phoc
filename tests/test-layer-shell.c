@@ -109,20 +109,20 @@ phoc_test_layer_surface_free (PhocTestLayerSurface *ls)
 static gboolean
 test_client_layer_shell_anchor (PhocTestClientGlobals *globals, gpointer data)
 {
-  PhocTestLayerSurface *ls_green, *ls_brown;
+  PhocTestLayerSurface *ls_green, *ls_red;
 
   ls_green = phoc_test_layer_surface_new (globals, WIDTH, HEIGHT, 0xFF00FF00,
 					  ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP, 0);
   g_assert_nonnull (ls_green);
   phoc_assert_screenshot (globals, "test-layer-shell-anchor-1.png");
 
-  ls_brown = phoc_test_layer_surface_new (globals, WIDTH * 2, HEIGHT * 2, 0xFF112233,
-					  ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM, 0);
-  g_assert_nonnull (ls_brown);
+  ls_red = phoc_test_layer_surface_new (globals, WIDTH * 2, HEIGHT * 2, 0xFFFF0000,
+                                        ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM, 0);
+  g_assert_nonnull (ls_red);
   phoc_assert_screenshot (globals, "test-layer-shell-anchor-2.png");
 
   phoc_test_layer_surface_free (ls_green);
-  phoc_test_layer_surface_free (ls_brown);
+  phoc_test_layer_surface_free (ls_red);
 
   phoc_assert_screenshot (globals, "empty.png");
   return TRUE;
@@ -140,7 +140,7 @@ test_layer_shell_anchor (void)
 static gboolean
 test_client_layer_shell_exclusive_zone (PhocTestClientGlobals *globals, gpointer data)
 {
-  PhocTestLayerSurface *ls_green, *ls_brown;
+  PhocTestLayerSurface *ls_green, *ls_red;
 
   ls_green = phoc_test_layer_surface_new (globals, 0, HEIGHT, 0xFF00FF00,
 					  ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
@@ -151,13 +151,13 @@ test_client_layer_shell_exclusive_zone (PhocTestClientGlobals *globals, gpointer
   phoc_assert_screenshot (globals, "test-layer-shell-exclusive-zone-1.png");
   wl_surface_commit (ls_green->wl_surface);
 
-  ls_brown = phoc_test_layer_surface_new (globals, WIDTH * 2, HEIGHT * 2, 0xFF112233,
-					  ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP, 0);
-  g_assert_nonnull (ls_brown);
+  ls_red = phoc_test_layer_surface_new (globals, WIDTH * 2, HEIGHT * 2, 0xFFFF0000,
+                                        ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP, 0);
+  g_assert_nonnull (ls_red);
   phoc_assert_screenshot (globals, "test-layer-shell-exclusive-zone-2.png");
 
   phoc_test_layer_surface_free (ls_green);
-  phoc_test_layer_surface_free (ls_brown);
+  phoc_test_layer_surface_free (ls_red);
 
   phoc_assert_screenshot (globals, "empty.png");
   return TRUE;
