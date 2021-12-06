@@ -233,6 +233,8 @@ phoc_input_get_last_active_seat (PhocInput *self)
 {
   PhocSeat *seat = NULL;
 
+  g_assert (PHOC_IS_INPUT (self));
+
   for (GSList *elem = phoc_input_get_seats (self); elem; elem = elem->next) {
     PhocSeat *_seat = PHOC_SEAT (elem->data);
 
