@@ -252,6 +252,13 @@ phoc_layer_shell_arrange (PhocOutput *output)
 {
   struct wlr_box usable_area = { 0 };
   PhocServer *server = phoc_server_get_default ();
+  GSList *seats = phoc_input_get_seats (server->input);
+  enum zwlr_layer_shell_v1_layer layers[] = {
+    ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+    ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+    ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
+    ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND
+  };
 
   wlr_output_effective_resolution (output->wlr_output, &usable_area.width, &usable_area.height);
 
@@ -259,7 +266,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
   if (osk_place.surface) {
     bool osk_force_overlay = false;
 
-    for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    for (GSList *elem = seats; elem; elem = elem->next) {
       PhocSeat *seat = PHOC_SEAT (elem->data);
 
       g_assert (PHOC_IS_SEAT (seat));
@@ -272,10 +279,8 @@ phoc_layer_shell_arrange (PhocOutput *output)
   }
 
   // Arrange exclusive surfaces from top->bottom
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &usable_area, true);
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &usable_area, true);
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &usable_area, true);
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &usable_area, true);
+  for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
+    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, true);
   output->usable_area = usable_area;
 
   struct roots_view *view;
@@ -290,17 +295,15 @@ phoc_layer_shell_arrange (PhocOutput *output)
   }
 
   // Arrange non-exlusive surfaces from top->bottom
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &usable_area, false);
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &usable_area, false);
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &usable_area, false);
-  arrange_layer (output->wlr_output, phoc_input_get_seats (server->input), &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &usable_area, false);
+  for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
+    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, false);
 }
 
 void
 phoc_layer_shell_update_focus (void)
 {
   PhocServer *server = phoc_server_get_default ();
-  uint32_t layers_above_shell[] = {
+  enum zwlr_layer_shell_v1_layer layers_above_shell[] = {
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
   };
