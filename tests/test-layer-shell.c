@@ -156,8 +156,8 @@ test_client_layer_shell_exclusive_zone (PhocTestClientGlobals *globals, gpointer
   g_assert_nonnull (ls_red);
   phoc_assert_screenshot (globals, "test-layer-shell-exclusive-zone-2.png");
 
-  phoc_test_layer_surface_free (ls_green);
   phoc_test_layer_surface_free (ls_red);
+  phoc_test_layer_surface_free (ls_green);
 
   phoc_assert_screenshot (globals, "empty.png");
   return TRUE;
