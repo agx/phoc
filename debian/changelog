@@ -1,3 +1,36 @@
+phoc (0.11.0) byzantium; urgency=medium
+
+  [ Sebastian Krzyszkowiak ]
+  * Update to wlroots 0.13 and drop support for older versions
+  * Adjust to subsurface handling changes in wlroots 0.14
+  * desktop: Switch to wlr_primary_selection_v1
+  * desktop: Remove unused wlr_list header
+  * render: Visualize touch points with rects instead of circles
+  * Depend on wlroots 0.14
+  * Thumbnail rendering with wlr_allocator
+
+  [ Guido Günther ]
+  * build: Allow wlroots >= 0.14.1
+  * ci: Use system wlroots on Debian
+  * ci: Print package list on Debian
+  * ci: Switch to wlroots 0.14.1
+  * input: Add guard to public function
+  * testlib: Use g_test_message for buffer match messages
+  * testlib: Print all mismatches
+  * tests: Update empty.png
+  * tests: Update test-xdg-shell-maximized-1.png
+  * tests: Update test-xdg-shell-normal-1.png
+  * tests: Update test-phosh-private-thumbnail-simple-1.png
+  * tests: Update layer-shell screenshots
+  * test-layer-shell: Reverse layer surface distruction
+  * tests: Add resolution for headless backend
+  * tests: Hide thumbnail test behind PHOC_TEST_HAVE_DRM
+  * gitlab-ci: No need for xvfb when collecting coverage
+  * gitlab-ci: Run tests through meson
+  * gitlab-ci: Allow PureOS job to fail
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Wed, 15 Dec 2021 21:04:53 +0100
+
 phoc (0.10.0) byzantium; urgency=medium
 
   [ Guido Günther ]
