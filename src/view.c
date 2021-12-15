@@ -857,8 +857,10 @@ void view_map(struct roots_view *view, struct wlr_surface *surface) {
 	view->wlr_surface = surface;
 
 	struct wlr_subsurface *subsurface;
-	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces,
-			parent_link) {
+	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link) {
+		subsurface_create(view, subsurface);
+	}
+	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link) {
 		subsurface_create(view, subsurface);
 	}
 

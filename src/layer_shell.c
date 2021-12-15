@@ -489,7 +489,13 @@ static void popup_handle_map(struct wl_listener *listener, void *data) {
 	}
 
 	struct wlr_subsurface *child;
-	wl_list_for_each(child, &popup->wlr_popup->base->surface->subsurfaces, parent_link) {
+	wl_list_for_each(child, &popup->wlr_popup->base->surface->subsurfaces_below, parent_link) {
+		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
+		new_subsurface->parent_type = LAYER_PARENT_POPUP;
+		new_subsurface->parent_popup = popup;
+		wl_list_insert(&popup->subsurfaces, &new_subsurface->link);
+	}
+	wl_list_for_each(child, &popup->wlr_popup->base->surface->subsurfaces_above, parent_link) {
 		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
 		new_subsurface->parent_type = LAYER_PARENT_POPUP;
 		new_subsurface->parent_popup = popup;
@@ -610,7 +616,13 @@ static void subsurface_handle_map(struct wl_listener *listener, void *data) {
 	struct roots_layer_subsurface *subsurface = wl_container_of(listener, subsurface, map);
 
 	struct wlr_subsurface *child;
-	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->subsurfaces, parent_link) {
+	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->subsurfaces_below, parent_link) {
+		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
+		new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
+		new_subsurface->parent_subsurface = subsurface;
+		wl_list_insert(&subsurface->subsurfaces, &new_subsurface->link);
+	}
+	wl_list_for_each(child, &subsurface->wlr_subsurface->surface->subsurfaces_above, parent_link) {
 		struct roots_layer_subsurface *new_subsurface = layer_subsurface_create(child);
 		new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
 		new_subsurface->parent_subsurface = subsurface;
@@ -691,7 +703,13 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	}
 
 	struct wlr_subsurface *subsurface;
-	wl_list_for_each(subsurface, &layer_surface->surface->subsurfaces, parent_link) {
+	wl_list_for_each(subsurface, &layer_surface->surface->subsurfaces_below, parent_link) {
+		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
+		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
+		roots_subsurface->parent_layer = layer;
+		wl_list_insert(&layer->subsurfaces, &roots_subsurface->link);
+	}
+	wl_list_for_each(subsurface, &layer_surface->surface->subsurfaces_above, parent_link) {
 		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
 		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
 		roots_subsurface->parent_layer = layer;

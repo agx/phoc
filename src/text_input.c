@@ -120,7 +120,7 @@ static void relay_send_im_done(struct roots_input_method_relay *relay,
 	}
 	wlr_input_method_v2_send_text_change_cause(input_method,
 		input->current.text_change_cause);
-	if (input->active_features & WLR_TEXT_INPUT_v3_FEATURE_CONTENT_TYPE) {
+	if (input->active_features & WLR_TEXT_INPUT_V3_FEATURE_CONTENT_TYPE) {
 		wlr_input_method_v2_send_content_type(input_method,
 			input->current.content_type.hint, input->current.content_type.purpose);
 	}

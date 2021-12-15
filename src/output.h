@@ -37,7 +37,7 @@ struct _PhocOutput {
 
   struct wl_listener        enable;
   struct wl_listener        mode;
-  struct wl_listener        transform;
+  struct wl_listener        commit;
   struct wl_listener        damage_frame;
   struct wl_listener        damage_destroy;
   struct wl_listener        output_destroy;

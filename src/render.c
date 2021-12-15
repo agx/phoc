@@ -18,6 +18,8 @@
 
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>
+#include <drm_fourcc.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
@@ -25,6 +27,7 @@
 #include <wlr/config.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/gles2.h>
+#include <wlr/render/egl.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_buffer.h>
@@ -35,7 +38,14 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#define TOUCH_POINT_RADIUS 30
+/* Private wlr_allocator headers */
+struct wlr_gbm_allocator *wlr_gbm_allocator_create(int drm_fd);
+struct wlr_buffer *wlr_allocator_create_buffer (struct wlr_allocator *alloc, int width, int height, const struct wlr_drm_format *format);
+void wlr_allocator_destroy (struct wlr_allocator *alloc);
+struct wlr_drm_format *wlr_drm_format_create (uint32_t format);
+/* ----------------------------- */
+
+#define TOUCH_POINT_SIZE 20
 #define TOUCH_POINT_BORDER 0.1
 
 #define COLOR_BLACK                {0.0f, 0.0f, 0.0f, 1.0f}
@@ -69,13 +79,20 @@ struct _PhocRenderer {
   GObject               parent;
 
   struct wlr_renderer  *wlr_renderer;
+  struct wlr_allocator *allocator;
 };
 G_DEFINE_TYPE (PhocRenderer, phoc_renderer, G_TYPE_OBJECT)
 
 
 struct render_data {
-	pixman_region32_t *damage;
-	float alpha;
+  pixman_region32_t *damage;
+  float alpha;
+};
+
+struct view_render_data {
+  struct roots_view *view;
+  int width;
+  int height;
 };
 
 struct touch_point_data {
@@ -364,16 +381,10 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 		return false;
 	}
 
-#if WLR_VERSION_MAJOR == 0 && WLR_VERSION_MINOR < 11
-	if (!wlr_output_attach_buffer(wlr_output, surface->buffer)) {
-		return false;
-	}
-#else
 	wlr_output_attach_buffer(wlr_output, &surface->buffer->base);
 	if (!wlr_output_test(wlr_output)) {
 		return false;
 	}
-#endif
 
 	wlr_presentation_surface_sampled_on_output(output->desktop->presentation, surface, output->wlr_output);
 
@@ -416,13 +427,13 @@ color_hsv_to_rgb (float* color)
 }
 
 static struct wlr_box
-wlr_box_from_touch_point (struct touch_point_data *touch_point, int radius)
+wlr_box_from_touch_point (struct touch_point_data *touch_point, int width, int height)
 {
   return (struct wlr_box) {
-    .x = touch_point->x - radius / 2.0,
-    .y = touch_point->y - radius / 2.0,
-    .width = radius,
-    .height = radius
+    .x = touch_point->x - width / 2.0,
+    .y = touch_point->y - height / 2.0,
+    .width = width,
+    .height = height
   };
 }
 
@@ -434,16 +445,23 @@ render_touch_point_cb (gpointer data, gpointer user_data)
   PhocOutput *output = user_data;
   struct wlr_output *wlr_output = output->wlr_output;
 
-  struct wlr_box point_box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * wlr_output->scale);
+  int size = TOUCH_POINT_SIZE * wlr_output->scale;
+  struct wlr_box point_box = wlr_box_from_touch_point (touch_point, size, size);
 
   struct wlr_renderer *renderer = wlr_backend_get_renderer (wlr_output->backend);
 
   float color[4] = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
   color_hsv_to_rgb (color);
-  wlr_render_ellipse (renderer, &point_box, color, wlr_output->transform_matrix);
+  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
 
-  point_box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale);
-  wlr_render_ellipse(renderer, &point_box, (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
+  size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
+  point_box = wlr_box_from_touch_point (touch_point, size, size);
+  wlr_render_rect (renderer, &point_box, (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
+
+  point_box = wlr_box_from_touch_point (touch_point, 8 * wlr_output->scale, 2 * wlr_output->scale);
+  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
+  point_box = wlr_box_from_touch_point (touch_point, 2 * wlr_output->scale, 8 * wlr_output->scale);
+  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
 }
 
 static void
@@ -464,7 +482,8 @@ damage_touch_point_cb (gpointer data, gpointer user_data)
   PhocOutput *output = user_data;
   struct wlr_output *wlr_output = output->wlr_output;
 
-  struct wlr_box box = wlr_box_from_touch_point (touch_point, TOUCH_POINT_RADIUS * wlr_output->scale);
+  int size = TOUCH_POINT_SIZE * wlr_output->scale;
+  struct wlr_box box = wlr_box_from_touch_point (touch_point, size, size);
   pixman_region32_t region;
   pixman_region32_init_rect(&region, box.x, box.y, box.width, box.height);
   wlr_output_damage_add(output->damage, &region);
@@ -482,7 +501,7 @@ damage_touch_points (PhocOutput *output)
 }
 
 static void
-view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *data)
+view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 {
   if (!wlr_surface_has_buffer (surface)) {
     return;
@@ -492,7 +511,8 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *data)
   PhocRenderer *self = server->renderer;
   struct wlr_texture *view_texture = wlr_surface_get_texture (surface);
 
-  struct roots_view *view = data;
+  struct view_render_data *data = _data;
+  struct roots_view *view = data->view;
   struct wlr_surface *root = view->wlr_surface;
 
   struct wlr_box box;
@@ -504,16 +524,11 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *data)
   float mat[16];
   wlr_matrix_identity (mat);
 
-  // NDC
-  wlr_matrix_translate (mat, -1, -1);
-  wlr_matrix_scale (mat, 2, 2);
-
-  wlr_matrix_scale (mat, 1 / (float)box.width, 1 / (float)box.height);
-  wlr_matrix_translate (mat, -geo.x, -geo.y);
-
+  wlr_matrix_scale (mat, data->width / (float)geo.width, data->height / (float)geo.height);
   wlr_matrix_scale (mat, 1 / (float)root->current.scale, 1 / (float)root->current.scale);
   wlr_matrix_scale (mat, view->scale, view->scale);
   wlr_matrix_scale (mat, root->current.scale / surface->current.scale, root->current.scale / surface->current.scale);
+  wlr_matrix_translate (mat, -geo.x, -geo.y);
 
   wlr_render_texture (self->wlr_renderer,
                       view_texture, mat, sx * surface->current.scale,
@@ -527,36 +542,29 @@ view_render_to_buffer (struct roots_view *view, int width, int height, int strid
   PhocServer *server = phoc_server_get_default ();
   PhocRenderer *self = server->renderer;
   struct wlr_surface *surface = view->wlr_surface;
-  struct wlr_egl *egl = wlr_gles2_renderer_get_egl (self->wlr_renderer);
-  GLuint tex, fbo;
 
-  if (!surface || !wlr_egl_make_current (egl, EGL_NO_SURFACE, NULL)) {
-    return FALSE;
-  }
+  g_return_val_if_fail (surface, false);
+  g_return_val_if_fail (self->allocator, false);
 
-  glGenTextures (1, &tex);
-  glBindTexture (GL_TEXTURE_2D, tex);
-  glTexImage2D (GL_TEXTURE_2D, 0, GL_BGRA_EXT, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, NULL);
-  glBindTexture (GL_TEXTURE_2D, 0);
+  struct wlr_drm_format *fmt = wlr_drm_format_create (DRM_FORMAT_ARGB8888);
+  struct wlr_buffer *buffer = wlr_allocator_create_buffer (self->allocator, width, height, fmt);
 
-  glGenFramebuffers (1, &fbo);
-  glBindFramebuffer (GL_FRAMEBUFFER, fbo);
-  glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+  struct view_render_data render_data ={
+    .view = view,
+    .width = width,
+    .height = height
+  };
 
-  wlr_renderer_begin (self->wlr_renderer, width, height);
+  wlr_renderer_begin_with_buffer (self->wlr_renderer, buffer);
   wlr_renderer_clear (self->wlr_renderer, (float[])COLOR_TRANSPARENT);
-  wlr_surface_for_each_surface (surface, view_render_iterator, view);
+  wlr_surface_for_each_surface (surface, view_render_iterator, &render_data);
+  wlr_renderer_read_pixels (self->wlr_renderer, DRM_FORMAT_ARGB8888, NULL, stride, width, height, 0, 0, 0, 0, data);
   wlr_renderer_end (self->wlr_renderer);
 
-  wlr_renderer_read_pixels (self->wlr_renderer, WL_SHM_FORMAT_ARGB8888, flags, stride, width, height, 0, 0, 0, 0, data);
+  wlr_buffer_drop (buffer);
+  free(fmt);
 
-  glDeleteFramebuffers (1, &fbo);
-  glDeleteTextures (1, &tex);
-  glBindFramebuffer (GL_FRAMEBUFFER, 0);
-
-  wlr_egl_unset_current (egl);
-
-  return TRUE;
+  return true;
 }
 
 static void surface_send_frame_done_iterator(PhocOutput *output,
@@ -780,8 +788,22 @@ send_frame_done:
 
 
 static void
+phoc_renderer_constructed (GObject *object)
+{
+  PhocRenderer *self = PHOC_RENDERER (object);
+  int drm_fd = fcntl (wlr_renderer_get_drm_fd (self->wlr_renderer), F_DUPFD_CLOEXEC, 0);
+  // TODO: use wlr_allocator_autocreate or retrieve a reference from wlr_renderer once possible
+  if (wlr_renderer_is_gles2 (self->wlr_renderer))
+    self->allocator = (struct wlr_allocator*) wlr_gbm_allocator_create (drm_fd);
+}
+
+
+static void
 phoc_renderer_finalize (GObject *object)
 {
+  PhocRenderer *self = PHOC_RENDERER (object);
+  if (self->allocator)
+    wlr_allocator_destroy (self->allocator);
   /* TODO: destroy wlr_renderer */
 }
 
@@ -793,6 +815,7 @@ phoc_renderer_class_init (PhocRendererClass *klass)
 
   object_class->get_property = phoc_renderer_get_property;
   object_class->set_property = phoc_renderer_set_property;
+  object_class->constructed = phoc_renderer_constructed;
   object_class->finalize = phoc_renderer_finalize;
 
   /**
