@@ -1739,7 +1739,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
       }
       PhocOutput *output;
       wl_list_for_each (output, &server->desktop->outputs, link) {
-        arrange_layers (output);
+        phoc_layer_shell_arrange (output);
       }
     }
     return;
@@ -1775,16 +1775,10 @@ void
 phoc_seat_set_exclusive_client (PhocSeat         *seat,
                                 struct wl_client *client)
 {
-  PhocServer *server = phoc_server_get_default ();
-
   if (!client) {
     seat->exclusive_client = client;
     // Triggers a refocus of the topmost surface layer if necessary
-    // TODO: Make layer surface focus per-output based on cursor position
-    PhocOutput *output;
-    wl_list_for_each (output, &server->desktop->outputs, link) {
-      arrange_layers (output);
-    }
+    phoc_layer_shell_update_focus ();
     return;
   }
   if (seat->focused_layer) {

@@ -34,7 +34,8 @@ phoc_layer_surface_finalize (GObject *object)
 
     g_assert (PHOC_IS_OUTPUT (output));
     wl_list_remove (&self->output_destroy.link);
-    arrange_layers (output);
+    phoc_layer_shell_arrange (output);
+    phoc_layer_shell_update_focus ();
   }
 
   G_OBJECT_CLASS (phoc_layer_surface_parent_class)->finalize (object);

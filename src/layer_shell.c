@@ -247,98 +247,89 @@ static void change_osk(const struct osk_origin *osk, struct wl_list layers[LAYER
 	}
 }
 
-void arrange_layers(PhocOutput *output) {
-	struct wlr_box usable_area = { 0 };
-	PhocServer *server = phoc_server_get_default ();
+void
+phoc_layer_shell_arrange (PhocOutput *output)
+{
+  struct wlr_box usable_area = { 0 };
+  PhocServer *server = phoc_server_get_default ();
+  GSList *seats = phoc_input_get_seats (server->input);
+  enum zwlr_layer_shell_v1_layer layers[] = {
+    ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+    ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+    ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
+    ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND
+  };
 
-	wlr_output_effective_resolution(output->wlr_output,
-			&usable_area.width, &usable_area.height);
+  wlr_output_effective_resolution (output->wlr_output, &usable_area.width, &usable_area.height);
 
-	struct osk_origin osk_place = find_osk(output->layers);
-	if (osk_place.surface) {
-		bool osk_force_overlay = false;
+  struct osk_origin osk_place = find_osk (output->layers);
+  if (osk_place.surface) {
+    bool osk_force_overlay = false;
 
-		for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
-			PhocSeat *seat = PHOC_SEAT (elem->data);
+    for (GSList *elem = seats; elem; elem = elem->next) {
+      PhocSeat *seat = PHOC_SEAT (elem->data);
 
-			g_assert (PHOC_IS_SEAT (seat));
-			if (seat->focused_layer && seat->focused_layer->client_pending.layer >=
-					osk_place.surface->layer_surface->client_pending.layer) {
-				osk_force_overlay = true;
-				break;
-			}
-		}
-		change_osk(&osk_place, output->layers, osk_force_overlay);
-	}
+      g_assert (PHOC_IS_SEAT (seat));
+      if (seat->focused_layer && seat->focused_layer->client_pending.layer >= osk_place.surface->layer_surface->client_pending.layer) {
+        osk_force_overlay = true;
+        break;
+      }
+    }
+    change_osk (&osk_place, output->layers, osk_force_overlay);
+  }
 
-	// Arrange exclusive surfaces from top->bottom
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
-			&usable_area, true);
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
-			&usable_area, true);
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
-			&usable_area, true);
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
-			&usable_area, true);
-	output->usable_area = usable_area;
+  // Arrange exclusive surfaces from top->bottom
+  for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
+    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, true);
+  output->usable_area = usable_area;
 
-	struct roots_view *view;
-	wl_list_for_each(view, &output->desktop->views, link) {
-		if (view_is_maximized(view)) {
-			view_arrange_maximized(view, NULL);
-		} else if (view_is_tiled(view)) {
-			view_arrange_tiled(view, NULL);
-		} else if (output->desktop->maximize) {
-			view_center(view, NULL);
-		}
-	}
+  struct roots_view *view;
+  wl_list_for_each (view, &output->desktop->views, link) {
+    if (view_is_maximized (view)) {
+      view_arrange_maximized (view, NULL);
+    } else if (view_is_tiled (view)) {
+      view_arrange_tiled (view, NULL);
+    } else if (output->desktop->maximize) {
+      view_center (view, NULL);
+    }
+  }
 
-	// Arrange non-exlusive surfaces from top->bottom
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
-			&usable_area, false);
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
-			&usable_area, false);
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
-			&usable_area, false);
-	arrange_layer(output->wlr_output, phoc_input_get_seats (server->input),
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
-			&usable_area, false);
+  // Arrange non-exlusive surfaces from top->bottom
+  for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
+    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, false);
+}
 
-	// Find topmost keyboard interactive layer, if such a layer exists
-	uint32_t layers_above_shell[] = {
-		ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
-		ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-	};
-	size_t nlayers = sizeof(layers_above_shell) / sizeof(layers_above_shell[0]);
-	PhocLayerSurface *layer, *topmost = NULL;
-	for (size_t i = 0; i < nlayers; ++i) {
-		wl_list_for_each(layer,
-				&output->layers[layers_above_shell[i]], link) {
-			if (layer->layer_surface->current.keyboard_interactive
-					&& layer->layer_surface->mapped) {
-				topmost = layer;
-				break;
-			}
-		}
-		if (topmost != NULL) {
-			break;
-		}
-	}
+void
+phoc_layer_shell_update_focus (void)
+{
+  PhocServer *server = phoc_server_get_default ();
+  enum zwlr_layer_shell_v1_layer layers_above_shell[] = {
+    ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+    ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+  };
+  PhocLayerSurface *layer, *topmost = NULL;
+  // Find topmost keyboard interactive layer, if such a layer exists
+  // TODO: Make layer surface focus per-output based on cursor position
+  PhocOutput *output;
+  wl_list_for_each (output, &server->desktop->outputs, link) {
+    for (size_t i = 0; i < G_N_ELEMENTS(layers_above_shell); ++i) {
+      wl_list_for_each(layer, &output->layers[layers_above_shell[i]], link) {
+        if (layer->layer_surface->current.keyboard_interactive && layer->layer_surface->mapped) {
+          topmost = layer;
+          break;
+        }
+      }
+      if (topmost != NULL)
+        break;
+    }
+  }
 
-	for (GSList *elem = phoc_input_get_seats (server->input);  elem; elem = elem->next) {
-		PhocSeat *seat = PHOC_SEAT (elem->data);
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
 
-		g_assert (PHOC_IS_SEAT (seat));
-		phoc_seat_set_focus_layer(seat,
-				topmost ? topmost->layer_surface : NULL);
-	}
+    g_assert (PHOC_IS_SEAT (seat));
+    phoc_seat_set_focus_layer(seat, topmost ? topmost->layer_surface : NULL);
+  }
 }
 
 static void handle_output_destroy(struct wl_listener *listener, void *data) {
@@ -358,10 +349,11 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	if (wlr_output != NULL) {
 		PhocOutput *output = wlr_output->data;
 		struct wlr_box old_geo = layer->geo;
-		arrange_layers(output);
+		phoc_layer_shell_arrange (output);
+		phoc_layer_shell_update_focus ();
 
 		// Cursor changes which happen as a consequence of resizing a layer
-		// surface are applied in arrange_layers. Because the resize happens
+		// surface are applied in phoc_layer_shell_arrange. Because the resize happens
 		// before the underlying surface changes, it will only receive a cursor
 		// update if the new cursor position crosses the *old* sized surface in
 		// the *new* layer surface.
@@ -804,7 +796,8 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	struct wlr_layer_surface_v1_state old_state = layer_surface->current;
 	layer_surface->current = layer_surface->client_pending;
 
-	arrange_layers(output);
+	phoc_layer_shell_arrange (output);
+	phoc_layer_shell_update_focus ();
 
 	layer_surface->current = old_state;
 }
