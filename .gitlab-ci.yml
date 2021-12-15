@@ -109,6 +109,7 @@ build-gtkdoc:
       - $PKG_ONLY == "1"
 
 package-pureos-byzantium:arm64:
+  allow_failure: true
   variables:
     L5_DOCKER_IMAGE: pureos/byzantium
   tags:
