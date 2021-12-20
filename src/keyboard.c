@@ -28,9 +28,6 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-#define KEYBOARD_DEFAULT_XKB_RULES "evdev"
-#define KEYBOARD_DEFAULT_XKB_MODEL "pc105"
-
 
 struct _PhocKeyboard {
   PhocInputDevice parent;
@@ -348,16 +345,9 @@ phoc_keyboard_handle_modifiers(PhocKeyboard *self)
 static void
 set_fallback_keymap (PhocKeyboard *self)
 {
-  struct xkb_rule_names rules = { 0 };
   struct xkb_context *context;
   PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
   struct wlr_input_device *device = phoc_input_device_get_device (input_device);
-
-  rules.rules = KEYBOARD_DEFAULT_XKB_RULES;
-  rules.model = KEYBOARD_DEFAULT_XKB_MODEL;
-  rules.layout = "us";
-  rules.variant = "";
-  rules.options = "";
 
   context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
   if (context == NULL) {
@@ -365,7 +355,7 @@ set_fallback_keymap (PhocKeyboard *self)
   }
 
   xkb_keymap_unref (self->keymap);
-  self->keymap = xkb_keymap_new_from_names (context, &rules,
+  self->keymap = xkb_keymap_new_from_names (context, NULL,
                                             XKB_KEYMAP_COMPILE_NO_FLAGS);
   xkb_context_unref (context);
 
@@ -384,8 +374,6 @@ set_xkb_keymap (PhocKeyboard *self, const gchar *layout, const gchar *variant, c
 
   g_assert (device->keyboard);
 
-  rules.rules = KEYBOARD_DEFAULT_XKB_RULES;
-  rules.model = KEYBOARD_DEFAULT_XKB_MODEL;
   rules.layout = layout;
   rules.variant = variant;
   rules.options = options;
