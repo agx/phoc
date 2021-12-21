@@ -165,14 +165,15 @@ static void scissor_output(struct wlr_output *wlr_output,
 
 static void render_texture(struct wlr_output *wlr_output,
 		pixman_region32_t *output_damage, struct wlr_texture *texture,
-		const struct wlr_box *box, const float matrix[static 9],
+		const struct wlr_fbox *src_box, const struct wlr_box *dst_box,
+		const float matrix[static 9],
 		float rotation, float alpha) {
 	struct wlr_renderer *renderer =
 		wlr_backend_get_renderer(wlr_output->backend);
 	assert(renderer);
 
 	struct wlr_box rotated;
-	wlr_box_rotated_bounds(&rotated, box, rotation);
+	wlr_box_rotated_bounds(&rotated, dst_box, rotation);
 
 	pixman_region32_t damage;
 	pixman_region32_init(&damage);
@@ -188,7 +189,12 @@ static void render_texture(struct wlr_output *wlr_output,
 	pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
 	for (int i = 0; i < nrects; ++i) {
 		scissor_output(wlr_output, &rects[i]);
-		wlr_render_texture_with_matrix(renderer, texture, matrix, alpha);
+
+		if (src_box != NULL) {
+			wlr_render_subtexture_with_matrix(renderer, texture, src_box, matrix, alpha);
+		} else {
+			wlr_render_texture_with_matrix(renderer, texture, matrix, alpha);
+		}
 	}
 
 buffer_damage_finish:
@@ -232,23 +238,26 @@ static void render_surface_iterator(PhocOutput *output,
 		return;
 	}
 
-	struct wlr_box box = *_box;
-	phoc_output_scale_box(wlr_output->data, &box, scale);
-	phoc_output_scale_box(wlr_output->data, &box, wlr_output->scale);
+	struct wlr_fbox src_box;
+	wlr_surface_get_buffer_source_box(surface, &src_box);
+
+	struct wlr_box dst_box = *_box;
+	phoc_output_scale_box(wlr_output->data, &dst_box, scale);
+	phoc_output_scale_box(wlr_output->data, &dst_box, wlr_output->scale);
 
 	float matrix[9];
 	enum wl_output_transform transform =
 		wlr_output_transform_invert(surface->current.transform);
-	wlr_matrix_project_box(matrix, &box, transform, rotation,
+	wlr_matrix_project_box(matrix, &dst_box, transform, rotation,
 		wlr_output->transform_matrix);
 
 	render_texture(wlr_output, output_damage,
-		texture, &box, matrix, rotation, alpha);
+		texture, &src_box, &dst_box, matrix, rotation, alpha);
 
 	wlr_presentation_surface_sampled_on_output(output->desktop->presentation,
 		surface, wlr_output);
 
-	collect_touch_points(output, surface, box, scale);
+	collect_touch_points(output, surface, dst_box, scale);
 }
 
 static void render_decorations(PhocOutput *output,

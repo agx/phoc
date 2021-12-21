@@ -22,6 +22,7 @@
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_tablet_v2.h>
+#include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_foreign_registry.h>
 #include <wlr/types/wlr_xdg_foreign_v1.h>
@@ -688,6 +689,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add(&self->xdg_decoration_manager->events.new_toplevel_decoration,
 		&self->xdg_toplevel_decoration);
   self->xdg_toplevel_decoration.notify = handle_xdg_toplevel_decoration;
+  wlr_viewporter_create(server->wl_display);
 
   struct wlr_xdg_foreign_registry *foreign_registry =
                 wlr_xdg_foreign_registry_create(server->wl_display);
