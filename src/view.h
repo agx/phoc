@@ -184,14 +184,7 @@ typedef struct _PhocViewChild {
   struct wl_listener new_subsurface;
 } PhocViewChild;
 
-typedef struct _PhocSubsurface {
-  PhocViewChild child;
-  struct wlr_subsurface *wlr_subsurface;
-
-  struct wl_listener destroy;
-  struct wl_listener map;
-  struct wl_listener unmap;
-} PhocSubsurface;
+typedef struct _PhocSubsurface PhocSubsurface;
 
 typedef struct roots_xdg_popup {
   PhocViewChild child;

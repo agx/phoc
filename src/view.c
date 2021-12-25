@@ -16,6 +16,16 @@
 #include "server.h"
 #include "view.h"
 
+struct _PhocSubsurface {
+  PhocViewChild child;
+  struct wlr_subsurface *wlr_subsurface;
+
+  struct wl_listener destroy;
+  struct wl_listener map;
+  struct wl_listener unmap;
+};
+
+
 void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 		enum roots_view_type type, PhocDesktop *desktop) {
 	assert(impl->destroy);
