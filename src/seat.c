@@ -1343,11 +1343,6 @@ seat_add_tablet_tool (PhocSeat                *seat,
     return;
 
   PhocTablet *tablet = phoc_tablet_new (device, seat);
-  if (!tablet) {
-    wlr_log (WLR_ERROR, "could not allocate tablet for seat");
-    return;
-  }
-
   seat->tablets = g_slist_prepend (seat->tablets, tablet);
   g_signal_connect_swapped (tablet, "device-destroy",
                             G_CALLBACK (on_tablet_destroy),
