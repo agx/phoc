@@ -745,7 +745,7 @@ static const struct phoc_view_child_interface subsurface_impl;
 
 static void subsurface_destroy(struct roots_view_child *child) {
 	assert(child->impl == &subsurface_impl);
-	struct roots_subsurface *subsurface = (struct roots_subsurface *)child;
+	PhocSubsurface *subsurface = (PhocSubsurface *)child;
 	wl_list_remove(&subsurface->destroy.link);
 	wl_list_remove(&subsurface->map.link);
 	wl_list_remove(&subsurface->unmap.link);
@@ -758,7 +758,7 @@ static const struct phoc_view_child_interface subsurface_impl = {
 
 static void subsurface_handle_destroy(struct wl_listener *listener,
 		void *data) {
-	struct roots_subsurface *subsurface =
+	PhocSubsurface *subsurface =
 		wl_container_of(listener, subsurface, destroy);
 	phoc_view_child_destroy(&subsurface->child);
 }
@@ -766,8 +766,7 @@ static void subsurface_handle_destroy(struct wl_listener *listener,
 static void subsurface_handle_map(struct wl_listener *listener,
 		void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_subsurface *subsurface =
-		wl_container_of(listener, subsurface, map);
+	PhocSubsurface *subsurface = wl_container_of(listener, subsurface, map);
 	struct roots_view *view = subsurface->child.view;
 	subsurface->child.mapped = true;
 	phoc_view_damage_whole (view);
@@ -788,8 +787,7 @@ static void subsurface_handle_map(struct wl_listener *listener,
 static void subsurface_handle_unmap(struct wl_listener *listener,
 		void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_subsurface *subsurface =
-		wl_container_of(listener, subsurface, unmap);
+	PhocSubsurface *subsurface = wl_container_of(listener, subsurface, unmap);
 	struct roots_view *view = subsurface->child.view;
 	phoc_view_damage_whole (view);
 	phoc_input_update_cursor_focus(server->input);

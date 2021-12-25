@@ -175,7 +175,7 @@ typedef struct roots_view_child {
   struct wl_listener new_subsurface;
 } PhocViewChild;
 
-typedef struct roots_subsurface {
+typedef struct _PhocSubsurface {
   PhocViewChild child;
   struct wlr_subsurface *wlr_subsurface;
 
