@@ -682,7 +682,7 @@ static void view_child_handle_commit(struct wl_listener *listener,
 	view_apply_damage(child->view);
 }
 
-static PhocSubsurface *phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
+static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
 
 static void view_child_handle_new_subsurface(struct wl_listener *listener,
 		void *data) {
@@ -765,13 +765,13 @@ static void subsurface_handle_unmap(struct wl_listener *listener,
 	phoc_input_update_cursor_focus(server->input);
 }
 
-static PhocSubsurface *
+static void
 phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)
 {
   PhocSubsurface *subsurface = calloc(1, sizeof(PhocSubsurface));
 
   if (subsurface == NULL)
-    return NULL;
+    return;
 
   subsurface->wlr_subsurface = wlr_subsurface;
   phoc_view_child_init (&subsurface->view_child, &subsurface_impl,
@@ -785,8 +785,6 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
 
   subsurface->unmap.notify = subsurface_handle_unmap;
   wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
-
-  return subsurface;
 }
 
 static void
