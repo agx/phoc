@@ -283,7 +283,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
     arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, true);
   output->usable_area = usable_area;
 
-  struct roots_view *view;
+  PhocView *view;
   wl_list_for_each (view, &output->desktop->views, link) {
     if (view_is_maximized (view)) {
       view_arrange_maximized (view, NULL);
