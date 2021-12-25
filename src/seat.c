@@ -1440,7 +1440,7 @@ phoc_seat_has_meta_pressed (PhocSeat *seat)
   return false;
 }
 
-struct roots_view *
+PhocView *
 phoc_seat_get_focus (PhocSeat *seat)
 {
   if (!seat->has_focus || wl_list_empty (&seat->views)) {
@@ -1456,7 +1456,7 @@ static void
 seat_view_destroy (PhocSeatView *seat_view)
 {
   PhocSeat *seat = seat_view->seat;
-  struct roots_view *view = seat_view->view;
+  PhocView *view = seat_view->view;
 
   if (view == phoc_seat_get_focus (seat)) {
     seat->has_focus = false;
@@ -1501,7 +1501,7 @@ seat_view_handle_destroy (struct wl_listener *listener, void *data)
 }
 
 static PhocSeatView *
-seat_add_view (PhocSeat *seat, struct roots_view *view)
+seat_add_view (PhocSeat *seat, PhocView *view)
 {
   PhocSeatView *seat_view = g_new0 (PhocSeatView, 1);
 
@@ -1519,7 +1519,7 @@ seat_add_view (PhocSeat *seat, struct roots_view *view)
 }
 
 PhocSeatView *
-phoc_seat_view_from_view (PhocSeat *seat, struct roots_view *view)
+phoc_seat_view_from_view (PhocSeat *seat, PhocView *view)
 {
   if (view == NULL) {
     return NULL;
@@ -1549,7 +1549,7 @@ phoc_seat_allow_input (PhocSeat           *seat,
 }
 
 static void
-seat_raise_view_stack (PhocSeat *seat, struct roots_view *view)
+seat_raise_view_stack (PhocSeat *seat, PhocView *view)
 {
   PhocServer *server = phoc_server_get_default ();
 
@@ -1561,7 +1561,7 @@ seat_raise_view_stack (PhocSeat *seat, struct roots_view *view)
   wl_list_insert (&server->desktop->views, &view->link);
   phoc_view_damage_whole (view);
 
-  struct roots_view *child;
+  PhocView *child;
 
   wl_list_for_each_reverse (child, &view->stack, parent_link)
   {
@@ -1570,7 +1570,7 @@ seat_raise_view_stack (PhocSeat *seat, struct roots_view *view)
 }
 
 void
-phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
+phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
 {
   if (view && !phoc_seat_allow_input (seat, view->wlr_surface->resource)) {
     return;
@@ -1579,7 +1579,7 @@ phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
   // Make sure the view will be rendered on top of others, even if it's
   // already focused in this seat
   if (view != NULL) {
-    struct roots_view *parent = view;
+    PhocView *parent = view;
     // reorder stack
     while (parent->parent) {
       wl_list_remove (&parent->parent_link);
@@ -1618,7 +1618,7 @@ phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
     }
   }
 
-  struct roots_view *prev_focus = phoc_seat_get_focus (seat);
+  PhocView *prev_focus = phoc_seat_get_focus (seat);
 
   if (view && view == prev_focus) {
     return;
@@ -1724,7 +1724,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
     return;
   }
   if (seat->has_focus) {
-    struct roots_view *prev_focus = phoc_seat_get_focus (seat);
+    PhocView *prev_focus = phoc_seat_get_focus (seat);
     wlr_seat_keyboard_clear_focus (seat->seat);
     view_activate (prev_focus, false);
   }
@@ -1761,7 +1761,7 @@ phoc_seat_set_exclusive_client (PhocSeat         *seat,
     }
   }
   if (seat->has_focus) {
-    struct roots_view *focus = phoc_seat_get_focus (seat);
+    PhocView *focus = phoc_seat_get_focus (seat);
     if (wl_resource_get_client (focus->wlr_surface->resource) != client) {
       phoc_seat_set_focus (seat, NULL);
     }
@@ -1815,7 +1815,7 @@ phoc_seat_cycle_focus (PhocSeat *seat)
 }
 
 void
-phoc_seat_begin_move (PhocSeat *seat, struct roots_view *view)
+phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
 {
   if (view->desktop->maximize)
     return;
@@ -1851,7 +1851,7 @@ phoc_seat_begin_move (PhocSeat *seat, struct roots_view *view)
 }
 
 void
-phoc_seat_begin_resize (PhocSeat *seat, struct roots_view *view,
+phoc_seat_begin_resize (PhocSeat *seat, PhocView *view,
                         uint32_t edges)
 {
   if (view->desktop->maximize || view_is_fullscreen (view))
@@ -1895,7 +1895,7 @@ void
 phoc_seat_end_compositor_grab (PhocSeat *seat)
 {
   PhocCursor *cursor = seat->cursor;
-  struct roots_view *view = phoc_seat_get_focus (seat);
+  PhocView *view = phoc_seat_get_focus (seat);
 
   if (view == NULL) {
     return;

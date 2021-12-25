@@ -77,7 +77,7 @@ typedef struct _PhocSeat {
 
 typedef struct _PhocSeatView {
   PhocSeat          *seat;
-  struct roots_view *view;
+  PhocView          *view;
 
   bool               has_button_grab;
   double             grab_sx;
@@ -152,24 +152,23 @@ void               phoc_seat_configure_xcursor (PhocSeat *seat);
 
 bool               phoc_seat_has_meta_pressed (PhocSeat *seat);
 
-struct roots_view *phoc_seat_get_focus (PhocSeat *seat);
+PhocView          *phoc_seat_get_focus (PhocSeat *seat);
 
-void               phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view);
+void               phoc_seat_set_focus (PhocSeat *seat, PhocView *view);
 
 void               phoc_seat_set_focus_layer (PhocSeat                    *seat,
                                               struct wlr_layer_surface_v1 *layer);
 
 void               phoc_seat_cycle_focus (PhocSeat *seat);
 
-void               phoc_seat_begin_move (PhocSeat *seat, struct roots_view *view);
+void               phoc_seat_begin_move (PhocSeat *seat, PhocView *view);
 
-void               phoc_seat_begin_resize (PhocSeat *seat, struct roots_view *view,
+void               phoc_seat_begin_resize (PhocSeat *seat, PhocView *view,
                                            uint32_t edges);
 
 void               phoc_seat_end_compositor_grab (PhocSeat *seat);
 
-PhocSeatView      *phoc_seat_view_from_view (PhocSeat          *seat,
-                                             struct roots_view *view);
+PhocSeatView      *phoc_seat_view_from_view (PhocSeat *seat, PhocView *view);
 
 void               phoc_drag_icon_update_position (PhocDragIcon *icon);
 
