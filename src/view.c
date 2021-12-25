@@ -692,7 +692,7 @@ static void view_child_handle_new_subsurface(struct wl_listener *listener,
 
 void
 phoc_view_child_init (struct roots_view_child *child,
-                      const struct roots_view_child_interface *impl,
+                      const struct phoc_view_child_interface *impl,
                       struct roots_view *view,
                       struct wlr_surface *wlr_surface)
 {
@@ -710,7 +710,7 @@ phoc_view_child_init (struct roots_view_child *child,
   wl_list_insert(&view->child_surfaces, &child->link);
 }
 
-static const struct roots_view_child_interface subsurface_impl;
+static const struct phoc_view_child_interface subsurface_impl;
 
 static void subsurface_destroy(struct roots_view_child *child) {
 	assert(child->impl == &subsurface_impl);
@@ -721,7 +721,7 @@ static void subsurface_destroy(struct roots_view_child *child) {
 	free(subsurface);
 }
 
-static const struct roots_view_child_interface subsurface_impl = {
+static const struct phoc_view_child_interface subsurface_impl = {
 	.destroy = subsurface_destroy,
 };
 

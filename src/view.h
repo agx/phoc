@@ -159,14 +159,14 @@ typedef struct roots_xwayland_surface {
 
 typedef struct roots_view_child PhocViewChild;
 
-struct roots_view_child_interface {
-  void (*destroy)(struct roots_view_child *child);
+struct phoc_view_child_interface {
+  void (*destroy)(PhocViewChild *child);
 };
 
 typedef struct roots_view_child {
-  const struct roots_view_child_interface *impl;
+  const struct phoc_view_child_interface *impl;
 
-  struct roots_view *view;
+  PhocView *view;
   struct wlr_surface *wlr_surface;
   struct wl_list link;
 
@@ -175,7 +175,7 @@ typedef struct roots_view_child {
 } PhocViewChild;
 
 typedef struct roots_subsurface {
-  struct roots_view_child view_child;
+  PhocViewChild view_child;
   struct wlr_subsurface *wlr_subsurface;
 
   struct wl_listener destroy;
@@ -184,7 +184,7 @@ typedef struct roots_subsurface {
 } PhocSubsurface;
 
 typedef struct roots_xdg_popup {
-  struct roots_view_child view_child;
+  PhocViewChild view_child;
   struct wlr_xdg_popup *wlr_popup;
 
   struct wl_listener destroy;
@@ -263,13 +263,12 @@ enum roots_deco_part {
 
 enum roots_deco_part view_get_deco_part(struct roots_view *view, double sx, double sy);
 
-void phoc_view_child_init(struct roots_view_child *child,
-                          const struct roots_view_child_interface *impl,
-                          struct roots_view *view,
+void phoc_view_child_init(PhocViewChild *child,
+                          const struct phoc_view_child_interface *impl,
+                          PhocView *view,
                           struct wlr_surface *wlr_surface);
-void view_child_destroy(struct roots_view_child *child);
+void view_child_destroy(PhocViewChild *child);
 
-struct roots_subsurface *subsurface_create(struct roots_view *view,
-	struct wlr_subsurface *wlr_subsurface);
+PhocSubsurface *subsurface_create(PhocView *view, struct wlr_subsurface *wlr_subsurface);
 
 G_END_DECLS

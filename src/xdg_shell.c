@@ -16,7 +16,7 @@
 #include "server.h"
 #include "view.h"
 
-static const struct roots_view_child_interface popup_impl;
+static const struct phoc_view_child_interface popup_impl;
 
 static void popup_destroy(struct roots_view_child *child) {
 	assert(child->impl == &popup_impl);
@@ -28,7 +28,7 @@ static void popup_destroy(struct roots_view_child *child) {
 	free(popup);
 }
 
-static const struct roots_view_child_interface popup_impl = {
+static const struct phoc_view_child_interface popup_impl = {
 	.destroy = popup_destroy,
 };
 
