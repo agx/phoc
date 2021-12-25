@@ -43,6 +43,7 @@ static void popup_handle_map(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, map);
 	phoc_view_damage_whole (popup->child.view);
 	phoc_input_update_cursor_focus(server->input);
+	popup->child.mapped = true;
 }
 
 static void popup_handle_unmap(struct wl_listener *listener, void *data) {
@@ -50,6 +51,7 @@ static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, unmap);
 	phoc_view_damage_whole (popup->child.view);
 	phoc_input_update_cursor_focus(server->input);
+	popup->child.mapped = false;
 }
 
 static struct roots_xdg_popup *popup_create(struct roots_view *view,

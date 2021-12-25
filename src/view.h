@@ -167,6 +167,7 @@ typedef struct roots_view_child {
   PhocView *view;
   struct wlr_surface *wlr_surface;
   struct wl_list link;
+  bool mapped;
 
   struct wl_listener commit;
   struct wl_listener new_subsurface;
