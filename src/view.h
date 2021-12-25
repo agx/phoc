@@ -269,6 +269,4 @@ void phoc_view_child_init(PhocViewChild *child,
                           struct wlr_surface *wlr_surface);
 void view_child_destroy(PhocViewChild *child);
 
-PhocSubsurface *subsurface_create(PhocView *view, struct wlr_subsurface *wlr_subsurface);
-
 G_END_DECLS

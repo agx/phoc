@@ -682,12 +682,14 @@ static void view_child_handle_commit(struct wl_listener *listener,
 	view_apply_damage(child->view);
 }
 
+static PhocSubsurface *phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
+
 static void view_child_handle_new_subsurface(struct wl_listener *listener,
 		void *data) {
 	struct roots_view_child *child =
 		wl_container_of(listener, child, new_subsurface);
 	struct wlr_subsurface *wlr_subsurface = data;
-	subsurface_create(child->view, wlr_subsurface);
+	phoc_view_subsurface_create(child->view, wlr_subsurface);
 }
 
 void
@@ -763,23 +765,28 @@ static void subsurface_handle_unmap(struct wl_listener *listener,
 	phoc_input_update_cursor_focus(server->input);
 }
 
-struct roots_subsurface *subsurface_create(struct roots_view *view,
-		struct wlr_subsurface *wlr_subsurface) {
-	struct roots_subsurface *subsurface =
-		calloc(1, sizeof(struct roots_subsurface));
-	if (subsurface == NULL) {
-		return NULL;
-	}
-	subsurface->wlr_subsurface = wlr_subsurface;
-	phoc_view_child_init(&subsurface->view_child, &subsurface_impl,
-			     view, wlr_subsurface->surface);
-	subsurface->destroy.notify = subsurface_handle_destroy;
-	wl_signal_add(&wlr_subsurface->events.destroy, &subsurface->destroy);
-	subsurface->map.notify = subsurface_handle_map;
-	wl_signal_add(&wlr_subsurface->events.map, &subsurface->map);
-	subsurface->unmap.notify = subsurface_handle_unmap;
-	wl_signal_add(&wlr_subsurface->events.unmap, &subsurface->unmap);
-	return subsurface;
+static PhocSubsurface *
+phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)
+{
+  PhocSubsurface *subsurface = calloc(1, sizeof(PhocSubsurface));
+
+  if (subsurface == NULL)
+    return NULL;
+
+  subsurface->wlr_subsurface = wlr_subsurface;
+  phoc_view_child_init (&subsurface->view_child, &subsurface_impl,
+                        view, wlr_subsurface->surface);
+
+  subsurface->destroy.notify = subsurface_handle_destroy;
+  wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
+
+  subsurface->map.notify = subsurface_handle_map;
+  wl_signal_add (&wlr_subsurface->events.map, &subsurface->map);
+
+  subsurface->unmap.notify = subsurface_handle_unmap;
+  wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
+
+  return subsurface;
 }
 
 static void
@@ -788,7 +795,7 @@ phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *dat
   PhocView *view = wl_container_of (listener, view, surface_new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
 
-  subsurface_create (view, wlr_subsurface);
+  phoc_view_subsurface_create (view, wlr_subsurface);
 }
 
 static gchar *
@@ -866,10 +873,10 @@ void view_map(struct roots_view *view, struct wlr_surface *surface) {
 
 	struct wlr_subsurface *subsurface;
 	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link) {
-		subsurface_create(view, subsurface);
+		phoc_view_subsurface_create(view, subsurface);
 	}
 	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link) {
-		subsurface_create(view, subsurface);
+		phoc_view_subsurface_create(view, subsurface);
 	}
 
 	view->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
