@@ -769,7 +769,7 @@ static void subsurface_handle_map(struct wl_listener *listener,
 	PhocSubsurface *subsurface = wl_container_of(listener, subsurface, map);
 	struct roots_view *view = subsurface->child.view;
 	subsurface->child.mapped = true;
-	phoc_view_damage_whole (view);
+	phoc_view_child_damage_whole (&subsurface->child);
 	phoc_input_update_cursor_focus(server->input);
 
 	struct wlr_box box;
@@ -788,8 +788,8 @@ static void subsurface_handle_unmap(struct wl_listener *listener,
 		void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocSubsurface *subsurface = wl_container_of(listener, subsurface, unmap);
-	struct roots_view *view = subsurface->child.view;
-	phoc_view_damage_whole (view);
+
+	phoc_view_child_damage_whole (&subsurface->child);
 	phoc_input_update_cursor_focus(server->input);
 
 	subsurface->child.mapped = false;
