@@ -175,7 +175,7 @@ typedef struct roots_view_child {
 } PhocViewChild;
 
 typedef struct roots_subsurface {
-  PhocViewChild view_child;
+  PhocViewChild child;
   struct wlr_subsurface *wlr_subsurface;
 
   struct wl_listener destroy;
@@ -184,7 +184,7 @@ typedef struct roots_subsurface {
 } PhocSubsurface;
 
 typedef struct roots_xdg_popup {
-  PhocViewChild view_child;
+  PhocViewChild child;
   struct wlr_xdg_popup *wlr_popup;
 
   struct wl_listener destroy;

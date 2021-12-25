@@ -35,20 +35,20 @@ static const struct phoc_view_child_interface popup_impl = {
 static void popup_handle_destroy(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup *popup =
 		wl_container_of(listener, popup, destroy);
-	view_child_destroy(&popup->view_child);
+	view_child_destroy(&popup->child);
 }
 
 static void popup_handle_map(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, map);
-	view_damage_whole(popup->view_child.view);
+	view_damage_whole(popup->child.view);
 	phoc_input_update_cursor_focus(server->input);
 }
 
 static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, unmap);
-	view_damage_whole(popup->view_child.view);
+	view_damage_whole(popup->child.view);
 	phoc_input_update_cursor_focus(server->input);
 }
 
@@ -59,7 +59,7 @@ static void popup_handle_new_popup(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup *popup =
 		wl_container_of(listener, popup, new_popup);
 	struct wlr_xdg_popup *wlr_popup = data;
-	popup_create(popup->view_child.view, wlr_popup);
+	popup_create(popup->child.view, wlr_popup);
 }
 
 static void popup_unconstrain(struct roots_xdg_popup *popup) {
@@ -67,7 +67,7 @@ static void popup_unconstrain(struct roots_xdg_popup *popup) {
 	// the toplevel parent's coordinate system and then pass it to
 	// wlr_xdg_popup_unconstrain_from_box
 
-	struct roots_view *view = popup->view_child.view;
+	struct roots_view *view = popup->child.view;
 	struct wlr_output_layout *layout = view->desktop->layout;
 	struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
 
@@ -121,7 +121,7 @@ static struct roots_xdg_popup *popup_create(struct roots_view *view,
 		return NULL;
 	}
 	popup->wlr_popup = wlr_popup;
-	phoc_view_child_init(&popup->view_child, &popup_impl,
+	phoc_view_child_init(&popup->child, &popup_impl,
 			     view, wlr_popup->base->surface);
 	popup->destroy.notify = popup_handle_destroy;
 	wl_signal_add(&wlr_popup->base->events.destroy, &popup->destroy);
