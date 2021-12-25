@@ -164,8 +164,9 @@ struct roots_view_child_interface {
 };
 
 typedef struct roots_view_child {
-  struct roots_view *view;
   const struct roots_view_child_interface *impl;
+
+  struct roots_view *view;
   struct wlr_surface *wlr_surface;
   struct wl_list link;
 
@@ -176,6 +177,7 @@ typedef struct roots_view_child {
 typedef struct roots_subsurface {
   struct roots_view_child view_child;
   struct wlr_subsurface *wlr_subsurface;
+
   struct wl_listener destroy;
   struct wl_listener map;
   struct wl_listener unmap;
@@ -184,6 +186,7 @@ typedef struct roots_subsurface {
 typedef struct roots_xdg_popup {
   struct roots_view_child view_child;
   struct wlr_xdg_popup *wlr_popup;
+
   struct wl_listener destroy;
   struct wl_listener map;
   struct wl_listener unmap;
