@@ -686,12 +686,13 @@ static void view_child_handle_commit(struct wl_listener *listener,
 static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
 static void phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *wlr_subsurface);
 
-static void view_child_handle_new_subsurface(struct wl_listener *listener,
-		void *data) {
-	struct roots_view_child *child =
-		wl_container_of(listener, child, new_subsurface);
-	struct wlr_subsurface *wlr_subsurface = data;
-	phoc_view_subsurface_create(child->view, wlr_subsurface);
+static void
+phoc_view_child_handle_new_subsurface (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *child = wl_container_of(listener, child, new_subsurface);
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  phoc_view_subsurface_create (child->view, wlr_subsurface);
 }
 
 static void
@@ -732,7 +733,7 @@ phoc_view_child_init (struct roots_view_child *child,
   child->commit.notify = view_child_handle_commit;
   wl_signal_add(&wlr_surface->events.commit, &child->commit);
 
-  child->new_subsurface.notify = view_child_handle_new_subsurface;
+  child->new_subsurface.notify = phoc_view_child_handle_new_subsurface;
   wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
 
   wl_list_insert(&view->child_surfaces, &child->link);
