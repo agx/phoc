@@ -677,10 +677,12 @@ phoc_view_child_is_mapped (PhocViewChild *child)
   return true;
 }
 
-static void view_child_handle_commit(struct wl_listener *listener,
-		void *data) {
-	PhocViewChild *child = wl_container_of(listener, child, commit);
-	phoc_view_damage_whole (child->view);
+static void
+phoc_view_child_handle_commit (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *child = wl_container_of(listener, child, commit);
+
+  phoc_view_damage_whole (child->view);
 }
 
 static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
@@ -730,7 +732,7 @@ phoc_view_child_init (PhocViewChild *child,
   child->view = view;
   child->wlr_surface = wlr_surface;
 
-  child->commit.notify = view_child_handle_commit;
+  child->commit.notify = phoc_view_child_handle_commit;
   wl_signal_add(&wlr_surface->events.commit, &child->commit);
 
   child->new_subsurface.notify = phoc_view_child_handle_new_subsurface;
