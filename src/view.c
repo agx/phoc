@@ -665,6 +665,18 @@ bool view_center(struct roots_view *view, struct wlr_output *wlr_output) {
 	return true;
 }
 
+static bool
+phoc_view_child_is_mapped (PhocViewChild *child)
+{
+  while (child) {
+    if (!child->mapped) {
+      return false;
+    }
+    child = child->parent;
+  }
+  return true;
+}
+
 void view_child_destroy(struct roots_view_child *child) {
 	if (child == NULL) {
 		return;
@@ -863,39 +875,41 @@ static void view_update_scale(struct roots_view *view) {
 	}
 }
 
-void view_map(struct roots_view *view, struct wlr_surface *surface) {
-	PhocServer *server = phoc_server_get_default ();
-	assert(view->wlr_surface == NULL);
+void
+phoc_view_map (PhocView *view, struct wlr_surface *surface)
+{
+  PhocServer *server = phoc_server_get_default ();
+  assert(view->wlr_surface == NULL);
 
-	view->wlr_surface = surface;
+  view->wlr_surface = surface;
 
-	struct wlr_subsurface *subsurface;
-	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link) {
-		phoc_view_subsurface_create(view, subsurface);
-	}
-	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link) {
-		phoc_view_subsurface_create(view, subsurface);
-	}
+  struct wlr_subsurface *subsurface;
+  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link) {
+    phoc_view_subsurface_create(view, subsurface);
+  }
+  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link) {
+    phoc_view_subsurface_create(view, subsurface);
+  }
 
-	view->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
-	wl_signal_add(&view->wlr_surface->events.new_subsurface, &view->surface_new_subsurface);
+  view->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
+  wl_signal_add(&view->wlr_surface->events.new_subsurface, &view->surface_new_subsurface);
 
-	if (view->desktop->maximize) {
-		view_appear_activated(view, true);
+  if (view->desktop->maximize) {
+    view_appear_activated(view, true);
 
-		if (!wl_list_empty(&view->desktop->views)) {
-			// mapping a new stack may make the old stack disappear, so damage its area
-			struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
-			while (top_view) {
-				phoc_view_damage_whole (top_view);
-				top_view = top_view->parent;
-			}
-		}
-	}
+    if (!wl_list_empty(&view->desktop->views)) {
+      // mapping a new stack may make the old stack disappear, so damage its area
+      struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
+      while (top_view) {
+        phoc_view_damage_whole (top_view);
+        top_view = top_view->parent;
+      }
+    }
+  }
 
-	wl_list_insert(&view->desktop->views, &view->link);
-	phoc_view_damage_whole (view);
-	phoc_input_update_cursor_focus(server->input);
+  wl_list_insert(&view->desktop->views, &view->link);
+  phoc_view_damage_whole (view);
+  phoc_input_update_cursor_focus(server->input);
 }
 
 void view_unmap(struct roots_view *view) {
@@ -1242,4 +1256,37 @@ bool
 phoc_view_is_mapped (PhocView *view)
 {
   return view && view->wlr_surface;
+}
+
+/**
+ * phoc_view_child_apply_damage:
+ * @child: A view child
+ *
+ * This is the equivalent of [method@Phoc.View.apply_damage] but for
+ * [struct@Phoc.ViewChild].
+ */
+void
+phoc_view_child_apply_damage (PhocViewChild *child)
+{
+  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
+    return;
+
+  phoc_view_apply_damage (child->view);
+}
+
+/**
+ * phoc_view_child_damage_whole:
+ * @child: A view child
+ *
+ * This is the equivalent of [method@Phoc.View.damage_whole] but for
+ * [struct@Phoc.ViewChild].
+ */
+void
+phoc_view_child_damage_whole (PhocViewChild *child)
+{
+  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
+    return;
+
+  /* TODO: just damage the whole child instead of the whole view */
+  phoc_view_damage_whole (child->view);
 }

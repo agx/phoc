@@ -515,7 +515,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	view->box.height = box.height;
 	get_geometry(view, &roots_xdg_surface->saved_geometry);
 
-	view_map(view, roots_xdg_surface->xdg_surface->surface);
+	phoc_view_map(view, roots_xdg_surface->xdg_surface->surface);
 	view_setup(view);
 }
 

@@ -367,7 +367,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	}
 	view_auto_maximize(view);
 
-	view_map(view, surface->surface);
+	phoc_view_map(view, surface->surface);
 
 	if (!surface->override_redirect) {
 		if (surface->decorations == WLR_XWAYLAND_SURFACE_DECORATIONS_ALL) {

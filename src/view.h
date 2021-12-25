@@ -165,6 +165,7 @@ typedef struct roots_view_child {
   const struct phoc_view_child_interface *impl;
 
   PhocView *view;
+  PhocViewChild *parent;
   struct wlr_surface *wlr_surface;
   struct wl_list link;
   bool mapped;
@@ -215,7 +216,7 @@ void view_update_position(struct roots_view *view, int x, int y);
 void view_update_size(struct roots_view *view, int width, int height);
 void view_update_decorated(struct roots_view *view, bool decorated);
 void view_initial_focus(struct roots_view *view);
-void view_map(struct roots_view *view, struct wlr_surface *surface);
+void phoc_view_map (PhocView *view, struct wlr_surface *surface);
 void view_unmap(struct roots_view *view);
 void view_arrange_maximized(struct roots_view *view, struct wlr_output *output);
 void view_arrange_tiled(struct roots_view *view, struct wlr_output *output);
@@ -267,5 +268,7 @@ void phoc_view_child_init(PhocViewChild *child,
                           PhocView *view,
                           struct wlr_surface *wlr_surface);
 void view_child_destroy(PhocViewChild *child);
+void phoc_view_child_apply_damage (PhocViewChild *child);
+void phoc_view_child_damage_whole (PhocViewChild *child);
 
 G_END_DECLS
