@@ -11,8 +11,6 @@
 
 #include <gio/gio.h>
 
-#include "output.h"
-
 G_BEGIN_DECLS
 
 struct roots_view;
