@@ -89,7 +89,7 @@ typedef struct roots_view {
 	struct wl_list stack; // roots_view::link
 
 	struct wlr_surface *wlr_surface; // set only when the surface is mapped
-	struct wl_list child_surfaces; // roots_view_child::link
+	struct wl_list child_surfaces; // PhocViewChild::link
 
 	struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
 	struct wl_listener toplevel_handle_request_maximize;
@@ -168,7 +168,7 @@ typedef struct roots_view_child {
   PhocViewChild *parent;
   GSList *children;
   struct wlr_surface *wlr_surface;
-  struct wl_list link;
+  struct wl_list link; // PhocView::child_surfaces;
   bool mapped;
 
   struct wl_listener commit;
