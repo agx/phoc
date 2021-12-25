@@ -620,9 +620,9 @@ phoc_desktop_constructed (GObject *object)
 
     setenv("DISPLAY", self->xwayland->display_name, true);
 
-    if (!wlr_xcursor_manager_load(self->xcursor_manager, 1)) {
-      wlr_log(WLR_ERROR, "Cannot load XWayland XCursor theme");
-    }
+    if (!wlr_xcursor_manager_load(self->xcursor_manager, 1))
+      g_critical ("Cannot load XWayland XCursor theme");
+
     struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor(
 								  self->xcursor_manager, cursor_default, 1);
     if (xcursor != NULL) {
