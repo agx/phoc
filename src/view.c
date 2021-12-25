@@ -1005,13 +1005,13 @@ phoc_view_apply_damage (PhocView *view)
   PhocOutput *output;
 
   wl_list_for_each (output, &view->desktop->outputs, link)
-    phoc_output_damage_from_view (output, view);
+    phoc_output_damage_from_view (output, view, false);
 }
 
 void view_damage_whole(struct roots_view *view) {
 	PhocOutput *output;
 	wl_list_for_each(output, &view->desktop->outputs, link) {
-		phoc_output_damage_whole_view(output, view);
+		phoc_output_damage_from_view (output, view, true);
 	}
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "view.h"
+
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <wayland-server-core.h>
@@ -90,8 +92,7 @@ struct roots_view;
 typedef struct _PhocDragIcon PhocDragIcon;
 void        phoc_output_damage_whole (PhocOutput *output);
 void        phoc_output_damage_whole_view (PhocOutput *self, struct roots_view   *view);
-void        phoc_output_damage_from_view (PhocOutput *self, struct roots_view
-                                          *view);
+void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole);
 void        phoc_output_damage_whole_drag_icon (PhocOutput   *self,
                                                 PhocDragIcon *icon);
 void        phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_surface *surface, double
