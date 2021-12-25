@@ -160,34 +160,34 @@ typedef struct roots_xwayland_surface {
 typedef struct roots_view_child PhocViewChild;
 
 struct roots_view_child_interface {
-	void (*destroy)(struct roots_view_child *child);
+  void (*destroy)(struct roots_view_child *child);
 };
 
 typedef struct roots_view_child {
-	struct roots_view *view;
-	const struct roots_view_child_interface *impl;
-	struct wlr_surface *wlr_surface;
-	struct wl_list link;
+  struct roots_view *view;
+  const struct roots_view_child_interface *impl;
+  struct wlr_surface *wlr_surface;
+  struct wl_list link;
 
-	struct wl_listener commit;
-	struct wl_listener new_subsurface;
+  struct wl_listener commit;
+  struct wl_listener new_subsurface;
 } PhocViewChild;
 
 typedef struct roots_subsurface {
-	struct roots_view_child view_child;
-	struct wlr_subsurface *wlr_subsurface;
-	struct wl_listener destroy;
-	struct wl_listener map;
-	struct wl_listener unmap;
+  struct roots_view_child view_child;
+  struct wlr_subsurface *wlr_subsurface;
+  struct wl_listener destroy;
+  struct wl_listener map;
+  struct wl_listener unmap;
 } PhocSubsurface;
 
 typedef struct roots_xdg_popup {
-	struct roots_view_child view_child;
-	struct wlr_xdg_popup *wlr_popup;
-	struct wl_listener destroy;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener new_popup;
+  struct roots_view_child view_child;
+  struct wlr_xdg_popup *wlr_popup;
+  struct wl_listener destroy;
+  struct wl_listener map;
+  struct wl_listener unmap;
+  struct wl_listener new_popup;
 } PhocXdgPopup;
 
 struct roots_xdg_toplevel_decoration {
