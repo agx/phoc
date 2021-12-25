@@ -684,6 +684,7 @@ static void view_child_handle_commit(struct wl_listener *listener,
 }
 
 static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
+static void phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *wlr_subsurface);
 
 static void view_child_handle_new_subsurface(struct wl_listener *listener,
 		void *data) {
@@ -705,6 +706,18 @@ phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
     phoc_view_subsurface_create (view, subsurface);
 }
 
+static void
+phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surface)
+{
+  struct wlr_subsurface *subsurface;
+
+  wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link)
+    phoc_view_child_subsurface_create (child, subsurface);
+
+  wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link)
+    phoc_view_child_subsurface_create (child, subsurface);
+}
+
 void
 phoc_view_child_init (struct roots_view_child *child,
                       const struct phoc_view_child_interface *impl,
@@ -723,6 +736,8 @@ phoc_view_child_init (struct roots_view_child *child,
   wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
 
   wl_list_insert(&view->child_surfaces, &child->link);
+
+  phoc_view_child_init_subsurfaces (child, wlr_surface);
 }
 
 static const struct phoc_view_child_interface subsurface_impl;
@@ -798,6 +813,29 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
 
   subsurface->unmap.notify = subsurface_handle_unmap;
   wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
+}
+
+static void
+phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *wlr_subsurface)
+{
+  PhocSubsurface *subsurface = g_new0 (PhocSubsurface, 1);
+
+  subsurface->child.parent = child;
+  child->children = g_slist_prepend (child->children, &subsurface->child);
+  subsurface->wlr_subsurface = wlr_subsurface;
+  phoc_view_child_init (&subsurface->child, &subsurface_impl, child->view,
+                        wlr_subsurface->surface);
+
+  subsurface->destroy.notify = subsurface_handle_destroy;
+  wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
+
+  subsurface->map.notify = subsurface_handle_map;
+  wl_signal_add (&wlr_subsurface->events.map, &subsurface->map);
+
+  subsurface->unmap.notify = subsurface_handle_unmap;
+  wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
+
+  phoc_view_child_damage_whole (&subsurface->child);
 }
 
 static void
@@ -1274,6 +1312,21 @@ phoc_view_child_destroy (PhocViewChild *child)
 
   if (phoc_view_child_is_mapped (child) && phoc_view_is_mapped (child->view))
     phoc_view_child_damage_whole (child);
+
+  /* Remove from parent if it's also a PhocChild */
+  if (child->parent != NULL) {
+    child->parent->children = g_slist_remove (child->parent->children, child);
+    child->parent = NULL;
+  }
+
+  /* Detach us from all children */
+  for (GSList *elem = child->children; elem; elem = elem->next) {
+    PhocViewChild *subchild = elem->data;
+    subchild->parent = NULL;
+    /* The subchild lost its parent, so it cannot see that the parent is unmapped. Unmap it directly */
+    subchild->mapped = false;
+  }
+  g_clear_pointer (&child->children, g_slist_free);
 
   wl_list_remove(&child->link);
   wl_list_remove(&child->commit.link);
