@@ -1272,7 +1272,8 @@ phoc_view_child_destroy (PhocViewChild *child)
   if (child == NULL)
     return;
 
-  phoc_view_damage_whole (child->view);
+  if (phoc_view_child_is_mapped (child) && phoc_view_is_mapped (child->view))
+    phoc_view_child_damage_whole (child);
 
   wl_list_remove(&child->link);
   wl_list_remove(&child->commit.link);
