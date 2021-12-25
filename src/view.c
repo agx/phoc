@@ -692,7 +692,7 @@ phoc_view_child_handle_new_subsurface (struct wl_listener *listener, void *data)
   PhocViewChild *child = wl_container_of(listener, child, new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
 
-  phoc_view_subsurface_create (child->view, wlr_subsurface);
+  phoc_view_child_subsurface_create (child, wlr_subsurface);
 }
 
 static void
