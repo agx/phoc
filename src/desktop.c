@@ -98,7 +98,7 @@ phoc_desktop_get_property (GObject    *object,
 }
 
 
-static bool view_at(struct roots_view *view, double lx, double ly,
+static bool view_at(PhocView *view, double lx, double ly,
 		struct wlr_surface **surface, double *sx, double *sy) {
 	if (!phoc_view_is_mapped (view)) {
 		return false;
@@ -142,10 +142,10 @@ static bool view_at(struct roots_view *view, double lx, double ly,
 	return false;
 }
 
-static struct roots_view *desktop_view_at(PhocDesktop *desktop,
+static PhocView *desktop_view_at(PhocDesktop *desktop,
 		double lx, double ly, struct wlr_surface **surface,
 		double *sx, double *sy) {
-	struct roots_view *view;
+	PhocView *view;
 	wl_list_for_each(view, &desktop->views, link) {
 		if (phoc_desktop_view_is_visible(desktop, view) && view_at(view, lx, ly, surface, sx, sy)) {
 			return view;
@@ -211,7 +211,7 @@ static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
  */
 struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
-		struct roots_view **view) {
+		PhocView **view) {
 	struct wlr_surface *surface = NULL;
 	struct wlr_output *wlr_output =
 		wlr_output_layout_output_at(desktop->layout, lx, ly);
@@ -256,7 +256,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		}
 	}
 
-	struct roots_view *_view;
+	PhocView *_view;
 	if ((_view = desktop_view_at(desktop, lx, ly, &surface, sx, sy))) {
 		if (view) {
 			*view = _view;
@@ -278,7 +278,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 }
 
 gboolean
-phoc_desktop_view_is_visible (PhocDesktop *desktop, struct roots_view *view)
+phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
 {
   if (!phoc_view_is_mapped (view)) {
     return false;
@@ -295,7 +295,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, struct roots_view *view)
     return true;
   }
 
-  struct roots_view *top_view = wl_container_of (desktop->views.next, view, link);
+  PhocView *top_view = wl_container_of (desktop->views.next, view, link);
 
 #ifdef PHOC_XWAYLAND
   // XWayland parent relations can be complicated and aren't described by roots_view
@@ -306,7 +306,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, struct roots_view *view)
   }
 #endif
 
-  struct roots_view *v = top_view;
+  PhocView *v = top_view;
   while (v) {
     if (v == view) {
       return true;
@@ -327,7 +327,7 @@ handle_layout_change (struct wl_listener *listener, void *data)
   struct wlr_output *center_output;
   struct wlr_box *center_output_box;
   double center_x, center_y;
-  struct roots_view *view;
+  PhocView *view;
   PhocOutput *output;
 
   self = wl_container_of (listener, self, layout_change);
@@ -399,7 +399,7 @@ static void handle_constraint_destroy(struct wl_listener *listener,
 		if (wlr_constraint->current.committed &
 				WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT &&
 				cursor->pointer_view) {
-			struct roots_view *view = cursor->pointer_view->view;
+			PhocView *view = cursor->pointer_view->view;
 			double lx = view->box.x + wlr_constraint->current.cursor_hint.x;
 			double ly = view->box.y + wlr_constraint->current.cursor_hint.y;
 
@@ -851,7 +851,7 @@ phoc_desktop_toggle_output_blank (PhocDesktop *self)
 void
 phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
 {
-  struct roots_view *view;
+  PhocView *view;
   PhocServer *server = phoc_server_get_default();
 
   if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE)) {
