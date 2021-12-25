@@ -451,7 +451,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		return;
 	}
 
-	view_apply_damage(view);
+	phoc_view_apply_damage(view);
 
 	struct wlr_box size;
 	get_size(view, &size);

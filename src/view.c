@@ -679,7 +679,7 @@ void view_child_destroy(struct roots_view_child *child) {
 static void view_child_handle_commit(struct wl_listener *listener,
 		void *data) {
 	struct roots_view_child *child = wl_container_of(listener, child, commit);
-	view_apply_damage(child->view);
+	phoc_view_apply_damage(child->view);
 }
 
 static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
@@ -992,11 +992,20 @@ void view_setup(struct roots_view *view) {
 	                                          view->parent ? view->parent->toplevel_handle : NULL);
 }
 
-void view_apply_damage(struct roots_view *view) {
-	PhocOutput *output;
-	wl_list_for_each(output, &view->desktop->outputs, link) {
-		phoc_output_damage_from_view(output, view);
-	}
+/**
+ * phoc_view_apply_damage:
+ * @view: A view
+ *
+ * Add the accumulated buffer damage of all surfaces belonging to a
+ * #PhocView's to the damaged screen area that needs repaint.
+ */
+void
+phoc_view_apply_damage (PhocView *view)
+{
+  PhocOutput *output;
+
+  wl_list_for_each (output, &view->desktop->outputs, link)
+    phoc_output_damage_from_view (output, view);
 }
 
 void view_damage_whole(struct roots_view *view) {

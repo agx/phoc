@@ -204,7 +204,7 @@ void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 void view_destroy(struct roots_view *view);
 void view_appear_activated(struct roots_view *view, bool activated);
 void view_activate(struct roots_view *view, bool activate);
-void view_apply_damage(struct roots_view *view);
+void phoc_view_apply_damage (PhocView *view);
 void view_damage_whole(struct roots_view *view);
 gboolean view_is_floating(const struct roots_view *view);
 gboolean view_is_maximized(const struct roots_view *view);
