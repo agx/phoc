@@ -19,6 +19,6 @@ G_DECLARE_FINAL_TYPE (PhocRenderer, phoc_renderer, PHOC, RENDERER, GObject)
 
 PhocRenderer *phoc_renderer_new (struct wlr_renderer *wlr_renderer);
 void          output_render(PhocOutput *output);
-gboolean      view_render_to_buffer (struct roots_view *view, int width, int height, int stride, uint32_t *flags, void* data);
+gboolean      view_render_to_buffer (PhocView *view, int width, int height, int stride, uint32_t *flags, void* data);
 
 G_END_DECLS
