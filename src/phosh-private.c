@@ -75,7 +75,7 @@ typedef struct {
   uint32_t stride;
 
   struct wl_shm_buffer *buffer;
-  struct roots_view *view;
+  PhocView *view;
 } PhocPhoshPrivateScreencopyFrame;
 
 typedef struct {
@@ -431,7 +431,7 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
     return;
   }
 
-  struct roots_view *view = frame->view;
+  PhocView *view = frame->view;
   wl_list_remove (&frame->view_destroy.link);
   frame->view = NULL;
 
@@ -515,7 +515,7 @@ handle_get_thumbnail (struct wl_client *client,
     return;
   }
 
-  struct roots_view *view = toplevel_handle->data;
+  PhocView *view = toplevel_handle->data;
   if (!view) {
     zwlr_screencopy_frame_v1_send_failed (frame->resource);
     return;
