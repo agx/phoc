@@ -704,6 +704,18 @@ static void view_child_handle_new_subsurface(struct wl_listener *listener,
 	phoc_view_subsurface_create(child->view, wlr_subsurface);
 }
 
+static void
+phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
+{
+  struct wlr_subsurface *subsurface;
+
+  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link)
+    phoc_view_subsurface_create (view, subsurface);
+
+  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link)
+    phoc_view_subsurface_create (view, subsurface);
+}
+
 void
 phoc_view_child_init (struct roots_view_child *child,
                       const struct phoc_view_child_interface *impl,
@@ -891,6 +903,7 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
     phoc_view_subsurface_create(view, subsurface);
   }
 
+  phoc_view_init_subsurfaces (view, surface);
   view->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
   wl_signal_add(&view->wlr_surface->events.new_subsurface, &view->surface_new_subsurface);
 
