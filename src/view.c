@@ -700,10 +700,10 @@ phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
 {
   struct wlr_subsurface *subsurface;
 
-  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link)
+  wl_list_for_each(subsurface, &surface->subsurfaces_below, parent_link)
     phoc_view_subsurface_create (view, subsurface);
 
-  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link)
+  wl_list_for_each(subsurface, &surface->subsurfaces_above, parent_link)
     phoc_view_subsurface_create (view, subsurface);
 }
 
