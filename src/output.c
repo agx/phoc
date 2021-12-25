@@ -487,7 +487,7 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
 }
 
 void
-phoc_output_view_for_each_surface (PhocOutput *self, struct roots_view *view,
+phoc_output_view_for_each_surface (PhocOutput *self, PhocView *view,
                                    PhocSurfaceIterator iterator, void
                                    *user_data)
 {
@@ -631,7 +631,7 @@ phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, vo
   PhocServer *server = phoc_server_get_default ();
 
   if (self->fullscreen_view != NULL) {
-    struct roots_view *view = self->fullscreen_view;
+    PhocView *view = self->fullscreen_view;
 
     phoc_output_view_for_each_surface (self, view, iterator, user_data);
 
@@ -645,7 +645,7 @@ phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, vo
     }
 #endif
   } else {
-    struct roots_view *view;
+    PhocView *view;
     wl_list_for_each_reverse (view, &desktop->views, link)
     {
       if (!visible_only || phoc_desktop_view_is_visible (desktop, view)) {
@@ -680,7 +680,7 @@ phoc_output_scale_box (PhocOutput *self, struct wlr_box *box, float scale)
 }
 
 void
-phoc_output_get_decoration_box (PhocOutput *self, struct roots_view *view,
+phoc_output_get_decoration_box (PhocOutput *self, PhocView *view,
                                 struct wlr_box *box)
 {
   struct wlr_box deco_box;
@@ -706,7 +706,7 @@ phoc_output_damage_whole (PhocOutput *self)
 }
 
 static bool
-phoc_view_accept_damage (PhocOutput *self, struct roots_view   *view)
+phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
 {
   PhocServer *server = phoc_server_get_default ();
 
@@ -790,7 +790,7 @@ phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *su
 }
 
 static void
-damage_whole_view (PhocOutput *self, struct roots_view   *view)
+damage_whole_view (PhocOutput *self, PhocView  *view)
 {
   if (!phoc_view_is_mapped (view)) {
     return;
@@ -804,7 +804,7 @@ damage_whole_view (PhocOutput *self, struct roots_view   *view)
 }
 
 void
-phoc_output_damage_from_view (PhocOutput *self, struct roots_view *view, bool whole)
+phoc_output_damage_from_view (PhocOutput *self, PhocView  *view, bool whole)
 {
   if (!phoc_view_accept_damage (self, view)) {
     return;

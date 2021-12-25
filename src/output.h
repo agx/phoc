@@ -27,7 +27,7 @@ struct _PhocOutput {
   struct wlr_output        *wlr_output;
   struct wl_list            link; // PhocDesktop::outputs
 
-  struct roots_view        *fullscreen_view;
+  PhocView                 *fullscreen_view;
   struct wl_list            layers[4]; // layer_surface::link
   bool                      force_shell_reveal;
 
@@ -62,7 +62,7 @@ void        phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_s
                                                   void *user_data);
 void        phoc_output_view_for_each_surface (
   PhocOutput *self,
-  struct roots_view *view, PhocSurfaceIterator iterator,
+  PhocView *view, PhocSurfaceIterator iterator,
   void *user_data);
 void        phoc_output_drag_icons_for_each_surface (
   PhocOutput *self,
@@ -88,7 +88,6 @@ void        handle_output_manager_apply (struct wl_listener *listener, void *dat
 void        handle_output_manager_test (struct wl_listener *listener, void *data);
 void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, void *data);
 
-struct roots_view;
 typedef struct _PhocDragIcon PhocDragIcon;
 void        phoc_output_damage_whole (PhocOutput *output);
 void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole);
@@ -100,7 +99,7 @@ void        phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr
                                                     double ox, double oy);
 
 void        phoc_output_scale_box (PhocOutput *self, struct wlr_box *box, float scale);
-void        phoc_output_get_decoration_box (PhocOutput *self, struct roots_view *view,
+void        phoc_output_get_decoration_box (PhocOutput *self, PhocView *view,
                                             struct wlr_box *box);
 gboolean    phoc_output_is_builtin (PhocOutput *output);
 gboolean    phoc_output_is_match (PhocOutput *self,
