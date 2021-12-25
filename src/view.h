@@ -99,7 +99,7 @@ typedef struct roots_view {
 	struct wl_listener toplevel_handle_request_fullscreen;
 	struct wl_listener toplevel_handle_request_close;
 
-	struct wl_listener new_subsurface;
+	struct wl_listener surface_new_subsurface;
 
 	struct {
 		struct wl_signal unmap;

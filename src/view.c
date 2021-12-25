@@ -782,11 +782,13 @@ struct roots_subsurface *subsurface_create(struct roots_view *view,
 	return subsurface;
 }
 
-static void view_handle_new_subsurface(struct wl_listener *listener,
-		void *data) {
-	struct roots_view *view = wl_container_of(listener, view, new_subsurface);
-	struct wlr_subsurface *wlr_subsurface = data;
-	subsurface_create(view, wlr_subsurface);
+static void
+phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *data)
+{
+  PhocView *view = wl_container_of (listener, view, surface_new_subsurface);
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  subsurface_create (view, wlr_subsurface);
 }
 
 static gchar *
@@ -870,9 +872,8 @@ void view_map(struct roots_view *view, struct wlr_surface *surface) {
 		subsurface_create(view, subsurface);
 	}
 
-	view->new_subsurface.notify = view_handle_new_subsurface;
-	wl_signal_add(&view->wlr_surface->events.new_subsurface,
-		&view->new_subsurface);
+	view->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
+	wl_signal_add(&view->wlr_surface->events.new_subsurface, &view->surface_new_subsurface);
 
 	if (view->desktop->maximize) {
 		view_appear_activated(view, true);
@@ -901,7 +902,7 @@ void view_unmap(struct roots_view *view) {
 
 	view_damage_whole(view);
 
-	wl_list_remove(&view->new_subsurface.link);
+	wl_list_remove(&view->surface_new_subsurface.link);
 
 	struct roots_view_child *child, *tmp;
 	wl_list_for_each_safe(child, tmp, &view->child_surfaces, link) {
