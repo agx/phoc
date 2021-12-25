@@ -503,8 +503,8 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
   struct wlr_tablet_tool *tool = event->tool;
 
   if (!tool->data) {
-    PhocTabletTool *phoc_tool =
-      calloc (1, sizeof(PhocTabletTool));
+    PhocTabletTool *phoc_tool = g_new0 (PhocTabletTool, 1);
+
     phoc_tool->seat = cursor->seat;
     tool->data = phoc_tool;
     phoc_tool->tablet_v2_tool =
@@ -829,11 +829,8 @@ phoc_seat_handle_start_drag (struct wl_listener *listener,
     return;
   }
 
-  PhocDragIcon *icon = calloc (1, sizeof(PhocDragIcon));
+  PhocDragIcon *icon = g_new0 (PhocDragIcon, 1);
 
-  if (icon == NULL) {
-    return;
-  }
   icon->seat = seat;
   icon->wlr_drag_icon = wlr_drag_icon;
 
@@ -1098,12 +1095,8 @@ seat_add_switch (PhocSeat                *seat,
                  struct wlr_input_device *device)
 {
   assert (device->type == WLR_INPUT_DEVICE_SWITCH);
-  struct roots_switch *switch_device = calloc (1, sizeof(struct roots_switch));
+  struct roots_switch *switch_device = g_new0 (struct roots_switch, 1);
 
-  if (!switch_device) {
-    wlr_log (WLR_ERROR, "could not allocate switch for seat");
-    return;
-  }
   device->data = switch_device;
   switch_device->device = device;
   switch_device->seat = seat;
@@ -1255,13 +1248,7 @@ seat_add_tablet_pad (PhocSeat                *seat,
                      struct wlr_input_device *device)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocTabletPad *tablet_pad =
-    calloc (1, sizeof(PhocTabletPad));
-
-  if (!tablet_pad) {
-    wlr_log (WLR_ERROR, "could not allocate tablet_pad for seat");
-    return;
-  }
+  PhocTabletPad *tablet_pad = g_new0 (PhocTabletPad, 1);
 
   device->data = tablet_pad;
   tablet_pad->device = device;
@@ -1516,11 +1503,8 @@ seat_view_handle_destroy (struct wl_listener *listener, void *data)
 static PhocSeatView *
 seat_add_view (PhocSeat *seat, struct roots_view *view)
 {
-  PhocSeatView *seat_view = calloc (1, sizeof(PhocSeatView));
+  PhocSeatView *seat_view = g_new0 (PhocSeatView, 1);
 
-  if (seat_view == NULL) {
-    return NULL;
-  }
   seat_view->seat = seat;
   seat_view->view = view;
 
@@ -1551,13 +1535,8 @@ phoc_seat_view_from_view (
       break;
     }
   }
-  if (!found) {
+  if (!found)
     seat_view = seat_add_view (seat, view);
-    if (seat_view == NULL) {
-      wlr_log (WLR_ERROR, "Allocation failed");
-      return NULL;
-    }
-  }
 
   return seat_view;
 }
