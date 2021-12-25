@@ -121,8 +121,8 @@ static struct roots_xdg_popup *popup_create(struct roots_view *view,
 		return NULL;
 	}
 	popup->wlr_popup = wlr_popup;
-	view_child_init(&popup->view_child, &popup_impl,
-		view, wlr_popup->base->surface);
+	phoc_view_child_init(&popup->view_child, &popup_impl,
+			     view, wlr_popup->base->surface);
 	popup->destroy.notify = popup_handle_destroy;
 	wl_signal_add(&wlr_popup->base->events.destroy, &popup->destroy);
 	popup->map.notify = popup_handle_map;

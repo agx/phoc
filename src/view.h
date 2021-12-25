@@ -260,9 +260,10 @@ enum roots_deco_part {
 
 enum roots_deco_part view_get_deco_part(struct roots_view *view, double sx, double sy);
 
-void view_child_init(struct roots_view_child *child,
-	const struct roots_view_child_interface *impl, struct roots_view *view,
-	struct wlr_surface *wlr_surface);
+void phoc_view_child_init(struct roots_view_child *child,
+                          const struct roots_view_child_interface *impl,
+                          struct roots_view *view,
+                          struct wlr_surface *wlr_surface);
 void view_child_destroy(struct roots_view_child *child);
 
 struct roots_subsurface *subsurface_create(struct roots_view *view,

@@ -690,18 +690,24 @@ static void view_child_handle_new_subsurface(struct wl_listener *listener,
 	subsurface_create(child->view, wlr_subsurface);
 }
 
-void view_child_init(struct roots_view_child *child,
-		const struct roots_view_child_interface *impl, struct roots_view *view,
-		struct wlr_surface *wlr_surface) {
-	assert(impl->destroy);
-	child->impl = impl;
-	child->view = view;
-	child->wlr_surface = wlr_surface;
-	child->commit.notify = view_child_handle_commit;
-	wl_signal_add(&wlr_surface->events.commit, &child->commit);
-	child->new_subsurface.notify = view_child_handle_new_subsurface;
-	wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
-	wl_list_insert(&view->child_surfaces, &child->link);
+void
+phoc_view_child_init (struct roots_view_child *child,
+                      const struct roots_view_child_interface *impl,
+                      struct roots_view *view,
+                      struct wlr_surface *wlr_surface)
+{
+  assert(impl->destroy);
+  child->impl = impl;
+  child->view = view;
+  child->wlr_surface = wlr_surface;
+
+  child->commit.notify = view_child_handle_commit;
+  wl_signal_add(&wlr_surface->events.commit, &child->commit);
+
+  child->new_subsurface.notify = view_child_handle_new_subsurface;
+  wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
+
+  wl_list_insert(&view->child_surfaces, &child->link);
 }
 
 static const struct roots_view_child_interface subsurface_impl;
@@ -765,8 +771,8 @@ struct roots_subsurface *subsurface_create(struct roots_view *view,
 		return NULL;
 	}
 	subsurface->wlr_subsurface = wlr_subsurface;
-	view_child_init(&subsurface->view_child, &subsurface_impl,
-		view, wlr_subsurface->surface);
+	phoc_view_child_init(&subsurface->view_child, &subsurface_impl,
+			     view, wlr_subsurface->surface);
 	subsurface->destroy.notify = subsurface_handle_destroy;
 	wl_signal_add(&wlr_subsurface->events.destroy, &subsurface->destroy);
 	subsurface->map.notify = subsurface_handle_map;
