@@ -178,7 +178,7 @@ static void view_update_output(struct roots_view *view,
 		const struct wlr_box *before) {
 	PhocDesktop *desktop = view->desktop;
 
-	if (view->wlr_surface == NULL) {
+	if (!phoc_view_is_mapped (view)) {
 		return;
 	}
 
@@ -465,7 +465,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 
 	if (was_fullscreen != fullscreen) {
 		/* don't allow unfocused surfaces to make themselves fullscreen */
-		if (fullscreen && view->wlr_surface)
+		if (fullscreen && phoc_view_is_mapped (view))
 			g_return_if_fail (phoc_input_view_has_focus (phoc_server_get_default()->input, view));
 
 		if (view->impl->set_fullscreen) {
@@ -955,7 +955,7 @@ void view_initial_focus(struct roots_view *view) {
 void
 view_send_frame_done_if_not_visible (struct roots_view *view)
 {
-  if (!phoc_desktop_view_is_visible (view->desktop, view) && view->wlr_surface) {
+  if (!phoc_desktop_view_is_visible (view->desktop, view) && phoc_view_is_mapped (view)) {
     struct timespec now;
     clock_gettime (CLOCK_MONOTONIC, &now);
     wlr_surface_send_frame_done (view->wlr_surface, &now);
@@ -1198,4 +1198,17 @@ roots_view_from_wlr_surface (struct wlr_surface *wlr_surface)
   }
 
   return NULL;
+}
+
+/**
+ * phoc_view_is_mapped:
+ * @view: (nullable): The view to check
+ *
+ * Check if a @view is currently mapped
+ * Returns: %TRUE if a view is currently mapped, otherwise %FALSE
+ */
+bool
+phoc_view_is_mapped (PhocView *view)
+{
+  return view && view->wlr_surface;
 }

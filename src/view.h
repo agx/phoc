@@ -247,6 +247,7 @@ struct roots_view *roots_view_from_wlr_surface (struct wlr_surface *surface);
 struct roots_xdg_surface *roots_xdg_surface_from_view(struct roots_view *view);
 struct roots_xwayland_surface *roots_xwayland_surface_from_view(
 	struct roots_view *view);
+bool   phoc_view_is_mapped (PhocView *view);
 
 enum roots_deco_part {
 	ROOTS_DECO_PART_NONE = 0,

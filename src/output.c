@@ -792,7 +792,7 @@ phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *su
 static void
 damage_whole_view (PhocOutput *self, struct roots_view   *view)
 {
-  if (view->wlr_surface == NULL) {
+  if (!phoc_view_is_mapped (view)) {
     return;
   }
 
