@@ -677,15 +677,19 @@ phoc_view_child_is_mapped (PhocViewChild *child)
   return true;
 }
 
-void view_child_destroy(struct roots_view_child *child) {
-	if (child == NULL) {
-		return;
-	}
-	phoc_view_damage_whole (child->view);
-	wl_list_remove(&child->link);
-	wl_list_remove(&child->commit.link);
-	wl_list_remove(&child->new_subsurface.link);
-	child->impl->destroy(child);
+void
+phoc_view_child_destroy (PhocViewChild *child)
+{
+  if (child == NULL)
+    return;
+
+  phoc_view_damage_whole (child->view);
+
+  wl_list_remove(&child->link);
+  wl_list_remove(&child->commit.link);
+  wl_list_remove(&child->new_subsurface.link);
+
+  child->impl->destroy(child);
 }
 
 static void view_child_handle_commit(struct wl_listener *listener,
@@ -755,7 +759,7 @@ static void subsurface_handle_destroy(struct wl_listener *listener,
 		void *data) {
 	struct roots_subsurface *subsurface =
 		wl_container_of(listener, subsurface, destroy);
-	view_child_destroy(&subsurface->child);
+	phoc_view_child_destroy(&subsurface->child);
 }
 
 static void subsurface_handle_map(struct wl_listener *listener,
@@ -938,7 +942,7 @@ void view_unmap(struct roots_view *view) {
 
 	struct roots_view_child *child, *tmp;
 	wl_list_for_each_safe(child, tmp, &view->child_surfaces, link) {
-		view_child_destroy(child);
+		phoc_view_child_destroy(child);
 	}
 
 	if (view_is_fullscreen (view)) {

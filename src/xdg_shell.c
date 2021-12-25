@@ -35,7 +35,7 @@ static const struct phoc_view_child_interface popup_impl = {
 static void popup_handle_destroy(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup *popup =
 		wl_container_of(listener, popup, destroy);
-	view_child_destroy(&popup->child);
+	phoc_view_child_destroy(&popup->child);
 }
 
 static void popup_handle_map(struct wl_listener *listener, void *data) {

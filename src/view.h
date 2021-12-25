@@ -267,7 +267,7 @@ void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,
                           PhocView *view,
                           struct wlr_surface *wlr_surface);
-void view_child_destroy(PhocViewChild *child);
+void phoc_view_child_destroy (PhocViewChild *child);
 void phoc_view_child_apply_damage (PhocViewChild *child);
 void phoc_view_child_damage_whole (PhocViewChild *child);
 
