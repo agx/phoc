@@ -155,13 +155,13 @@ typedef struct roots_xwayland_surface {
 } PhocXWaylandSurface;
 #endif
 
-typedef struct roots_view_child PhocViewChild;
+typedef struct _PhocViewChild PhocViewChild;
 
 struct phoc_view_child_interface {
   void (*destroy)(PhocViewChild *child);
 };
 
-typedef struct roots_view_child {
+typedef struct _PhocViewChild {
   const struct phoc_view_child_interface *impl;
 
   PhocView *view;

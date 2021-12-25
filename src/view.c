@@ -679,8 +679,8 @@ phoc_view_child_is_mapped (PhocViewChild *child)
 
 static void view_child_handle_commit(struct wl_listener *listener,
 		void *data) {
-	struct roots_view_child *child = wl_container_of(listener, child, commit);
-	phoc_view_apply_damage(child->view);
+	PhocViewChild *child = wl_container_of(listener, child, commit);
+	phoc_view_damage_whole (child->view);
 }
 
 static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
@@ -720,7 +720,7 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
 }
 
 void
-phoc_view_child_init (struct roots_view_child *child,
+phoc_view_child_init (PhocViewChild *child,
                       const struct phoc_view_child_interface *impl,
                       struct roots_view *view,
                       struct wlr_surface *wlr_surface)
@@ -743,7 +743,7 @@ phoc_view_child_init (struct roots_view_child *child,
 
 static const struct phoc_view_child_interface subsurface_impl;
 
-static void subsurface_destroy(struct roots_view_child *child) {
+static void subsurface_destroy(PhocViewChild *child) {
 	assert(child->impl == &subsurface_impl);
 	PhocSubsurface *subsurface = (PhocSubsurface *)child;
 	wl_list_remove(&subsurface->destroy.link);
@@ -962,7 +962,7 @@ void view_unmap(struct roots_view *view) {
 
 	wl_list_remove(&view->surface_new_subsurface.link);
 
-	struct roots_view_child *child, *tmp;
+	PhocViewChild *child, *tmp;
 	wl_list_for_each_safe(child, tmp, &view->child_surfaces, link) {
 		phoc_view_child_destroy(child);
 	}

@@ -18,7 +18,7 @@
 
 static const struct phoc_view_child_interface popup_impl;
 
-static void popup_destroy(struct roots_view_child *child) {
+static void popup_destroy(PhocViewChild *child) {
 	assert(child->impl == &popup_impl);
 	struct roots_xdg_popup *popup = (struct roots_xdg_popup *)child;
 	wl_list_remove(&popup->destroy.link);
