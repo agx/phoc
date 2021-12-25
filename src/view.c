@@ -677,21 +677,6 @@ phoc_view_child_is_mapped (PhocViewChild *child)
   return true;
 }
 
-void
-phoc_view_child_destroy (PhocViewChild *child)
-{
-  if (child == NULL)
-    return;
-
-  phoc_view_damage_whole (child->view);
-
-  wl_list_remove(&child->link);
-  wl_list_remove(&child->commit.link);
-  wl_list_remove(&child->new_subsurface.link);
-
-  child->impl->destroy(child);
-}
-
 static void view_child_handle_commit(struct wl_listener *listener,
 		void *data) {
 	struct roots_view_child *child = wl_container_of(listener, child, commit);
@@ -1276,6 +1261,27 @@ phoc_view_is_mapped (PhocView *view)
 }
 
 /**
+ * phoc_view_child_destroy:
+ * @child: The view child to destroy
+ *
+ * Destroys a view child freeing its resources.
+ */
+void
+phoc_view_child_destroy (PhocViewChild *child)
+{
+  if (child == NULL)
+    return;
+
+  phoc_view_damage_whole (child->view);
+
+  wl_list_remove(&child->link);
+  wl_list_remove(&child->commit.link);
+  wl_list_remove(&child->new_subsurface.link);
+
+  child->impl->destroy(child);
+}
+
+/*
  * phoc_view_child_apply_damage:
  * @child: A view child
  *
