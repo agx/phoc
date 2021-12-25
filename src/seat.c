@@ -1519,8 +1519,7 @@ seat_add_view (PhocSeat *seat, struct roots_view *view)
 }
 
 PhocSeatView *
-phoc_seat_view_from_view (
-  PhocSeat *seat, struct roots_view *view)
+phoc_seat_view_from_view (PhocSeat *seat, struct roots_view *view)
 {
   if (view == NULL) {
     return NULL;
