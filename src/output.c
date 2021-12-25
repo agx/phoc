@@ -804,21 +804,6 @@ damage_whole_view (PhocOutput *self, struct roots_view   *view)
 }
 
 void
-phoc_output_damage_whole_view (PhocOutput *self, struct roots_view   *view)
-{
-  if (!phoc_view_accept_damage (self, view)) {
-    return;
-  }
-
-  damage_whole_view (self, view);
-
-  bool whole = true;
-
-  phoc_output_view_for_each_surface (self, view, damage_surface_iterator, &whole);
-}
-
-
-void
 phoc_output_damage_from_view (PhocOutput *self, struct roots_view *view, bool whole)
 {
   if (!phoc_view_accept_damage (self, view)) {

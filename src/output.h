@@ -91,7 +91,6 @@ void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener
 struct roots_view;
 typedef struct _PhocDragIcon PhocDragIcon;
 void        phoc_output_damage_whole (PhocOutput *output);
-void        phoc_output_damage_whole_view (PhocOutput *self, struct roots_view   *view);
 void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole);
 void        phoc_output_damage_whole_drag_icon (PhocOutput   *self,
                                                 PhocDragIcon *icon);
