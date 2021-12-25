@@ -768,10 +768,7 @@ static void subsurface_handle_unmap(struct wl_listener *listener,
 static void
 phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)
 {
-  PhocSubsurface *subsurface = calloc(1, sizeof(PhocSubsurface));
-
-  if (subsurface == NULL)
-    return;
+  PhocSubsurface *subsurface = g_new0 (PhocSubsurface, 1);
 
   subsurface->wlr_subsurface = wlr_subsurface;
   phoc_view_child_init (&subsurface->view_child, &subsurface_impl,
