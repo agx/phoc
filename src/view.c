@@ -682,7 +682,7 @@ phoc_view_child_handle_commit (struct wl_listener *listener, void *data)
 {
   PhocViewChild *child = wl_container_of(listener, child, commit);
 
-  phoc_view_damage_whole (child->view);
+  phoc_view_child_apply_damage (child);
 }
 
 static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
