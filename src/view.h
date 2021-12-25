@@ -161,6 +161,15 @@ struct phoc_view_child_interface {
   void (*destroy)(PhocViewChild *child);
 };
 
+/**
+ * PhocViewChild:
+ * @link: Link to PhocView::child_surfaces
+ * @view: The #PhocView this child belongs to
+ * @parent: (nullable): The parent of this child if another child
+ * @children: (nullable): children of this child
+ *
+ * A child of a view, e.g. a popup or subsurface
+ */
 typedef struct _PhocViewChild {
   const struct phoc_view_child_interface *impl;
 
@@ -168,7 +177,7 @@ typedef struct _PhocViewChild {
   PhocViewChild *parent;
   GSList *children;
   struct wlr_surface *wlr_surface;
-  struct wl_list link; // PhocView::child_surfaces;
+  struct wl_list link;
   bool mapped;
 
   struct wl_listener commit;
