@@ -551,49 +551,16 @@ handle_new_output (struct wl_listener *listener, void *data)
 			  NULL);
 }
 
+
 static void
-phoc_desktop_constructed (GObject *object)
+phoc_desktop_setup_xwayland (PhocDesktop *self)
 {
-  PhocDesktop *self = PHOC_DESKTOP (object);
-  PhocServer *server = phoc_server_get_default ();
-  struct roots_config *config = self->config;
-
-  G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
-
-  wl_list_init(&self->views);
-  wl_list_init(&self->outputs);
-
-  self->new_output.notify = handle_new_output;
-  wl_signal_add(&server->backend->events.new_output, &self->new_output);
-
-  self->layout = wlr_output_layout_create();
-  wlr_xdg_output_manager_v1_create(server->wl_display, self->layout);
-  self->layout_change.notify = handle_layout_change;
-  wl_signal_add(&self->layout->events.change, &self->layout_change);
-
-  self->xdg_shell = wlr_xdg_shell_create(server->wl_display);
-  wl_signal_add(&self->xdg_shell->events.new_surface,
-		&self->xdg_shell_surface);
-  self->xdg_shell_surface.notify = handle_xdg_shell_surface;
-
-  self->layer_shell = wlr_layer_shell_v1_create(server->wl_display);
-  wl_signal_add(&self->layer_shell->events.new_surface,
-		&self->layer_shell_surface);
-  self->layer_shell_surface.notify = handle_layer_shell_surface;
-
-  self->tablet_v2 = wlr_tablet_v2_create(server->wl_display);
-
 #ifdef PHOC_XWAYLAND
   const char *cursor_theme = NULL;
   const char *cursor_default = PHOC_XCURSOR_DEFAULT;
-#endif
+  PhocConfig *config = self->config;
+  PhocServer *server = phoc_server_get_default ();
 
-  char cursor_size_fmt[16];
-  snprintf(cursor_size_fmt, sizeof(cursor_size_fmt),
-	   "%d", PHOC_XCURSOR_SIZE);
-  setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
-
-#ifdef PHOC_XWAYLAND
   self->xcursor_manager = wlr_xcursor_manager_create(cursor_theme,
 						     PHOC_XCURSOR_SIZE);
   g_return_if_fail (self->xcursor_manager);
@@ -630,6 +597,46 @@ phoc_desktop_constructed (GObject *object)
     }
   }
 #endif
+}
+
+
+static void
+phoc_desktop_constructed (GObject *object)
+{
+  PhocDesktop *self = PHOC_DESKTOP (object);
+  PhocServer *server = phoc_server_get_default ();
+
+  G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
+
+  wl_list_init(&self->views);
+  wl_list_init(&self->outputs);
+
+  self->new_output.notify = handle_new_output;
+  wl_signal_add(&server->backend->events.new_output, &self->new_output);
+
+  self->layout = wlr_output_layout_create();
+  wlr_xdg_output_manager_v1_create(server->wl_display, self->layout);
+  self->layout_change.notify = handle_layout_change;
+  wl_signal_add(&self->layout->events.change, &self->layout_change);
+
+  self->xdg_shell = wlr_xdg_shell_create(server->wl_display);
+  wl_signal_add(&self->xdg_shell->events.new_surface,
+		&self->xdg_shell_surface);
+  self->xdg_shell_surface.notify = handle_xdg_shell_surface;
+
+  self->layer_shell = wlr_layer_shell_v1_create(server->wl_display);
+  wl_signal_add(&self->layer_shell->events.new_surface,
+		&self->layer_shell_surface);
+  self->layer_shell_surface.notify = handle_layer_shell_surface;
+
+  self->tablet_v2 = wlr_tablet_v2_create(server->wl_display);
+
+  char cursor_size_fmt[16];
+  snprintf(cursor_size_fmt, sizeof(cursor_size_fmt),
+	   "%d", PHOC_XCURSOR_SIZE);
+  setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
+
+  phoc_desktop_setup_xwayland (self);
 
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create(server->wl_display);
   self->export_dmabuf_manager_v1 =
