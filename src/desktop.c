@@ -568,6 +568,12 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
   if (config->xwayland) {
     self->xwayland = wlr_xwayland_create(server->wl_display,
 					 server->compositor, config->xwayland_lazy);
+    if (!self->xwayland) {
+      g_critical ("Failed to initialize Xwayland");
+      g_unsetenv ("DISPLAY");
+      return;
+    }
+
     wl_signal_add(&self->xwayland->events.new_surface,
 		  &self->xwayland_surface);
     self->xwayland_surface.notify = handle_xwayland_surface;
