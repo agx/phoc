@@ -753,7 +753,7 @@ phoc_desktop_finalize (GObject *object)
 
 #ifdef PHOC_XWAYLAND
   /* Disconnect XWayland listener before shutting it down */
-  if (self->config->xwayland) {
+  if (self->xwayland) {
     wl_list_remove (&self->xwayland_surface.link);
     wl_list_remove (&self->xwayland_ready.link);
 #ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
