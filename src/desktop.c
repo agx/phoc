@@ -588,7 +588,7 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
     self->xwayland_remove_startup_id.notify = handle_xwayland_remove_startup_id;
 #endif
 
-    setenv("DISPLAY", self->xwayland->display_name, true);
+    g_setenv ("DISPLAY", self->xwayland->display_name, true);
 
     if (!wlr_xcursor_manager_load(self->xcursor_manager, 1))
       g_critical ("Cannot load XWayland XCursor theme");
@@ -640,7 +640,7 @@ phoc_desktop_constructed (GObject *object)
   char cursor_size_fmt[16];
   snprintf(cursor_size_fmt, sizeof(cursor_size_fmt),
 	   "%d", PHOC_XCURSOR_SIZE);
-  setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
+  g_setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
 
   phoc_desktop_setup_xwayland (self);
 
