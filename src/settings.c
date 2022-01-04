@@ -83,10 +83,10 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 			} else if (strcasecmp(value, "false") == 0) {
 				config->xwayland = false;
 			} else {
-				wlr_log(WLR_ERROR, "got unknown xwayland value: %s", value);
+				g_critical ("got unknown xwayland value: %s", value);
 			}
 		} else {
-			wlr_log(WLR_ERROR, "got unknown core config: %s", name);
+			g_critical ("got unknown core config: %s", name);
 		}
 	} else if (strncmp(output_prefix, section, strlen(output_prefix)) == 0) {
 		const char *output_name = section + strlen(output_prefix);
@@ -116,7 +116,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 			} else if (strcasecmp(value, "false") == 0) {
 				oc->enable = false;
 			} else {
-				wlr_log(WLR_ERROR, "got invalid output enable value: %s", value);
+				g_critical ("got invalid output enable value: %s", value);
 			}
 		} else if (strcmp(name, "x") == 0) {
 			oc->x = strtol(value, NULL, 10);
@@ -143,7 +143,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 			} else if (strcmp(value, "flipped-270") == 0) {
 				oc->transform = WL_OUTPUT_TRANSFORM_FLIPPED_270;
 			} else {
-				wlr_log(WLR_ERROR, "got unknown transform value: %s", value);
+				g_critical ("got unknown transform value: %s", value);
 			}
 			/* Make sure we rotate clockwise */
 			phoc_utils_fix_transform(&oc->transform);
@@ -169,7 +169,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 				wl_list_insert(&oc->modes, &mode->link);
 			} else {
 				free(mode);
-				wlr_log(WLR_ERROR, "Invalid modeline: %s", value);
+				g_critical ("Invalid modeline: %s", value);
 			}
 		}
 	} else if (strncmp(cursor_prefix, section, strlen(cursor_prefix)) == 0) {
@@ -181,7 +181,7 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 	} else if (strncmp(switch_prefix, section, strlen(switch_prefix)) == 0) {
 		g_warning ("Found unused 'switch:' config section. Please remove");
 	} else {
-		wlr_log(WLR_ERROR, "got unknown config section: %s", section);
+		g_critical ("got unknown config section: %s", section);
 	}
 
 	return 1;
@@ -211,12 +211,12 @@ struct roots_config *roots_config_create(const char *config_path) {
 		if (getcwd(cwd, sizeof(cwd)) != NULL) {
 			char buf[MAXPATHLEN];
 			if (snprintf(buf, MAXPATHLEN, "%s/%s", cwd, "phoc.ini") >= MAXPATHLEN) {
-				wlr_log(WLR_ERROR, "config path too long");
+				g_critical ("config path too long");
 				exit(1);
 			}
 			config->config_path = strdup(buf);
 		} else {
-			wlr_log(WLR_ERROR, "could not get cwd");
+			g_critical ("could not get cwd");
 			exit(1);
 		}
 	}
@@ -226,10 +226,10 @@ struct roots_config *roots_config_create(const char *config_path) {
 	if (result == -1) {
 		g_debug ("No config file found. Using sensible defaults.");
 	} else if (result == -2) {
-		wlr_log(WLR_ERROR, "Could not allocate memory to parse config file");
+		g_critical ("Could not allocate memory to parse config file");
 		exit(1);
 	} else if (result != 0) {
-		wlr_log(WLR_ERROR, "Could not parse config file");
+		g_critical ("Could not parse config file");
 		exit(1);
 	}
 

@@ -108,8 +108,8 @@ static void update_cursors(PhocLayerSurface *roots_surface,
 				phoc_cursor_update_position(cursor,
 							    time.tv_sec * 1000 + time.tv_nsec / 1000000);
 			} else {
-				wlr_log(WLR_ERROR, "Failed to get time, not updating"
-					"position. Errno: %s\n", strerror(errno));
+				g_critical ("Failed to get time, not updating position. Errno: %s\n",
+					    strerror(errno));
 			}
 		}
 	}
@@ -766,9 +766,9 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 					cursor->cursor->x,
 					cursor->cursor->y);
 		if (!output) {
-			wlr_log(WLR_ERROR, "Couldn't find output at (%.0f,%.0f)",
-				cursor->cursor->x,
-				cursor->cursor->y);
+			g_critical ("Couldn't find output at (%.0f,%.0f)",
+                                    cursor->cursor->x,
+                                    cursor->cursor->y);
 			output = wlr_output_layout_get_center_output(desktop->layout);
 		}
 		if (output) {

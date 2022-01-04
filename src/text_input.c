@@ -105,7 +105,7 @@ static void relay_send_im_done(struct roots_input_method_relay *relay,
 		struct wlr_text_input_v3 *input) {
 	struct wlr_input_method_v2 *input_method = relay->input_method;
 	if (!input_method) {
-		wlr_log(WLR_INFO, "Sending IM_DONE but im is gone");
+		g_debug ("Sending IM_DONE but im is gone");
 		return;
 	}
 	if (!text_input_is_focused(input)) {
@@ -133,7 +133,7 @@ static void handle_text_input_enable(struct wl_listener *listener, void *data) {
 		enable);
 	struct roots_input_method_relay *relay = text_input->relay;
 	if (relay->input_method == NULL) {
-		wlr_log(WLR_INFO, "Enabling text input when input method is gone");
+		g_debug ("Enabling text input when input method is gone");
 		return;
 	}
 	// relay_send_im_done protects from receiving unfocussed done,
@@ -152,12 +152,12 @@ static void handle_text_input_commit(struct wl_listener *listener,
 		commit);
 	struct roots_input_method_relay *relay = text_input->relay;
 	if (!text_input->input->current_enabled) {
-		wlr_log(WLR_INFO, "Inactive text input tried to commit an update");
+		g_debug ("Inactive text input tried to commit an update");
 		return;
 	}
 	g_debug ("Text input committed update");
 	if (relay->input_method == NULL) {
-		wlr_log(WLR_INFO, "Text input committed, but input method is gone");
+		g_debug ("Text input committed, but input method is gone");
 		return;
 	}
 	relay_send_im_done(relay, text_input->input);
@@ -269,7 +269,7 @@ static void relay_handle_input_method(struct wl_listener *listener,
 	}
 
 	if (relay->input_method != NULL) {
-		wlr_log(WLR_INFO, "Attempted to connect second input method to a seat");
+		g_debug ("Attempted to connect second input method to a seat");
 		wlr_input_method_v2_send_unavailable(input_method);
 		return;
 	}
