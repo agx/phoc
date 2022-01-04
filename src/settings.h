@@ -30,7 +30,7 @@ struct roots_output_config {
 	struct wl_list modes;
 };
 
-struct roots_config {
+typedef struct roots_config {
 	bool xwayland;
 	bool xwayland_lazy;
 
@@ -39,7 +39,7 @@ struct roots_config {
 	struct wl_list outputs;
 
 	char *config_path;
-};
+} PhocConfig;
 
 struct roots_config *roots_config_create(const char *config_path);
 void roots_config_destroy(struct roots_config *config);

@@ -551,12 +551,66 @@ handle_new_output (struct wl_listener *listener, void *data)
 			  NULL);
 }
 
+
+static void
+phoc_desktop_setup_xwayland (PhocDesktop *self)
+{
+#ifdef PHOC_XWAYLAND
+  const char *cursor_theme = NULL;
+  const char *cursor_default = PHOC_XCURSOR_DEFAULT;
+  PhocConfig *config = self->config;
+  PhocServer *server = phoc_server_get_default ();
+
+  self->xcursor_manager = wlr_xcursor_manager_create(cursor_theme,
+						     PHOC_XCURSOR_SIZE);
+  g_return_if_fail (self->xcursor_manager);
+
+  if (config->xwayland) {
+    self->xwayland = wlr_xwayland_create(server->wl_display,
+					 server->compositor, config->xwayland_lazy);
+    if (!self->xwayland) {
+      g_critical ("Failed to initialize Xwayland");
+      g_unsetenv ("DISPLAY");
+      return;
+    }
+
+    wl_signal_add(&self->xwayland->events.new_surface,
+		  &self->xwayland_surface);
+    self->xwayland_surface.notify = handle_xwayland_surface;
+
+    wl_signal_add(&self->xwayland->events.ready,
+		  &self->xwayland_ready);
+    self->xwayland_ready.notify = handle_xwayland_ready;
+
+#ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
+    wl_signal_add(&self->xwayland->events.remove_startup_info,
+		  &self->xwayland_remove_startup_id);
+    self->xwayland_remove_startup_id.notify = handle_xwayland_remove_startup_id;
+#endif
+
+    g_setenv ("DISPLAY", self->xwayland->display_name, true);
+
+    if (!wlr_xcursor_manager_load(self->xcursor_manager, 1))
+      g_critical ("Cannot load XWayland XCursor theme");
+
+    struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor(
+								  self->xcursor_manager, cursor_default, 1);
+    if (xcursor != NULL) {
+      struct wlr_xcursor_image *image = xcursor->images[0];
+      wlr_xwayland_set_cursor(self->xwayland, image->buffer,
+			      image->width * 4, image->width, image->height, image->hotspot_x,
+			      image->hotspot_y);
+    }
+  }
+#endif
+}
+
+
 static void
 phoc_desktop_constructed (GObject *object)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
   PhocServer *server = phoc_server_get_default ();
-  struct roots_config *config = self->config;
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
 
@@ -583,56 +637,12 @@ phoc_desktop_constructed (GObject *object)
 
   self->tablet_v2 = wlr_tablet_v2_create(server->wl_display);
 
-  const char *cursor_theme = NULL;
-#ifdef PHOC_XWAYLAND
-  const char *cursor_default = PHOC_XCURSOR_DEFAULT;
-#endif
-
   char cursor_size_fmt[16];
   snprintf(cursor_size_fmt, sizeof(cursor_size_fmt),
 	   "%d", PHOC_XCURSOR_SIZE);
-  setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
-  if (cursor_theme != NULL) {
-    setenv("XCURSOR_THEME", cursor_theme, 1);
-  }
+  g_setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
 
-#ifdef PHOC_XWAYLAND
-  self->xcursor_manager = wlr_xcursor_manager_create(cursor_theme,
-						     PHOC_XCURSOR_SIZE);
-  g_return_if_fail (self->xcursor_manager);
-
-  if (config->xwayland) {
-    self->xwayland = wlr_xwayland_create(server->wl_display,
-					 server->compositor, config->xwayland_lazy);
-    wl_signal_add(&self->xwayland->events.new_surface,
-		  &self->xwayland_surface);
-    self->xwayland_surface.notify = handle_xwayland_surface;
-
-    wl_signal_add(&self->xwayland->events.ready,
-		  &self->xwayland_ready);
-    self->xwayland_ready.notify = handle_xwayland_ready;
-
-#ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
-    wl_signal_add(&self->xwayland->events.remove_startup_info,
-		  &self->xwayland_remove_startup_id);
-    self->xwayland_remove_startup_id.notify = handle_xwayland_remove_startup_id;
-#endif
-
-    setenv("DISPLAY", self->xwayland->display_name, true);
-
-    if (!wlr_xcursor_manager_load(self->xcursor_manager, 1))
-      g_critical ("Cannot load XWayland XCursor theme");
-
-    struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor(
-								  self->xcursor_manager, cursor_default, 1);
-    if (xcursor != NULL) {
-      struct wlr_xcursor_image *image = xcursor->images[0];
-      wlr_xwayland_set_cursor(self->xwayland, image->buffer,
-			      image->width * 4, image->width, image->height, image->hotspot_x,
-			      image->hotspot_y);
-    }
-  }
-#endif
+  phoc_desktop_setup_xwayland (self);
 
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create(server->wl_display);
   self->export_dmabuf_manager_v1 =
@@ -749,7 +759,7 @@ phoc_desktop_finalize (GObject *object)
 
 #ifdef PHOC_XWAYLAND
   /* Disconnect XWayland listener before shutting it down */
-  if (self->config->xwayland) {
+  if (self->xwayland) {
     wl_list_remove (&self->xwayland_surface.link);
     wl_list_remove (&self->xwayland_ready.link);
 #ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO

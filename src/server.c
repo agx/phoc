@@ -400,7 +400,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
     return FALSE;
   }
 
-  setenv("WAYLAND_DISPLAY", socket, true);
+  g_setenv("WAYLAND_DISPLAY", socket, true);
 #ifdef PHOC_XWAYLAND
   if (self->desktop->xwayland != NULL) {
     PhocSeat *xwayland_seat = phoc_input_get_seat(self->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
