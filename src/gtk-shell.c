@@ -45,7 +45,7 @@ handle_set_dbus_properties(struct wl_client *client,
   g_free (gtk_surface->app_id);
   gtk_surface->app_id = g_strdup (application_id);
 
-  view = roots_view_from_wlr_surface (gtk_surface->wlr_surface);
+  view = phoc_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
     view_set_app_id (view, application_id);
 }
@@ -88,7 +88,7 @@ handle_request_focus(struct wl_client *client,
   if (!gtk_surface->wlr_surface)
     return;
 
-  view = roots_view_from_wlr_surface (gtk_surface->wlr_surface);
+  view = phoc_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
     phoc_seat_set_focus(seat, view);
 }

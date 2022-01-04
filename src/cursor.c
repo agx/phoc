@@ -720,7 +720,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
         }
       }
     } else {
-      PhocView *view = roots_view_from_wlr_surface (root);
+      PhocView *view = phoc_view_from_wlr_surface (root);
       if (view) {
         scale = view->scale;
         sx = lx / scale - view->box.x;
