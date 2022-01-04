@@ -752,7 +752,9 @@ phoc_desktop_finalize (GObject *object)
   if (self->config->xwayland) {
     wl_list_remove (&self->xwayland_surface.link);
     wl_list_remove (&self->xwayland_ready.link);
+#ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
     wl_list_remove (&self->xwayland_remove_startup_id.link);
+#endif
   }
 
   // We need to shutdown Xwayland before disconnecting all clients, otherwise
