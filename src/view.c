@@ -669,7 +669,7 @@ void view_child_destroy(struct roots_view_child *child) {
 	if (child == NULL) {
 		return;
 	}
-	view_damage_whole(child->view);
+	phoc_view_damage_whole (child->view);
 	wl_list_remove(&child->link);
 	wl_list_remove(&child->commit.link);
 	wl_list_remove(&child->new_subsurface.link);
@@ -740,7 +740,7 @@ static void subsurface_handle_map(struct wl_listener *listener,
 	struct roots_subsurface *subsurface =
 		wl_container_of(listener, subsurface, map);
 	struct roots_view *view = subsurface->child.view;
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	phoc_input_update_cursor_focus(server->input);
 
 	struct wlr_box box;
@@ -761,7 +761,7 @@ static void subsurface_handle_unmap(struct wl_listener *listener,
 	struct roots_subsurface *subsurface =
 		wl_container_of(listener, subsurface, unmap);
 	struct roots_view *view = subsurface->child.view;
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	phoc_input_update_cursor_focus(server->input);
 }
 
@@ -884,14 +884,14 @@ void view_map(struct roots_view *view, struct wlr_surface *surface) {
 			// mapping a new stack may make the old stack disappear, so damage its area
 			struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
 			while (top_view) {
-				view_damage_whole(top_view);
+				phoc_view_damage_whole (top_view);
 				top_view = top_view->parent;
 			}
 		}
 	}
 
 	wl_list_insert(&view->desktop->views, &view->link);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	phoc_input_update_cursor_focus(server->input);
 }
 
@@ -902,7 +902,7 @@ void view_unmap(struct roots_view *view) {
 
 	wl_signal_emit(&view->events.unmap, view);
 
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 
 	wl_list_remove(&view->surface_new_subsurface.link);
 
@@ -923,7 +923,7 @@ void view_unmap(struct roots_view *view) {
 		// damage the newly activated stack as well since it may have just become visible
 		struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
 		while (top_view) {
-			view_damage_whole(top_view);
+			phoc_view_damage_whole (top_view);
 			top_view = top_view->parent;
 		}
 	}
@@ -1008,11 +1008,21 @@ phoc_view_apply_damage (PhocView *view)
     phoc_output_damage_from_view (output, view, false);
 }
 
-void view_damage_whole(struct roots_view *view) {
-	PhocOutput *output;
-	wl_list_for_each(output, &view->desktop->outputs, link) {
-		phoc_output_damage_from_view (output, view, true);
-	}
+/**
+ * phoc_view_damage_whole:
+ * @view: A view
+ *
+ * Add the damage of all surfaces belonging to a #PhocView's to the
+ * damaged screen area that needs repaint. This damages the whole
+ * @view (possibly including server side window decorations) ignoring
+ * any buffer damage.
+ */
+void
+phoc_view_damage_whole (struct roots_view *view)
+{
+  PhocOutput *output;
+  wl_list_for_each(output, &view->desktop->outputs, link)
+    phoc_output_damage_from_view (output, view, true);
 }
 
 void view_for_each_surface(struct roots_view *view,
@@ -1031,11 +1041,11 @@ void view_update_position(struct roots_view *view, int x, int y) {
 
 	struct wlr_box before;
 	view_get_box(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	view->box.x = x;
 	view->box.y = y;
 	view_update_output(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 }
 
 void view_update_size(struct roots_view *view, int width, int height) {
@@ -1046,7 +1056,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 
 	struct wlr_box before;
 	view_get_box(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	view->box.width = width;
 	view->box.height = height;
 	if (view->pending_centering || (view_is_floating (view) && phoc_desktop_get_auto_maximize (view->desktop))) {
@@ -1055,7 +1065,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 	}
 	view_update_scale(view);
 	view_update_output(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 }
 
 void view_update_decorated(struct roots_view *view, bool decorated) {
@@ -1063,7 +1073,7 @@ void view_update_decorated(struct roots_view *view, bool decorated) {
 		return;
 	}
 
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	view->decorated = decorated;
 	if (decorated) {
 		view->border_width = 4;
@@ -1072,7 +1082,7 @@ void view_update_decorated(struct roots_view *view, bool decorated) {
 		view->border_width = 0;
 		view->titlebar_height = 0;
 	}
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 }
 
 void view_set_title(struct roots_view *view, const char *title) {

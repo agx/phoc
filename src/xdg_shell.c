@@ -41,14 +41,14 @@ static void popup_handle_destroy(struct wl_listener *listener, void *data) {
 static void popup_handle_map(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, map);
-	view_damage_whole(popup->child.view);
+	phoc_view_damage_whole (popup->child.view);
 	phoc_input_update_cursor_focus(server->input);
 }
 
 static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, unmap);
-	view_damage_whole(popup->child.view);
+	phoc_view_damage_whole (popup->child.view);
 	phoc_input_update_cursor_focus(server->input);
 }
 

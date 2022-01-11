@@ -1559,7 +1559,7 @@ seat_raise_view_stack (PhocSeat *seat, struct roots_view *view)
 
   wl_list_remove (&view->link);
   wl_list_insert (&server->desktop->views, &view->link);
-  view_damage_whole (view);
+  phoc_view_damage_whole (view);
 
   struct roots_view *child;
 
