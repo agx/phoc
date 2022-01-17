@@ -57,9 +57,8 @@ typedef struct roots_text_input {
 	struct wl_listener destroy;
 } PhocTextInput;
 
-void roots_input_method_relay_init(PhocSeat *seat, struct roots_input_method_relay *relay);
-
-void roots_input_method_relay_destroy(struct roots_input_method_relay *relay);
+void phoc_input_method_relay_init      (PhocSeat *seat, PhocInputMethodRelay *relay);
+void phoc_input_method_relay_destroy   (PhocInputMethodRelay *relay);
 
 // Updates currently focused surface. Surface must belong to the same seat.
 void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,

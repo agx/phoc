@@ -291,25 +291,30 @@ static void relay_handle_input_method(struct wl_listener *listener,
 	}
 }
 
-void roots_input_method_relay_init(PhocSeat *seat,
-		struct roots_input_method_relay *relay) {
-        PhocServer *server = phoc_server_get_default ();
-	relay->seat = seat;
-	wl_list_init(&relay->text_inputs);
+void
+phoc_input_method_relay_init (PhocSeat *seat,
+                              PhocInputMethodRelay *relay)
+{
+  PhocServer *server = phoc_server_get_default ();
 
-	relay->text_input_new.notify = relay_handle_text_input;
-	wl_signal_add(&server->desktop->text_input->events.text_input,
-		&relay->text_input_new);
+  g_assert (PHOC_IS_SEAT (seat));
+  relay->seat = seat;
+  wl_list_init (&relay->text_inputs);
 
-	relay->input_method_new.notify = relay_handle_input_method;
-	wl_signal_add(
-		&server->desktop->input_method->events.input_method,
-		&relay->input_method_new);
+  relay->text_input_new.notify = relay_handle_text_input;
+  wl_signal_add (&server->desktop->text_input->events.text_input,
+                 &relay->text_input_new);
+
+  relay->input_method_new.notify = relay_handle_input_method;
+  wl_signal_add(&server->desktop->input_method->events.input_method,
+                &relay->input_method_new);
 }
 
-void roots_input_method_relay_destroy(struct roots_input_method_relay *relay) {
-	wl_list_remove(&relay->text_input_new.link);
-	wl_list_remove(&relay->input_method_new.link);
+void
+phoc_input_method_relay_destroy (PhocInputMethodRelay *relay)
+{
+  wl_list_remove (&relay->text_input_new.link);
+  wl_list_remove (&relay->input_method_new.link);
 }
 
 void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,

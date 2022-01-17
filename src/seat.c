@@ -927,7 +927,7 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
   // TODO: probably more to be freed here
   wl_list_remove (&seat->destroy.link);
 
-  roots_input_method_relay_destroy (&seat->im_relay);
+  phoc_input_method_relay_destroy (&seat->im_relay);
 
   PhocSeatView *view, *nview;
 
@@ -1974,7 +1974,7 @@ phoc_seat_constructed (GObject *object)
   phoc_seat_init_cursor (self);
   g_assert (self->cursor);
 
-  roots_input_method_relay_init (self, &self->im_relay);
+  phoc_input_method_relay_init (self, &self->im_relay);
 
   self->request_set_selection.notify =
     phoc_seat_handle_request_set_selection;
