@@ -260,35 +260,38 @@ relay_handle_text_input (struct wl_listener *listener, void *data)
   wl_list_insert (&relay->text_inputs, &text_input->link);
 }
 
-static void relay_handle_input_method(struct wl_listener *listener,
-		void *data) {
-	struct roots_input_method_relay *relay = wl_container_of(listener, relay,
-		input_method_new);
-	struct wlr_input_method_v2 *input_method = data;
-	if (relay->seat->seat != input_method->seat) {
-		return;
-	}
+static void
+relay_handle_input_method (struct wl_listener *listener,
+                           void *data)
+{
+  PhocInputMethodRelay *relay = wl_container_of (listener, relay, input_method_new);
+  struct wlr_input_method_v2 *input_method = data;
 
-	if (relay->input_method != NULL) {
-		g_debug ("Attempted to connect second input method to a seat");
-		wlr_input_method_v2_send_unavailable(input_method);
-		return;
-	}
+  if (relay->seat->seat != input_method->seat) {
+    g_warning ("Attempted to input method for wrong seat");
+    return;
+  }
 
-	relay->input_method = input_method;
-	wl_signal_add(&relay->input_method->events.commit,
-		&relay->input_method_commit);
-	relay->input_method_commit.notify = handle_im_commit;
-	wl_signal_add(&relay->input_method->events.destroy,
-		&relay->input_method_destroy);
-	relay->input_method_destroy.notify = handle_im_destroy;
+  if (relay->input_method != NULL) {
+    g_debug ("Attempted to connect second input method to a seat");
+    wlr_input_method_v2_send_unavailable (input_method);
+    return;
+  }
 
-	struct roots_text_input *text_input = relay_get_focusable_text_input(relay);
-	if (text_input) {
-		wlr_text_input_v3_send_enter(text_input->input,
-			text_input->pending_focused_surface);
-		text_input_clear_pending_focused_surface(text_input);
-	}
+  g_debug ("Input method available");
+  relay->input_method = input_method;
+
+  wl_signal_add(&relay->input_method->events.commit, &relay->input_method_commit);
+  relay->input_method_commit.notify = handle_im_commit;
+
+  wl_signal_add(&relay->input_method->events.destroy, &relay->input_method_destroy);
+  relay->input_method_destroy.notify = handle_im_destroy;
+
+  PhocTextInput *text_input = relay_get_focusable_text_input (relay);
+  if (text_input) {
+    wlr_text_input_v3_send_enter (text_input->input, text_input->pending_focused_surface);
+    text_input_clear_pending_focused_surface (text_input);
+  }
 }
 
 void
