@@ -214,32 +214,33 @@ static void handle_pending_focused_surface_destroy(struct wl_listener *listener,
 	text_input_clear_pending_focused_surface(text_input);
 }
 
-struct roots_text_input *roots_text_input_create(
-		struct roots_input_method_relay *relay,
-		struct wlr_text_input_v3 *text_input) {
-	struct roots_text_input *input = calloc(1, sizeof(struct roots_text_input));
-	if (!input) {
-		return NULL;
-	}
-	input->input = text_input;
-	input->relay = relay;
+static PhocTextInput *
+phoc_text_input_create (PhocInputMethodRelay     *relay,
+                        struct wlr_text_input_v3 *text_input)
+{
+  PhocTextInput *input = g_new0 (PhocTextInput, 1);
 
-	wl_signal_add(&text_input->events.enable, &input->enable);
-	input->enable.notify = handle_text_input_enable;
+  g_debug ("New text input %p", input);
 
-	wl_signal_add(&text_input->events.commit, &input->commit);
-	input->commit.notify = handle_text_input_commit;
+  input->input = text_input;
+  input->relay = relay;
 
-	wl_signal_add(&text_input->events.disable, &input->disable);
-	input->disable.notify = handle_text_input_disable;
+  wl_signal_add (&text_input->events.enable, &input->enable);
+  input->enable.notify = handle_text_input_enable;
 
-	wl_signal_add(&text_input->events.destroy, &input->destroy);
-	input->destroy.notify = handle_text_input_destroy;
+  wl_signal_add (&text_input->events.commit, &input->commit);
+  input->commit.notify = handle_text_input_commit;
 
-	input->pending_focused_surface_destroy.notify =
-		handle_pending_focused_surface_destroy;
-	wl_list_init(&input->pending_focused_surface_destroy.link);
-	return input;
+  wl_signal_add (&text_input->events.disable, &input->disable);
+  input->disable.notify = handle_text_input_disable;
+
+  wl_signal_add (&text_input->events.destroy, &input->destroy);
+  input->destroy.notify = handle_text_input_destroy;
+
+  input->pending_focused_surface_destroy.notify = handle_pending_focused_surface_destroy;
+  wl_list_init (&input->pending_focused_surface_destroy.link);
+
+  return input;
 }
 
 static void relay_handle_text_input(struct wl_listener *listener,
@@ -251,7 +252,7 @@ static void relay_handle_text_input(struct wl_listener *listener,
 		return;
 	}
 
-	struct roots_text_input *text_input = roots_text_input_create(relay,
+	struct roots_text_input *text_input = phoc_text_input_create(relay,
 		wlr_text_input);
 	if (!text_input) {
 		return;

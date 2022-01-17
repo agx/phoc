@@ -65,8 +65,4 @@ void roots_input_method_relay_destroy(struct roots_input_method_relay *relay);
 void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,
 	struct wlr_surface *surface);
 
-struct roots_text_input *roots_text_input_create(
-	struct roots_input_method_relay *relay,
-	struct wlr_text_input_v3 *text_input);
-
 G_END_DECLS
