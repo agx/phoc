@@ -8,7 +8,7 @@
 G_BEGIN_DECLS
 
 /**
- * roots_input_method_relay:
+ * PhocInputMethodRelay:
  *
  * The relay structure manages the relationship between text-input and
  * input_method interfaces on a given seat. Multiple text-input interfaces may
@@ -21,7 +21,7 @@ G_BEGIN_DECLS
  * in the focused state, wl_keyboard sent an enter as well. However, having
  * wl_keyboard focused doesn't mean that text-input will be focused.
  */
-struct roots_input_method_relay {
+typedef struct roots_input_method_relay {
 	PhocSeat *seat;
 
 	struct wl_list text_inputs; // roots_text_input::link
@@ -32,10 +32,10 @@ struct roots_input_method_relay {
 	struct wl_listener input_method_new;
 	struct wl_listener input_method_commit;
 	struct wl_listener input_method_destroy;
-};
+} PhocInputMethodRelay;
 
-struct roots_text_input {
-	struct roots_input_method_relay *relay;
+typedef struct roots_text_input {
+	PhocInputMethodRelay *relay;
 
 	struct wlr_text_input_v3 *input;
 	// The surface getting seat's focus. Stored for when text-input cannot
@@ -50,7 +50,7 @@ struct roots_text_input {
 	struct wl_listener commit;
 	struct wl_listener disable;
 	struct wl_listener destroy;
-};
+} PhocTextInput;
 
 void roots_input_method_relay_init(PhocSeat *seat, struct roots_input_method_relay *relay);
 
