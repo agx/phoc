@@ -9,9 +9,9 @@
 #include "server.h"
 #include "text_input.h"
 
-static struct roots_text_input *relay_get_focusable_text_input(
-		struct roots_input_method_relay *relay) {
-	struct roots_text_input *text_input = NULL;
+static PhocTextInput *relay_get_focusable_text_input(
+		PhocInputMethodRelay *relay) {
+	PhocTextInput *text_input = NULL;
 	wl_list_for_each(text_input, &relay->text_inputs, link) {
 		if (text_input->pending_focused_surface) {
 			return text_input;
@@ -20,9 +20,9 @@ static struct roots_text_input *relay_get_focusable_text_input(
 	return NULL;
 }
 
-static struct roots_text_input *relay_get_focused_text_input(
-		struct roots_input_method_relay *relay) {
-	struct roots_text_input *text_input = NULL;
+static PhocTextInput *relay_get_focused_text_input(
+		PhocInputMethodRelay *relay) {
+	PhocTextInput *text_input = NULL;
 	wl_list_for_each(text_input, &relay->text_inputs, link) {
 		if (text_input->input->focused_surface) {
 			assert(text_input->pending_focused_surface == NULL);
@@ -33,10 +33,10 @@ static struct roots_text_input *relay_get_focused_text_input(
 }
 
 static void handle_im_commit(struct wl_listener *listener, void *data) {
-	struct roots_input_method_relay *relay = wl_container_of(listener, relay,
+	PhocInputMethodRelay *relay = wl_container_of(listener, relay,
 		input_method_commit);
 
-	struct roots_text_input *text_input = relay_get_focused_text_input(relay);
+	PhocTextInput *text_input = relay_get_focused_text_input(relay);
 	if (!text_input) {
 		return;
 	}
@@ -63,14 +63,14 @@ static void handle_im_commit(struct wl_listener *listener, void *data) {
 
 
 static void text_input_clear_pending_focused_surface(
-		struct roots_text_input *text_input) {
+		PhocTextInput *text_input) {
 	wl_list_remove(&text_input->pending_focused_surface_destroy.link);
 	wl_list_init(&text_input->pending_focused_surface_destroy.link);
 	text_input->pending_focused_surface = NULL;
 }
 
 static void text_input_set_pending_focused_surface(
-		struct roots_text_input *text_input, struct wlr_surface *surface) {
+		PhocTextInput *text_input, struct wlr_surface *surface) {
 	text_input_clear_pending_focused_surface(text_input);
 	g_assert(surface);
 	text_input->pending_focused_surface = surface;
@@ -79,12 +79,12 @@ static void text_input_set_pending_focused_surface(
 }
 
 static void handle_im_destroy(struct wl_listener *listener, void *data) {
-	struct roots_input_method_relay *relay = wl_container_of(listener, relay,
+	PhocInputMethodRelay *relay = wl_container_of(listener, relay,
 		input_method_destroy);
 	struct wlr_input_method_v2 *context = data;
 	assert(context == relay->input_method);
 	relay->input_method = NULL;
-	struct roots_text_input *text_input = relay_get_focused_text_input(relay);
+	PhocTextInput *text_input = relay_get_focused_text_input(relay);
 	if (text_input) {
 		// keyboard focus is still there, so keep the surface at hand in case
 		// the input method returns
@@ -101,7 +101,7 @@ static bool text_input_is_focused(struct wlr_text_input_v3 *text_input) {
 	return text_input->focused_surface != NULL;
 }
 
-static void relay_send_im_done(struct roots_input_method_relay *relay,
+static void relay_send_im_done(PhocInputMethodRelay *relay,
 		struct wlr_text_input_v3 *input) {
 	struct wlr_input_method_v2 *input_method = relay->input_method;
 	if (!input_method) {
@@ -129,9 +129,9 @@ static void relay_send_im_done(struct roots_input_method_relay *relay,
 }
 
 static void handle_text_input_enable(struct wl_listener *listener, void *data) {
-	struct roots_text_input *text_input = wl_container_of(listener, text_input,
+	PhocTextInput *text_input = wl_container_of(listener, text_input,
 		enable);
-	struct roots_input_method_relay *relay = text_input->relay;
+	PhocInputMethodRelay *relay = text_input->relay;
 	if (relay->input_method == NULL) {
 		g_debug ("Enabling text input when input method is gone");
 		return;
@@ -148,9 +148,9 @@ static void handle_text_input_enable(struct wl_listener *listener, void *data) {
 
 static void handle_text_input_commit(struct wl_listener *listener,
 		void *data) {
-	struct roots_text_input *text_input = wl_container_of(listener, text_input,
+	PhocTextInput *text_input = wl_container_of(listener, text_input,
 		commit);
-	struct roots_input_method_relay *relay = text_input->relay;
+	PhocInputMethodRelay *relay = text_input->relay;
 	if (!text_input->input->current_enabled) {
 		g_debug ("Inactive text input tried to commit an update");
 		return;
@@ -163,8 +163,8 @@ static void handle_text_input_commit(struct wl_listener *listener,
 	relay_send_im_done(relay, text_input->input);
 }
 
-static void relay_disable_text_input(struct roots_input_method_relay *relay,
-		struct roots_text_input *text_input) {
+static void relay_disable_text_input(PhocInputMethodRelay *relay,
+		PhocTextInput *text_input) {
 	if (relay->input_method == NULL) {
 		g_debug ("Disabling text input, but input method is gone");
 		return;
@@ -180,17 +180,17 @@ static void relay_disable_text_input(struct roots_input_method_relay *relay,
 
 static void handle_text_input_disable(struct wl_listener *listener,
 		void *data) {
-	struct roots_text_input *text_input = wl_container_of(listener, text_input,
+	PhocTextInput *text_input = wl_container_of(listener, text_input,
 		disable);
-	struct roots_input_method_relay *relay = text_input->relay;
+	PhocInputMethodRelay *relay = text_input->relay;
 	relay_disable_text_input(relay, text_input);
 }
 
 static void handle_text_input_destroy(struct wl_listener *listener,
 		void *data) {
-	struct roots_text_input *text_input = wl_container_of(listener, text_input,
+	PhocTextInput *text_input = wl_container_of(listener, text_input,
 		destroy);
-	struct roots_input_method_relay *relay = text_input->relay;
+	PhocInputMethodRelay *relay = text_input->relay;
 
 	if (text_input->input->current_enabled) {
 		relay_disable_text_input(relay, text_input);
@@ -207,7 +207,7 @@ static void handle_text_input_destroy(struct wl_listener *listener,
 
 static void handle_pending_focused_surface_destroy(struct wl_listener *listener,
 		void *data) {
-	struct roots_text_input *text_input = wl_container_of(listener, text_input,
+	PhocTextInput *text_input = wl_container_of(listener, text_input,
 		pending_focused_surface_destroy);
 	struct wlr_surface *surface = data;
 	assert(text_input->pending_focused_surface == surface);

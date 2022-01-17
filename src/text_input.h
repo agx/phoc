@@ -23,10 +23,10 @@ G_BEGIN_DECLS
  * in the focused state, wl_keyboard sent an enter as well. However, having
  * wl_keyboard focused doesn't mean that text-input will be focused.
  */
-typedef struct roots_input_method_relay {
+typedef struct _PhocInputMethodRelay {
 	PhocSeat *seat;
 
-	struct wl_list text_inputs; // roots_text_input::link
+	struct wl_list text_inputs; // PhocTextInput::link
 	struct wlr_input_method_v2 *input_method; // doesn't have to be present
 
 	struct wl_listener text_input_new;
@@ -42,7 +42,7 @@ typedef struct roots_input_method_relay {
  *    be sent an enter event immediately after getting focus, e.g. when
  *    there's no input method available. Cleared once text-input is entered.
  */
-typedef struct roots_text_input {
+typedef struct _PhocTextInput {
 	PhocInputMethodRelay *relay;
 
 	struct wlr_text_input_v3 *input;
