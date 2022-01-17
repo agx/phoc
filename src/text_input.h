@@ -36,13 +36,16 @@ typedef struct roots_input_method_relay {
 	struct wl_listener input_method_destroy;
 } PhocInputMethodRelay;
 
+/**
+ * PhocTextInput:
+ * @pending_focused_surface: The surface getting seat's focus. Stored for when text-input cannot
+ *    be sent an enter event immediately after getting focus, e.g. when
+ *    there's no input method available. Cleared once text-input is entered.
+ */
 typedef struct roots_text_input {
 	PhocInputMethodRelay *relay;
 
 	struct wlr_text_input_v3 *input;
-	// The surface getting seat's focus. Stored for when text-input cannot
-	// be sent an enter event immediately after getting focus, e.g. when
-	// there's no input method available. Cleared once text-input is entered.
 	struct wlr_surface *pending_focused_surface;
 
 	struct wl_list link;
