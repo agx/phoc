@@ -243,21 +243,21 @@ phoc_text_input_create (PhocInputMethodRelay     *relay,
   return input;
 }
 
-static void relay_handle_text_input(struct wl_listener *listener,
-		void *data) {
-	struct roots_input_method_relay *relay = wl_container_of(listener, relay,
-		text_input_new);
-	struct wlr_text_input_v3 *wlr_text_input = data;
-	if (relay->seat->seat != wlr_text_input->seat) {
-		return;
-	}
+static void
+relay_handle_text_input (struct wl_listener *listener, void *data)
+{
+  PhocInputMethodRelay *relay = wl_container_of(listener, relay, text_input_new);
+  struct wlr_text_input_v3 *wlr_text_input = data;
 
-	struct roots_text_input *text_input = phoc_text_input_create(relay,
-		wlr_text_input);
-	if (!text_input) {
-		return;
-	}
-	wl_list_insert(&relay->text_inputs, &text_input->link);
+  if (relay->seat->seat != wlr_text_input->seat) {
+    g_warning ("Can't create text-input. Incorrect seat");
+    return;
+  }
+
+  PhocTextInput *text_input = phoc_text_input_create (relay, wlr_text_input);
+  g_assert (text_input);
+
+  wl_list_insert (&relay->text_inputs, &text_input->link);
 }
 
 static void relay_handle_input_method(struct wl_listener *listener,
