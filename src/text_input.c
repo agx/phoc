@@ -96,7 +96,7 @@ static void handle_im_destroy(struct wl_listener *listener, void *data) {
 }
 
 static bool text_input_is_focused(struct wlr_text_input_v3 *text_input) {
-	// roots_input_method_relay_set_focus ensures
+	// phoc_input_method_relay_set_focus ensures
 	// that focus sits on the single text input with focused_surface set.
 	return text_input->focused_surface != NULL;
 }
@@ -317,33 +317,47 @@ phoc_input_method_relay_destroy (PhocInputMethodRelay *relay)
   wl_list_remove (&relay->input_method_new.link);
 }
 
-void roots_input_method_relay_set_focus(struct roots_input_method_relay *relay,
-		struct wlr_surface *surface) {
-	struct roots_text_input *text_input;
-	wl_list_for_each(text_input, &relay->text_inputs, link) {
-		if (text_input->pending_focused_surface) {
-			assert(text_input->input->focused_surface == NULL);
-			if (surface != text_input->pending_focused_surface) {
-				text_input_clear_pending_focused_surface(text_input);
-			}
-		} else if (text_input->input->focused_surface) {
-			assert(text_input->pending_focused_surface == NULL);
-			if (surface != text_input->input->focused_surface) {
-				relay_disable_text_input(relay, text_input);
-				wlr_text_input_v3_send_leave(text_input->input);
-			}
-		}
+/**
+ * phoc_input_method_relay_set_focus:
+ * @relay: The input method relay
+ * @surface: The surface to focus
+ *
+ * Updates the currently focused surface. Surface must belong to the
+ * same seat.
+ */
+void
+phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
+                                   struct wlr_surface *surface)
+{
+  PhocTextInput *text_input;
 
-		if (surface
-		    && wl_resource_get_client(text_input->input->resource)
-		    == wl_resource_get_client(surface->resource)) {
-			if (relay->input_method) {
-				if (surface != text_input->input->focused_surface) {
-					wlr_text_input_v3_send_enter(text_input->input, surface);
-				}
-			} else if (surface != text_input->pending_focused_surface) {
-				text_input_set_pending_focused_surface(text_input, surface);
-			}
-		}
-	}
+  wl_list_for_each(text_input, &relay->text_inputs, link) {
+
+    if (text_input->pending_focused_surface) {
+      assert(text_input->input->focused_surface == NULL);
+      if (surface != text_input->pending_focused_surface) {
+        text_input_clear_pending_focused_surface(text_input);
+      }
+    } else if (text_input->input->focused_surface) {
+      assert(text_input->pending_focused_surface == NULL);
+      if (surface != text_input->input->focused_surface) {
+        relay_disable_text_input(relay, text_input);
+        wlr_text_input_v3_send_leave(text_input->input);
+      }
+    }
+
+    if (surface
+        && wl_resource_get_client(text_input->input->resource)
+        == wl_resource_get_client(surface->resource)) {
+
+      if (relay->input_method) {
+        if (surface != text_input->input->focused_surface) {
+          wlr_text_input_v3_send_enter(text_input->input, surface);
+        }
+      } else if (surface != text_input->pending_focused_surface) {
+        text_input_set_pending_focused_surface(text_input, surface);
+      }
+    }
+  }
 }
+

@@ -1652,7 +1652,7 @@ phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
   if (view == NULL) {
     seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
     wlr_seat_keyboard_clear_focus (seat->seat);
-    roots_input_method_relay_set_focus (&seat->im_relay, NULL);
+    phoc_input_method_relay_set_focus (&seat->im_relay, NULL);
     return;
   }
 
@@ -1687,7 +1687,7 @@ phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
   }
 
   phoc_cursor_update_focus (seat->cursor);
-  roots_input_method_relay_set_focus (&seat->im_relay, view->wlr_surface);
+  phoc_input_method_relay_set_focus (&seat->im_relay, view->wlr_surface);
 }
 
 /*
@@ -1742,7 +1742,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   }
 
   phoc_cursor_update_focus (seat->cursor);
-  roots_input_method_relay_set_focus (&seat->im_relay, layer->surface);
+  phoc_input_method_relay_set_focus (&seat->im_relay, layer->surface);
 }
 
 void
