@@ -65,9 +65,6 @@ static bool parse_modeline(const char *s, drmModeModeInfo *mode) {
 }
 
 static const char *output_prefix = "output:";
-static const char *device_prefix = "device:";
-static const char *cursor_prefix = "cursor:";
-static const char *switch_prefix = "switch:";
 
 static int config_ini_handler(PhocConfig *config, const char *section, const char *name,
 		const char *value) {
@@ -166,20 +163,12 @@ static int config_ini_handler(PhocConfig *config, const char *section, const cha
 			if (parse_modeline(value, &mode->info)) {
 				wl_list_insert(&oc->modes, &mode->link);
 			} else {
-				free(mode);
+				g_free(mode);
 				g_critical ("Invalid modeline: %s", value);
 			}
 		}
-	} else if (strncmp(cursor_prefix, section, strlen(cursor_prefix)) == 0) {
-		g_warning ("Found unused 'cursor:' config section. Please remove");
-	} else if (strcmp(section, "cursor") == 0) {
-		g_warning ("Found unused 'cursor' config section. Please remove");
-	} else if (strncmp(device_prefix, section, strlen(device_prefix)) == 0) {
-		g_warning ("Found unused 'device:' config section. Please remove");
-	} else if (strncmp(switch_prefix, section, strlen(switch_prefix)) == 0) {
-		g_warning ("Found unused 'switch:' config section. Please remove");
 	} else {
-		g_critical ("got unknown config section: %s", section);
+		g_critical ("Found unknown config section: %s", section);
 	}
 
 	return 1;
