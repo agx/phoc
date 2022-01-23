@@ -213,12 +213,12 @@ phoc_config_create (const char *config_path)
       char buf[MAXPATHLEN];
       if (snprintf(buf, MAXPATHLEN, "%s/%s", cwd, "phoc.ini") >= MAXPATHLEN) {
         g_critical ("config path too long");
-        exit(1);
+        return NULL;
       }
       config->config_path = g_strdup (buf);
     } else {
       g_critical ("could not get cwd");
-      exit(1);
+      return NULL;
     }
   }
 
