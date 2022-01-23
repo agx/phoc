@@ -369,7 +369,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
 {
   g_assert (!self->inited);
 
-  self->config = roots_config_create(config_path);
+  self->config = phoc_config_create (config_path);
   if (!self->config) {
     g_warning("Failed to parse config");
     return FALSE;

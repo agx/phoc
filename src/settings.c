@@ -72,7 +72,7 @@ static const char *switch_prefix = "switch:";
 
 static int config_ini_handler(void *user, const char *section, const char *name,
 		const char *value) {
-	struct roots_config *config = user;
+	PhocConfig*config = user;
 	if (strcmp(section, "core") == 0) {
 		if (strcmp(name, "xwayland") == 0) {
 			if (strcasecmp(value, "true") == 0) {
@@ -189,97 +189,101 @@ static int config_ini_handler(void *user, const char *section, const char *name,
 
 
 /**
- * roots_config_create:
+ * phoc_config_create:
+ * @config_path: (nullable): The config file location
  *
- * Create a roots config from the given arguments.
+ * Parse the file at the given location into a configuration.
  */
-struct roots_config *roots_config_create(const char *config_path) {
-	struct roots_config *config = calloc(1, sizeof(struct roots_config));
-	if (config == NULL) {
-		return NULL;
-	}
+PhocConfig *phoc_config_create (const char *config_path)
+{
+  PhocConfig *config = g_new0 (PhocConfig, 1);
 
-	config->xwayland = true;
-	config->xwayland_lazy = true;
-	wl_list_init(&config->outputs);
+  config->xwayland = true;
+  config->xwayland_lazy = true;
+  wl_list_init(&config->outputs);
 
-	config->config_path = g_strdup(config_path);
+  config->config_path = g_strdup (config_path);
 
-	if (!config->config_path) {
-		// get the config path from the current directory
-		char cwd[MAXPATHLEN];
-		if (getcwd(cwd, sizeof(cwd)) != NULL) {
-			char buf[MAXPATHLEN];
-			if (snprintf(buf, MAXPATHLEN, "%s/%s", cwd, "phoc.ini") >= MAXPATHLEN) {
-				g_critical ("config path too long");
-				exit(1);
-			}
-			config->config_path = strdup(buf);
-		} else {
-			g_critical ("could not get cwd");
-			exit(1);
-		}
-	}
+  if (!config->config_path) {
+    // get the config path from the current directory
+    char cwd[MAXPATHLEN];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+      char buf[MAXPATHLEN];
+      if (snprintf(buf, MAXPATHLEN, "%s/%s", cwd, "phoc.ini") >= MAXPATHLEN) {
+        g_critical ("config path too long");
+        exit(1);
+      }
+      config->config_path = g_strdup (buf);
+    } else {
+      g_critical ("could not get cwd");
+      exit(1);
+    }
+  }
 
-	int result = ini_parse(config->config_path, config_ini_handler, config);
+  int result = ini_parse (config->config_path, config_ini_handler, config);
 
-	if (result == -1) {
-		g_debug ("No config file found. Using sensible defaults.");
-	} else if (result == -2) {
-		g_critical ("Could not allocate memory to parse config file");
-		exit(1);
-	} else if (result != 0) {
-		g_critical ("Could not parse config file");
-		exit(1);
-	}
+  if (result == -1) {
+    g_debug ("No config file found. Using sensible defaults.");
+  } else if (result == -2) {
+    g_critical ("Could not allocate memory to parse config file");
+    exit(1);
+  } else if (result != 0) {
+    g_critical ("Could not parse config file");
+    exit(1);
+  }
 
-	config->keybindings = phoc_keybindings_new ();
+  config->keybindings = phoc_keybindings_new ();
 
-	return config;
+  return config;
 }
 
 
 /**
- * roots_config_destroy:
+ * phoc_config_destroy:
+ * config: The #PhocConfig.
  *
  * Destroy the config and free its resources.
  */
-void roots_config_destroy(struct roots_config *config) {
-	struct roots_output_config *oc, *otmp = NULL;
-	wl_list_for_each_safe(oc, otmp, &config->outputs, link) {
-		struct roots_output_mode_config *omc, *omctmp = NULL;
-		wl_list_for_each_safe(omc, omctmp, &oc->modes, link) {
-			free(omc);
-		}
-		free(oc->name);
-		free(oc);
-	}
+void phoc_config_destroy (PhocConfig *config)
+{
+  struct roots_output_config *oc, *otmp = NULL;
+  wl_list_for_each_safe(oc, otmp, &config->outputs, link) {
+    struct roots_output_mode_config *omc, *omctmp = NULL;
+    wl_list_for_each_safe(omc, omctmp, &oc->modes, link) {
+      free(omc);
+    }
+    free(oc->name);
+    free(oc);
+  }
 
-	g_object_unref (config->keybindings);
+  g_object_unref (config->keybindings);
 
-	free(config->config_path);
-	free(config);
+  free(config->config_path);
+  free(config);
 }
 
 /**
- * roots_config_get_output:
+ * phoc_config_get_output:
+ * config: The #PhocConfig
+ * output: The wlr output to get the configuration for
  *
  * Get configuration for the output. If the output is not configured, returns
  * NULL.
  */
-struct roots_output_config *roots_config_get_output(struct roots_config *config,
-		struct wlr_output *output) {
-	char name[88];
-	snprintf(name, sizeof(name), "%s %s %s", output->make, output->model,
-		output->serial);
+PhocOutputConfig *
+phoc_config_get_output (PhocConfig *config, struct wlr_output *output)
+{
+  char name[88];
+  snprintf(name, sizeof(name), "%s %s %s", output->make, output->model,
+           output->serial);
 
-	struct roots_output_config *oc;
-	wl_list_for_each(oc, &config->outputs, link) {
-		if (strcmp(oc->name, output->name) == 0 ||
-				strcmp(oc->name, name) == 0) {
-			return oc;
-		}
-	}
+  PhocOutputConfig *oc;
+  wl_list_for_each(oc, &config->outputs, link) {
+    if (strcmp(oc->name, output->name) == 0 ||
+        strcmp(oc->name, name) == 0) {
+      return oc;
+    }
+  }
 
-	return NULL;
+  return NULL;
 }

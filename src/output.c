@@ -313,8 +313,7 @@ phoc_output_constructed (GObject *object)
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
     wl_list_init (&self->layers[i]);
 
-  struct roots_output_config *output_config =
-    roots_config_get_output (config, self->wlr_output);
+  PhocOutputConfig *output_config = phoc_config_get_output (config, self->wlr_output);
 
   struct wlr_output_mode *preferred_mode =
     wlr_output_preferred_mode (self->wlr_output);
