@@ -16,6 +16,16 @@
 #include "server.h"
 #include "view.h"
 
+struct _PhocSubsurface {
+  PhocViewChild child;
+  struct wlr_subsurface *wlr_subsurface;
+
+  struct wl_listener destroy;
+  struct wl_listener map;
+  struct wl_listener unmap;
+};
+
+
 void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 		enum roots_view_type type, PhocDesktop *desktop) {
 	assert(impl->destroy);
@@ -178,7 +188,7 @@ static void view_update_output(struct roots_view *view,
 		const struct wlr_box *before) {
 	PhocDesktop *desktop = view->desktop;
 
-	if (view->wlr_surface == NULL) {
+	if (!phoc_view_is_mapped (view)) {
 		return;
 	}
 
@@ -465,7 +475,7 @@ void view_set_fullscreen(struct roots_view *view, bool fullscreen,
 
 	if (was_fullscreen != fullscreen) {
 		/* don't allow unfocused surfaces to make themselves fullscreen */
-		if (fullscreen && view->wlr_surface)
+		if (fullscreen && phoc_view_is_mapped (view))
 			g_return_if_fail (phoc_input_view_has_focus (phoc_server_get_default()->input, view));
 
 		if (view->impl->set_fullscreen) {
@@ -665,74 +675,113 @@ bool view_center(struct roots_view *view, struct wlr_output *wlr_output) {
 	return true;
 }
 
-void view_child_destroy(struct roots_view_child *child) {
-	if (child == NULL) {
-		return;
-	}
-	view_damage_whole(child->view);
-	wl_list_remove(&child->link);
-	wl_list_remove(&child->commit.link);
-	wl_list_remove(&child->new_subsurface.link);
-	child->impl->destroy(child);
+static bool
+phoc_view_child_is_mapped (PhocViewChild *child)
+{
+  while (child) {
+    if (!child->mapped) {
+      return false;
+    }
+    child = child->parent;
+  }
+  return true;
 }
 
-static void view_child_handle_commit(struct wl_listener *listener,
-		void *data) {
-	struct roots_view_child *child = wl_container_of(listener, child, commit);
-	view_apply_damage(child->view);
+static void
+phoc_view_child_handle_commit (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *child = wl_container_of(listener, child, commit);
+
+  phoc_view_child_apply_damage (child);
 }
 
-static void view_child_handle_new_subsurface(struct wl_listener *listener,
-		void *data) {
-	struct roots_view_child *child =
-		wl_container_of(listener, child, new_subsurface);
-	struct wlr_subsurface *wlr_subsurface = data;
-	subsurface_create(child->view, wlr_subsurface);
+static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
+static void phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *wlr_subsurface);
+
+static void
+phoc_view_child_handle_new_subsurface (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *child = wl_container_of(listener, child, new_subsurface);
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  phoc_view_child_subsurface_create (child, wlr_subsurface);
 }
 
-void view_child_init(struct roots_view_child *child,
-		const struct roots_view_child_interface *impl, struct roots_view *view,
-		struct wlr_surface *wlr_surface) {
-	assert(impl->destroy);
-	child->impl = impl;
-	child->view = view;
-	child->wlr_surface = wlr_surface;
-	child->commit.notify = view_child_handle_commit;
-	wl_signal_add(&wlr_surface->events.commit, &child->commit);
-	child->new_subsurface.notify = view_child_handle_new_subsurface;
-	wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
-	wl_list_insert(&view->child_surfaces, &child->link);
+static void
+phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
+{
+  struct wlr_subsurface *subsurface;
+
+  wl_list_for_each(subsurface, &surface->subsurfaces_below, parent_link)
+    phoc_view_subsurface_create (view, subsurface);
+
+  wl_list_for_each(subsurface, &surface->subsurfaces_above, parent_link)
+    phoc_view_subsurface_create (view, subsurface);
 }
 
-static const struct roots_view_child_interface subsurface_impl;
+static void
+phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surface)
+{
+  struct wlr_subsurface *subsurface;
 
-static void subsurface_destroy(struct roots_view_child *child) {
+  wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link)
+    phoc_view_child_subsurface_create (child, subsurface);
+
+  wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link)
+    phoc_view_child_subsurface_create (child, subsurface);
+}
+
+void
+phoc_view_child_init (PhocViewChild *child,
+                      const struct phoc_view_child_interface *impl,
+                      struct roots_view *view,
+                      struct wlr_surface *wlr_surface)
+{
+  assert(impl->destroy);
+  child->impl = impl;
+  child->view = view;
+  child->wlr_surface = wlr_surface;
+
+  child->commit.notify = phoc_view_child_handle_commit;
+  wl_signal_add(&wlr_surface->events.commit, &child->commit);
+
+  child->new_subsurface.notify = phoc_view_child_handle_new_subsurface;
+  wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
+
+  wl_list_insert(&view->child_surfaces, &child->link);
+
+  phoc_view_child_init_subsurfaces (child, wlr_surface);
+}
+
+static const struct phoc_view_child_interface subsurface_impl;
+
+static void subsurface_destroy(PhocViewChild *child) {
 	assert(child->impl == &subsurface_impl);
-	struct roots_subsurface *subsurface = (struct roots_subsurface *)child;
+	PhocSubsurface *subsurface = (PhocSubsurface *)child;
 	wl_list_remove(&subsurface->destroy.link);
 	wl_list_remove(&subsurface->map.link);
 	wl_list_remove(&subsurface->unmap.link);
 	free(subsurface);
 }
 
-static const struct roots_view_child_interface subsurface_impl = {
+static const struct phoc_view_child_interface subsurface_impl = {
 	.destroy = subsurface_destroy,
 };
 
 static void subsurface_handle_destroy(struct wl_listener *listener,
 		void *data) {
-	struct roots_subsurface *subsurface =
+	PhocSubsurface *subsurface =
 		wl_container_of(listener, subsurface, destroy);
-	view_child_destroy(&subsurface->view_child);
+	phoc_view_child_destroy(&subsurface->child);
 }
 
 static void subsurface_handle_map(struct wl_listener *listener,
 		void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_subsurface *subsurface =
-		wl_container_of(listener, subsurface, map);
-	struct roots_view *view = subsurface->view_child.view;
-	view_damage_whole(view);
+	PhocSubsurface *subsurface = wl_container_of(listener, subsurface, map);
+	struct roots_view *view = subsurface->child.view;
+	subsurface->child.mapped = true;
+	phoc_view_child_damage_whole (&subsurface->child);
 	phoc_input_update_cursor_focus(server->input);
 
 	struct wlr_box box;
@@ -750,37 +799,63 @@ static void subsurface_handle_map(struct wl_listener *listener,
 static void subsurface_handle_unmap(struct wl_listener *listener,
 		void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct roots_subsurface *subsurface =
-		wl_container_of(listener, subsurface, unmap);
-	struct roots_view *view = subsurface->view_child.view;
-	view_damage_whole(view);
+	PhocSubsurface *subsurface = wl_container_of(listener, subsurface, unmap);
+
+	phoc_view_child_damage_whole (&subsurface->child);
 	phoc_input_update_cursor_focus(server->input);
+
+	subsurface->child.mapped = false;
 }
 
-struct roots_subsurface *subsurface_create(struct roots_view *view,
-		struct wlr_subsurface *wlr_subsurface) {
-	struct roots_subsurface *subsurface =
-		calloc(1, sizeof(struct roots_subsurface));
-	if (subsurface == NULL) {
-		return NULL;
-	}
-	subsurface->wlr_subsurface = wlr_subsurface;
-	view_child_init(&subsurface->view_child, &subsurface_impl,
-		view, wlr_subsurface->surface);
-	subsurface->destroy.notify = subsurface_handle_destroy;
-	wl_signal_add(&wlr_subsurface->events.destroy, &subsurface->destroy);
-	subsurface->map.notify = subsurface_handle_map;
-	wl_signal_add(&wlr_subsurface->events.map, &subsurface->map);
-	subsurface->unmap.notify = subsurface_handle_unmap;
-	wl_signal_add(&wlr_subsurface->events.unmap, &subsurface->unmap);
-	return subsurface;
+static void
+phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)
+{
+  PhocSubsurface *subsurface = g_new0 (PhocSubsurface, 1);
+
+  subsurface->wlr_subsurface = wlr_subsurface;
+  phoc_view_child_init (&subsurface->child, &subsurface_impl,
+                        view, wlr_subsurface->surface);
+
+  subsurface->destroy.notify = subsurface_handle_destroy;
+  wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
+
+  subsurface->map.notify = subsurface_handle_map;
+  wl_signal_add (&wlr_subsurface->events.map, &subsurface->map);
+
+  subsurface->unmap.notify = subsurface_handle_unmap;
+  wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
 }
 
-static void view_handle_new_subsurface(struct wl_listener *listener,
-		void *data) {
-	struct roots_view *view = wl_container_of(listener, view, new_subsurface);
-	struct wlr_subsurface *wlr_subsurface = data;
-	subsurface_create(view, wlr_subsurface);
+static void
+phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *wlr_subsurface)
+{
+  PhocSubsurface *subsurface = g_new0 (PhocSubsurface, 1);
+
+  subsurface->child.parent = child;
+  child->children = g_slist_prepend (child->children, &subsurface->child);
+  subsurface->wlr_subsurface = wlr_subsurface;
+  phoc_view_child_init (&subsurface->child, &subsurface_impl, child->view,
+                        wlr_subsurface->surface);
+
+  subsurface->destroy.notify = subsurface_handle_destroy;
+  wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
+
+  subsurface->map.notify = subsurface_handle_map;
+  wl_signal_add (&wlr_subsurface->events.map, &subsurface->map);
+
+  subsurface->unmap.notify = subsurface_handle_unmap;
+  wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
+
+  phoc_view_child_damage_whole (&subsurface->child);
+}
+
+static void
+phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *data)
+{
+  PhocView *view = wl_container_of (listener, view, surface_new_subsurface);
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  phoc_view_subsurface_create (view, wlr_subsurface);
 }
 
 static gchar *
@@ -850,40 +925,42 @@ static void view_update_scale(struct roots_view *view) {
 	}
 }
 
-void view_map(struct roots_view *view, struct wlr_surface *surface) {
-	PhocServer *server = phoc_server_get_default ();
-	assert(view->wlr_surface == NULL);
+void
+phoc_view_map (PhocView *view, struct wlr_surface *surface)
+{
+  PhocServer *server = phoc_server_get_default ();
+  assert(view->wlr_surface == NULL);
 
-	view->wlr_surface = surface;
+  view->wlr_surface = surface;
 
-	struct wlr_subsurface *subsurface;
-	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link) {
-		subsurface_create(view, subsurface);
-	}
-	wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link) {
-		subsurface_create(view, subsurface);
-	}
+  struct wlr_subsurface *subsurface;
+  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link) {
+    phoc_view_subsurface_create(view, subsurface);
+  }
+  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link) {
+    phoc_view_subsurface_create(view, subsurface);
+  }
 
-	view->new_subsurface.notify = view_handle_new_subsurface;
-	wl_signal_add(&view->wlr_surface->events.new_subsurface,
-		&view->new_subsurface);
+  phoc_view_init_subsurfaces (view, surface);
+  view->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
+  wl_signal_add(&view->wlr_surface->events.new_subsurface, &view->surface_new_subsurface);
 
-	if (view->desktop->maximize) {
-		view_appear_activated(view, true);
+  if (view->desktop->maximize) {
+    view_appear_activated(view, true);
 
-		if (!wl_list_empty(&view->desktop->views)) {
-			// mapping a new stack may make the old stack disappear, so damage its area
-			struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
-			while (top_view) {
-				view_damage_whole(top_view);
-				top_view = top_view->parent;
-			}
-		}
-	}
+    if (!wl_list_empty(&view->desktop->views)) {
+      // mapping a new stack may make the old stack disappear, so damage its area
+      struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
+      while (top_view) {
+        phoc_view_damage_whole (top_view);
+        top_view = top_view->parent;
+      }
+    }
+  }
 
-	wl_list_insert(&view->desktop->views, &view->link);
-	view_damage_whole(view);
-	phoc_input_update_cursor_focus(server->input);
+  wl_list_insert(&view->desktop->views, &view->link);
+  phoc_view_damage_whole (view);
+  phoc_input_update_cursor_focus(server->input);
 }
 
 void view_unmap(struct roots_view *view) {
@@ -893,13 +970,13 @@ void view_unmap(struct roots_view *view) {
 
 	wl_signal_emit(&view->events.unmap, view);
 
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 
-	wl_list_remove(&view->new_subsurface.link);
+	wl_list_remove(&view->surface_new_subsurface.link);
 
-	struct roots_view_child *child, *tmp;
+	PhocViewChild *child, *tmp;
 	wl_list_for_each_safe(child, tmp, &view->child_surfaces, link) {
-		view_child_destroy(child);
+		phoc_view_child_destroy(child);
 	}
 
 	if (view_is_fullscreen (view)) {
@@ -914,7 +991,7 @@ void view_unmap(struct roots_view *view) {
 		// damage the newly activated stack as well since it may have just become visible
 		struct roots_view *top_view = wl_container_of(view->desktop->views.next, view, link);
 		while (top_view) {
-			view_damage_whole(top_view);
+			phoc_view_damage_whole (top_view);
 			top_view = top_view->parent;
 		}
 	}
@@ -955,7 +1032,7 @@ void view_initial_focus(struct roots_view *view) {
 void
 view_send_frame_done_if_not_visible (struct roots_view *view)
 {
-  if (!phoc_desktop_view_is_visible (view->desktop, view) && view->wlr_surface) {
+  if (!phoc_desktop_view_is_visible (view->desktop, view) && phoc_view_is_mapped (view)) {
     struct timespec now;
     clock_gettime (CLOCK_MONOTONIC, &now);
     wlr_surface_send_frame_done (view->wlr_surface, &now);
@@ -983,18 +1060,37 @@ void view_setup(struct roots_view *view) {
 	                                          view->parent ? view->parent->toplevel_handle : NULL);
 }
 
-void view_apply_damage(struct roots_view *view) {
-	PhocOutput *output;
-	wl_list_for_each(output, &view->desktop->outputs, link) {
-		phoc_output_damage_from_view(output, view);
-	}
+/**
+ * phoc_view_apply_damage:
+ * @view: A view
+ *
+ * Add the accumulated buffer damage of all surfaces belonging to a
+ * #PhocView's to the damaged screen area that needs repaint.
+ */
+void
+phoc_view_apply_damage (PhocView *view)
+{
+  PhocOutput *output;
+
+  wl_list_for_each (output, &view->desktop->outputs, link)
+    phoc_output_damage_from_view (output, view, false);
 }
 
-void view_damage_whole(struct roots_view *view) {
-	PhocOutput *output;
-	wl_list_for_each(output, &view->desktop->outputs, link) {
-		phoc_output_damage_whole_view(output, view);
-	}
+/**
+ * phoc_view_damage_whole:
+ * @view: A view
+ *
+ * Add the damage of all surfaces belonging to a #PhocView's to the
+ * damaged screen area that needs repaint. This damages the whole
+ * @view (possibly including server side window decorations) ignoring
+ * any buffer damage.
+ */
+void
+phoc_view_damage_whole (struct roots_view *view)
+{
+  PhocOutput *output;
+  wl_list_for_each(output, &view->desktop->outputs, link)
+    phoc_output_damage_from_view (output, view, true);
 }
 
 void view_for_each_surface(struct roots_view *view,
@@ -1013,11 +1109,11 @@ void view_update_position(struct roots_view *view, int x, int y) {
 
 	struct wlr_box before;
 	view_get_box(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	view->box.x = x;
 	view->box.y = y;
 	view_update_output(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 }
 
 void view_update_size(struct roots_view *view, int width, int height) {
@@ -1028,7 +1124,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 
 	struct wlr_box before;
 	view_get_box(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	view->box.width = width;
 	view->box.height = height;
 	if (view->pending_centering || (view_is_floating (view) && phoc_desktop_get_auto_maximize (view->desktop))) {
@@ -1037,7 +1133,7 @@ void view_update_size(struct roots_view *view, int width, int height) {
 	}
 	view_update_scale(view);
 	view_update_output(view, &before);
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 }
 
 void view_update_decorated(struct roots_view *view, bool decorated) {
@@ -1045,7 +1141,7 @@ void view_update_decorated(struct roots_view *view, bool decorated) {
 		return;
 	}
 
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 	view->decorated = decorated;
 	if (decorated) {
 		view->border_width = 4;
@@ -1054,7 +1150,7 @@ void view_update_decorated(struct roots_view *view, bool decorated) {
 		view->border_width = 0;
 		view->titlebar_height = 0;
 	}
-	view_damage_whole(view);
+	phoc_view_damage_whole (view);
 }
 
 void view_set_title(struct roots_view *view, const char *title) {
@@ -1198,4 +1294,87 @@ roots_view_from_wlr_surface (struct wlr_surface *wlr_surface)
   }
 
   return NULL;
+}
+
+/**
+ * phoc_view_is_mapped:
+ * @view: (nullable): The view to check
+ *
+ * Check if a @view is currently mapped
+ * Returns: %TRUE if a view is currently mapped, otherwise %FALSE
+ */
+bool
+phoc_view_is_mapped (PhocView *view)
+{
+  return view && view->wlr_surface;
+}
+
+/**
+ * phoc_view_child_destroy:
+ * @child: The view child to destroy
+ *
+ * Destroys a view child freeing its resources.
+ */
+void
+phoc_view_child_destroy (PhocViewChild *child)
+{
+  if (child == NULL)
+    return;
+
+  if (phoc_view_child_is_mapped (child) && phoc_view_is_mapped (child->view))
+    phoc_view_child_damage_whole (child);
+
+  /* Remove from parent if it's also a PhocChild */
+  if (child->parent != NULL) {
+    child->parent->children = g_slist_remove (child->parent->children, child);
+    child->parent = NULL;
+  }
+
+  /* Detach us from all children */
+  for (GSList *elem = child->children; elem; elem = elem->next) {
+    PhocViewChild *subchild = elem->data;
+    subchild->parent = NULL;
+    /* The subchild lost its parent, so it cannot see that the parent is unmapped. Unmap it directly */
+    subchild->mapped = false;
+  }
+  g_clear_pointer (&child->children, g_slist_free);
+
+  wl_list_remove(&child->link);
+  wl_list_remove(&child->commit.link);
+  wl_list_remove(&child->new_subsurface.link);
+
+  child->impl->destroy(child);
+}
+
+/*
+ * phoc_view_child_apply_damage:
+ * @child: A view child
+ *
+ * This is the equivalent of [method@Phoc.View.apply_damage] but for
+ * [struct@Phoc.ViewChild].
+ */
+void
+phoc_view_child_apply_damage (PhocViewChild *child)
+{
+  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
+    return;
+
+  phoc_view_apply_damage (child->view);
+}
+
+/**
+ * phoc_view_child_damage_whole:
+ * @child: A view child
+ *
+ * This is the equivalent of [method@Phoc.View.damage_whole] but for
+ * [struct@Phoc.ViewChild].
+ */
+void
+phoc_view_child_damage_whole (PhocViewChild *child)
+{
+  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
+    return;
+
+  /* TODO: just damage the whole child instead of the whole view */
+  phoc_view_damage_whole (child->view);
 }

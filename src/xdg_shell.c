@@ -16,9 +16,9 @@
 #include "server.h"
 #include "view.h"
 
-static const struct roots_view_child_interface popup_impl;
+static const struct phoc_view_child_interface popup_impl;
 
-static void popup_destroy(struct roots_view_child *child) {
+static void popup_destroy(PhocViewChild *child) {
 	assert(child->impl == &popup_impl);
 	struct roots_xdg_popup *popup = (struct roots_xdg_popup *)child;
 	wl_list_remove(&popup->destroy.link);
@@ -28,28 +28,30 @@ static void popup_destroy(struct roots_view_child *child) {
 	free(popup);
 }
 
-static const struct roots_view_child_interface popup_impl = {
+static const struct phoc_view_child_interface popup_impl = {
 	.destroy = popup_destroy,
 };
 
 static void popup_handle_destroy(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup *popup =
 		wl_container_of(listener, popup, destroy);
-	view_child_destroy(&popup->view_child);
+	phoc_view_child_destroy(&popup->child);
 }
 
 static void popup_handle_map(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, map);
-	view_damage_whole(popup->view_child.view);
+	phoc_view_child_damage_whole (&popup->child);
 	phoc_input_update_cursor_focus(server->input);
+	popup->child.mapped = true;
 }
 
 static void popup_handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	struct roots_xdg_popup *popup = wl_container_of(listener, popup, unmap);
-	view_damage_whole(popup->view_child.view);
+	phoc_view_child_damage_whole (&popup->child);
 	phoc_input_update_cursor_focus(server->input);
+	popup->child.mapped = false;
 }
 
 static struct roots_xdg_popup *popup_create(struct roots_view *view,
@@ -59,7 +61,7 @@ static void popup_handle_new_popup(struct wl_listener *listener, void *data) {
 	struct roots_xdg_popup *popup =
 		wl_container_of(listener, popup, new_popup);
 	struct wlr_xdg_popup *wlr_popup = data;
-	popup_create(popup->view_child.view, wlr_popup);
+	popup_create(popup->child.view, wlr_popup);
 }
 
 static void popup_unconstrain(struct roots_xdg_popup *popup) {
@@ -67,7 +69,7 @@ static void popup_unconstrain(struct roots_xdg_popup *popup) {
 	// the toplevel parent's coordinate system and then pass it to
 	// wlr_xdg_popup_unconstrain_from_box
 
-	struct roots_view *view = popup->view_child.view;
+	struct roots_view *view = popup->child.view;
 	struct wlr_output_layout *layout = view->desktop->layout;
 	struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
 
@@ -121,8 +123,8 @@ static struct roots_xdg_popup *popup_create(struct roots_view *view,
 		return NULL;
 	}
 	popup->wlr_popup = wlr_popup;
-	view_child_init(&popup->view_child, &popup_impl,
-		view, wlr_popup->base->surface);
+	phoc_view_child_init(&popup->child, &popup_impl,
+			     view, wlr_popup->base->surface);
 	popup->destroy.notify = popup_handle_destroy;
 	wl_signal_add(&wlr_popup->base->events.destroy, &popup->destroy);
 	popup->map.notify = popup_handle_map;
@@ -451,7 +453,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		return;
 	}
 
-	view_apply_damage(view);
+	phoc_view_apply_damage(view);
 
 	struct wlr_box size;
 	get_size(view, &size);
@@ -513,7 +515,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	view->box.height = box.height;
 	get_geometry(view, &roots_xdg_surface->saved_geometry);
 
-	view_map(view, roots_xdg_surface->xdg_surface->surface);
+	phoc_view_map(view, roots_xdg_surface->xdg_surface->surface);
 	view_setup(view);
 }
 

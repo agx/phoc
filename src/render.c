@@ -262,7 +262,7 @@ static void render_surface_iterator(PhocOutput *output,
 
 static void render_decorations(PhocOutput *output,
 		struct roots_view *view, struct render_data *data) {
-	if (!view->decorated || view->wlr_surface == NULL) {
+	if (!view->decorated || !phoc_view_is_mapped (view)) {
 		return;
 	}
 
@@ -359,7 +359,7 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 
 	struct roots_view *view = output->fullscreen_view;
 	assert(view != NULL);
-	if (view->wlr_surface == NULL) {
+	if (!phoc_view_is_mapped (view)) {
 		return false;
 	}
 	size_t n_surfaces = 0;

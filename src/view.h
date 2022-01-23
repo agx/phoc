@@ -11,8 +11,6 @@
 
 #include <gio/gio.h>
 
-#include "output.h"
-
 G_BEGIN_DECLS
 
 struct roots_view;
@@ -91,7 +89,7 @@ typedef struct roots_view {
 	struct wl_list stack; // roots_view::link
 
 	struct wlr_surface *wlr_surface; // set only when the surface is mapped
-	struct wl_list child_surfaces; // roots_view_child::link
+	struct wl_list child_surfaces; // PhocViewChild::link
 
 	struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
 	struct wl_listener toplevel_handle_request_maximize;
@@ -99,7 +97,7 @@ typedef struct roots_view {
 	struct wl_listener toplevel_handle_request_fullscreen;
 	struct wl_listener toplevel_handle_request_close;
 
-	struct wl_listener new_subsurface;
+	struct wl_listener surface_new_subsurface;
 
 	struct {
 		struct wl_signal unmap;
@@ -157,38 +155,46 @@ typedef struct roots_xwayland_surface {
 } PhocXWaylandSurface;
 #endif
 
-struct roots_view_child;
+typedef struct _PhocViewChild PhocViewChild;
 
-struct roots_view_child_interface {
-	void (*destroy)(struct roots_view_child *child);
+struct phoc_view_child_interface {
+  void (*destroy)(PhocViewChild *child);
 };
 
-struct roots_view_child {
-	struct roots_view *view;
-	const struct roots_view_child_interface *impl;
-	struct wlr_surface *wlr_surface;
-	struct wl_list link;
+/**
+ * PhocViewChild:
+ * @link: Link to PhocView::child_surfaces
+ * @view: The #PhocView this child belongs to
+ * @parent: (nullable): The parent of this child if another child
+ * @children: (nullable): children of this child
+ *
+ * A child of a view, e.g. a popup or subsurface
+ */
+typedef struct _PhocViewChild {
+  const struct phoc_view_child_interface *impl;
 
-	struct wl_listener commit;
-	struct wl_listener new_subsurface;
-};
+  PhocView *view;
+  PhocViewChild *parent;
+  GSList *children;
+  struct wlr_surface *wlr_surface;
+  struct wl_list link;
+  bool mapped;
 
-struct roots_subsurface {
-	struct roots_view_child view_child;
-	struct wlr_subsurface *wlr_subsurface;
-	struct wl_listener destroy;
-	struct wl_listener map;
-	struct wl_listener unmap;
-};
+  struct wl_listener commit;
+  struct wl_listener new_subsurface;
+} PhocViewChild;
 
-struct roots_xdg_popup {
-	struct roots_view_child view_child;
-	struct wlr_xdg_popup *wlr_popup;
-	struct wl_listener destroy;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener new_popup;
-};
+typedef struct _PhocSubsurface PhocSubsurface;
+
+typedef struct roots_xdg_popup {
+  PhocViewChild child;
+  struct wlr_xdg_popup *wlr_popup;
+
+  struct wl_listener destroy;
+  struct wl_listener map;
+  struct wl_listener unmap;
+  struct wl_listener new_popup;
+} PhocXdgPopup;
 
 struct roots_xdg_toplevel_decoration {
 	struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
@@ -203,8 +209,8 @@ void view_init(struct roots_view *view, const struct roots_view_interface *impl,
 void view_destroy(struct roots_view *view);
 void view_appear_activated(struct roots_view *view, bool activated);
 void view_activate(struct roots_view *view, bool activate);
-void view_apply_damage(struct roots_view *view);
-void view_damage_whole(struct roots_view *view);
+void phoc_view_apply_damage (PhocView *view);
+void phoc_view_damage_whole (PhocView *view);
 gboolean view_is_floating(const struct roots_view *view);
 gboolean view_is_maximized(const struct roots_view *view);
 gboolean view_is_tiled(const struct roots_view *view);
@@ -213,7 +219,7 @@ void view_update_position(struct roots_view *view, int x, int y);
 void view_update_size(struct roots_view *view, int width, int height);
 void view_update_decorated(struct roots_view *view, bool decorated);
 void view_initial_focus(struct roots_view *view);
-void view_map(struct roots_view *view, struct wlr_surface *surface);
+void phoc_view_map (PhocView *view, struct wlr_surface *surface);
 void view_unmap(struct roots_view *view);
 void view_arrange_maximized(struct roots_view *view, struct wlr_output *output);
 void view_arrange_tiled(struct roots_view *view, struct wlr_output *output);
@@ -247,6 +253,7 @@ struct roots_view *roots_view_from_wlr_surface (struct wlr_surface *surface);
 struct roots_xdg_surface *roots_xdg_surface_from_view(struct roots_view *view);
 struct roots_xwayland_surface *roots_xwayland_surface_from_view(
 	struct roots_view *view);
+bool   phoc_view_is_mapped (PhocView *view);
 
 enum roots_deco_part {
 	ROOTS_DECO_PART_NONE = 0,
@@ -259,12 +266,12 @@ enum roots_deco_part {
 
 enum roots_deco_part view_get_deco_part(struct roots_view *view, double sx, double sy);
 
-void view_child_init(struct roots_view_child *child,
-	const struct roots_view_child_interface *impl, struct roots_view *view,
-	struct wlr_surface *wlr_surface);
-void view_child_destroy(struct roots_view_child *child);
-
-struct roots_subsurface *subsurface_create(struct roots_view *view,
-	struct wlr_subsurface *wlr_subsurface);
+void phoc_view_child_init(PhocViewChild *child,
+                          const struct phoc_view_child_interface *impl,
+                          PhocView *view,
+                          struct wlr_surface *wlr_surface);
+void phoc_view_child_destroy (PhocViewChild *child);
+void phoc_view_child_apply_damage (PhocViewChild *child);
+void phoc_view_child_damage_whole (PhocViewChild *child);
 
 G_END_DECLS

@@ -709,9 +709,7 @@ static bool
 phoc_view_accept_damage (PhocOutput *self, struct roots_view   *view)
 {
   PhocServer *server = phoc_server_get_default ();
-  if (view->wlr_surface == NULL) {
-    return false;
-  }
+
   if (!phoc_desktop_view_is_visible (server->desktop, view)) {
     return false;
   }
@@ -794,7 +792,7 @@ phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *su
 static void
 damage_whole_view (PhocOutput *self, struct roots_view   *view)
 {
-  if (view->wlr_surface == NULL) {
+  if (!phoc_view_is_mapped (view)) {
     return;
   }
 
@@ -806,31 +804,16 @@ damage_whole_view (PhocOutput *self, struct roots_view   *view)
 }
 
 void
-phoc_output_damage_whole_view (PhocOutput *self, struct roots_view   *view)
+phoc_output_damage_from_view (PhocOutput *self, struct roots_view *view, bool whole)
 {
   if (!phoc_view_accept_damage (self, view)) {
     return;
   }
 
-  damage_whole_view (self, view);
-
-  bool whole = true;
-
-  phoc_output_view_for_each_surface (self, view, damage_surface_iterator, &whole);
-}
-
-
-void
-phoc_output_damage_from_view (PhocOutput *self, struct roots_view *view)
-{
-  if (!phoc_view_accept_damage (self, view)) {
-    return;
-  }
-
-  bool whole = false;
+  if (whole)
+    damage_whole_view (self, view);
 
   phoc_output_view_for_each_surface (self, view, damage_surface_iterator, &whole);
-
 }
 
 void

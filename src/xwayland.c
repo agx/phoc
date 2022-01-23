@@ -318,7 +318,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	struct roots_view *view = &roots_surface->view;
 	struct wlr_surface *wlr_surface = view->wlr_surface;
 
-	view_apply_damage(view);
+	phoc_view_apply_damage(view);
 
 	int width = wlr_surface->current.width;
 	int height = wlr_surface->current.height;
@@ -367,7 +367,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	}
 	view_auto_maximize(view);
 
-	view_map(view, surface->surface);
+	phoc_view_map(view, surface->surface);
 
 	if (!surface->override_redirect) {
 		if (surface->decorations == WLR_XWAYLAND_SURFACE_DECORATIONS_ALL) {

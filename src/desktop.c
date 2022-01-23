@@ -100,7 +100,7 @@ phoc_desktop_get_property (GObject    *object,
 
 static bool view_at(struct roots_view *view, double lx, double ly,
 		struct wlr_surface **surface, double *sx, double *sy) {
-	if (view->wlr_surface == NULL) {
+	if (!phoc_view_is_mapped (view)) {
 		return false;
 	}
 
@@ -280,7 +280,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 gboolean
 phoc_desktop_view_is_visible (PhocDesktop *desktop, struct roots_view *view)
 {
-  if (!view->wlr_surface) {
+  if (!phoc_view_is_mapped (view)) {
     return false;
   }
 
