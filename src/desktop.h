@@ -49,7 +49,7 @@ struct _PhocDesktop {
 	struct wl_list outputs; // PhocOutput::link
 	struct timespec last_frame;
 
-	struct roots_config *config;
+	PhocConfig *config;
 
 	struct wlr_output_layout *layout;
 	struct wlr_xdg_shell *xdg_shell;
@@ -107,7 +107,7 @@ struct _PhocDesktop {
 	PhocGtkShell *gtk_shell;
 };
 
-PhocDesktop *phoc_desktop_new (struct roots_config *config);
+PhocDesktop *phoc_desktop_new (PhocConfig *config);
 void         phoc_desktop_toggle_output_blank (PhocDesktop *self);
 void         phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean on);
 gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);

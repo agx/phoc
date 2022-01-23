@@ -11,12 +11,12 @@ G_BEGIN_DECLS
 
 #define ROOTS_CONFIG_DEFAULT_SEAT_NAME "seat0"
 
-typedef struct roots_output_mode_config {
+typedef struct _PhocOutputModeConfig {
 	drmModeModeInfo info;
 	struct wl_list link;
 } PhocOutputModeConfig;
 
-typedef struct roots_output_config {
+typedef struct _PhocOutputConfig {
 	char *name;
 	bool enable;
 	enum wl_output_transform transform;
@@ -30,7 +30,7 @@ typedef struct roots_output_config {
 	struct wl_list modes;
 } PhocOutputConfig;
 
-typedef struct roots_config {
+typedef struct _PhocConfig {
 	bool xwayland;
 	bool xwayland_lazy;
 
@@ -42,7 +42,7 @@ typedef struct roots_config {
 } PhocConfig;
 
 PhocConfig       *phoc_config_create (const char *config_path);
-void              phoc_config_destroy (struct roots_config *config);
+void              phoc_config_destroy (PhocConfig *config);
 PhocOutputConfig *phoc_config_get_output (PhocConfig *config,
                                           struct wlr_output *output);
 

@@ -88,7 +88,7 @@ static int config_ini_handler(PhocConfig *config, const char *section, const cha
 		}
 	} else if (strncmp(output_prefix, section, strlen(output_prefix)) == 0) {
 		const char *output_name = section + strlen(output_prefix);
-		struct roots_output_config *oc;
+		PhocOutputConfig *oc;
 		bool found = false;
 
 		wl_list_for_each(oc, &config->outputs, link) {
@@ -99,7 +99,7 @@ static int config_ini_handler(PhocConfig *config, const char *section, const cha
 		}
 
 		if (!found) {
-			oc = calloc(1, sizeof(struct roots_output_config));
+			oc = g_new0 (PhocOutputConfig, 1);
 			oc->name = strdup(output_name);
 			oc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
 			oc->scale = 1;
@@ -161,7 +161,7 @@ static int config_ini_handler(PhocConfig *config, const char *section, const cha
 					oc->name, oc->mode.width, oc->mode.height,
 					oc->mode.refresh_rate);
 		} else if (strcmp(name, "modeline") == 0) {
-			struct roots_output_mode_config *mode = calloc(1, sizeof(*mode));
+			PhocOutputModeConfig *mode = g_new0 (PhocOutputModeConfig, 1);
 
 			if (parse_modeline(value, &mode->info)) {
 				wl_list_insert(&oc->modes, &mode->link);
@@ -274,9 +274,9 @@ phoc_config_create (const char *config_path)
  */
 void phoc_config_destroy (PhocConfig *config)
 {
-  struct roots_output_config *oc, *otmp = NULL;
+  PhocOutputConfig *oc, *otmp = NULL;
   wl_list_for_each_safe(oc, otmp, &config->outputs, link) {
-    struct roots_output_mode_config *omc, *omctmp = NULL;
+    PhocOutputModeConfig *omc, *omctmp = NULL;
     wl_list_for_each_safe(omc, omctmp, &oc->modes, link) {
       free(omc);
     }

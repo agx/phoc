@@ -46,7 +46,7 @@ struct _PhocServer {
   GObject parent;
 
   /* Phoc resources */
-  struct roots_config *config;
+  PhocConfig *config;
   PhocDesktop *desktop;
   PhocInput *input;
   PhocServerFlags flags;
