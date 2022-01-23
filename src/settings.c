@@ -119,7 +119,7 @@ static int config_ini_handler(PhocConfig *config, const char *section, const cha
 			oc->y = strtol(value, NULL, 10);
 		} else if (strcmp(name, "scale") == 0) {
 			oc->scale = strtof(value, NULL);
-			assert(oc->scale > 0);
+			g_assert (oc->scale > 0);
 		} else if (strcmp(name, "rotate") == 0) {
 			if (strcmp(value, "normal") == 0) {
 				oc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
@@ -145,14 +145,14 @@ static int config_ini_handler(PhocConfig *config, const char *section, const cha
 		} else if (strcmp(name, "mode") == 0) {
 			char *end;
 			oc->mode.width = strtol(value, &end, 10);
-			assert(*end == 'x');
+			g_assert (*end == 'x');
 			++end;
 			oc->mode.height = strtol(end, &end, 10);
 			if (*end) {
-				assert(*end == '@');
+				g_assert (*end == '@');
 				++end;
 				oc->mode.refresh_rate = strtof(end, &end);
-				assert(strcmp("Hz", end) == 0);
+				g_assert (strcmp("Hz", end) == 0);
 			}
 			g_debug ("Configured output %s with mode %dx%d@%f",
 					oc->name, oc->mode.width, oc->mode.height,
