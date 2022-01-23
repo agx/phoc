@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#define ROOTS_CONFIG_DEFAULT_SEAT_NAME "seat0"
+#define PHOC_CONFIG_DEFAULT_SEAT_NAME "seat0"
 
 typedef struct _PhocOutputModeConfig {
 	drmModeModeInfo info;
