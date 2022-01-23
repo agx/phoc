@@ -371,7 +371,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
 
   self->config = phoc_config_create (config_path);
   if (!self->config) {
-    g_warning("Failed to parse config");
+    /* phoc_config_create printed an error */
     return FALSE;
   }
 

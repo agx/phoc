@@ -17,7 +17,6 @@
 #include <wlr/types/wlr_box.h>
 #include <wlr/util/log.h>
 #include "settings.h"
-#include "ini.h"
 #include "utils.h"
 
 static bool parse_modeline(const char *s, drmModeModeInfo *mode) {
@@ -70,9 +69,8 @@ static const char *device_prefix = "device:";
 static const char *cursor_prefix = "cursor:";
 static const char *switch_prefix = "switch:";
 
-static int config_ini_handler(void *user, const char *section, const char *name,
+static int config_ini_handler(PhocConfig *config, const char *section, const char *name,
 		const char *value) {
-	PhocConfig*config = user;
 	if (strcmp(section, "core") == 0) {
 		if (strcmp(name, "xwayland") == 0) {
 			if (strcasecmp(value, "true") == 0) {
@@ -194,9 +192,13 @@ static int config_ini_handler(void *user, const char *section, const char *name,
  *
  * Parse the file at the given location into a configuration.
  */
-PhocConfig *phoc_config_create (const char *config_path)
+PhocConfig *
+phoc_config_create (const char *config_path)
 {
   PhocConfig *config = g_new0 (PhocConfig, 1);
+  g_autoptr (GKeyFile) keyfile = g_key_file_new ();
+  g_autoptr (GError) err = NULL;
+  g_auto (GStrv) sections = NULL;
 
   config->xwayland = true;
   config->xwayland_lazy = true;
@@ -220,18 +222,44 @@ PhocConfig *phoc_config_create (const char *config_path)
     }
   }
 
-  int result = ini_parse (config->config_path, config_ini_handler, config);
+  if (!g_key_file_load_from_file (keyfile, config->config_path, G_KEY_FILE_NONE, &err)) {
+    if (g_error_matches (err, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+      g_debug ("No config file found. Using sensible defaults.");
+      goto out;
+    }
 
-  if (result == -1) {
-    g_debug ("No config file found. Using sensible defaults.");
-  } else if (result == -2) {
-    g_critical ("Could not allocate memory to parse config file");
-    exit(1);
-  } else if (result != 0) {
-    g_critical ("Could not parse config file");
-    exit(1);
+    g_critical ("Failed to parse config %s: %s", config->config_path, err->message);
+    return NULL;
   }
 
+  sections = g_key_file_get_groups (keyfile, NULL);
+
+  for (int i = 0; i < g_strv_length (sections); i++) {
+    const char *section = sections[i];
+    g_auto (GStrv) keys = g_key_file_get_keys (keyfile, section, NULL, &err);
+
+    if (!keys) {
+      g_critical ("Failed to get keys for %s: %s", section, err->message);
+      g_clear_error (&err);
+      continue;
+    }
+
+    for (int j = 0; j < g_strv_length (keys); j++)  {
+      const char *key = keys[j];
+      g_autofree char *value = NULL;
+
+      value = g_key_file_get_value (keyfile, section, key, &err);
+      if (value == NULL) {
+        g_critical ("Failed to key value for %s.%s: %s", section, key, err->message);
+        g_clear_error (&err);
+        continue;
+      }
+
+      config_ini_handler (config, section, key, value);
+    }
+  }
+
+ out:
   config->keybindings = phoc_keybindings_new ();
 
   return config;
