@@ -278,16 +278,16 @@ void phoc_config_destroy (PhocConfig *config)
   wl_list_for_each_safe(oc, otmp, &config->outputs, link) {
     PhocOutputModeConfig *omc, *omctmp = NULL;
     wl_list_for_each_safe(omc, omctmp, &oc->modes, link) {
-      free(omc);
+      g_free (omc);
     }
-    free(oc->name);
-    free(oc);
+    g_free (oc->name);
+    g_free (oc);
   }
 
   g_object_unref (config->keybindings);
 
-  free(config->config_path);
-  free(config);
+  g_free (config->config_path);
+  g_free (config);
 }
 
 /**
