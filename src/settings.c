@@ -5,17 +5,13 @@
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #endif
-#include <assert.h>
-#include <getopt.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include <wlr/config.h>
-#include <wlr/types/wlr_box.h>
-#include <wlr/util/log.h>
+
 #include "settings.h"
 #include "utils.h"
 
