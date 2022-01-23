@@ -927,7 +927,7 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
   // TODO: probably more to be freed here
   wl_list_remove (&seat->destroy.link);
 
-  roots_input_method_relay_destroy (&seat->im_relay);
+  phoc_input_method_relay_destroy (&seat->im_relay);
 
   PhocSeatView *view, *nview;
 
@@ -1652,7 +1652,7 @@ phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
   if (view == NULL) {
     seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
     wlr_seat_keyboard_clear_focus (seat->seat);
-    roots_input_method_relay_set_focus (&seat->im_relay, NULL);
+    phoc_input_method_relay_set_focus (&seat->im_relay, NULL);
     return;
   }
 
@@ -1687,7 +1687,7 @@ phoc_seat_set_focus (PhocSeat *seat, struct roots_view *view)
   }
 
   phoc_cursor_update_focus (seat->cursor);
-  roots_input_method_relay_set_focus (&seat->im_relay, view->wlr_surface);
+  phoc_input_method_relay_set_focus (&seat->im_relay, view->wlr_surface);
 }
 
 /*
@@ -1742,7 +1742,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   }
 
   phoc_cursor_update_focus (seat->cursor);
-  roots_input_method_relay_set_focus (&seat->im_relay, layer->surface);
+  phoc_input_method_relay_set_focus (&seat->im_relay, layer->surface);
 }
 
 void
@@ -1974,7 +1974,7 @@ phoc_seat_constructed (GObject *object)
   phoc_seat_init_cursor (self);
   g_assert (self->cursor);
 
-  roots_input_method_relay_init (self, &self->im_relay);
+  phoc_input_method_relay_init (self, &self->im_relay);
 
   self->request_set_selection.notify =
     phoc_seat_handle_request_set_selection;

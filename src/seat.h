@@ -24,6 +24,13 @@ typedef struct _PhocCursor PhocCursor;
 typedef struct _PhocDragIcon PhocDragIcon;
 typedef struct _PhocTablet PhocTablet;
 
+/**
+ * PhocSeat:
+ * @im_relay: The input method relay for this seat
+ *
+ * Represents a seat
+ */
+
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
 typedef struct _PhocSeat {
@@ -42,7 +49,7 @@ typedef struct _PhocSeat {
   // If the focused layer is set, views cannot receive keyboard focus
   struct wlr_layer_surface_v1    *focused_layer;
 
-  struct roots_input_method_relay im_relay;
+  PhocInputMethodRelay            im_relay;
 
   // If non-null, only this client can receive input events
   struct wl_client               *exclusive_client;

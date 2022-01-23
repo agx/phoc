@@ -41,7 +41,7 @@ enum {
 static guint signals[N_SIGNALS] = { 0 };
 
 struct surface_iterator_data {
-  roots_surface_iterator_func_t user_iterator;
+  PhocSurfaceIterator user_iterator;
   void                         *user_data;
 
   PhocOutput                   *output;
@@ -444,7 +444,7 @@ phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
 void
 phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
                                       *surface, double ox, double oy,
-                                      roots_surface_iterator_func_t iterator,
+                                      PhocSurfaceIterator iterator,
                                       void *user_data)
 {
   struct surface_iterator_data data = {
@@ -467,7 +467,7 @@ void
 phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
                                           wlr_xdg_surface *xdg_surface, double
                                           ox, double oy,
-                                          roots_surface_iterator_func_t
+                                          PhocSurfaceIterator
                                           iterator, void *user_data)
 {
   struct surface_iterator_data data = {
@@ -488,7 +488,7 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
 
 void
 phoc_output_view_for_each_surface (PhocOutput *self, struct roots_view *view,
-                                   roots_surface_iterator_func_t iterator, void
+                                   PhocSurfaceIterator iterator, void
                                    *user_data)
 {
   struct wlr_box *output_box =
@@ -517,7 +517,7 @@ phoc_output_view_for_each_surface (PhocOutput *self, struct roots_view *view,
 void
 phoc_output_xwayland_children_for_each_surface (PhocOutput *self, struct
                                                 wlr_xwayland_surface *surface,
-                                                roots_surface_iterator_func_t
+                                                PhocSurfaceIterator
                                                 iterator, void *user_data)
 {
   struct wlr_box *output_box =
@@ -544,7 +544,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput *self, struct
 
 static void
 phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surface,
-                                  roots_surface_iterator_func_t iterator, void
+                                  PhocSurfaceIterator iterator, void
                                   *user_data)
 {
   struct wlr_layer_surface_v1 *wlr_layer_surface_v1 =
@@ -577,7 +577,7 @@ phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surf
 void
 phoc_output_layer_for_each_surface (PhocOutput                   *self,
                                     struct wl_list               *layer_surfaces,
-                                    roots_surface_iterator_func_t iterator,
+                                    PhocSurfaceIterator iterator,
                                     void                         *user_data)
 {
   PhocLayerSurface *layer_surface;
@@ -597,7 +597,7 @@ phoc_output_layer_for_each_surface (PhocOutput                   *self,
 
 void
 phoc_output_drag_icons_for_each_surface (PhocOutput *self, PhocInput *input,
-                                         roots_surface_iterator_func_t
+                                         PhocSurfaceIterator
                                          iterator, void *user_data)
 {
   struct wlr_box *output_box =
@@ -624,7 +624,7 @@ phoc_output_drag_icons_for_each_surface (PhocOutput *self, PhocInput *input,
 }
 
 void
-phoc_output_for_each_surface (PhocOutput *self, roots_surface_iterator_func_t iterator, void
+phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, void
                               *user_data, gboolean visible_only)
 {
   PhocDesktop *desktop = self->desktop;
