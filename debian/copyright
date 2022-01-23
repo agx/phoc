@@ -8,7 +8,6 @@ License: GPL-3+
 
 Files: src/cursor.*
  src/desktop.*
- src/ini.*
  src/input.*
  src/keyboard.*
  src/layers.h

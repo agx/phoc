@@ -13,8 +13,6 @@ sources = files(
   'desktop.h',
   'gtk-shell.c',
   'gtk-shell.h',
-  'ini.c',
-  'ini.h',
   'input.c',
   'input.h',
   'input-device.c',
