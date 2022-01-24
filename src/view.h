@@ -57,7 +57,7 @@ typedef struct roots_view {
 	enum roots_view_type type;
 	const struct roots_view_interface *impl;
 	PhocDesktop *desktop;
-	struct wl_list link; // roots_desktop::views
+	struct wl_list link; // PhocDesktop::views
 	struct wl_list parent_link; // roots_view::stack
 
 	struct wlr_box box;
