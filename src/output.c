@@ -215,6 +215,9 @@ phoc_output_damage_handle_destroy (struct wl_listener *listener,
   if (self->fullscreen_view)
     phoc_view_set_fullscreen (self->fullscreen_view, false, NULL);
 
+  wl_list_remove (&self->damage_frame.link);
+  wl_list_remove (&self->damage_destroy.link);
+
   g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
@@ -379,8 +382,6 @@ phoc_output_finalize (GObject *object)
   wl_list_remove (&self->enable.link);
   wl_list_remove (&self->mode.link);
   wl_list_remove (&self->commit.link);
-  wl_list_remove (&self->damage_frame.link);
-  wl_list_remove (&self->damage_destroy.link);
   g_list_free_full (self->debug_touch_points, g_free);
 
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
