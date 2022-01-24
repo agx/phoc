@@ -210,6 +210,11 @@ phoc_output_damage_handle_destroy (struct wl_listener *listener,
 {
   PhocOutput *self = wl_container_of (listener, self, damage_destroy);
 
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  if (self->fullscreen_view)
+    phoc_view_set_fullscreen (self->fullscreen_view, false, NULL);
+
   g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
