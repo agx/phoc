@@ -217,8 +217,6 @@ phoc_output_damage_handle_destroy (struct wl_listener *listener,
 
   wl_list_remove (&self->damage_frame.link);
   wl_list_remove (&self->damage_destroy.link);
-
-  g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
 static void
