@@ -107,7 +107,7 @@ handle_toggle_fullscreen (PhocSeat *seat)
   PhocView *focus = phoc_seat_get_focus(seat);
 
   if (focus) {
-    view_set_fullscreen(focus, !view_is_fullscreen (focus), NULL);
+    phoc_view_set_fullscreen(focus, !view_is_fullscreen (focus), NULL);
   }
 }
 

@@ -412,7 +412,7 @@ static void handle_request_fullscreen(struct wl_listener *listener,
 		return;
 	}
 
-	view_set_fullscreen(view, e->fullscreen, e->output);
+	phoc_view_set_fullscreen(view, e->fullscreen, e->output);
 }
 
 static void handle_set_title(struct wl_listener *listener, void *data) {
@@ -566,7 +566,7 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 	if (surface->toplevel->client_pending.maximized) {
 		view_maximize(&roots_surface->view, NULL);
 	}
-	view_set_fullscreen(&roots_surface->view, surface->toplevel->client_pending.fullscreen,
+	phoc_view_set_fullscreen(&roots_surface->view, surface->toplevel->client_pending.fullscreen,
 		surface->toplevel->client_pending.fullscreen_output);
 	view_auto_maximize(&roots_surface->view);
 	view_set_title(&roots_surface->view, surface->toplevel->title);

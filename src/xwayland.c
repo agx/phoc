@@ -279,7 +279,7 @@ static void handle_request_fullscreen(struct wl_listener *listener,
 	struct wlr_xwayland_surface *xwayland_surface =
 		roots_surface->xwayland_surface;
 
-	view_set_fullscreen(view, xwayland_surface->fullscreen, NULL);
+	phoc_view_set_fullscreen(view, xwayland_surface->fullscreen, NULL);
 }
 
 static void handle_set_title(struct wl_listener *listener, void *data) {

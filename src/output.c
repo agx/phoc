@@ -878,7 +878,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     wlr_output_set_scale (wlr_output, config_head->state.scale);
     ok &= wlr_output_commit (wlr_output);
     if (output->fullscreen_view) {
-      view_set_fullscreen (output->fullscreen_view, true, wlr_output);
+      phoc_view_set_fullscreen (output->fullscreen_view, true, wlr_output);
     }
   }
 
