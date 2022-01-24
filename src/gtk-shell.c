@@ -36,7 +36,7 @@ handle_set_dbus_properties(struct wl_client *client,
                            const char *unique_bus_name)
 {
   PhocGtkSurface *gtk_surface = gtk_surface_from_resource (resource);
-  struct roots_view *view;
+  PhocView *view;
 
   g_debug ("Setting app-id %s for surface %p (res %p)", application_id, gtk_surface->wlr_surface, resource);
   if (!gtk_surface->wlr_surface)
@@ -45,7 +45,7 @@ handle_set_dbus_properties(struct wl_client *client,
   g_free (gtk_surface->app_id);
   gtk_surface->app_id = g_strdup (application_id);
 
-  view = roots_view_from_wlr_surface (gtk_surface->wlr_surface);
+  view = phoc_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
     view_set_app_id (view, application_id);
 }
@@ -82,13 +82,13 @@ handle_request_focus(struct wl_client *client,
   PhocServer *server = phoc_server_get_default ();
   PhocInput *input = server->input;
   PhocSeat *seat = phoc_input_get_last_active_seat (input);
-  struct roots_view *view;
+  PhocView *view;
 
   g_debug ("Requesting focus for surface %p (res %p)", gtk_surface->wlr_surface, resource);
   if (!gtk_surface->wlr_surface)
     return;
 
-  view = roots_view_from_wlr_surface (gtk_surface->wlr_surface);
+  view = phoc_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
     phoc_seat_set_focus(seat, view);
 }

@@ -122,8 +122,8 @@ PhocOutput *phoc_desktop_get_builtin_output (PhocDesktop *self);
 
 struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
-		struct roots_view **view);
-gboolean phoc_desktop_view_is_visible (PhocDesktop *desktop, struct roots_view *view);
+		PhocView **view);
+gboolean phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view);
 
 void handle_xdg_shell_surface(struct wl_listener *listener, void *data);
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data);

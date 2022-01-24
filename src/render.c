@@ -90,7 +90,7 @@ struct render_data {
 };
 
 struct view_render_data {
-  struct roots_view *view;
+  PhocView *view;
   int width;
   int height;
 };
@@ -261,7 +261,7 @@ static void render_surface_iterator(PhocOutput *output,
 }
 
 static void render_decorations(PhocOutput *output,
-		struct roots_view *view, struct render_data *data) {
+		PhocView *view, struct render_data *data) {
 	if (!view->decorated || !phoc_view_is_mapped (view)) {
 		return;
 	}
@@ -300,7 +300,7 @@ buffer_damage_finish:
 	pixman_region32_fini(&damage);
 }
 
-static void render_view(PhocOutput *output, struct roots_view *view,
+static void render_view(PhocOutput *output, PhocView *view,
 		struct render_data *data) {
 	// Do not render views fullscreened on other outputs
 	if (view_is_fullscreen (view) && view->fullscreen_output != output) {
@@ -357,7 +357,7 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 		}
 	}
 
-	struct roots_view *view = output->fullscreen_view;
+	PhocView *view = output->fullscreen_view;
 	assert(view != NULL);
 	if (!phoc_view_is_mapped (view)) {
 		return false;
@@ -521,7 +521,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
   struct wlr_texture *view_texture = wlr_surface_get_texture (surface);
 
   struct view_render_data *data = _data;
-  struct roots_view *view = data->view;
+  PhocView *view = data->view;
   struct wlr_surface *root = view->wlr_surface;
 
   struct wlr_box box;
@@ -546,7 +546,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 }
 
 gboolean
-view_render_to_buffer (struct roots_view *view, int width, int height, int stride, uint32_t *flags, void* data)
+view_render_to_buffer (PhocView *view, int width, int height, int stride, uint32_t *flags, void* data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocRenderer *self = server->renderer;
@@ -610,7 +610,7 @@ void output_render(PhocOutput *output) {
 	// Check if we can delegate the fullscreen surface to the output
 	if (output->fullscreen_view != NULL &&
 			output->fullscreen_view->wlr_surface != NULL) {
-		struct roots_view *view = output->fullscreen_view;
+		PhocView *view = output->fullscreen_view;
 
 		// Make sure the view is centered on screen
 		struct wlr_box view_box;
@@ -688,7 +688,7 @@ void output_render(PhocOutput *output) {
 
 	// If a view is fullscreen on this output, render it
 	if (output->fullscreen_view != NULL) {
-		struct roots_view *view = output->fullscreen_view;
+		PhocView *view = output->fullscreen_view;
 
 		render_view(output, view, &data);
 
@@ -717,7 +717,7 @@ void output_render(PhocOutput *output) {
 		render_layer(output, &buffer_damage,
 			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
 
-		struct roots_view *view;
+		PhocView *view;
 			// Render all views
 		wl_list_for_each_reverse(view, &desktop->views, link) {
 			if (phoc_desktop_view_is_visible(desktop, view)) {

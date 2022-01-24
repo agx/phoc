@@ -231,7 +231,7 @@ roots_passthrough_cursor (PhocCursor *self,
 {
   PhocServer *server = phoc_server_get_default ();
   double sx, sy;
-  struct roots_view *view = NULL;
+  PhocView *view = NULL;
   PhocSeat *seat = self->seat;
   PhocDesktop *desktop = server->desktop;
   struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
@@ -333,7 +333,7 @@ phoc_cursor_update_position (PhocCursor *self,
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   PhocSeat *seat = self->seat;
-  struct roots_view *view;
+  PhocView *view;
 
   switch (self->mode) {
   case PHOC_CURSOR_PASSTHROUGH:
@@ -418,7 +418,7 @@ phoc_cursor_press_button (PhocCursor *self,
   bool is_touch = device->type == WLR_INPUT_DEVICE_TOUCH;
 
   double sx, sy;
-  struct roots_view *view;
+  PhocView *view;
   struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
                                                          lx, ly, &sx, &sy, &view);
 
@@ -497,7 +497,7 @@ phoc_cursor_handle_motion (PhocCursor                      *self,
     dx_unaccel, dy_unaccel);
 
   if (self->active_constraint) {
-    struct roots_view *view = self->pointer_view->view;
+    PhocView *view = self->pointer_view->view;
     assert (view);
 
     double lx1 = self->cursor->x;
@@ -544,7 +544,7 @@ phoc_cursor_handle_motion_absolute (PhocCursor                               *se
     self->seat->seat, (uint64_t)event->time_msec * 1000, dx, dy, dx, dy);
 
   if (self->pointer_view) {
-    struct roots_view *view = self->pointer_view->view;
+    PhocView *view = self->pointer_view->view;
 
     if (self->active_constraint &&
         !pixman_region32_contains_point (&self->confine,
@@ -598,7 +598,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
   }
 
   double sx, sy;
-  struct roots_view *view;
+  PhocView *view;
   struct wlr_surface *surface = phoc_desktop_surface_at (
     desktop, lx, ly, &sx, &sy, &view);
   bool shell_revealed = roots_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
@@ -720,7 +720,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
         }
       }
     } else {
-      struct roots_view *view = roots_view_from_wlr_surface (root);
+      PhocView *view = phoc_view_from_wlr_surface (root);
       if (view) {
         scale = view->scale;
         sx = lx / scale - view->box.x;
@@ -782,7 +782,7 @@ phoc_cursor_handle_tool_axis (PhocCursor                        *self,
 
 
   if (self->pointer_view) {
-    struct roots_view *view = self->pointer_view->view;
+    PhocView *view = self->pointer_view->view;
 
     if (self->active_constraint &&
         !pixman_region32_contains_point (&self->confine,
@@ -920,7 +920,7 @@ phoc_cursor_constrain (PhocCursor *self,
     int nboxes;
     pixman_box32_t *boxes = pixman_region32_rectangles (region, &nboxes);
     if (nboxes > 0) {
-      struct roots_view *view = self->pointer_view->view;
+      PhocView *view = self->pointer_view->view;
 
       double lx = view->box.x + (boxes[0].x1 + boxes[0].x2) / 2.;
       double ly = view->box.y + (boxes[0].y1 + boxes[0].y2) / 2.;
