@@ -469,8 +469,17 @@ view_restore(struct roots_view *view)
     view->impl->set_tiled (view, false);
 }
 
-void view_set_fullscreen(struct roots_view *view, bool fullscreen,
-		struct wlr_output *output) {
+/**
+ * phoc_view_set_fullscreen:
+ * @view: The view
+ * @fullscreen: Whether to fullscreen or unfulscreen
+ * @output: The output to fullscreen the view on.
+ *
+ * If @fullscreen is `true`. fullscreens a view on the given output or
+ * (if @output is %NULL) on the view's current output. Unfullscreens
+ * the @view if @fullscreens is `false`.
+ */
+void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output) {
 	bool was_fullscreen = view_is_fullscreen (view);
 
 	if (was_fullscreen != fullscreen) {
@@ -582,7 +591,7 @@ view_move_to_next_output (struct roots_view *view, enum wlr_direction direction)
   view->saved.y = y;
 
   if (view_is_fullscreen (view)) {
-    view_set_fullscreen (view, true, new_output);
+    phoc_view_set_fullscreen (view, true, new_output);
     return true;
   }
 
@@ -1237,7 +1246,7 @@ static void handle_toplevel_handle_request_fullscreen(struct wl_listener *listen
 	struct roots_view *view =
 		wl_container_of(listener, view, toplevel_handle_request_fullscreen);
 	struct wlr_foreign_toplevel_handle_v1_fullscreen_event *event = data;
-	view_set_fullscreen(view, event->fullscreen, event->output);
+	phoc_view_set_fullscreen(view, event->fullscreen, event->output);
 }
 
 static void handle_toplevel_handle_request_close(struct wl_listener *listener,

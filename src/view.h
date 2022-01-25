@@ -57,7 +57,7 @@ typedef struct roots_view {
 	enum roots_view_type type;
 	const struct roots_view_interface *impl;
 	PhocDesktop *desktop;
-	struct wl_list link; // roots_desktop::views
+	struct wl_list link; // PhocDesktop::views
 	struct wl_list parent_link; // roots_view::stack
 
 	struct wlr_box box;
@@ -234,8 +234,7 @@ void view_auto_maximize(struct roots_view *view);
 void view_tile(struct roots_view *view, PhocViewTileDirection direction, struct wlr_output *output);
 void view_maximize(struct roots_view *view, struct wlr_output *output);
 void view_restore(struct roots_view *view);
-void view_set_fullscreen(struct roots_view *view, bool fullscreen,
-	struct wlr_output *output);
+void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output);
 void view_close(struct roots_view *view);
 bool view_center(struct roots_view *view, struct wlr_output *output);
 void view_send_frame_done_if_not_visible (struct roots_view *view);

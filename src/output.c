@@ -210,7 +210,13 @@ phoc_output_damage_handle_destroy (struct wl_listener *listener,
 {
   PhocOutput *self = wl_container_of (listener, self, damage_destroy);
 
-  g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  if (self->fullscreen_view)
+    phoc_view_set_fullscreen (self->fullscreen_view, false, NULL);
+
+  wl_list_remove (&self->damage_frame.link);
+  wl_list_remove (&self->damage_destroy.link);
 }
 
 static void
@@ -304,11 +310,8 @@ phoc_output_constructed (GObject *object)
   self->damage_destroy.notify = phoc_output_damage_handle_destroy;
   wl_signal_add (&self->damage->events.destroy, &self->damage_destroy);
 
-  size_t len = sizeof(self->layers) / sizeof(self->layers[0]);
-
-  for (size_t i = 0; i < len; ++i) {
+  for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
     wl_list_init (&self->layers[i]);
-  }
 
   struct roots_output_config *output_config =
     roots_config_get_output (config, self->wlr_output);
@@ -377,14 +380,10 @@ phoc_output_finalize (GObject *object)
   wl_list_remove (&self->enable.link);
   wl_list_remove (&self->mode.link);
   wl_list_remove (&self->commit.link);
-  wl_list_remove (&self->damage_frame.link);
-  wl_list_remove (&self->damage_destroy.link);
   g_list_free_full (self->debug_touch_points, g_free);
 
-  size_t len = sizeof (self->layers) / sizeof (self->layers[0]);
-  for (size_t i = 0; i < len; ++i) {
+  for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
     wl_list_remove (&self->layers[i]);
-  }
 
   g_clear_object (&self->desktop);
 
@@ -657,8 +656,7 @@ phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, vo
   phoc_output_drag_icons_for_each_surface (self, server->input,
                                            iterator, user_data);
 
-  size_t len = sizeof(self->layers) / sizeof(self->layers[0]);
-  for (size_t i = 0; i < len; ++i) {
+  for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i) {
     phoc_output_layer_for_each_surface (self, &self->layers[i],
                                         iterator, user_data);
   }
@@ -884,7 +882,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     wlr_output_set_scale (wlr_output, config_head->state.scale);
     ok &= wlr_output_commit (wlr_output);
     if (output->fullscreen_view) {
-      view_set_fullscreen (output->fullscreen_view, true, wlr_output);
+      phoc_view_set_fullscreen (output->fullscreen_view, true, wlr_output);
     }
   }
 

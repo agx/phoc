@@ -1612,8 +1612,8 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
           wlr_output_layout_intersects (
             desktop->layout,
             output->wlr_output, &box)) {
-        view_set_fullscreen (output->fullscreen_view,
-                             false, NULL);
+        phoc_view_set_fullscreen (output->fullscreen_view,
+                                  false, NULL);
       }
     }
   }
