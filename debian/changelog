@@ -1,3 +1,98 @@
+phoc (0.12.0) byzantium; urgency=medium
+
+  [ Andreas Streichardt ]
+  * remove xkb default assumptions
+
+  [ Guido Günther ]
+  * desktop: Enable xdg-foreign support
+  * seat: Drop NULL check
+  * seat: Make object allocation consistent
+  * seat: Fix indentation
+  * seat: Use g_critical instead of wlr_log
+  * layer-shell: Use g_critical instead of wlr_log
+  * desktop: Use g_critical instead of wlr_log
+  * settings: Use g_critical instead of wlr_log
+  * text-input: Use g_debug instead of wlr_log
+  * d/control: Use << for smaller than relationships
+  * d/copyright: Drop references to nonexistent files
+  * d/control: Bump standards version
+  * desktop: Don't remove startup-id listener when not connected
+  * desktop: Drop unused code
+  * desktop: Move xwayland configuration to seprate function
+  * desktop: Deconfigure xwayland only when created
+  * desktop: Handle XWayland startup errors
+  * Use g_setenv() consistently
+  * desktop: Enable viewporter
+  * output: Remove redundant check in phoc_view_accept_damage()
+  * view: Add and use phoc_view_is_mapped
+  * view: Rename and reindent view_child_init to phoc_view_child_init
+  * view: Use typedefs for child views as well
+  * view: Reindent child views
+  * view: Clarify "base" classes
+  * view: Use typedefs in the header
+  * view: Clarify source "object" on `new_subsurface`
+  * subsurface: Rename subsurface_create to phoc_view_subsurface_create
+  * subsurface: Make phoc_view_subsurface_create void
+  * subsurface: Use g_new0 when allocating subsurface
+  * view-child: Use the shorter `child` in structs that embed it
+  * view: Drop output.h include
+  * view: Prefix and reindent view_apply_damage
+  * output: Allow phoc_output_damage_from_view() to optionally damage the whole view
+  * output: Drop phoc_output_damage_whole_view()
+  * view: Make view_damage_whole  match phoc_view_apply_damage
+  * view-child: Start tracking mapped state
+  * view-child: Add phoc_view_child_{apply_damage,damage_whole}
+  * xdg-popup: Use phoc_view_child_damage_whole()
+  * view: Move subsurface initialization to separate function
+  * view: Rename and reindent view_child_destroy to phoc_view_child_destroy
+  * view: Move public function to the end
+  * view-child: Use child specific damage function when destroying child
+  * view-child: Make sure to init a childs children
+  * view-child: Document where `link` links to
+  * view: Reindent and rename view_child_handle_new_subsurface
+  * view-child: Invoke the child specific creation function
+  * view: Use the passed in surface
+  * view: Drop remaining use of `struct roots_subsurface`
+  * view: Drop remaining use of `struct roots_view_child`
+  * view-child: Document struct members a bit
+  * view: Only damage child on subsurface map/unmap
+  * view: Reindent and rename view_child_handle_new_commit
+  * view-child: Only damage child on commit
+  * view: Make PhocSubsurface private
+  * output: Rename surface iterator to PhocSurfaceIterator
+  * text-input: Add typedefs
+  * text-input: Separate summary
+  * text-input: Move member documentation to docstring
+  * text-input: Modernize phoc_text_input_create()
+  * text-input: Modernize relay_handle_text_input
+  * text-input: Modernize phoc_input_method_relay_{init,destroy}
+  * text-input: Modernize phoc_input_method_relay_set_focus()
+  * text-input: Modernize relay_handle_input_method()
+  * text-input: Use Phoc* types
+  * text-input: Make PhocTextInput private
+  * text-input: Handle text-input being registered late
+  * output: Use PhocView
+  * desktop: Use PhocView
+  * xwayland: Use PhocView
+  * xdg_shell: Use PhocView
+  * cursor: Use PhocView
+  * keybindings: Use PhocView
+  * seat: Use PhocView
+  * gtk-shell: Use PhocView
+  * input: Use PhocView
+  * layer-shell: Use PhocView
+  * phosh-private: Use PhocView
+  * render: Use PhocView
+  * Rename roots_view_from_wlr_surface
+  * view: Fix comment
+  * output: Use G_N_ELEMENTS() for layers consistently
+  * view: Add phoc_ prefix to view_set_fullscreen
+  * output: Unfullscreen when output damage goes away
+  * output: Free output-damage releated bits in handle_output_damage_destroy
+  * output: Only emit output-destroy from phoc_output_destroy()
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Tue, 25 Jan 2022 14:28:19 +0100
+
 phoc (0.11.0) byzantium; urgency=medium
 
   [ Sebastian Krzyszkowiak ]
