@@ -662,7 +662,7 @@ gboolean
 phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filename)
 {
   const char *msg;
-  cairo_surface_t *surface = surface = cairo_image_surface_create_from_png (filename);
+  cairo_surface_t *surface = cairo_image_surface_create_from_png (filename);
   cairo_format_t format;
   guint32 *l, *r;
   guint32 mask = 0xFFFFFFFF;
