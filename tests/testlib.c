@@ -248,13 +248,14 @@ foreign_toplevel_handle_closed (void *data,
 }
 
 static const struct zwlr_foreign_toplevel_handle_v1_listener foreign_toplevel_handle_listener = {
-  foreign_toplevel_handle_title,
-  foreign_toplevel_handle_app_id,
-  foreign_toplevel_handle_output_enter,
-  foreign_toplevel_handle_output_leave,
-  foreign_toplevel_handle_state,
-  foreign_toplevel_handle_done,
-  foreign_toplevel_handle_closed
+  .title = foreign_toplevel_handle_title,
+  .app_id = foreign_toplevel_handle_app_id,
+  .output_enter = foreign_toplevel_handle_output_enter,
+  .output_leave = foreign_toplevel_handle_output_leave,
+  .state = foreign_toplevel_handle_state,
+  .done = foreign_toplevel_handle_done,
+  .closed = foreign_toplevel_handle_closed,
+  .parent = NULL
 };
 
 
