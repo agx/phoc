@@ -4,7 +4,6 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <wlr/util/log.h>
 #include "seat.h"
 #include "server.h"
 #include "text_input.h"

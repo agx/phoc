@@ -13,7 +13,6 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/util/log.h>
 #include <wlr/util/region.h>
 #include "settings.h"
 #include "layers.h"

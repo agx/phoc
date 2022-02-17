@@ -9,7 +9,6 @@
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/util/log.h>
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"

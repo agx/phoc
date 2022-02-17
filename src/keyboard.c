@@ -19,7 +19,6 @@
 #include <wayland-server-core.h>
 #include <wlr/backend/session.h>
 #include <wlr/types/wlr_pointer.h>
-#include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 #include "keyboard.h"
 #include "phosh-private.h"

@@ -9,7 +9,6 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
-#include <wlr/util/log.h>
 #include <wlr/xwayland.h>
 #include "cursor.h"
 #include "server.h"
