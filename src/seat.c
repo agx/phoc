@@ -2028,7 +2028,7 @@ phoc_seat_class_init (PhocSeatClass *klass)
   object_class->set_property = phoc_seat_set_property;
   object_class->constructed = phoc_seat_constructed;
   object_class->dispose = phoc_seat_dispose;
-  object_class->dispose = phoc_seat_finalize;
+  object_class->finalize = phoc_seat_finalize;
 
   /**
    * PhocSeat:input:
