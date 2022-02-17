@@ -10,7 +10,7 @@ function print_current()
   local munged_id="$2"
 
   echo -n "Scale-to-fit for $app_id: "
-  G_MESSAGES_DEBUG= gsettings get sm.puri.phoc.application:/sm/puri/phoc/application/"$munged_id"/ scale-to-fit
+  G_MESSAGES_DEBUG='' gsettings get sm.puri.phoc.application:/sm/puri/phoc/application/"$munged_id"/ scale-to-fit
 }
 
 if [ -z "$1" ]; then
@@ -19,7 +19,7 @@ if [ -z "$1" ]; then
 fi
 
 APP_ID="$1"
-MUNGED_ID="$(echo $1 | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')"
+MUNGED_ID=$(echo "$1" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
 
 if [ -z "$2" ]; then
   print_current "$APP_ID" "$MUNGED_ID"
@@ -34,6 +34,6 @@ case "$2" in
 	val=false
 	;;
 esac
-G_MESSAGES_DEBUG= gsettings set sm.puri.phoc.application:/sm/puri/phoc/application/"$MUNGED_ID"/ scale-to-fit "$val"
+G_MESSAGES_DEBUG='' gsettings set sm.puri.phoc.application:/sm/puri/phoc/application/"$MUNGED_ID"/ scale-to-fit "$val"
 
 print_current "$APP_ID" "$MUNGED_ID"
