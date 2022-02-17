@@ -1396,17 +1396,6 @@ void
 phoc_seat_configure_xcursor (PhocSeat *seat)
 {
   PhocServer *server = phoc_server_get_default ();
-  const char *cursor_theme = NULL;
-
-  if (!seat->cursor->xcursor_manager) {
-    seat->cursor->xcursor_manager =
-      wlr_xcursor_manager_create (cursor_theme, PHOC_XCURSOR_SIZE);
-    if (seat->cursor->xcursor_manager == NULL) {
-      g_critical ("Cannot create XCursor manager for theme");
-      return;
-    }
-  }
-
   PhocOutput *output;
 
   wl_list_for_each (output, &server->desktop->outputs, link) {

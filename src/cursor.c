@@ -291,6 +291,18 @@ timespec_to_msec (const struct timespec *a)
 
 
 static void
+phoc_cursor_constructed (GObject *object)
+{
+  PhocCursor *self = PHOC_CURSOR (object);
+
+  self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
+  g_assert (self->xcursor_manager);
+
+  G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
+}
+
+
+static void
 phoc_cursor_finalize (GObject *object)
 {
   PhocCursor *self = PHOC_CURSOR (object);
@@ -328,6 +340,7 @@ phoc_cursor_class_init (PhocCursorClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->constructed = phoc_cursor_constructed;
   object_class->finalize = phoc_cursor_finalize;
   object_class->get_property = phoc_cursor_get_property;
   object_class->set_property = phoc_cursor_set_property;
