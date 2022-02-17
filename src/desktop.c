@@ -776,6 +776,7 @@ phoc_desktop_finalize (GObject *object)
 
   g_clear_object (&self->phosh);
   g_clear_pointer (&self->gtk_shell, phoc_gtk_shell_destroy);
+  g_clear_pointer (&self->layout, wlr_output_layout_destroy);
 
   g_hash_table_remove_all (self->input_output_map);
   g_hash_table_unref (self->input_output_map);
