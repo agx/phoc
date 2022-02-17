@@ -307,6 +307,8 @@ phoc_server_finalize (GObject *object)
     self->inited = FALSE;
   }
 
+  g_clear_pointer (&self->config, phoc_config_destroy);
+
   wl_display_destroy (self->wl_display);
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
