@@ -2000,7 +2000,6 @@ phoc_seat_dispose (GObject *object)
   PhocSeat *self = PHOC_SEAT (object);
 
   g_clear_object (&self->cursor);
-  g_clear_object (&self->input);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->dispose (object);
 }
