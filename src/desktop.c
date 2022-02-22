@@ -557,13 +557,11 @@ static void
 phoc_desktop_setup_xwayland (PhocDesktop *self)
 {
 #ifdef PHOC_XWAYLAND
-  const char *cursor_theme = NULL;
   const char *cursor_default = PHOC_XCURSOR_DEFAULT;
   PhocConfig *config = self->config;
   PhocServer *server = phoc_server_get_default ();
 
-  self->xcursor_manager = wlr_xcursor_manager_create(cursor_theme,
-						     PHOC_XCURSOR_SIZE);
+  self->xcursor_manager = wlr_xcursor_manager_create(NULL, PHOC_XCURSOR_SIZE);
   g_return_if_fail (self->xcursor_manager);
 
   if (config->xwayland) {
@@ -769,6 +767,7 @@ phoc_desktop_finalize (GObject *object)
 #endif
   }
 
+  g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
   // We need to shutdown Xwayland before disconnecting all clients, otherwise
   // wlroots will restart it automatically.
   g_clear_pointer (&self->xwayland, wlr_xwayland_destroy);
@@ -776,6 +775,7 @@ phoc_desktop_finalize (GObject *object)
 
   g_clear_object (&self->phosh);
   g_clear_pointer (&self->gtk_shell, phoc_gtk_shell_destroy);
+  g_clear_pointer (&self->layout, wlr_output_layout_destroy);
 
   g_hash_table_remove_all (self->input_output_map);
   g_hash_table_unref (self->input_output_map);

@@ -291,10 +291,57 @@ timespec_to_msec (const struct timespec *a)
 
 
 static void
+phoc_cursor_constructed (GObject *object)
+{
+  PhocCursor *self = PHOC_CURSOR (object);
+
+  self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
+  g_assert (self->xcursor_manager);
+
+  G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
+}
+
+
+static void
+phoc_cursor_finalize (GObject *object)
+{
+  PhocCursor *self = PHOC_CURSOR (object);
+
+  wl_list_remove (&self->motion.link);
+  wl_list_remove (&self->motion_absolute.link);
+  wl_list_remove (&self->button.link);
+  wl_list_remove (&self->axis.link);
+  wl_list_remove (&self->frame.link);
+  wl_list_remove (&self->swipe_begin.link);
+  wl_list_remove (&self->swipe_update.link);
+  wl_list_remove (&self->swipe_end.link);
+  wl_list_remove (&self->pinch_begin.link);
+  wl_list_remove (&self->pinch_update.link);
+  wl_list_remove (&self->pinch_end.link);
+  wl_list_remove (&self->touch_down.link);
+  wl_list_remove (&self->touch_up.link);
+  wl_list_remove (&self->touch_motion.link);
+  wl_list_remove (&self->tool_axis.link);
+  wl_list_remove (&self->tool_tip.link);
+  wl_list_remove (&self->tool_proximity.link);
+  wl_list_remove (&self->tool_button.link);
+  wl_list_remove (&self->request_set_cursor.link);
+  wl_list_remove (&self->focus_change.link);
+
+  g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
+  g_clear_pointer (&self->cursor, wlr_cursor_destroy);
+
+  G_OBJECT_CLASS (phoc_cursor_parent_class)->finalize (object);
+}
+
+
+static void
 phoc_cursor_class_init (PhocCursorClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->constructed = phoc_cursor_constructed;
+  object_class->finalize = phoc_cursor_finalize;
   object_class->get_property = phoc_cursor_get_property;
   object_class->set_property = phoc_cursor_set_property;
 

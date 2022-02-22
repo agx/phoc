@@ -52,8 +52,6 @@ struct _PhocDesktop {
 	struct roots_config *config;
 
 	struct wlr_output_layout *layout;
-	struct wlr_xcursor_manager *xcursor_manager;
-
 	struct wlr_xdg_shell *xdg_shell;
 	struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
 	struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;
@@ -92,6 +90,7 @@ struct _PhocDesktop {
 	struct wl_listener output_power_manager_set_mode;
 
 #ifdef PHOC_XWAYLAND
+	struct wlr_xcursor_manager *xcursor_manager;
 	struct wlr_xwayland *xwayland;
 	struct wl_listener xwayland_surface;
 	struct wl_listener xwayland_ready;

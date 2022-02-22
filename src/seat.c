@@ -1396,17 +1396,6 @@ void
 phoc_seat_configure_xcursor (PhocSeat *seat)
 {
   PhocServer *server = phoc_server_get_default ();
-  const char *cursor_theme = NULL;
-
-  if (!seat->cursor->xcursor_manager) {
-    seat->cursor->xcursor_manager =
-      wlr_xcursor_manager_create (cursor_theme, PHOC_XCURSOR_SIZE);
-    if (seat->cursor->xcursor_manager == NULL) {
-      g_critical ("Cannot create XCursor manager for theme");
-      return;
-    }
-  }
-
   PhocOutput *output;
 
   wl_list_for_each (output, &server->desktop->outputs, link) {
@@ -2000,7 +1989,6 @@ phoc_seat_dispose (GObject *object)
   PhocSeat *self = PHOC_SEAT (object);
 
   g_clear_object (&self->cursor);
-  g_clear_object (&self->input);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->dispose (object);
 }
@@ -2029,7 +2017,7 @@ phoc_seat_class_init (PhocSeatClass *klass)
   object_class->set_property = phoc_seat_set_property;
   object_class->constructed = phoc_seat_constructed;
   object_class->dispose = phoc_seat_dispose;
-  object_class->dispose = phoc_seat_finalize;
+  object_class->finalize = phoc_seat_finalize;
 
   /**
    * PhocSeat:input:
