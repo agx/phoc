@@ -85,7 +85,6 @@ typedef struct _PhocCursor {
 } PhocCursor;
 
 PhocCursor *phoc_cursor_new (PhocSeat                                                    *seat);
-void        phoc_cursor_handle_frame (PhocCursor                                         *self);
 void        phoc_cursor_handle_touch_down (PhocCursor                                    *self,
                                            struct wlr_event_touch_down                   *event);
 void        phoc_cursor_handle_touch_up (PhocCursor                                      *self,

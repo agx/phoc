@@ -39,6 +39,7 @@ static void handle_pointer_motion (struct wl_listener *listener, void *data);
 static void handle_pointer_motion_absolute (struct wl_listener *listener, void *data);
 static void handle_pointer_button (struct wl_listener *listener, void *data);
 static void handle_pointer_axis (struct wl_listener *listener, void *data);
+static void handle_pointer_frame (struct wl_listener *listener, void *data);
 
 static void
 phoc_cursor_set_property (GObject      *object,
@@ -315,6 +316,9 @@ phoc_cursor_constructed (GObject *object)
 
   wl_signal_add (&wlr_cursor->events.axis, &self->axis);
   self->axis.notify = handle_pointer_axis;
+
+  wl_signal_add (&wlr_cursor->events.frame, &self->frame);
+  self->frame.notify = handle_pointer_frame;
 
   G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 }
@@ -656,9 +660,14 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
                                 event->orientation, event->delta, event->delta_discrete, event->source);
 }
 
-void
-phoc_cursor_handle_frame (PhocCursor *self)
+static void
+handle_pointer_frame (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, frame);
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   wlr_seat_pointer_notify_frame (self->seat->seat);
 }
 
