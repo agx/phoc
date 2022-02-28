@@ -35,6 +35,8 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 G_DEFINE_TYPE (PhocCursor, phoc_cursor, G_TYPE_OBJECT)
 
+static void handle_pointer_motion (struct wl_listener *listener, void *data);
+
 static void
 phoc_cursor_set_property (GObject      *object,
 			  guint         property_id,
@@ -293,9 +295,14 @@ static void
 phoc_cursor_constructed (GObject *object)
 {
   PhocCursor *self = PHOC_CURSOR (object);
+  struct wlr_cursor *wlr_cursor = self->cursor;
 
+  g_assert (self->cursor);
   self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
   g_assert (self->xcursor_manager);
+
+  wl_signal_add (&wlr_cursor->events.motion, &self->motion);
+  self->motion.notify = handle_pointer_motion;
 
   G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 }
@@ -526,16 +533,21 @@ phoc_cursor_press_button (PhocCursor *self,
   }
 }
 
-void
-phoc_cursor_handle_motion (PhocCursor                      *self,
-                           struct wlr_event_pointer_motion *event)
+
+static void
+handle_pointer_motion (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, motion);
+  struct wlr_event_pointer_motion *event = data;
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
   double dx = event->delta_x;
   double dy = event->delta_y;
 
   double dx_unaccel = event->unaccel_dx;
   double dy_unaccel = event->unaccel_dy;
+
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
 
   wlr_relative_pointer_manager_v1_send_relative_motion (
     server->desktop->relative_pointer_manager,
