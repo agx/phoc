@@ -817,7 +817,7 @@ phoc_desktop_init (PhocDesktop *self)
 
 
 PhocDesktop *
-phoc_desktop_new (struct roots_config *config)
+phoc_desktop_new (PhocConfig *config)
 {
   return g_object_new (PHOC_TYPE_DESKTOP, "config", config, NULL);
 }

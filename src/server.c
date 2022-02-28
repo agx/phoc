@@ -307,6 +307,8 @@ phoc_server_finalize (GObject *object)
     self->inited = FALSE;
   }
 
+  g_clear_pointer (&self->config, phoc_config_destroy);
+
   wl_display_destroy (self->wl_display);
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
@@ -369,9 +371,9 @@ phoc_server_setup (PhocServer *self, const char *config_path,
 {
   g_assert (!self->inited);
 
-  self->config = roots_config_create(config_path);
+  self->config = phoc_config_create (config_path);
   if (!self->config) {
-    g_warning("Failed to parse config");
+    /* phoc_config_create printed an error */
     return FALSE;
   }
 
@@ -403,7 +405,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
   g_setenv("WAYLAND_DISPLAY", socket, true);
 #ifdef PHOC_XWAYLAND
   if (self->desktop->xwayland != NULL) {
-    PhocSeat *xwayland_seat = phoc_input_get_seat(self->input, ROOTS_CONFIG_DEFAULT_SEAT_NAME);
+    PhocSeat *xwayland_seat = phoc_input_get_seat(self->input, PHOC_CONFIG_DEFAULT_SEAT_NAME);
     wlr_xwayland_set_seat(self->desktop->xwayland, xwayland_seat->seat);
   }
 #endif

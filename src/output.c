@@ -237,7 +237,7 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
 }
 
 static void
-phoc_output_set_mode (struct wlr_output *output, struct roots_output_config *oc)
+phoc_output_set_mode (struct wlr_output *output, PhocOutputConfig *oc)
 {
   int mhz = (int)(oc->mode.refresh_rate * 1000);
 
@@ -277,7 +277,7 @@ phoc_output_constructed (GObject *object)
 
   assert (server->desktop);
 
-  struct roots_config *config = self->desktop->config;
+  PhocConfig *config = self->desktop->config;
 
   g_message ("Output '%s' added ('%s'/'%s'/'%s'), "
              "%" PRId32 "mm x %" PRId32 "mm",
@@ -313,8 +313,7 @@ phoc_output_constructed (GObject *object)
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
     wl_list_init (&self->layers[i]);
 
-  struct roots_output_config *output_config =
-    roots_config_get_output (config, self->wlr_output);
+  PhocOutputConfig *output_config = phoc_config_get_output (config, self->wlr_output);
 
   struct wlr_output_mode *preferred_mode =
     wlr_output_preferred_mode (self->wlr_output);
@@ -322,7 +321,7 @@ phoc_output_constructed (GObject *object)
   if (output_config) {
     if (output_config->enable) {
       if (wlr_output_is_drm (self->wlr_output)) {
-        struct roots_output_mode_config *mode_config;
+        PhocOutputModeConfig *mode_config;
         wl_list_for_each (mode_config, &output_config->modes, link) {
           wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
         }
