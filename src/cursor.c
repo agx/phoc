@@ -37,6 +37,7 @@ G_DEFINE_TYPE (PhocCursor, phoc_cursor, G_TYPE_OBJECT)
 
 static void handle_pointer_motion (struct wl_listener *listener, void *data);
 static void handle_pointer_motion_absolute (struct wl_listener *listener, void *data);
+static void handle_pointer_button (struct wl_listener *listener, void *data);
 
 static void
 phoc_cursor_set_property (GObject      *object,
@@ -307,6 +308,9 @@ phoc_cursor_constructed (GObject *object)
 
   wl_signal_add (&wlr_cursor->events.motion_absolute, &self->motion_absolute);
   self->motion_absolute.notify = handle_pointer_motion_absolute;
+
+  wl_signal_add (&wlr_cursor->events.button, &self->button);
+  self->button.notify = handle_pointer_button;
 
   G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 }
@@ -622,10 +626,15 @@ handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
   phoc_cursor_update_position (self, event->time_msec);
 }
 
-void
-phoc_cursor_handle_button (PhocCursor                      *self,
-                           struct wlr_event_pointer_button *event)
+static void
+handle_pointer_button (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, button);
+  struct wlr_event_pointer_button *event = data;
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   phoc_cursor_press_button (self, event->device, event->time_msec,
                             event->button, event->state, self->cursor->x, self->cursor->y);
 }
