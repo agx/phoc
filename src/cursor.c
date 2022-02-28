@@ -36,6 +36,7 @@ static GParamSpec *props[PROP_LAST_PROP];
 G_DEFINE_TYPE (PhocCursor, phoc_cursor, G_TYPE_OBJECT)
 
 static void handle_pointer_motion (struct wl_listener *listener, void *data);
+static void handle_pointer_motion_absolute (struct wl_listener *listener, void *data);
 
 static void
 phoc_cursor_set_property (GObject      *object,
@@ -303,6 +304,9 @@ phoc_cursor_constructed (GObject *object)
 
   wl_signal_add (&wlr_cursor->events.motion, &self->motion);
   self->motion.notify = handle_pointer_motion;
+
+  wl_signal_add (&wlr_cursor->events.motion_absolute, &self->motion_absolute);
+  self->motion_absolute.notify = handle_pointer_motion_absolute;
 
   G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 }
@@ -584,13 +588,16 @@ handle_pointer_motion (struct wl_listener *listener, void *data)
   phoc_cursor_update_position (self, event->time_msec);
 }
 
-void
-phoc_cursor_handle_motion_absolute (PhocCursor                               *self,
-                                    struct wlr_event_pointer_motion_absolute *event)
+static void
+handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, motion_absolute);
+  struct wlr_event_pointer_motion_absolute *event = data;
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
   double lx, ly;
 
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   wlr_cursor_absolute_to_layout_coords (self->cursor, event->device, event->x,
                                         event->y, &lx, &ly);
 

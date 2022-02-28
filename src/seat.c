@@ -92,21 +92,6 @@ phoc_seat_get_property (GObject    *object,
   }
 }
 
-
-static void
-handle_cursor_motion_absolute (struct wl_listener *listener,
-                               void               *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocCursor *cursor = wl_container_of (listener, cursor, motion_absolute);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_pointer_motion_absolute *event = data;
-
-  phoc_cursor_handle_motion_absolute (cursor, event);
-}
-
 static void
 handle_cursor_button (struct wl_listener *listener, void *data)
 {
@@ -660,10 +645,6 @@ phoc_seat_init_cursor (PhocSeat *seat)
   phoc_seat_configure_xcursor (seat);
 
   // add input signals
-  wl_signal_add (&wlr_cursor->events.motion_absolute,
-                 &seat->cursor->motion_absolute);
-  seat->cursor->motion_absolute.notify = handle_cursor_motion_absolute;
-
   wl_signal_add (&wlr_cursor->events.button, &seat->cursor->button);
   seat->cursor->button.notify = handle_cursor_button;
 
