@@ -247,7 +247,7 @@ void view_create_foreign_toplevel_handle(PhocView *view);
 void view_get_deco_box(const PhocView *view, struct wlr_box *box);
 void view_for_each_surface(PhocView *view,
 	wlr_surface_iterator_func_t iterator, void *user_data);
-PhocView *phoc_view_from_wlr_surface (struct wlr_surface *surface);
+PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
 struct roots_xdg_surface *roots_xdg_surface_from_view(PhocView *view);
 struct roots_xwayland_surface *roots_xwayland_surface_from_view(
