@@ -171,11 +171,11 @@ struct phoc_view_child_interface {
 /**
  * PhocViewChild:
  * @link: Link to PhocView::child_surfaces
- * @view: The #PhocView this child belongs to
+ * @view: The [type@PhocView] this child belongs to
  * @parent: (nullable): The parent of this child if another child
  * @children: (nullable): children of this child
  *
- * A child of a view, e.g. a popup or subsurface
+ * A child of a [type@PhocView], e.g. a popup or subsurface
  */
 typedef struct _PhocViewChild {
   const struct phoc_view_child_interface *impl;
