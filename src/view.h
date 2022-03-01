@@ -53,6 +53,13 @@ typedef enum {
   PHOC_VIEW_STATE_TILED,
 } PhocViewState;
 
+/**
+ * PhocView:
+ * @type: The type of the toplevel
+ * @impl: The interface imlementing the toplevel
+ *
+ * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
+ */
 struct _PhocView {
 	PhocViewType type;
 	const PhocViewInterface *impl;
