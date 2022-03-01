@@ -297,7 +297,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
   PhocView *top_view = wl_container_of (desktop->views.next, view, link);
 
 #ifdef PHOC_XWAYLAND
-  // XWayland parent relations can be complicated and aren't described by roots_view
+  // XWayland parent relations can be complicated and aren't described by PhocView
   // relationships very well at the moment, so just make all XWayland windows visible
   // when some XWayland window is active for now
   if (view->type == ROOTS_XWAYLAND_VIEW && top_view->type == ROOTS_XWAYLAND_VIEW) {

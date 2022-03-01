@@ -44,7 +44,7 @@ G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
 struct _PhocDesktop {
 	GObject parent;
 
-	struct wl_list views; // roots_view::link
+	struct wl_list views; // PhocView::link
 
 	struct wl_list outputs; // PhocOutput::link
 	struct timespec last_frame;
