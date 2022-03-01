@@ -26,7 +26,7 @@ struct _PhocSubsurface {
 };
 
 
-void view_init(PhocView *view, const struct roots_view_interface *impl,
+void view_init(PhocView *view, const PhocViewInterface *impl,
 		PhocViewType type, PhocDesktop *desktop) {
 	assert(impl->destroy);
 	view->impl = impl;

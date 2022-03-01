@@ -17,7 +17,7 @@ typedef struct _PhocView PhocView;
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
 
-struct roots_view_interface {
+typedef struct _PhocViewInterface {
 	void (*move)(PhocView *view, double x, double y);
 	void (*resize)(PhocView *view, uint32_t width, uint32_t height);
 	void (*move_resize)(PhocView *view, double x, double y,
@@ -33,7 +33,7 @@ struct roots_view_interface {
 		wlr_surface_iterator_func_t iterator, void *user_data);
 	void (*get_geometry)(PhocView *view, struct wlr_box *box);
 	void (*destroy)(PhocView *view);
-};
+} PhocViewInterface;
 
 typedef enum {
 	ROOTS_XDG_SHELL_VIEW,
@@ -55,7 +55,7 @@ typedef enum {
 
 struct _PhocView {
 	PhocViewType type;
-	const struct roots_view_interface *impl;
+	const PhocViewInterface *impl;
 	PhocDesktop *desktop;
 	struct wl_list link; // PhocDesktop::views
 	struct wl_list parent_link; // PhocView::stack
@@ -204,7 +204,7 @@ struct roots_xdg_toplevel_decoration {
 	struct wl_listener surface_commit;
 };
 
-void view_init(PhocView *view, const struct roots_view_interface *impl,
+void view_init(PhocView *view, const PhocViewInterface *impl,
                PhocViewType type, PhocDesktop *desktop);
 void view_destroy(PhocView *view);
 void view_appear_activated(PhocView *view, bool activated);
