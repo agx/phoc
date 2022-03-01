@@ -312,6 +312,10 @@ phoc_layer_shell_update_focus (void)
   PhocOutput *output;
   wl_list_for_each (output, &server->desktop->outputs, link) {
     for (size_t i = 0; i < G_N_ELEMENTS(layers_above_shell); ++i) {
+      if (output->fullscreen_view && !output->force_shell_reveal) {
+        if (layers_above_shell[i] == ZWLR_LAYER_SHELL_V1_LAYER_TOP)
+          continue;
+      }
       wl_list_for_each(layer, &output->layers[layers_above_shell[i]], link) {
         if (layer->layer_surface->current.keyboard_interactive && layer->layer_surface->mapped) {
           topmost = layer;
