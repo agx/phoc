@@ -179,7 +179,7 @@ static void destroy(PhocView *view) {
 	free(roots_surface);
 }
 
-static const struct roots_view_interface view_impl = {
+static const PhocViewInterface view_impl = {
 	.resize = resize,
 	.move = move,
 	.move_resize = move_resize,

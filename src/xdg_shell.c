@@ -334,7 +334,7 @@ static void destroy(PhocView *view) {
 	free(roots_xdg_surface);
 }
 
-static const struct roots_view_interface view_impl = {
+static const PhocViewInterface view_impl = {
 	.resize = resize,
 	.move_resize = move_resize,
 	.want_auto_maximize = want_auto_maximize,
