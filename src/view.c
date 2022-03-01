@@ -27,7 +27,7 @@ struct _PhocSubsurface {
 
 
 void view_init(PhocView *view, const struct roots_view_interface *impl,
-		enum roots_view_type type, PhocDesktop *desktop) {
+		PhocViewType type, PhocDesktop *desktop) {
 	assert(impl->destroy);
 	view->impl = impl;
 	view->type = type;

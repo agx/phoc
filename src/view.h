@@ -35,12 +35,12 @@ struct roots_view_interface {
 	void (*destroy)(PhocView *view);
 };
 
-enum roots_view_type {
+typedef enum {
 	ROOTS_XDG_SHELL_VIEW,
 #ifdef PHOC_XWAYLAND
 	ROOTS_XWAYLAND_VIEW,
 #endif
-};
+} PhocViewType;
 
 typedef enum {
   PHOC_VIEW_TILE_LEFT,
@@ -54,7 +54,7 @@ typedef enum {
 } PhocViewState;
 
 struct _PhocView {
-	enum roots_view_type type;
+	PhocViewType type;
 	const struct roots_view_interface *impl;
 	PhocDesktop *desktop;
 	struct wl_list link; // PhocDesktop::views
@@ -205,7 +205,7 @@ struct roots_xdg_toplevel_decoration {
 };
 
 void view_init(PhocView *view, const struct roots_view_interface *impl,
-	enum roots_view_type type, PhocDesktop *desktop);
+               PhocViewType type, PhocDesktop *desktop);
 void view_destroy(PhocView *view);
 void view_appear_activated(PhocView *view, bool activated);
 void view_activate(PhocView *view, bool activate);
