@@ -525,7 +525,7 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
     wlr_tablet_v2_tablet_tool_notify_proximity_out (phoc_tool->tablet_v2_tool);
 
     /* Clear cursor image if there's no pointing device. */
-    if ((cursor->seat->seat->capabilities & WL_SEAT_CAPABILITY_POINTER) == 0)
+    if (phoc_seat_has_pointer (cursor->seat) == FALSE)
       phoc_seat_maybe_set_cursor (cursor->seat, cursor->default_xcursor);
 
     return;
@@ -1917,10 +1917,7 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
 void
 phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
 {
-  struct wlr_seat *wlr_seat = self->seat;
-
-  g_return_if_fail (wlr_seat);
-  if ((wlr_seat->capabilities & WL_SEAT_CAPABILITY_POINTER) == 0) {
+  if (phoc_seat_has_pointer (self) == FALSE) {
     wlr_cursor_set_image (self->cursor->cursor, NULL, 0, 0, 0, 0, 0, 0);
   } else {
     if (!name)
@@ -2062,4 +2059,34 @@ phoc_seat_new (PhocInput *input, const char *name)
                                   "input", input,
                                   "name", name,
                                   NULL));
+}
+
+
+gboolean
+phoc_seat_has_touch (PhocSeat *self)
+{
+  g_return_val_if_fail (PHOC_IS_SEAT (self), FALSE);
+
+  g_assert (self->seat);
+  return (self->seat->capabilities & WL_SEAT_CAPABILITY_TOUCH);
+}
+
+
+gboolean
+phoc_seat_has_pointer (PhocSeat *self)
+{
+  g_return_val_if_fail (PHOC_IS_SEAT (self), FALSE);
+
+  g_assert (self->seat);
+  return (self->seat->capabilities & WL_SEAT_CAPABILITY_POINTER);
+}
+
+
+gboolean
+phoc_seat_has_keyboard (PhocSeat *self)
+{
+  g_return_val_if_fail (PHOC_IS_SEAT (self), FALSE);
+
+  g_assert (self->seat);
+  return (self->seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD);
 }
