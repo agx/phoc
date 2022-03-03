@@ -799,6 +799,19 @@ damage_whole_view (PhocOutput *self, PhocView  *view)
   wlr_output_damage_add_box (self->damage, &box);
 }
 
+
+/**
+ * phoc_output_damage_from_view:
+ * @self: The output to add damage to
+ * @view: The view providing the damage
+ * @whole: Whether
+ *
+ * Adds a [type@PhocView]'s damage to the damaged area of @self. If
+ * @whole is %TRUE the whole view is damaged (including any window
+ * decorations if they exist). If @whole is %FALSE only buffer damage
+ * is taken into account.
+ * Also schedules a new frame.
+ */
 void
 phoc_output_damage_from_view (PhocOutput *self, PhocView  *view, bool whole)
 {
