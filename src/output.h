@@ -18,6 +18,13 @@ G_DECLARE_FINAL_TYPE (PhocOutput, phoc_output, PHOC, OUTPUT, GObject);
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocInput PhocInput;
 
+/**
+ * PhocOutput:
+ *
+ * The output region of a compositor (typically a monitor).
+ *
+ * See wlroot's #wlr_output.
+ */
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
 struct _PhocOutput {
