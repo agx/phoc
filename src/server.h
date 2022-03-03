@@ -40,6 +40,13 @@ typedef enum _PhocServerDebugFlags {
   PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS =    1 << 3,
 } PhocServerDebugFlags;
 
+/**
+ * PhocServer:
+ *
+ * The server singleton.
+ *
+ * Maintains the compositors state.
+ */
 /* TODO: we keep the struct public due to heaps of direct access
    which will be replaced by getters and setters over time */
 struct _PhocServer {
