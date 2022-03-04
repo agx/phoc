@@ -15,7 +15,6 @@
 
 G_DEFINE_TYPE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT)
 
-
 static void
 phoc_layer_surface_finalize (GObject *object)
 {

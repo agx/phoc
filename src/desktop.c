@@ -42,6 +42,9 @@
 #include "xcursor.h"
 #include "xdg-activation-v1.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
+#include "gesture-swipe.h"
+#include "layer-shell-effects.h"
+
 
 #include "xdg-surface.h"
 
@@ -634,6 +637,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add(&self->layer_shell->events.new_surface,
 		&self->layer_shell_surface);
   self->layer_shell_surface.notify = handle_layer_shell_surface;
+  self->layer_shell_effects = phoc_layer_shell_effects_new ();
 
   self->tablet_v2 = wlr_tablet_v2_create(server->wl_display);
 
@@ -783,6 +787,7 @@ phoc_desktop_finalize (GObject *object)
 
   g_clear_object (&self->phosh);
   g_clear_pointer (&self->gtk_shell, phoc_gtk_shell_destroy);
+  g_clear_object (&self->layer_shell_effects);
   g_clear_pointer (&self->layout, wlr_output_layout_destroy);
 
   g_hash_table_remove_all (self->input_output_map);
@@ -817,6 +822,8 @@ phoc_desktop_class_init (PhocDesktopClass *klass)
 static void
 phoc_desktop_init (PhocDesktop *self)
 {
+  g_autoptr (PhocGesture) touchpad_swipe = NULL;
+
   self->input_output_map = g_hash_table_new_full (g_str_hash,
                                                   g_str_equal,
                                                   g_free,
@@ -918,7 +925,6 @@ phoc_desktop_get_scale_to_fit (PhocDesktop *self)
     return self->scale_to_fit;
 }
 
-
 /**
  * phoc_desktop_find_output:
  * @self: The desktop
@@ -949,6 +955,49 @@ phoc_desktop_find_output (PhocDesktop *self,
   return NULL;
 }
 
+/**
+ * phoc_desktop_layer_surface_at:
+ * @self: The `PhocDesktop` to look the surface up for
+ * @lx: X coordinate the layer surface to look up at in layout coordinates
+ * @ly: Y coordinate the layer surface to look up at in layout coordinates
+ * @sx: (out) (nullable): Surface relative x coordinate
+ * @sy: (out) (nullable): Surface relative y coordinate
+ *
+ * Looks up the surface at `lx,ly` and returns the topmost surface at that position
+ * if it is a layersurface, `NULL` otherwise.
+ *
+ * Returns: (transfer none) (nullable): The `PhocLayerSurface`
+ */
+PhocLayerSurface
+*phoc_desktop_layer_surface_at(PhocDesktop *self, double lx, double ly, double *sx, double *sy)
+{
+  struct wlr_surface *wlr_surface;
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
+  PhocLayerSurface *layer_surface;
+  double sx_, sy_;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  wlr_surface = phoc_desktop_surface_at (self, lx, ly, &sx_, &sy_, NULL);
+
+  if (!wlr_surface)
+    return NULL;
+
+  if (!wlr_surface_is_layer_surface (wlr_surface))
+    return NULL;
+
+  wlr_layer_surface = wlr_layer_surface_v1_from_wlr_surface (wlr_surface);
+  layer_surface = wlr_layer_surface->data;
+
+  if (sx)
+    *sx = sx_;
+
+  if (sy)
+    *sy = sy_;
+
+  return layer_surface;
+}
+
 
 /**
  * phoc_desktop_get_builtin_output:
@@ -972,4 +1021,24 @@ phoc_desktop_get_builtin_output (PhocDesktop *self)
   }
 
   return NULL;
+}
+
+/**
+ * phoc_desktop_get_draggable_layer_surface:
+ * @self: The `PhocDesktop` to look the surface up for
+ * @layer_surface: The layer surface to look up
+ *
+ * Returns a draggable layer surface if `layer_surface` is configured as
+ * such. `NULL` otherwise.
+ *
+ * Returns: (nullable): The `PhocDraggableLayerSurface`
+ */
+PhocDraggableLayerSurface *
+phoc_desktop_get_draggable_layer_surface (PhocDesktop *self, PhocLayerSurface *layer_surface)
+{
+  g_assert (PHOC_IS_DESKTOP (self));
+  g_assert (layer_surface);
+
+  return phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
+    self->layer_shell_effects, layer_surface);
 }
