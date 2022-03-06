@@ -557,6 +557,11 @@ view_render_to_buffer (PhocView *view, int width, int height, int stride, uint32
   struct wlr_drm_format *fmt = wlr_drm_format_create (DRM_FORMAT_ARGB8888);
   struct wlr_buffer *buffer = wlr_allocator_create_buffer (self->allocator, width, height, fmt);
 
+  if (!buffer) {
+    free (fmt);
+    g_return_val_if_reached (false);
+  }
+
   struct view_render_data render_data ={
     .view = view,
     .width = width,
