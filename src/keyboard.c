@@ -27,7 +27,13 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-
+/**
+ * PhocKeyboard:
+ *
+ * A keyboard input device
+ *
+ * It tracks keybindings and it's keymap.
+ */
 struct _PhocKeyboard {
   PhocInputDevice parent;
 

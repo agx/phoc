@@ -1074,7 +1074,7 @@ void view_setup(PhocView *view) {
  * @view: A view
  *
  * Add the accumulated buffer damage of all surfaces belonging to a
- * #PhocView's to the damaged screen area that needs repaint.
+ * [type@PhocView] to the damaged screen area that needs repaint.
  */
 void
 phoc_view_apply_damage (PhocView *view)
@@ -1089,7 +1089,7 @@ phoc_view_apply_damage (PhocView *view)
  * phoc_view_damage_whole:
  * @view: A view
  *
- * Add the damage of all surfaces belonging to a #PhocView's to the
+ * Add the damage of all surfaces belonging to a [type@PhocView] to the
  * damaged screen area that needs repaint. This damages the whole
  * @view (possibly including server side window decorations) ignoring
  * any buffer damage.

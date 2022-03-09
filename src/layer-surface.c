@@ -85,3 +85,18 @@ phoc_layer_surface_unmap (PhocLayerSurface *self)
                                            self->geo.x, self->geo.y);
   }
 }
+
+
+/**
+ * phoc_layer_surface_get_namespace:
+ * @self: The layer surface
+ *
+ * Returns: (nullable): The layer surface's namespace
+ */
+const char *
+phoc_layer_surface_get_namespace (PhocLayerSurface *self)
+{
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  return self->layer_surface->namespace;
+}

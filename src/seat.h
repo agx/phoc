@@ -181,3 +181,7 @@ bool               phoc_seat_allow_input (PhocSeat           *seat,
                                           struct wl_resource *resource);
 
 void               phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name);
+
+gboolean           phoc_seat_has_touch    (PhocSeat *self);
+gboolean           phoc_seat_has_pointer  (PhocSeat *self);
+gboolean           phoc_seat_has_keyboard (PhocSeat *self);
