@@ -768,6 +768,10 @@ renderer_end:
 
 	render_touch_points (output);
 	g_signal_emit (self, signals[RENDER_END], 0, output);
+	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
+		render_damage (self, output);
+
+	wlr_renderer_end(wlr_renderer);
 
 	int width, height;
 	wlr_output_transformed_resolution(wlr_output, &width, &height);
@@ -777,11 +781,6 @@ renderer_end:
 
 	wlr_region_transform(&frame_damage, &output->damage->current,
 		transform, width, height);
-
-	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
-		render_damage (self, output);
-
-	wlr_renderer_end(wlr_renderer);
 
 	wlr_output_set_damage(wlr_output, &frame_damage);
 	pixman_region32_fini(&frame_damage);
