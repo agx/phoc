@@ -394,6 +394,17 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 		return false;
 	}
 
+	// Make sure the view is centered on screen
+	const struct wlr_box *output_box =
+		wlr_output_layout_get_box(output->desktop->layout, wlr_output);
+	struct wlr_box view_box;
+	view_get_box(view, &view_box);
+	double view_x = (double)(output_box->width - view_box.width) / 2 +
+	  output_box->x;
+	double view_y = (double)(output_box->height - view_box.height) / 2 +
+	  output_box->y;
+	view_move(view, view_x, view_y);
+
 	wlr_presentation_surface_sampled_on_output(output->desktop->presentation, surface, output->wlr_output);
 
 	return wlr_output_commit(wlr_output);
@@ -501,9 +512,9 @@ damage_touch_point_cb (gpointer data, gpointer user_data)
 static void
 damage_touch_points (PhocOutput *output)
 {
-  if (!g_list_length (output->debug_touch_points)) {
+  if (output->debug_touch_points == NULL)
     return;
-  }
+
   g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
   wlr_output_schedule_frame(output->wlr_output);
 }
@@ -516,7 +527,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
   }
 
   PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *self = server->renderer;
+  PhocRenderer *self = phoc_server_get_renderer (server);
   struct wlr_texture *view_texture = wlr_surface_get_texture (surface);
 
   struct view_render_data *data = _data;
@@ -548,7 +559,7 @@ gboolean
 view_render_to_buffer (PhocView *view, int width, int height, int stride, uint32_t *flags, void* data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *self = server->renderer;
+  PhocRenderer *self = phoc_server_get_renderer (server);
   struct wlr_surface *surface = view->wlr_surface;
 
   g_return_val_if_fail (surface, false);
@@ -587,11 +598,43 @@ static void surface_send_frame_done_iterator(PhocOutput *output,
 	wlr_surface_send_frame_done(surface, when);
 }
 
+
+static void
+render_damage (PhocRenderer *self, PhocOutput *output)
+{
+  int nrects;
+  pixman_box32_t *rects;
+  struct wlr_box box;
+  pixman_region32_t previous_damage;
+
+  pixman_region32_init(&previous_damage);
+  pixman_region32_subtract(&previous_damage,
+                           &output->damage->previous[output->damage->previous_idx],
+                           &output->damage->current);
+
+  rects = pixman_region32_rectangles(&previous_damage, &nrects);
+  for (int i = 0; i < nrects; ++i) {
+    wlr_box_from_pixman_box32(&box, rects[i]);
+    wlr_render_rect(self->wlr_renderer, &box, (float[])COLOR_TRANSPARENT_MAGENTA,
+                    output->wlr_output->transform_matrix);
+  }
+
+  rects = pixman_region32_rectangles(&output->damage->current, &nrects);
+  for (int i = 0; i < nrects; ++i) {
+    wlr_box_from_pixman_box32(&box, rects[i]);
+    wlr_render_rect(self->wlr_renderer, &box, (float[])COLOR_TRANSPARENT_YELLOW,
+                    output->wlr_output->transform_matrix);
+  }
+  wlr_output_schedule_frame(output->wlr_output);
+  pixman_region32_fini(&previous_damage);
+}
+
+
 void output_render(PhocOutput *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	PhocDesktop *desktop = output->desktop;
 	PhocServer *server = phoc_server_get_default ();
-	PhocRenderer *self = server->renderer;
+	PhocRenderer *self = phoc_server_get_renderer (server);
 	struct wlr_renderer *wlr_renderer;
 
         g_assert (PHOC_IS_RENDERER (self));
@@ -606,36 +649,16 @@ void output_render(PhocOutput *output) {
 
 	float clear_color[] = COLOR_BLACK;
 
-	const struct wlr_box *output_box =
-		wlr_output_layout_get_box(desktop->layout, wlr_output);
-
 	g_signal_emit (self, signals[RENDER_START], 0, output);
 
 	// Check if we can delegate the fullscreen surface to the output
-	if (output->fullscreen_view != NULL &&
-			output->fullscreen_view->wlr_surface != NULL) {
-		PhocView *view = output->fullscreen_view;
-
-		// Make sure the view is centered on screen
-		struct wlr_box view_box;
-		view_get_box(view, &view_box);
-		double view_x = (double)(output_box->width - view_box.width) / 2 +
-			output_box->x;
-		double view_y = (double)(output_box->height - view_box.height) / 2 +
-			output_box->y;
-		view_move(view, view_x, view_y);
-
-		// Fullscreen views are rendered on a black background
-		clear_color[0] = clear_color[1] = clear_color[2] = 0;
-
-		// Check if we can scan-out the fullscreen view
+	if (phoc_output_has_fullscreen_view (output)) {
 		static bool last_scanned_out = false;
 		bool scanned_out = scan_out_fullscreen_view(output);
 
 		if (scanned_out && !last_scanned_out) {
-			g_debug ("Scanning out fullscreen view");
-		}
-		if (last_scanned_out && !scanned_out) {
+			g_debug ("Starting fullscreen view scan out");
+		} else if (!scanned_out && last_scanned_out) {
 			g_debug ("Stopping fullscreen view scan out");
 		}
 		last_scanned_out = scanned_out;
@@ -745,6 +768,10 @@ renderer_end:
 
 	render_touch_points (output);
 	g_signal_emit (self, signals[RENDER_END], 0, output);
+	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
+		render_damage (self, output);
+
+	wlr_renderer_end(wlr_renderer);
 
 	int width, height;
 	wlr_output_transformed_resolution(wlr_output, &width, &height);
@@ -754,30 +781,6 @@ renderer_end:
 
 	wlr_region_transform(&frame_damage, &output->damage->current,
 		transform, width, height);
-
-	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
-		pixman_region32_t previous_damage;
-		pixman_region32_init(&previous_damage);
-		pixman_region32_subtract(&previous_damage,
-			&output->damage->previous[output->damage->previous_idx], &output->damage->current);
-
-		struct wlr_box box;
-		rects = pixman_region32_rectangles(&previous_damage, &nrects);
-		for (int i = 0; i < nrects; ++i) {
-			wlr_box_from_pixman_box32(&box, rects[i]);
-			wlr_render_rect(wlr_renderer, &box, (float[])COLOR_TRANSPARENT_MAGENTA, wlr_output->transform_matrix);
-		}
-
-		rects = pixman_region32_rectangles(&output->damage->current, &nrects);
-		for (int i = 0; i < nrects; ++i) {
-			wlr_box_from_pixman_box32(&box, rects[i]);
-			wlr_render_rect(wlr_renderer, &box, (float[])COLOR_TRANSPARENT_YELLOW, wlr_output->transform_matrix);
-		}
-		wlr_output_schedule_frame(output->wlr_output);
-		pixman_region32_fini(&previous_damage);
-	}
-
-	wlr_renderer_end(wlr_renderer);
 
 	wlr_output_set_damage(wlr_output, &frame_damage);
 	pixman_region32_fini(&frame_damage);
@@ -795,8 +798,7 @@ send_frame_done:
 	phoc_output_for_each_surface(output, surface_send_frame_done_iterator, &now, true);
 
 	damage_touch_points(output);
-	g_list_free_full(output->debug_touch_points, g_free);
-	output->debug_touch_points = NULL;
+	g_clear_list (&output->debug_touch_points, g_free);
 }
 
 

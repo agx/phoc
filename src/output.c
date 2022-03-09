@@ -374,11 +374,11 @@ phoc_output_finalize (GObject *object)
   PhocOutput *self = PHOC_OUTPUT (object);
 
   wl_list_remove (&self->link);
-  wl_list_remove (&self->output_destroy.link);
   wl_list_remove (&self->enable.link);
   wl_list_remove (&self->mode.link);
   wl_list_remove (&self->commit.link);
-  g_list_free_full (self->debug_touch_points, g_free);
+  wl_list_remove (&self->output_destroy.link);
+  g_clear_list (&self->debug_touch_points, g_free);
 
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
     wl_list_remove (&self->layers[i]);
@@ -992,4 +992,19 @@ phoc_output_is_match (PhocOutput *self,
            g_strcmp0 (self->wlr_output->serial, serial) == 0);
 
   return match;
+}
+
+/*
+ * phoc_output_has_fullscreen_view:
+ * @self: The #PhocOutput
+ *
+ * Returns: %TRUE if the output has a fullscreen view attached,
+ *          %FALSE otherwise.
+ */
+gboolean
+phoc_output_has_fullscreen_view (PhocOutput *self)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  return self->fullscreen_view != NULL && self->fullscreen_view->wlr_surface != NULL;
 }

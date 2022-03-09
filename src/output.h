@@ -106,5 +106,6 @@ gboolean    phoc_output_is_match (PhocOutput *self,
                                   const char *make,
                                   const char *model,
                                   const char *serial);
+gboolean    phoc_output_has_fullscreen_view (PhocOutput *self);
 
 G_END_DECLS

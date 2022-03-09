@@ -440,3 +440,16 @@ phoc_server_get_session_exit_status (PhocServer *self)
 {
   return self->exit_status;
 }
+
+/**
+ * phoc_server_get_renderer:
+ *
+ * Returns: (transfer none): The renderer
+ */
+PhocRenderer *
+phoc_server_get_renderer (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->renderer;
+}
