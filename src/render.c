@@ -643,7 +643,7 @@ render_damage (PhocRenderer *self, PhocOutput *output)
  */
 void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
-	PhocDesktop *desktop = output->desktop;
+	PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
 	PhocServer *server = phoc_server_get_default ();
 	struct wlr_renderer *wlr_renderer;
 
