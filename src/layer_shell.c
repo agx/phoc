@@ -415,7 +415,7 @@ static void popup_unconstrain(struct roots_layer_popup *popup) {
 	PhocLayerSurface *layer = popup_get_root_layer(popup);
 	struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
 
-	PhocOutput *output = layer->layer_surface->output->data;
+	PhocOutput *output = phoc_layer_surface_get_output (layer);
 
 	// the output box expressed in the coordinate system of the toplevel parent
 	// of the popup
@@ -445,16 +445,15 @@ static void popup_damage(struct roots_layer_popup *layer_popup, bool whole) {
 	ox += layer->geo.x;
 	oy += layer->geo.y;
 
-	struct wlr_output *wlr_output = layer->layer_surface->output;
-	if (!wlr_output) {
+	PhocOutput *output = phoc_layer_surface_get_output (layer);
+	if (!output) {
 		return;
 	}
 
 	if (whole) {
-		phoc_output_damage_whole_local_surface(wlr_output->data, surface, ox, oy);
+		phoc_output_damage_whole_local_surface(output, surface, ox, oy);
 	} else {
-		phoc_output_damage_from_local_surface(layer->layer_surface->output->data,
-						      surface, ox, oy);
+		phoc_output_damage_from_local_surface(output, surface, ox, oy);
 	}
 }
 
@@ -582,18 +581,18 @@ static PhocLayerSurface *subsurface_get_root_layer(struct roots_layer_subsurface
 
 static void subsurface_damage(struct roots_layer_subsurface *subsurface, bool whole) {
 	PhocLayerSurface *layer = subsurface_get_root_layer(subsurface);
-	struct wlr_output *wlr_output = layer->layer_surface->output;
-	if (!wlr_output) {
+	PhocOutput *output = phoc_layer_surface_get_output (layer);
+	if (!output) {
 		return;
 	}
 	int ox = subsurface->wlr_subsurface->current.x + layer->geo.x;
 	int oy = subsurface->wlr_subsurface->current.y + layer->geo.y;
 	if (whole) {
-		phoc_output_damage_whole_local_surface(wlr_output->data,
+		phoc_output_damage_whole_local_surface(output,
 						       subsurface->wlr_subsurface->surface,
 						       ox, oy);
 	} else {
-		phoc_output_damage_from_local_surface(wlr_output->data,
+		phoc_output_damage_from_local_surface(output,
 						      subsurface->wlr_subsurface->surface,
 						      ox, oy);
 	}
@@ -695,9 +694,9 @@ static void handle_new_subsurface(struct wl_listener *listener, void *data) {
 
 static void handle_map(struct wl_listener *listener, void *data) {
 	struct wlr_layer_surface_v1 *layer_surface = data;
-	PhocLayerSurface *layer = layer_surface->data;
-	struct wlr_output *wlr_output = layer_surface->output;
-	if (!wlr_output) {
+	PhocLayerSurface *layer = PHOC_LAYER_SURFACE (layer_surface->data);
+	PhocOutput *output = phoc_layer_surface_get_output (layer);
+	if (!output) {
 		return;
 	}
 
@@ -718,10 +717,10 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	layer->new_subsurface.notify = handle_new_subsurface;
 	wl_signal_add(&layer_surface->surface->events.new_subsurface, &layer->new_subsurface);
 
-	phoc_output_damage_whole_local_surface(wlr_output->data,
+	phoc_output_damage_whole_local_surface(output,
 					       layer_surface->surface, layer->geo.x,
 					       layer->geo.y);
-	wlr_surface_send_enter(layer_surface->surface, wlr_output);
+	wlr_surface_send_enter(layer_surface->surface, output->wlr_output);
 }
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
