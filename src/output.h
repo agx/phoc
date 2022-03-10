@@ -54,47 +54,54 @@ struct _PhocOutput {
 
 PhocOutput *phoc_output_new (PhocDesktop       *desktop,
                              struct wlr_output *wlr_output);
-
-typedef void (*PhocSurfaceIterator)(PhocOutput *self,
-                                    struct wlr_surface *surface, struct wlr_box *box, float rotation,
-                                    float scale, void *user_data);
-
-void        phoc_output_xdg_surface_for_each_surface (
-  PhocOutput *self,
-  struct wlr_xdg_surface *xdg_surface, double ox, double oy,
-  PhocSurfaceIterator iterator, void *user_data);
-void        phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
-                                                  *surface, double ox, double oy,
-                                                  PhocSurfaceIterator iterator,
-                                                  void *user_data);
-void        phoc_output_view_for_each_surface (
-  PhocOutput *self,
-  PhocView *view, PhocSurfaceIterator iterator,
-  void *user_data);
-void        phoc_output_drag_icons_for_each_surface (
-  PhocOutput *self,
-  PhocInput *input, PhocSurfaceIterator iterator,
-  void *user_data);
-void        phoc_output_layer_for_each_surface (
-  PhocOutput *self,
-  struct wl_list *layer_surfaces, PhocSurfaceIterator iterator,
-  void *user_data);
+/* Surface iterators */
+typedef void (*PhocSurfaceIterator)(PhocOutput         *self,
+                                    struct wlr_surface *surface,
+                                    struct wlr_box     *box,
+                                    float               rotation,
+                                    float               scale,
+                                    void               *user_data);
+void        phoc_output_xdg_surface_for_each_surface (PhocOutput *self,
+                                                      struct wlr_xdg_surface *xdg_surface,
+                                                      double ox,
+                                                      double oy,
+                                                      PhocSurfaceIterator iterator,
+                                                      void *user_data);
+void        phoc_output_surface_for_each_surface     (PhocOutput *self,
+                                                      struct wlr_surface *surface,
+                                                      double ox,
+                                                      double oy,
+                                                      PhocSurfaceIterator iterator,
+                                                      void *user_data);
+void        phoc_output_view_for_each_surface        (PhocOutput *self,
+                                                      PhocView *view,
+                                                      PhocSurfaceIterator iterator,
+                                                      void *user_data);
+void        phoc_output_drag_icons_for_each_surface  (PhocOutput *self,
+                                                      PhocInput *input,
+                                                      PhocSurfaceIterator iterator,
+                                                      void *user_data);
+void        phoc_output_layer_for_each_surface       (PhocOutput *self,
+                                                      struct wl_list *layer_surfaces,
+                                                      PhocSurfaceIterator iterator,
+                                                      void *user_data);
 #ifdef PHOC_XWAYLAND
 struct wlr_xwayland_surface;
-void        phoc_output_xwayland_children_for_each_surface (
-  PhocOutput *self,
-  struct wlr_xwayland_surface *surface,
-  PhocSurfaceIterator iterator, void *user_data);
+void        phoc_output_xwayland_children_for_each_surface (PhocOutput *self,
+                                                            struct wlr_xwayland_surface *surface,
+                                                            PhocSurfaceIterator iterator,
+                                                            void *user_data);
 #endif
-void        phoc_output_for_each_surface (PhocOutput                   *self,
-                                          PhocSurfaceIterator iterator,
-                                          void                         *user_data,
-                                          gboolean                      visible_only);
-
+void        phoc_output_for_each_surface             (PhocOutput *self,
+                                                      PhocSurfaceIterator iterator,
+                                                      void *user_data,
+                                                      gboolean visible_only);
+/* signal handlers */
 void        handle_output_manager_apply (struct wl_listener *listener, void *data);
 void        handle_output_manager_test (struct wl_listener *listener, void *data);
-void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, void *data);
-
+void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener,
+                                                              void *data);
+/* methods */
 typedef struct _PhocDragIcon PhocDragIcon;
 void        phoc_output_damage_whole (PhocOutput *output);
 void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole);
