@@ -556,10 +556,14 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 }
 
 gboolean
-view_render_to_buffer (PhocView *view, int width, int height, int stride, uint32_t *flags, void* data)
+phoc_renderer_render_view_to_buffer (PhocRenderer *self,
+                                     PhocView     *view,
+                                     int           width,
+                                     int           height,
+                                     int           stride,
+                                     uint32_t     *flags,
+                                     void         *data)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *self = phoc_server_get_renderer (server);
   struct wlr_surface *surface = view->wlr_surface;
 
   g_return_val_if_fail (surface, false);
