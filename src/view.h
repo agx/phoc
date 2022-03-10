@@ -61,6 +61,12 @@ typedef enum {
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
 struct _PhocView {
+        /* Ugly: Since PhocXdgSurfce is a GObject we need to put that
+         * here so that for a PhocXdgSurface PhocView, GObject and
+         * PhocXdgSurface start at the same address. Fixes itself once
+         * PhocView becomes a GObject */
+	GObject parent_;
+
 	PhocViewType type;
 	const PhocViewInterface *impl;
 	PhocDesktop *desktop;
