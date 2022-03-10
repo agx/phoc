@@ -630,11 +630,17 @@ render_damage (PhocRenderer *self, PhocOutput *output)
 }
 
 
-void output_render(PhocOutput *output) {
+/**
+ * phoc_renderer_render_output:
+ * @self: The renderer
+ * @output: The output to render
+ *
+ * Render a given output.
+ */
+void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
 	PhocDesktop *desktop = output->desktop;
 	PhocServer *server = phoc_server_get_default ();
-	PhocRenderer *self = phoc_server_get_renderer (server);
 	struct wlr_renderer *wlr_renderer;
 
         g_assert (PHOC_IS_RENDERER (self));

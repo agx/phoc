@@ -201,8 +201,10 @@ phoc_output_damage_handle_frame (struct wl_listener *listener,
                                  void               *data)
 {
   PhocOutput *self = wl_container_of (listener, self, damage_frame);
+  PhocServer *server = phoc_server_get_default ();
+  PhocRenderer *renderer = phoc_server_get_renderer (server);
 
-  output_render (self);
+  phoc_renderer_render_output (renderer, self);
 }
 
 static void
