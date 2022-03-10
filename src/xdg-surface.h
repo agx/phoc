@@ -49,6 +49,6 @@ typedef struct _PhocXdgSurface {
 
 G_DECLARE_FINAL_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC, XDG_SURFACE, GObject)
 
-PhocXdgSurface *phoc_xdg_surface_new (void);
+PhocXdgSurface *phoc_xdg_surface_new (struct wlr_xdg_surface *xdg_surface);
 
 G_END_DECLS
