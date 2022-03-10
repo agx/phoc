@@ -287,7 +287,6 @@ phoc_output_constructed (GObject *object)
              self->wlr_output->phys_width,
              self->wlr_output->phys_height);
 
-  clock_gettime (CLOCK_MONOTONIC, &self->last_frame);
   self->wlr_output->data = self;
   wl_list_insert (&self->desktop->outputs, &self->link);
 
