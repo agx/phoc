@@ -47,7 +47,6 @@ struct _PhocDesktop {
 	struct wl_list views; // PhocView::link
 
 	struct wl_list outputs; // PhocOutput::link
-	struct timespec last_frame;
 
 	PhocConfig *config;
 

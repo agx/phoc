@@ -788,7 +788,7 @@ renderer_end:
 	if (!wlr_output_commit(wlr_output)) {
 		goto buffer_damage_finish;
 	}
-	output->last_frame = desktop->last_frame = now;
+	output->last_frame = now;
 
 buffer_damage_finish:
 	pixman_region32_fini(&buffer_damage);
