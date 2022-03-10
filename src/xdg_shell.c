@@ -319,19 +319,6 @@ static void get_geometry(PhocView *view, struct wlr_box *geom) {
 static void destroy(PhocView *view) {
 	PhocXdgSurface *phoc_xdg_surface =
 		phoc_xdg_surface_from_view (view);
-	wl_list_remove(&phoc_xdg_surface->surface_commit.link);
-	wl_list_remove(&phoc_xdg_surface->destroy.link);
-	wl_list_remove(&phoc_xdg_surface->new_popup.link);
-	wl_list_remove(&phoc_xdg_surface->map.link);
-	wl_list_remove(&phoc_xdg_surface->unmap.link);
-	wl_list_remove(&phoc_xdg_surface->request_move.link);
-	wl_list_remove(&phoc_xdg_surface->request_resize.link);
-	wl_list_remove(&phoc_xdg_surface->request_maximize.link);
-	wl_list_remove(&phoc_xdg_surface->request_fullscreen.link);
-	wl_list_remove(&phoc_xdg_surface->set_title.link);
-	wl_list_remove(&phoc_xdg_surface->set_app_id.link);
-	wl_list_remove(&phoc_xdg_surface->set_parent.link);
-	phoc_xdg_surface->xdg_surface->data = NULL;
 	g_object_unref(phoc_xdg_surface);
 }
 
