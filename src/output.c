@@ -40,13 +40,13 @@ enum {
 static guint signals[N_SIGNALS] = { 0 };
 
 struct surface_iterator_data {
-  PhocSurfaceIterator user_iterator;
-  void                         *user_data;
+  PhocSurfaceIterator  user_iterator;
+  void                *user_data;
 
-  PhocOutput                   *output;
-  double                        ox, oy;
-  int                           width, height;
-  float                         rotation, scale;
+  PhocOutput          *output;
+  double               ox, oy;
+  int                  width, height;
+  float                rotation, scale;
 };
 
 static bool
