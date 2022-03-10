@@ -39,7 +39,8 @@ enum {
 };
 static guint signals[N_SIGNALS] = { 0 };
 
-struct surface_iterator_data {
+
+typedef struct {
   PhocSurfaceIterator  user_iterator;
   void                *user_data;
 
@@ -47,10 +48,11 @@ struct surface_iterator_data {
   double               ox, oy;
   int                  width, height;
   float                rotation, scale;
-};
+} PhocOutputSurfaceIteratorData;
+
 
 static bool
-get_surface_box (struct surface_iterator_data *data,
+get_surface_box (PhocOutputSurfaceIteratorData *data,
                  struct wlr_surface *surface, int sx, int sy,
                  struct wlr_box *surface_box)
 {
@@ -424,7 +426,7 @@ static void
 phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
                                        int sx, int sy, void *_data)
 {
-  struct surface_iterator_data *data = _data;
+  PhocOutputSurfaceIteratorData *data = _data;
 
   struct wlr_box box;
   bool intersects = get_surface_box (data, surface, sx, sy, &box);
@@ -443,7 +445,7 @@ phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
                                       PhocSurfaceIterator iterator,
                                       void *user_data)
 {
-  struct surface_iterator_data data = {
+  PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
     .user_data = user_data,
     .output = self,
@@ -466,7 +468,7 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
                                           PhocSurfaceIterator
                                           iterator, void *user_data)
 {
-  struct surface_iterator_data data = {
+  PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
     .user_data = user_data,
     .output = self,
@@ -494,7 +496,7 @@ phoc_output_view_for_each_surface (PhocOutput *self, PhocView *view,
     return;
   }
 
-  struct surface_iterator_data data = {
+  PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
     .user_data = user_data,
     .output = self,
