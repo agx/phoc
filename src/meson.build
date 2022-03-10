@@ -54,6 +54,7 @@ sources = files(
   'virtual.c',
   'virtual.h',
   'xdg_shell.c',
+  'xdg-surface.c',
 )
 libphoc_generated_sources = [
   phoc_enum_sources,

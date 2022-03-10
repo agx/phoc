@@ -16,6 +16,7 @@ G_BEGIN_DECLS
 typedef struct _PhocView PhocView;
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
+typedef struct _PhocXdgSurface PhocXdgSurface;
 
 typedef struct _PhocViewInterface {
 	void (*move)(PhocView *view, double x, double y);
@@ -120,32 +121,6 @@ struct _PhocView {
 
 struct roots_xdg_toplevel_decoration;
 
-typedef struct roots_xdg_surface {
-	PhocView view;
-
-	struct wlr_xdg_surface *xdg_surface;
-
-	struct wlr_box saved_geometry;
-
-	struct wl_listener destroy;
-	struct wl_listener new_popup;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener request_move;
-	struct wl_listener request_resize;
-	struct wl_listener request_maximize;
-	struct wl_listener request_fullscreen;
-	struct wl_listener set_title;
-	struct wl_listener set_app_id;
-	struct wl_listener set_parent;
-
-	struct wl_listener surface_commit;
-
-	uint32_t pending_move_resize_configure_serial;
-
-	struct roots_xdg_toplevel_decoration *xdg_toplevel_decoration;
-} PhocXdgSurface;
-
 #ifdef PHOC_XWAYLAND
 typedef struct roots_xwayland_surface {
 	PhocView view;
@@ -211,7 +186,7 @@ typedef struct roots_xdg_popup {
 
 struct roots_xdg_toplevel_decoration {
 	struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
-	struct roots_xdg_surface *surface;
+	PhocXdgSurface *surface;
 	struct wl_listener destroy;
 	struct wl_listener request_mode;
 	struct wl_listener surface_commit;
@@ -261,7 +236,7 @@ void view_for_each_surface(PhocView *view,
 	wlr_surface_iterator_func_t iterator, void *user_data);
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
-struct roots_xdg_surface *roots_xdg_surface_from_view(PhocView *view);
+PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
 struct roots_xwayland_surface *roots_xwayland_surface_from_view(
 	PhocView *view);
 bool   phoc_view_is_mapped (PhocView *view);
