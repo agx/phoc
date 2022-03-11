@@ -97,3 +97,9 @@ phoc_xdg_surface_new (struct wlr_xdg_surface *wlr_xdg_surface)
                                          "wlr-xdg-surface", wlr_xdg_surface,
                                          NULL));
 }
+
+void
+phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom)
+{
+  wlr_xdg_surface_get_geometry (self->xdg_surface, geom);
+}
