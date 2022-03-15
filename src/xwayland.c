@@ -21,7 +21,7 @@ bool is_moveable(PhocView *view)
 {
 	PhocServer *server = phoc_server_get_default ();
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view (view)->xwayland_surface;
+		phoc_xwayland_surface_from_view (view)->xwayland_surface;
 
 	if (xwayland_surface->window_type == NULL)
 		return true;
@@ -36,13 +36,13 @@ bool is_moveable(PhocView *view)
 
 static void set_active(PhocView *view, bool active) {
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_activate(xwayland_surface, active);
 }
 
 static void move(PhocView *view, double x, double y) {
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 
 	if (!is_moveable (view))
 		return;
@@ -81,7 +81,7 @@ static void apply_size_constraints(PhocView *view,
 
 static void resize(PhocView *view, uint32_t width, uint32_t height) {
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 
 	uint32_t constrained_width, constrained_height;
 	apply_size_constraints(view, xwayland_surface, width, height, &constrained_width,
@@ -94,7 +94,7 @@ static void resize(PhocView *view, uint32_t width, uint32_t height) {
 static void move_resize(PhocView *view, double x, double y,
 		uint32_t width, uint32_t height) {
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 
 	if (!is_moveable (view)) {
 		x = view->box.x;
@@ -128,7 +128,7 @@ static void move_resize(PhocView *view, double x, double y,
 
 static void _close(PhocView *view) {
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_close(xwayland_surface);
 }
 
@@ -139,7 +139,7 @@ static bool want_scaling(PhocView *view) {
 
 static bool want_auto_maximize(PhocView *view) {
 	struct wlr_xwayland_surface *surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 
 	if (surface->size_hints &&
 	    (surface->size_hints->min_width > 0 && surface->size_hints->min_width == surface->size_hints->max_width) &&
@@ -151,19 +151,19 @@ static bool want_auto_maximize(PhocView *view) {
 
 static void set_maximized(PhocView *view, bool maximized) {
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_set_maximized(xwayland_surface, maximized);
 }
 
 static void set_fullscreen(PhocView *view, bool fullscreen) {
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_xwayland_surface_from_view(view)->xwayland_surface;
+		phoc_xwayland_surface_from_view(view)->xwayland_surface;
 	wlr_xwayland_surface_set_fullscreen(xwayland_surface, fullscreen);
 }
 
 static void destroy(PhocView *view) {
 	PhocXWaylandSurface *phoc_surface =
-		roots_xwayland_surface_from_view(view);
+		phoc_xwayland_surface_from_view(view);
 	wl_list_remove(&phoc_surface->destroy.link);
 	wl_list_remove(&phoc_surface->request_configure.link);
 	wl_list_remove(&phoc_surface->request_move.link);
@@ -447,7 +447,7 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 #endif
 }
 
-PhocXWaylandSurface *roots_xwayland_surface_from_view(
+PhocXWaylandSurface *phoc_xwayland_surface_from_view(
 		PhocView *view) {
 	assert(view->impl == &view_impl);
 	return (PhocXWaylandSurface *)view;
