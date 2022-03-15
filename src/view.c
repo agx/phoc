@@ -28,9 +28,7 @@ struct _PhocSubsurface {
 };
 
 
-void view_init(PhocView *view, const PhocViewInterface *impl,
-		PhocViewType type, PhocDesktop *desktop) {
-	view->impl = impl;
+void view_init(PhocView *view, PhocViewType type) {
 	view->type = type;
 }
 
@@ -66,8 +64,8 @@ void view_get_box(const PhocView *view, struct wlr_box *box) {
 void
 view_get_geometry (PhocView *view, struct wlr_box *geom)
 {
-  if (view->impl->get_geometry) {
-    view->impl->get_geometry (view, geom);
+  if (PHOC_VIEW_GET_CLASS (view)->get_geometry) {
+    PHOC_VIEW_GET_CLASS (view)->get_geometry (view, geom);
   } else {
     geom->x = 0;
     geom->y = 0;
@@ -199,8 +197,8 @@ void view_move(PhocView *view, double x, double y) {
 
 	struct wlr_box before;
 	view_get_box(view, &before);
-	if (view->impl->move) {
-		view->impl->move(view, x, y);
+	if (PHOC_VIEW_GET_CLASS (view)->move) {
+		PHOC_VIEW_GET_CLASS (view)->move(view, x, y);
 	} else {
 		view_update_position(view, x, y);
 	}
@@ -209,8 +207,8 @@ void view_move(PhocView *view, double x, double y) {
 void
 view_appear_activated (PhocView *view, bool activated)
 {
-  if (view->impl->set_active)
-    view->impl->set_active (view, activated);
+  if (PHOC_VIEW_GET_CLASS (view)->set_active)
+    PHOC_VIEW_GET_CLASS (view)->set_active (view, activated);
 }
 
 void view_activate(PhocView *view, bool activate) {
@@ -233,8 +231,8 @@ void view_resize(PhocView *view, uint32_t width, uint32_t height) {
 	struct wlr_box before;
 	view_get_box(view, &before);
 
-	if (view->impl->resize) {
-		view->impl->resize(view, width, height);
+	if (PHOC_VIEW_GET_CLASS (view)->resize) {
+		PHOC_VIEW_GET_CLASS (view)->resize(view, width, height);
 	}
 }
 
@@ -254,8 +252,8 @@ void view_move_resize(PhocView *view, double x, double y,
 		return;
 	}
 
-	if (view->impl->move_resize) {
-		view->impl->move_resize(view, x, y, width, height);
+	if (PHOC_VIEW_GET_CLASS (view)->move_resize) {
+		PHOC_VIEW_GET_CLASS (view)->move_resize(view, x, y, width, height);
 		return;
 	}
 
@@ -350,8 +348,8 @@ want_auto_maximize(PhocView *view) {
   if (!view->desktop->maximize)
     return false;
 
-  if (view->impl->want_auto_maximize)
-    return view->impl->want_auto_maximize(view);
+  if (PHOC_VIEW_GET_CLASS (view)->want_auto_maximize)
+    return PHOC_VIEW_GET_CLASS (view)->want_auto_maximize(view);
 
   return false;
 }
@@ -365,12 +363,12 @@ void view_maximize(PhocView *view, struct wlr_output *output) {
 		return;
 	}
 
-	if (view->impl->set_tiled) {
-		view->impl->set_tiled (view, false);
+	if (PHOC_VIEW_GET_CLASS (view)->set_tiled) {
+		PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
 	}
 
-	if (view->impl->set_maximized) {
-		view->impl->set_maximized (view, true);
+	if (PHOC_VIEW_GET_CLASS (view)->set_maximized) {
+		PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
 	}
 
 	if (view->toplevel_handle) {
@@ -417,11 +415,11 @@ view_restore(PhocView *view)
   if (view->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
 
-  if (view->impl->set_maximized)
-    view->impl->set_maximized (view, false);
+  if (PHOC_VIEW_GET_CLASS (view)->set_maximized)
+    PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
 
-  if (view->impl->set_tiled)
-    view->impl->set_tiled (view, false);
+  if (PHOC_VIEW_GET_CLASS (view)->set_tiled)
+    PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
 }
 
 /**
@@ -442,8 +440,8 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 		if (fullscreen && phoc_view_is_mapped (view))
 			g_return_if_fail (phoc_input_view_has_focus (phoc_server_get_default()->input, view));
 
-		if (view->impl->set_fullscreen) {
-			view->impl->set_fullscreen(view, fullscreen);
+		if (PHOC_VIEW_GET_CLASS (view)->set_fullscreen) {
+			PHOC_VIEW_GET_CLASS (view)->set_fullscreen(view, fullscreen);
 		}
 
 		if (view->toplevel_handle) {
@@ -508,8 +506,8 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 }
 
 void view_close(PhocView *view) {
-	if (view->impl->close) {
-		view->impl->close(view);
+	if (PHOC_VIEW_GET_CLASS (view)->close) {
+		PHOC_VIEW_GET_CLASS (view)->close(view);
 	}
 }
 
@@ -572,12 +570,12 @@ view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *ou
   view->state = PHOC_VIEW_STATE_TILED;
   view->tile_direction = direction;
 
-  if (view->impl->set_tiled) {
-    view->impl->set_maximized (view, false);
-    view->impl->set_tiled (view, true);
-  } else if (view->impl->set_maximized) {
+  if (PHOC_VIEW_GET_CLASS (view)->set_tiled) {
+    PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
+    PHOC_VIEW_GET_CLASS (view)->set_tiled (view, true);
+  } else if (PHOC_VIEW_GET_CLASS (view)->set_maximized) {
     /* fallback to the maximized flag on the toplevel so it can remove its drop shadows */
-    view->impl->set_maximized (view, true);
+    PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
   }
 
   view_arrange_tiled (view, output);
@@ -843,7 +841,7 @@ munge_app_id (const gchar *app_id)
 static void view_update_scale(PhocView *view) {
 	PhocServer *server = phoc_server_get_default ();
 
-	if (!view->impl->want_scaling(view)) {
+	if (!PHOC_VIEW_GET_CLASS (view)->want_scaling(view)) {
 		return;
 	}
 
@@ -1059,8 +1057,8 @@ phoc_view_damage_whole (PhocView *view)
 
 void view_for_each_surface(PhocView *view,
 		wlr_surface_iterator_func_t iterator, void *user_data) {
-	if (view->impl->for_each_surface) {
-		view->impl->for_each_surface(view, iterator, user_data);
+	if (PHOC_VIEW_GET_CLASS (view)->for_each_surface) {
+		PHOC_VIEW_GET_CLASS (view)->for_each_surface(view, iterator, user_data);
 	} else if (view->wlr_surface) {
 		wlr_surface_for_each_surface(view->wlr_surface, iterator, user_data);
 	}

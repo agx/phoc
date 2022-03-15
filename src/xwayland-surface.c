@@ -168,18 +168,6 @@ static void set_fullscreen(PhocView *view, bool fullscreen) {
 	wlr_xwayland_surface_set_fullscreen(xwayland_surface, fullscreen);
 }
 
-static const PhocViewInterface view_impl = {
-	.resize = resize,
-	.move = move,
-	.move_resize = move_resize,
-	.want_scaling = want_scaling,
-	.want_auto_maximize = want_auto_maximize,
-	.set_active = set_active,
-	.set_fullscreen = set_fullscreen,
-	.set_maximized = set_maximized,
-	.close = _close,
-};
-
 static void
 phoc_xwayland_surface_set_property (GObject      *object,
                                     guint         property_id,
@@ -207,7 +195,7 @@ phoc_xwayland_surface_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_xwayland_surface_parent_class)->constructed (object);
 
-  view_init(PHOC_VIEW (self), &view_impl, ROOTS_XWAYLAND_VIEW, NULL);
+  view_init(PHOC_VIEW (self), ROOTS_XWAYLAND_VIEW);
 }
 
 
@@ -239,10 +227,21 @@ static void
 phoc_xwayland_surface_class_init (PhocXWaylandSurfaceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  PhocViewClass *view_class = PHOC_VIEW_CLASS (klass);
 
   object_class->set_property = phoc_xwayland_surface_set_property;
   object_class->constructed = phoc_xwayland_surface_constructed;
   object_class->finalize = phoc_xwayland_surface_finalize;
+
+  view_class->resize = resize;
+  view_class->move = move;
+  view_class->move_resize = move_resize;
+  view_class->want_scaling = want_scaling;
+  view_class->want_auto_maximize = want_auto_maximize;
+  view_class->set_active = set_active;
+  view_class->set_fullscreen = set_fullscreen;
+  view_class->set_maximized = set_maximized;
+  view_class->close = _close;
 
   /**
    * PhocXWaylandSurface:wlr-xwayland-surface:
