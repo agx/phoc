@@ -16,7 +16,10 @@
 #include "server.h"
 #include "view.h"
 
-G_DEFINE_TYPE (PhocView, phoc_view, G_TYPE_OBJECT)
+typedef struct _PhocViewPrivate {
+} PhocViewPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
 
 struct _PhocSubsurface {
   PhocViewChild child;
