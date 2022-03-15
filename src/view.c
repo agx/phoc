@@ -38,36 +38,6 @@ void view_destroy(PhocView *view) {
 	if (view == NULL) {
 		return;
 	}
-
-	if (view->parent) {
-		wl_list_remove(&view->parent_link);
-		wl_list_init(&view->parent_link);
-	}
-	PhocView *child, *tmp;
-	wl_list_for_each_safe(child, tmp, &view->stack, parent_link) {
-		wl_list_remove(&child->parent_link);
-		wl_list_init(&child->parent_link);
-		child->parent = view->parent;
-		if (child->parent) {
-			wl_list_insert(&child->parent->stack, &child->parent_link);
-		}
-	}
-
-	wl_signal_emit(&view->events.destroy, view);
-
-	if (view->wlr_surface != NULL) {
-		view_unmap(view);
-	}
-
-	// Can happen if fullscreened while unmapped, and hasn't been mapped
-	if (view_is_fullscreen (view)) {
-		view->fullscreen_output->fullscreen_view = NULL;
-	}
-
-	g_clear_pointer (&view->title, g_free);
-	g_clear_pointer (&view->app_id, g_free);
-	g_clear_object (&view->settings);
-
 	g_object_unref (view);
 }
 
@@ -1274,8 +1244,50 @@ void view_create_foreign_toplevel_handle(PhocView *view) {
 
 
 static void
+phoc_view_finalize (GObject *object)
+{
+  PhocView *self = PHOC_VIEW (object);
+
+  if (self->parent) {
+    wl_list_remove(&self->parent_link);
+    wl_list_init(&self->parent_link);
+  }
+  PhocView *child, *tmp;
+  wl_list_for_each_safe(child, tmp, &self->stack, parent_link) {
+    wl_list_remove(&child->parent_link);
+    wl_list_init(&child->parent_link);
+    child->parent = self->parent;
+    if (child->parent) {
+      wl_list_insert(&child->parent->stack, &child->parent_link);
+    }
+  }
+
+  wl_signal_emit(&self->events.destroy, self);
+
+  if (self->wlr_surface != NULL) {
+    view_unmap(self);
+  }
+
+  // Can happen if fullscreened while unmapped, and hasn't been mapped
+  if (view_is_fullscreen (self)) {
+    self->fullscreen_output->fullscreen_view = NULL;
+  }
+
+  g_clear_pointer (&self->title, g_free);
+  g_clear_pointer (&self->app_id, g_free);
+  g_clear_object (&self->settings);
+
+
+  G_OBJECT_CLASS (phoc_view_parent_class)->finalize (object);
+}
+
+
+static void
 phoc_view_class_init (PhocViewClass *klass)
 {
+  GObjectClass *object_class = (GObjectClass *)klass;
+
+  object_class->finalize = phoc_view_finalize;
 }
 
 
