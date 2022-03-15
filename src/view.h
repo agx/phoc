@@ -17,6 +17,7 @@ typedef struct _PhocView PhocView;
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
 typedef struct _PhocXdgSurface PhocXdgSurface;
+typedef struct _PhocXWaylandSurface PhocXWaylandSurface;
 
 typedef struct _PhocViewInterface {
 	void (*move)(PhocView *view, double x, double y);
@@ -122,7 +123,7 @@ struct _PhocView {
 struct roots_xdg_toplevel_decoration;
 
 #ifdef PHOC_XWAYLAND
-typedef struct roots_xwayland_surface {
+typedef struct _PhocXWaylandSurface {
 	PhocView view;
 
 	struct wlr_xwayland_surface *xwayland_surface;
@@ -237,8 +238,7 @@ void view_for_each_surface(PhocView *view,
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
 PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
-struct roots_xwayland_surface *roots_xwayland_surface_from_view(
-	PhocView *view);
+PhocXWaylandSurface *roots_xwayland_surface_from_view(PhocView *view);
 bool   phoc_view_is_mapped (PhocView *view);
 
 enum roots_deco_part {

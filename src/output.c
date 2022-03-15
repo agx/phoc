@@ -637,7 +637,7 @@ phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, vo
 
 #ifdef PHOC_XWAYLAND
     if (view->type == ROOTS_XWAYLAND_VIEW) {
-      struct roots_xwayland_surface *xwayland_surface =
+      PhocXWaylandSurface *xwayland_surface =
         roots_xwayland_surface_from_view (view);
       phoc_output_xwayland_children_for_each_surface (self,
                                                       xwayland_surface->xwayland_surface,

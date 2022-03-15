@@ -162,21 +162,21 @@ static void set_fullscreen(PhocView *view, bool fullscreen) {
 }
 
 static void destroy(PhocView *view) {
-	struct roots_xwayland_surface *roots_surface =
+	PhocXWaylandSurface *phoc_surface =
 		roots_xwayland_surface_from_view(view);
-	wl_list_remove(&roots_surface->destroy.link);
-	wl_list_remove(&roots_surface->request_configure.link);
-	wl_list_remove(&roots_surface->request_move.link);
-	wl_list_remove(&roots_surface->request_resize.link);
-	wl_list_remove(&roots_surface->request_maximize.link);
-	wl_list_remove(&roots_surface->set_title.link);
-	wl_list_remove(&roots_surface->set_class.link);
+	wl_list_remove(&phoc_surface->destroy.link);
+	wl_list_remove(&phoc_surface->request_configure.link);
+	wl_list_remove(&phoc_surface->request_move.link);
+	wl_list_remove(&phoc_surface->request_resize.link);
+	wl_list_remove(&phoc_surface->request_maximize.link);
+	wl_list_remove(&phoc_surface->set_title.link);
+	wl_list_remove(&phoc_surface->set_class.link);
 #ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
-	wl_list_remove(&roots_surface->set_startup_id.link);
+	wl_list_remove(&phoc_surface->set_startup_id.link);
 #endif
-	wl_list_remove(&roots_surface->map.link);
-	wl_list_remove(&roots_surface->unmap.link);
-	free(roots_surface);
+	wl_list_remove(&phoc_surface->map.link);
+	wl_list_remove(&phoc_surface->unmap.link);
+	free(phoc_surface);
 }
 
 static const PhocViewInterface view_impl = {
@@ -193,19 +193,19 @@ static const PhocViewInterface view_impl = {
 };
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, destroy);
-	view_destroy(&roots_surface->view);
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, destroy);
+	view_destroy(&phoc_surface->view);
 }
 
 static void handle_request_configure(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, request_configure);
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, request_configure);
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_surface->xwayland_surface;
+		phoc_surface->xwayland_surface;
 	struct wlr_xwayland_surface_configure_event *event = data;
 
-	view_update_position(&roots_surface->view, event->x, event->y);
+	view_update_position(&phoc_surface->view, event->x, event->y);
 
 	wlr_xwayland_surface_configure(xwayland_surface, event->x, event->y,
 		event->width, event->height);
@@ -229,9 +229,9 @@ static PhocSeat *guess_seat_for_view(PhocView *view) {
 }
 
 static void handle_request_move(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, request_move);
-	PhocView *view = &roots_surface->view;
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, request_move);
+	PhocView *view = &phoc_surface->view;
 	PhocSeat *seat = guess_seat_for_view(view);
 
 	if (!seat || phoc_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
@@ -242,9 +242,9 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 }
 
 static void handle_request_resize(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, request_resize);
-	PhocView *view = &roots_surface->view;
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, request_resize);
+	PhocView *view = &phoc_surface->view;
 	PhocSeat *seat = guess_seat_for_view(view);
 	struct wlr_xwayland_resize_event *e = data;
 
@@ -255,11 +255,11 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 }
 
 static void handle_request_maximize(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, request_maximize);
-	PhocView *view = &roots_surface->view;
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, request_maximize);
+	PhocView *view = &phoc_surface->view;
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_surface->xwayland_surface;
+		phoc_surface->xwayland_surface;
 
 	bool maximized = xwayland_surface->maximized_vert &&
 		xwayland_surface->maximized_horz;
@@ -272,49 +272,49 @@ static void handle_request_maximize(struct wl_listener *listener, void *data) {
 
 static void handle_request_fullscreen(struct wl_listener *listener,
 		void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, request_fullscreen);
-	PhocView *view = &roots_surface->view;
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, request_fullscreen);
+	PhocView *view = &phoc_surface->view;
 	struct wlr_xwayland_surface *xwayland_surface =
-		roots_surface->xwayland_surface;
+		phoc_surface->xwayland_surface;
 
 	phoc_view_set_fullscreen(view, xwayland_surface->fullscreen, NULL);
 }
 
 static void handle_set_title(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, set_title);
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, set_title);
 
-	view_set_title(&roots_surface->view,
-		roots_surface->xwayland_surface->title);
+	view_set_title(&phoc_surface->view,
+		phoc_surface->xwayland_surface->title);
 }
 
 static void handle_set_class(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, set_class);
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, set_class);
 
-	view_set_app_id(&roots_surface->view,
-		roots_surface->xwayland_surface->class);
+	view_set_app_id(&phoc_surface->view,
+		phoc_surface->xwayland_surface->class);
 }
 
 #ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
 static void handle_set_startup_id(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, set_startup_id);
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, set_startup_id);
 
-	g_debug ("Got startup-id %s", roots_surface->xwayland_surface->startup_id);
+	g_debug ("Got startup-id %s", phoc_surface->xwayland_surface->startup_id);
 	phoc_phosh_private_notify_startup_id (server->desktop->phosh,
-                                              roots_surface->xwayland_surface->startup_id,
+                                              phoc_surface->xwayland_surface->startup_id,
                                               PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
 }
 #endif /* PHOC_HAVE_WLR_SET_STARTUP_ID */
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, surface_commit);
-	PhocView *view = &roots_surface->view;
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, surface_commit);
+	PhocView *view = &phoc_surface->view;
 	struct wlr_surface *wlr_surface = view->wlr_surface;
 
 	phoc_view_apply_damage(view);
@@ -347,19 +347,19 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 }
 
 static void handle_map(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, map);
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, map);
 	struct wlr_xwayland_surface *surface = data;
-	PhocView *view = &roots_surface->view;
+	PhocView *view = &phoc_surface->view;
 
 	view->box.x = surface->x;
 	view->box.y = surface->y;
 	view->box.width = surface->surface->current.width;
 	view->box.height = surface->surface->current.height;
 
-	roots_surface->surface_commit.notify = handle_surface_commit;
+	phoc_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&surface->surface->events.commit,
-		&roots_surface->surface_commit);
+		&phoc_surface->surface_commit);
 
 	if (surface->maximized_horz && surface->maximized_vert) {
 		view_maximize(view, NULL);
@@ -382,11 +382,11 @@ static void handle_map(struct wl_listener *listener, void *data) {
 }
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
-	struct roots_xwayland_surface *roots_surface =
-		wl_container_of(listener, roots_surface, unmap);
-	PhocView *view = &roots_surface->view;
+	PhocXWaylandSurface *phoc_surface =
+		wl_container_of(listener, phoc_surface, unmap);
+	PhocView *view = &phoc_surface->view;
 
-	wl_list_remove(&roots_surface->surface_commit.link);
+	wl_list_remove(&phoc_surface->surface_commit.link);
 	view_unmap(view);
 }
 
@@ -399,56 +399,56 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 		surface->title, surface->class, surface->instance);
 	wlr_xwayland_surface_ping(surface);
 
-	struct roots_xwayland_surface *roots_surface =
-		calloc(1, sizeof(struct roots_xwayland_surface));
-	if (roots_surface == NULL) {
+	PhocXWaylandSurface *phoc_surface =
+		calloc(1, sizeof(PhocXWaylandSurface));
+	if (phoc_surface == NULL) {
 		return;
 	}
 
-	view_init(&roots_surface->view, &view_impl, ROOTS_XWAYLAND_VIEW, desktop);
-	roots_surface->view.box.x = surface->x;
-	roots_surface->view.box.y = surface->y;
-	roots_surface->view.box.width = surface->width;
-	roots_surface->view.box.height = surface->height;
-	roots_surface->xwayland_surface = surface;
+	view_init(&phoc_surface->view, &view_impl, ROOTS_XWAYLAND_VIEW, desktop);
+	phoc_surface->view.box.x = surface->x;
+	phoc_surface->view.box.y = surface->y;
+	phoc_surface->view.box.width = surface->width;
+	phoc_surface->view.box.height = surface->height;
+	phoc_surface->xwayland_surface = surface;
 
-	view_set_title(&roots_surface->view, surface->title);
-	view_set_app_id(&roots_surface->view, surface->class);
+	view_set_title(&phoc_surface->view, surface->title);
+	view_set_app_id(&phoc_surface->view, surface->class);
 
-	roots_surface->destroy.notify = handle_destroy;
-	wl_signal_add(&surface->events.destroy, &roots_surface->destroy);
-	roots_surface->request_configure.notify = handle_request_configure;
+	phoc_surface->destroy.notify = handle_destroy;
+	wl_signal_add(&surface->events.destroy, &phoc_surface->destroy);
+	phoc_surface->request_configure.notify = handle_request_configure;
 	wl_signal_add(&surface->events.request_configure,
-		&roots_surface->request_configure);
-	roots_surface->map.notify = handle_map;
-	wl_signal_add(&surface->events.map, &roots_surface->map);
-	roots_surface->unmap.notify = handle_unmap;
-	wl_signal_add(&surface->events.unmap, &roots_surface->unmap);
-	roots_surface->request_move.notify = handle_request_move;
-	wl_signal_add(&surface->events.request_move, &roots_surface->request_move);
-	roots_surface->request_resize.notify = handle_request_resize;
+		&phoc_surface->request_configure);
+	phoc_surface->map.notify = handle_map;
+	wl_signal_add(&surface->events.map, &phoc_surface->map);
+	phoc_surface->unmap.notify = handle_unmap;
+	wl_signal_add(&surface->events.unmap, &phoc_surface->unmap);
+	phoc_surface->request_move.notify = handle_request_move;
+	wl_signal_add(&surface->events.request_move, &phoc_surface->request_move);
+	phoc_surface->request_resize.notify = handle_request_resize;
 	wl_signal_add(&surface->events.request_resize,
-		&roots_surface->request_resize);
-	roots_surface->request_maximize.notify = handle_request_maximize;
+		&phoc_surface->request_resize);
+	phoc_surface->request_maximize.notify = handle_request_maximize;
 	wl_signal_add(&surface->events.request_maximize,
-		&roots_surface->request_maximize);
-	roots_surface->request_fullscreen.notify = handle_request_fullscreen;
+		&phoc_surface->request_maximize);
+	phoc_surface->request_fullscreen.notify = handle_request_fullscreen;
 	wl_signal_add(&surface->events.request_fullscreen,
-		&roots_surface->request_fullscreen);
-	roots_surface->set_title.notify = handle_set_title;
-	wl_signal_add(&surface->events.set_title, &roots_surface->set_title);
-	roots_surface->set_class.notify = handle_set_class;
+		&phoc_surface->request_fullscreen);
+	phoc_surface->set_title.notify = handle_set_title;
+	wl_signal_add(&surface->events.set_title, &phoc_surface->set_title);
+	phoc_surface->set_class.notify = handle_set_class;
 	wl_signal_add(&surface->events.set_class,
-			&roots_surface->set_class);
+			&phoc_surface->set_class);
 #ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
-	roots_surface->set_startup_id.notify = handle_set_startup_id;
+	phoc_surface->set_startup_id.notify = handle_set_startup_id;
 	wl_signal_add(&surface->events.set_startup_id,
-			&roots_surface->set_startup_id);
+			&phoc_surface->set_startup_id);
 #endif
 }
 
-struct roots_xwayland_surface *roots_xwayland_surface_from_view(
+PhocXWaylandSurface *roots_xwayland_surface_from_view(
 		PhocView *view) {
 	assert(view->impl == &view_impl);
-	return (struct roots_xwayland_surface *)view;
+	return (PhocXWaylandSurface *)view;
 }

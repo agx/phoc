@@ -370,7 +370,7 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 
 #if WLR_HAS_XWAYLAND
 	if (view->type == ROOTS_XWAYLAND_VIEW) {
-		struct roots_xwayland_surface *xwayland_surface =
+		PhocXWaylandSurface *xwayland_surface =
 			roots_xwayland_surface_from_view(view);
 		if (!wl_list_empty(&xwayland_surface->xwayland_surface->children)) {
 			return false;
@@ -734,7 +734,7 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 		// the fullscreen window's children so we have to traverse the tree.
 #ifdef PHOC_XWAYLAND
 		if (view->type == ROOTS_XWAYLAND_VIEW) {
-			struct roots_xwayland_surface *xwayland_surface =
+			PhocXWaylandSurface *xwayland_surface =
 				roots_xwayland_surface_from_view(view);
 			phoc_output_xwayland_children_for_each_surface(output,
 				xwayland_surface->xwayland_surface,
