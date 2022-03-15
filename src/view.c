@@ -17,6 +17,7 @@
 #include "view.h"
 
 typedef struct _PhocViewPrivate {
+  GSettings *settings;
 } PhocViewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
@@ -843,6 +844,10 @@ munge_app_id (const gchar *app_id)
 
 static void view_update_scale(PhocView *view) {
 	PhocServer *server = phoc_server_get_default ();
+	PhocViewPrivate *priv;
+
+	g_assert (PHOC_IS_VIEW (view));
+	priv = phoc_view_get_instance_private (view);
 
 	if (!PHOC_VIEW_GET_CLASS (view)->want_scaling(view)) {
 		return;
@@ -850,8 +855,8 @@ static void view_update_scale(PhocView *view) {
 
 	bool scaling_enabled = false;
 
-	if (view->settings) {
-		scaling_enabled = g_settings_get_boolean (view->settings, "scale-to-fit");
+	if (priv->settings) {
+		scaling_enabled = g_settings_get_boolean (priv->settings, "scale-to-fit");
 	}
 
 	if (!scaling_enabled && !phoc_desktop_get_scale_to_fit (server->desktop)) {
@@ -1151,14 +1156,19 @@ void view_set_parent(PhocView *view, PhocView *parent) {
 }
 
 void view_set_app_id(PhocView *view, const char *app_id) {
+	PhocViewPrivate *priv;
+
+	g_assert (PHOC_IS_VIEW (view));
+	priv = phoc_view_get_instance_private (view);
+
 	free(view->app_id);
 	view->app_id = g_strdup (app_id);
 
-	g_clear_object (&view->settings);
+	g_clear_object (&priv->settings);
 	if (app_id) {
 		g_autofree gchar *munged_app_id = munge_app_id (app_id);
 		g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
-		view->settings = g_settings_new_with_path ("sm.puri.phoc.application", path);
+		priv->settings = g_settings_new_with_path ("sm.puri.phoc.application", path);
 	}
 
 	view_update_scale(view);
@@ -1242,6 +1252,7 @@ static void
 phoc_view_finalize (GObject *object)
 {
   PhocView *self = PHOC_VIEW (object);
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
 
   if (self->parent) {
     wl_list_remove(&self->parent_link);
@@ -1270,7 +1281,7 @@ phoc_view_finalize (GObject *object)
 
   g_clear_pointer (&self->title, g_free);
   g_clear_pointer (&self->app_id, g_free);
-  g_clear_object (&self->settings);
+  g_clear_object (&priv->settings);
 
 
   G_OBJECT_CLASS (phoc_view_parent_class)->finalize (object);

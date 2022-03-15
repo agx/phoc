@@ -63,8 +63,6 @@ struct _PhocView {
 	char *title;
 	char *app_id;
 
-	GSettings *settings;
-
 	PhocViewState state;
 	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;
