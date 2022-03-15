@@ -21,6 +21,7 @@
 #include "seat.h"
 #include "server.h"
 #include "utils.h"
+#include "xwayland-surface.h"
 
 
 G_DEFINE_TYPE (PhocOutput, phoc_output, G_TYPE_OBJECT);

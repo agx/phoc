@@ -15,6 +15,7 @@
 #include "seat.h"
 #include "server.h"
 #include "render.h"
+#include "xwayland-surface.h"
 
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>

@@ -35,7 +35,7 @@
 #include "text_input.h"
 #include "touch.h"
 #include "xcursor.h"
-
+#include "xwayland-surface.h"
 
 enum {
   PROP_0,

@@ -15,6 +15,7 @@
 #include "seat.h"
 #include "view.h"
 #include "xwayland.h"
+#include "xwayland-surface.h"
 
 static
 bool is_moveable(PhocView *view)
@@ -176,7 +177,7 @@ static void destroy(PhocView *view) {
 #endif
 	wl_list_remove(&phoc_surface->map.link);
 	wl_list_remove(&phoc_surface->unmap.link);
-	free(phoc_surface);
+	g_object_unref (phoc_surface);
 }
 
 static const PhocViewInterface view_impl = {
@@ -399,18 +400,13 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 		surface->title, surface->class, surface->instance);
 	wlr_xwayland_surface_ping(surface);
 
-	PhocXWaylandSurface *phoc_surface =
-		calloc(1, sizeof(PhocXWaylandSurface));
-	if (phoc_surface == NULL) {
-		return;
-	}
+	PhocXWaylandSurface *phoc_surface = phoc_xwayland_surface_new (surface);
 
 	view_init(&phoc_surface->view, &view_impl, ROOTS_XWAYLAND_VIEW, desktop);
 	phoc_surface->view.box.x = surface->x;
 	phoc_surface->view.box.y = surface->y;
 	phoc_surface->view.box.width = surface->width;
 	phoc_surface->view.box.height = surface->height;
-	phoc_surface->xwayland_surface = surface;
 
 	view_set_title(&phoc_surface->view, surface->title);
 	view_set_app_id(&phoc_surface->view, surface->class);

@@ -122,28 +122,6 @@ struct _PhocView {
 
 struct roots_xdg_toplevel_decoration;
 
-#ifdef PHOC_XWAYLAND
-typedef struct _PhocXWaylandSurface {
-	PhocView view;
-
-	struct wlr_xwayland_surface *xwayland_surface;
-
-	struct wl_listener destroy;
-	struct wl_listener request_configure;
-	struct wl_listener request_move;
-	struct wl_listener request_resize;
-	struct wl_listener request_maximize;
-	struct wl_listener request_fullscreen;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener set_title;
-	struct wl_listener set_class;
-	struct wl_listener set_startup_id;
-
-	struct wl_listener surface_commit;
-} PhocXWaylandSurface;
-#endif
-
 typedef struct _PhocViewChild PhocViewChild;
 
 struct phoc_view_child_interface {
