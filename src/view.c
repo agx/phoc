@@ -33,16 +33,6 @@ void view_init(PhocView *view, const PhocViewInterface *impl,
 	assert(impl->destroy);
 	view->impl = impl;
 	view->type = type;
-	view->desktop = desktop;
-	view->alpha = 1.0f;
-	view->scale = 1.0f;
-	view->title = NULL;
-	view->app_id = NULL;
-	view->state = PHOC_VIEW_STATE_FLOATING;
-	wl_signal_init(&view->events.unmap);
-	wl_signal_init(&view->events.destroy);
-	wl_list_init(&view->child_surfaces);
-	wl_list_init(&view->stack);
 }
 
 void view_destroy(PhocView *view) {
@@ -1293,6 +1283,15 @@ phoc_view_class_init (PhocViewClass *klass)
 static void
 phoc_view_init (PhocView *self)
 {
+  self->alpha = 1.0f;
+  self->scale = 1.0f;
+  self->title = NULL;
+  self->app_id = NULL;
+  self->state = PHOC_VIEW_STATE_FLOATING;
+  wl_signal_init(&self->events.unmap);
+  wl_signal_init(&self->events.destroy);
+  wl_list_init(&self->child_surfaces);
+  wl_list_init(&self->stack);
 }
 
 
