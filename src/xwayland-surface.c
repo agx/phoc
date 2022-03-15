@@ -12,6 +12,8 @@
 
 #include "xwayland-surface.h"
 
+#include <wlr/xwayland.h>
+
 enum {
   PROP_0,
   PROP_WLR_XWAYLAND_SURFACE,
@@ -32,6 +34,7 @@ phoc_xwayland_surface_set_property (GObject      *object,
   switch (property_id) {
   case PROP_WLR_XWAYLAND_SURFACE:
     self->xwayland_surface = g_value_get_pointer (value);
+    self->xwayland_surface->data = self;
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -53,6 +56,8 @@ static void
 phoc_xwayland_surface_finalize (GObject *object)
 {
   PhocXWaylandSurface *self = PHOC_XWAYLAND_SURFACE(object);
+
+  self->xwayland_surface->data = NULL;
 
   G_OBJECT_CLASS (phoc_xwayland_surface_parent_class)->finalize (object);
 }
