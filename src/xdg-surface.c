@@ -237,7 +237,7 @@ phoc_xdg_surface_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_xdg_surface_parent_class)->constructed (object);
 
-  view_init(&self->view, &view_impl, ROOTS_XDG_SHELL_VIEW, NULL);
+  view_init(PHOC_VIEW (self), &view_impl, ROOTS_XDG_SHELL_VIEW, NULL);
 }
 
 static void
