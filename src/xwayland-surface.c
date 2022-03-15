@@ -57,6 +57,19 @@ phoc_xwayland_surface_finalize (GObject *object)
 {
   PhocXWaylandSurface *self = PHOC_XWAYLAND_SURFACE(object);
 
+  wl_list_remove(&self->destroy.link);
+  wl_list_remove(&self->request_configure.link);
+  wl_list_remove(&self->request_move.link);
+  wl_list_remove(&self->request_resize.link);
+  wl_list_remove(&self->request_maximize.link);
+  wl_list_remove(&self->set_title.link);
+  wl_list_remove(&self->set_class.link);
+#ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
+  wl_list_remove(&self->set_startup_id.link);
+#endif
+  wl_list_remove(&self->map.link);
+  wl_list_remove(&self->unmap.link);
+
   self->xwayland_surface->data = NULL;
 
   G_OBJECT_CLASS (phoc_xwayland_surface_parent_class)->finalize (object);

@@ -165,18 +165,6 @@ static void set_fullscreen(PhocView *view, bool fullscreen) {
 static void destroy(PhocView *view) {
 	PhocXWaylandSurface *phoc_surface =
 		phoc_xwayland_surface_from_view(view);
-	wl_list_remove(&phoc_surface->destroy.link);
-	wl_list_remove(&phoc_surface->request_configure.link);
-	wl_list_remove(&phoc_surface->request_move.link);
-	wl_list_remove(&phoc_surface->request_resize.link);
-	wl_list_remove(&phoc_surface->request_maximize.link);
-	wl_list_remove(&phoc_surface->set_title.link);
-	wl_list_remove(&phoc_surface->set_class.link);
-#ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
-	wl_list_remove(&phoc_surface->set_startup_id.link);
-#endif
-	wl_list_remove(&phoc_surface->map.link);
-	wl_list_remove(&phoc_surface->unmap.link);
 	g_object_unref (phoc_surface);
 }
 
