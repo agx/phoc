@@ -191,7 +191,6 @@ struct roots_xdg_toplevel_decoration {
 
 void view_init(PhocView *view, const PhocViewInterface *impl,
                PhocViewType type, PhocDesktop *desktop);
-void view_destroy(PhocView *view);
 void view_appear_activated(PhocView *view, bool activated);
 void view_activate(PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);

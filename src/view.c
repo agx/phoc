@@ -34,12 +34,6 @@ void view_init(PhocView *view, const PhocViewInterface *impl,
 	view->type = type;
 }
 
-void view_destroy(PhocView *view) {
-	if (view == NULL) {
-		return;
-	}
-	g_object_unref (view);
-}
 
 gboolean view_is_floating(const PhocView *view)
 {
