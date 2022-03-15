@@ -12,6 +12,8 @@
 #include "seat.h"
 #include "server.h"
 
+#include <wlr/xwayland.h>
+
 #include <errno.h>
 
 static void phoc_server_initable_iface_init (GInitableIface *iface);
