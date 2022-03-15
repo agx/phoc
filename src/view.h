@@ -9,6 +9,7 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
+#include <glib-object.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
@@ -63,11 +64,7 @@ typedef enum {
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
 struct _PhocView {
-        /* Ugly: Since PhocXdgSurfce is a GObject we need to put that
-         * here so that for a PhocXdgSurface PhocView, GObject and
-         * PhocXdgSurface start at the same address. Fixes itself once
-         * PhocView becomes a GObject */
-	GObject parent_;
+	GObject parent_instance;
 
 	PhocViewType type;
 	const PhocViewInterface *impl;
@@ -119,6 +116,28 @@ struct _PhocView {
 		struct wl_signal destroy;
 	} events;
 };
+
+typedef struct _PhocViewClass
+{
+  GObjectClass parent_class;
+} PhocViewClass;
+
+
+#define PHOC_TYPE_VIEW (phoc_view_get_type ())
+
+GType phoc_view_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocView, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocViewClass, g_type_class_unref)
+static inline PhocView * PHOC_VIEW (gpointer ptr) {
+  return G_TYPE_CHECK_INSTANCE_CAST (ptr, phoc_view_get_type (), PhocView); }
+static inline PhocViewClass * PHOC_VIEW_CLASS (gpointer ptr) {
+  return G_TYPE_CHECK_CLASS_CAST (ptr, phoc_view_get_type (), PhocViewClass); }
+static inline gboolean PHOC_IS_VIEW (gpointer ptr) {
+  return G_TYPE_CHECK_INSTANCE_TYPE (ptr, phoc_view_get_type ()); }
+static inline gboolean PHOC_IS_VIEW_CLASS (gpointer ptr) {
+  return G_TYPE_CHECK_CLASS_TYPE (ptr, phoc_view_get_type ()); }
+static inline PhocViewClass * PHOC_VIEW_GET_CLASS (gpointer ptr) {
+  return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_get_type (), PhocViewClass); }
 
 struct roots_xdg_toplevel_decoration;
 

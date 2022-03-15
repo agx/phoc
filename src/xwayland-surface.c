@@ -21,7 +21,7 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
-G_DEFINE_TYPE (PhocXWaylandSurface, phoc_xwayland_surface, G_TYPE_OBJECT)
+G_DEFINE_TYPE (PhocXWaylandSurface, phoc_xwayland_surface, PHOC_TYPE_VIEW)
 
 static
 bool is_moveable(PhocView *view)
@@ -278,6 +278,6 @@ phoc_xwayland_surface_new (struct wlr_xwayland_surface *surface)
 }
 
 PhocXWaylandSurface *phoc_xwayland_surface_from_view(PhocView *view) {
-	g_assert(view->impl == &view_impl);
-	return (PhocXWaylandSurface *)view;
+	g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+	return PHOC_XWAYLAND_SURFACE (view);
 }

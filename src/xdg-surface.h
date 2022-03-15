@@ -47,7 +47,7 @@ typedef struct _PhocXdgSurface {
 	struct roots_xdg_toplevel_decoration *xdg_toplevel_decoration;
 } PhocXdgSurface;
 
-G_DECLARE_FINAL_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC, XDG_SURFACE, GObject)
+G_DECLARE_FINAL_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC, XDG_SURFACE, PhocView)
 
 PhocXdgSurface *phoc_xdg_surface_new (struct wlr_xdg_surface *xdg_surface);
 void            phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom);

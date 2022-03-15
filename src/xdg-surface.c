@@ -22,7 +22,7 @@ enum {
 
 static GParamSpec *props[PROP_LAST_PROP];
 
-G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, G_TYPE_OBJECT)
+G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC_TYPE_VIEW)
 
 static void
 phoc_xdg_surface_set_property (GObject      *object,
@@ -306,6 +306,6 @@ phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom)
 
 PhocXdgSurface *
 phoc_xdg_surface_from_view (PhocView *view) {
-	g_assert(view->impl == &view_impl);
-	return (PhocXdgSurface *)view;
+	g_assert (PHOC_IS_XDG_SURFACE (view));
+	return PHOC_XDG_SURFACE (view);
 }

@@ -15,7 +15,7 @@ G_BEGIN_DECLS
 #define PHOC_TYPE_XWAYLAND_SURFACE (phoc_xwayland_surface_get_type ())
 
 #ifdef PHOC_XWAYLAND
-G_DECLARE_FINAL_TYPE (PhocXWaylandSurface, phoc_xwayland_surface, PHOC, XWAYLAND_SURFACE, GObject)
+G_DECLARE_FINAL_TYPE (PhocXWaylandSurface, phoc_xwayland_surface, PHOC, XWAYLAND_SURFACE, PhocView)
 
 /**
  * PhocXWaylandSurface

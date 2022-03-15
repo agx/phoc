@@ -202,7 +202,7 @@ static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
  * @ly: Y coordinate the surface to look up at in layout coordinates
  * @sx: (out) (not nullable): Surface-local x coordinate
  * @sy: (out) (not nullable): Surface-local y coordinate
- * @view: (out) (optional): The corresponding [struct@Phoc.View]
+ * @view: (out) (optional): The corresponding [class@Phoc.View]
  *
  * Looks up the surface at `lx,ly` and returns the topmost surface at
  * that position (if any) and the surface-local coordinates of `sx,sy`

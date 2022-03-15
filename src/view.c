@@ -16,6 +16,8 @@
 #include "server.h"
 #include "view.h"
 
+G_DEFINE_TYPE (PhocView, phoc_view, G_TYPE_OBJECT)
+
 struct _PhocSubsurface {
   PhocViewChild child;
   struct wlr_subsurface *wlr_subsurface;
@@ -1074,7 +1076,7 @@ void view_setup(PhocView *view) {
  * @view: A view
  *
  * Add the accumulated buffer damage of all surfaces belonging to a
- * [type@PhocView] to the damaged screen area that needs repaint.
+ * [class@PhocView] to the damaged screen area that needs repaint.
  */
 void
 phoc_view_apply_damage (PhocView *view)
@@ -1089,7 +1091,7 @@ phoc_view_apply_damage (PhocView *view)
  * phoc_view_damage_whole:
  * @view: A view
  *
- * Add the damage of all surfaces belonging to a [type@PhocView] to the
+ * Add the damage of all surfaces belonging to a [class@PhocView] to the
  * damaged screen area that needs repaint. This damages the whole
  * @view (possibly including server side window decorations) ignoring
  * any buffer damage.
@@ -1280,6 +1282,19 @@ void view_create_foreign_toplevel_handle(PhocView *view) {
 
 	view->toplevel_handle->data = view;
 }
+
+
+static void
+phoc_view_class_init (PhocViewClass *klass)
+{
+}
+
+
+static void
+phoc_view_init (PhocView *self)
+{
+}
+
 
 /**
  * phoc_view_from_wlr_surface:
