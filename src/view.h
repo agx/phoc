@@ -60,9 +60,6 @@ struct _PhocView {
 	int border_width;
 	int titlebar_height;
 
-	char *title;
-	char *app_id;
-
 	PhocViewState state;
 	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;

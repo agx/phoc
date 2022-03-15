@@ -17,6 +17,8 @@
 #include "view.h"
 
 typedef struct _PhocViewPrivate {
+  char *title;
+  char *app_id;
   GSettings *settings;
 } PhocViewPrivate;
 
@@ -1010,6 +1012,8 @@ view_send_frame_done_if_not_visible (PhocView *view)
 }
 
 void view_setup(PhocView *view) {
+        PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+
 	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
 
@@ -1023,9 +1027,9 @@ void view_setup(PhocView *view) {
 	wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
 	                                             view_is_maximized(view));
 	wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle,
-	                                         view->title ?: "");
+	                                         priv->title ?: "");
 	wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle,
-	                                          view->app_id ?: "");
+	                                          priv->app_id ?: "");
 	wlr_foreign_toplevel_handle_v1_set_parent(view->toplevel_handle,
 	                                          view->parent ? view->parent->toplevel_handle : NULL);
 }
@@ -1124,8 +1128,10 @@ void view_update_decorated(PhocView *view, bool decorated) {
 }
 
 void view_set_title(PhocView *view, const char *title) {
-	free(view->title);
-	view->title = g_strdup (title);
+	PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+
+	free(priv->title);
+	priv->title = g_strdup (title);
 
 	if (view->toplevel_handle) {
 		wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle, title ?: "");
@@ -1161,8 +1167,8 @@ void view_set_app_id(PhocView *view, const char *app_id) {
 	g_assert (PHOC_IS_VIEW (view));
 	priv = phoc_view_get_instance_private (view);
 
-	free(view->app_id);
-	view->app_id = g_strdup (app_id);
+	free(priv->app_id);
+	priv->app_id = g_strdup (app_id);
 
 	g_clear_object (&priv->settings);
 	if (app_id) {
@@ -1279,10 +1285,9 @@ phoc_view_finalize (GObject *object)
     self->fullscreen_output->fullscreen_view = NULL;
   }
 
-  g_clear_pointer (&self->title, g_free);
-  g_clear_pointer (&self->app_id, g_free);
+  g_clear_pointer (&priv->title, g_free);
+  g_clear_pointer (&priv->app_id, g_free);
   g_clear_object (&priv->settings);
-
 
   G_OBJECT_CLASS (phoc_view_parent_class)->finalize (object);
 }
@@ -1302,8 +1307,6 @@ phoc_view_init (PhocView *self)
 {
   self->alpha = 1.0f;
   self->scale = 1.0f;
-  self->title = NULL;
-  self->app_id = NULL;
   self->state = PHOC_VIEW_STATE_FLOATING;
   wl_signal_init(&self->events.unmap);
   wl_signal_init(&self->events.destroy);
