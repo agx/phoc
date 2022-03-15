@@ -30,7 +30,6 @@ struct _PhocSubsurface {
 
 void view_init(PhocView *view, const PhocViewInterface *impl,
 		PhocViewType type, PhocDesktop *desktop) {
-	assert(impl->destroy);
 	view->impl = impl;
 	view->type = type;
 }
@@ -69,7 +68,7 @@ void view_destroy(PhocView *view) {
 	g_clear_pointer (&view->app_id, g_free);
 	g_clear_object (&view->settings);
 
-	view->impl->destroy(view);
+	g_object_unref (view);
 }
 
 gboolean view_is_floating(const PhocView *view)

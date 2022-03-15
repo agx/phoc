@@ -35,7 +35,6 @@ typedef struct _PhocViewInterface {
 	void (*for_each_surface)(PhocView *view,
 		wlr_surface_iterator_func_t iterator, void *user_data);
 	void (*get_geometry)(PhocView *view, struct wlr_box *box);
-	void (*destroy)(PhocView *view);
 } PhocViewInterface;
 
 typedef enum {

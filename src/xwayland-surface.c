@@ -168,12 +168,6 @@ static void set_fullscreen(PhocView *view, bool fullscreen) {
 	wlr_xwayland_surface_set_fullscreen(xwayland_surface, fullscreen);
 }
 
-static void destroy(PhocView *view) {
-	PhocXWaylandSurface *phoc_surface =
-		phoc_xwayland_surface_from_view(view);
-	g_object_unref (phoc_surface);
-}
-
 static const PhocViewInterface view_impl = {
 	.resize = resize,
 	.move = move,
@@ -184,7 +178,6 @@ static const PhocViewInterface view_impl = {
 	.set_fullscreen = set_fullscreen,
 	.set_maximized = set_maximized,
 	.close = _close,
-	.destroy = destroy,
 };
 
 static void

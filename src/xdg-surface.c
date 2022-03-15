@@ -209,12 +209,6 @@ static void get_geometry(PhocView *view, struct wlr_box *geom) {
         phoc_xdg_surface_get_geometry (phoc_xdg_surface_from_view (view), geom);
 }
 
-static void destroy(PhocView *view) {
-	PhocXdgSurface *phoc_xdg_surface =
-		phoc_xdg_surface_from_view (view);
-	g_object_unref(phoc_xdg_surface);
-}
-
 static const PhocViewInterface view_impl = {
 	.resize = resize,
 	.move_resize = move_resize,
@@ -227,7 +221,6 @@ static const PhocViewInterface view_impl = {
 	.close = _close,
 	.for_each_surface = for_each_surface,
 	.get_geometry = get_geometry,
-	.destroy = destroy,
 };
 
 static void
