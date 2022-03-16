@@ -189,17 +189,6 @@ phoc_xwayland_surface_set_property (GObject      *object,
 
 
 static void
-phoc_xwayland_surface_constructed (GObject *object)
-{
-  PhocXWaylandSurface *self = PHOC_XWAYLAND_SURFACE(object);
-
-  G_OBJECT_CLASS (phoc_xwayland_surface_parent_class)->constructed (object);
-
-  view_init(PHOC_VIEW (self), ROOTS_XWAYLAND_VIEW);
-}
-
-
-static void
 phoc_xwayland_surface_finalize (GObject *object)
 {
   PhocXWaylandSurface *self = PHOC_XWAYLAND_SURFACE(object);
@@ -230,7 +219,6 @@ phoc_xwayland_surface_class_init (PhocXWaylandSurfaceClass *klass)
   PhocViewClass *view_class = PHOC_VIEW_CLASS (klass);
 
   object_class->set_property = phoc_xwayland_surface_set_property;
-  object_class->constructed = phoc_xwayland_surface_constructed;
   object_class->finalize = phoc_xwayland_surface_finalize;
 
   view_class->resize = resize;
@@ -258,6 +246,7 @@ phoc_xwayland_surface_class_init (PhocXWaylandSurfaceClass *klass)
 static void
 phoc_xwayland_surface_init (PhocXWaylandSurface *self)
 {
+  PHOC_VIEW (self)->type = ROOTS_XWAYLAND_VIEW;
 }
 
 

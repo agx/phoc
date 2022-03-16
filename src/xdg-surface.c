@@ -209,15 +209,6 @@ static void get_geometry(PhocView *view, struct wlr_box *geom) {
         phoc_xdg_surface_get_geometry (phoc_xdg_surface_from_view (view), geom);
 }
 
-static void
-phoc_xdg_surface_constructed (GObject *object)
-{
-  PhocXdgSurface *self = PHOC_XDG_SURFACE (object);
-
-  G_OBJECT_CLASS (phoc_xdg_surface_parent_class)->constructed (object);
-
-  view_init(PHOC_VIEW (self), ROOTS_XDG_SHELL_VIEW);
-}
 
 static void
 phoc_xdg_surface_finalize (GObject *object)
@@ -248,7 +239,6 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   PhocViewClass *view_class = PHOC_VIEW_CLASS (klass);
 
-  object_class->constructed = phoc_xdg_surface_constructed;
   object_class->finalize = phoc_xdg_surface_finalize;
   object_class->set_property = phoc_xdg_surface_set_property;
 
@@ -279,6 +269,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
 static void
 phoc_xdg_surface_init (PhocXdgSurface *self)
 {
+  PHOC_VIEW (self)->type = ROOTS_XDG_SHELL_VIEW;
 }
 
 

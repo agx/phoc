@@ -34,11 +34,6 @@ struct _PhocSubsurface {
 };
 
 
-void view_init(PhocView *view, PhocViewType type) {
-	view->type = type;
-}
-
-
 gboolean view_is_floating(const PhocView *view)
 {
 	return view->state == PHOC_VIEW_STATE_FLOATING && !view_is_fullscreen (view);

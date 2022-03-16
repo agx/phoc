@@ -179,7 +179,6 @@ struct roots_xdg_toplevel_decoration {
 	struct wl_listener surface_commit;
 };
 
-void view_init(PhocView *view, PhocViewType type);
 void view_appear_activated(PhocView *view, bool activated);
 void view_activate(PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
