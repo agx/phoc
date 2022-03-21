@@ -42,6 +42,8 @@
 #include "xcursor.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 
+#include "xdg-surface.h"
+
 /**
  * PhocDesktop:
  *
@@ -110,8 +112,7 @@ static bool view_at(PhocView *view, double lx, double ly,
 	struct wlr_surface *_surface = NULL;
 	switch (view->type) {
 	case ROOTS_XDG_SHELL_VIEW:;
-		struct roots_xdg_surface *xdg_surface =
-			roots_xdg_surface_from_view(view);
+		PhocXdgSurface *xdg_surface = phoc_xdg_surface_from_view(view);
 		_surface = wlr_xdg_surface_surface_at(xdg_surface->xdg_surface,
 			view_sx, view_sy, &_sx, &_sy);
 		break;

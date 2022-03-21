@@ -54,6 +54,7 @@ sources = files(
   'virtual.c',
   'virtual.h',
   'xdg_shell.c',
+  'xdg-surface.c',
 )
 libphoc_generated_sources = [
   phoc_enum_sources,
@@ -76,7 +77,10 @@ phoc_deps = [
 ]
 
 if have_xwayland
-  sources += 'xwayland.c'
+  sources += ['xwayland.c',
+              'xwayland-surface.c',
+              'xwayland-surface.h',
+	     ]
   phoc_deps += dependency('xcb')
 endif
 

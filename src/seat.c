@@ -35,7 +35,7 @@
 #include "text_input.h"
 #include "touch.h"
 #include "xcursor.h"
-
+#include "xwayland-surface.h"
 
 enum {
   PROP_0,
@@ -1500,8 +1500,8 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
 
 #ifdef PHOC_XWAYLAND
   if (view && view->type == ROOTS_XWAYLAND_VIEW) {
-    struct roots_xwayland_surface *xwayland_surface =
-      roots_xwayland_surface_from_view (view);
+    PhocXWaylandSurface *xwayland_surface =
+      phoc_xwayland_surface_from_view (view);
     if (xwayland_surface->xwayland_surface->override_redirect) {
       unfullscreen = false;
     }
@@ -1533,8 +1533,8 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
 
 #ifdef PHOC_XWAYLAND
   if (view && view->type == ROOTS_XWAYLAND_VIEW) {
-    struct roots_xwayland_surface *xwayland_surface =
-      roots_xwayland_surface_from_view (view);
+    PhocXWaylandSurface *xwayland_surface =
+      phoc_xwayland_surface_from_view (view);
     if (!wlr_xwayland_or_surface_wants_focus (
           xwayland_surface->xwayland_surface)) {
       return;

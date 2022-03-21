@@ -8,10 +8,6 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_device.h>
-#ifdef PHOC_XWAYLAND
-#include <wlr/xwayland.h>
-#include <xcb/xproto.h>
-#endif
 #include "settings.h"
 #include "desktop.h"
 #include "input.h"

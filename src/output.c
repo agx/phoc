@@ -21,6 +21,7 @@
 #include "seat.h"
 #include "server.h"
 #include "utils.h"
+#include "xwayland-surface.h"
 
 
 G_DEFINE_TYPE (PhocOutput, phoc_output, G_TYPE_OBJECT);
@@ -637,8 +638,8 @@ phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, vo
 
 #ifdef PHOC_XWAYLAND
     if (view->type == ROOTS_XWAYLAND_VIEW) {
-      struct roots_xwayland_surface *xwayland_surface =
-        roots_xwayland_surface_from_view (view);
+      PhocXWaylandSurface *xwayland_surface =
+        phoc_xwayland_surface_from_view (view);
       phoc_output_xwayland_children_for_each_surface (self,
                                                       xwayland_surface->xwayland_surface,
                                                       iterator, user_data);
@@ -723,9 +724,9 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
       view->type == ROOTS_XWAYLAND_VIEW) {
     // Special case: accept damage from children
     struct wlr_xwayland_surface *xsurface =
-      roots_xwayland_surface_from_view (view)->xwayland_surface;
+      phoc_xwayland_surface_from_view (view)->xwayland_surface;
     struct wlr_xwayland_surface *fullscreen_xsurface =
-      roots_xwayland_surface_from_view (self->fullscreen_view)->xwayland_surface;
+      phoc_xwayland_surface_from_view (self->fullscreen_view)->xwayland_surface;
     while (xsurface != NULL) {
       if (fullscreen_xsurface == xsurface) {
         return true;
