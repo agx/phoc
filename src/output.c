@@ -39,18 +39,20 @@ enum {
 };
 static guint signals[N_SIGNALS] = { 0 };
 
-struct surface_iterator_data {
-  PhocSurfaceIterator user_iterator;
-  void                         *user_data;
 
-  PhocOutput                   *output;
-  double                        ox, oy;
-  int                           width, height;
-  float                         rotation, scale;
-};
+typedef struct {
+  PhocSurfaceIterator  user_iterator;
+  void                *user_data;
+
+  PhocOutput          *output;
+  double               ox, oy;
+  int                  width, height;
+  float                rotation, scale;
+} PhocOutputSurfaceIteratorData;
+
 
 static bool
-get_surface_box (struct surface_iterator_data *data,
+get_surface_box (PhocOutputSurfaceIteratorData *data,
                  struct wlr_surface *surface, int sx, int sy,
                  struct wlr_box *surface_box)
 {
@@ -199,8 +201,10 @@ phoc_output_damage_handle_frame (struct wl_listener *listener,
                                  void               *data)
 {
   PhocOutput *self = wl_container_of (listener, self, damage_frame);
+  PhocServer *server = phoc_server_get_default ();
+  PhocRenderer *renderer = phoc_server_get_renderer (server);
 
-  output_render (self);
+  phoc_renderer_render_output (renderer, self);
 }
 
 static void
@@ -287,7 +291,6 @@ phoc_output_constructed (GObject *object)
              self->wlr_output->phys_width,
              self->wlr_output->phys_height);
 
-  clock_gettime (CLOCK_MONOTONIC, &self->last_frame);
   self->wlr_output->data = self;
   wl_list_insert (&self->desktop->outputs, &self->link);
 
@@ -425,7 +428,7 @@ static void
 phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
                                        int sx, int sy, void *_data)
 {
-  struct surface_iterator_data *data = _data;
+  PhocOutputSurfaceIteratorData *data = _data;
 
   struct wlr_box box;
   bool intersects = get_surface_box (data, surface, sx, sy, &box);
@@ -444,7 +447,7 @@ phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
                                       PhocSurfaceIterator iterator,
                                       void *user_data)
 {
-  struct surface_iterator_data data = {
+  PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
     .user_data = user_data,
     .output = self,
@@ -467,7 +470,7 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
                                           PhocSurfaceIterator
                                           iterator, void *user_data)
 {
-  struct surface_iterator_data data = {
+  PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
     .user_data = user_data,
     .output = self,
@@ -495,7 +498,7 @@ phoc_output_view_for_each_surface (PhocOutput *self, PhocView *view,
     return;
   }
 
-  struct surface_iterator_data data = {
+  PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
     .user_data = user_data,
     .output = self,

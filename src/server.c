@@ -202,18 +202,18 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
   switch (state) {
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UP:
     if (self->render_shield_id) {
-      self->damage_shield_id =  g_signal_connect_object (self->renderer, "render-start",
-                                                         G_CALLBACK (damage_shield),
-                                                         self, G_CONNECT_SWAPPED);
+      self->damage_shield_id = g_signal_connect_object (self->renderer, "render-start",
+                                                        G_CALLBACK (damage_shield),
+                                                        self, G_CONNECT_SWAPPED);
     }
     break;
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN:
   default:
     /* TODO: prevent input without a shell attached */
     self->fader_t = 0.0f;
-    self->render_shield_id =  g_signal_connect_object (self->renderer, "render-end",
-                                                       G_CALLBACK (render_shield),
-                                                       self, G_CONNECT_SWAPPED);
+    self->render_shield_id = g_signal_connect_object (self->renderer, "render-end",
+                                                      G_CALLBACK (render_shield),
+                                                      self, G_CONNECT_SWAPPED);
     wl_list_for_each (output, &self->desktop->outputs, link)
       phoc_output_damage_whole (output);
   }

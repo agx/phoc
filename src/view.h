@@ -246,7 +246,6 @@ void view_close(PhocView *view);
 bool view_center(PhocView *view, struct wlr_output *output);
 void view_send_frame_done_if_not_visible (PhocView *view);
 void view_setup(PhocView *view);
-void view_teardown(PhocView *view);
 void view_set_title(PhocView *view, const char *title);
 void view_set_parent(PhocView *view, PhocView *parent);
 void view_set_app_id(PhocView *view, const char *app_id);

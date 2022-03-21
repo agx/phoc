@@ -556,10 +556,14 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 }
 
 gboolean
-view_render_to_buffer (PhocView *view, int width, int height, int stride, uint32_t *flags, void* data)
+phoc_renderer_render_view_to_buffer (PhocRenderer *self,
+                                     PhocView     *view,
+                                     int           width,
+                                     int           height,
+                                     int           stride,
+                                     uint32_t     *flags,
+                                     void         *data)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *self = phoc_server_get_renderer (server);
   struct wlr_surface *surface = view->wlr_surface;
 
   g_return_val_if_fail (surface, false);
@@ -630,11 +634,17 @@ render_damage (PhocRenderer *self, PhocOutput *output)
 }
 
 
-void output_render(PhocOutput *output) {
+/**
+ * phoc_renderer_render_output:
+ * @self: The renderer
+ * @output: The output to render
+ *
+ * Render a given output.
+ */
+void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 	struct wlr_output *wlr_output = output->wlr_output;
-	PhocDesktop *desktop = output->desktop;
+	PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
 	PhocServer *server = phoc_server_get_default ();
-	PhocRenderer *self = phoc_server_get_renderer (server);
 	struct wlr_renderer *wlr_renderer;
 
         g_assert (PHOC_IS_RENDERER (self));
@@ -788,7 +798,6 @@ renderer_end:
 	if (!wlr_output_commit(wlr_output)) {
 		goto buffer_damage_finish;
 	}
-	output->last_frame = desktop->last_frame = now;
 
 buffer_damage_finish:
 	pixman_region32_fini(&buffer_damage);

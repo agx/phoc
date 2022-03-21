@@ -30,7 +30,7 @@ phoc_layer_surface_finalize (GObject *object)
   wl_list_remove (&self->unmap.link);
   wl_list_remove (&self->surface_commit.link);
   if (self->layer_surface->output) {
-    PhocOutput *output = self->layer_surface->output->data;
+    PhocOutput *output = phoc_layer_surface_get_output (self);
 
     g_assert (PHOC_IS_OUTPUT (output));
     wl_list_remove (&self->output_destroy.link);
@@ -99,4 +99,22 @@ phoc_layer_surface_get_namespace (PhocLayerSurface *self)
   g_assert (PHOC_IS_LAYER_SURFACE (self));
 
   return self->layer_surface->namespace;
+}
+
+/**
+ * phoc_layer_surface_get_output:
+ * @self: The layer surface
+ *
+ * Returns: (transfer none) (nullable): The layer surface's output or
+ *  %NULL if the output was destroyed.
+ */
+PhocOutput *
+phoc_layer_surface_get_output (PhocLayerSurface *self)
+{
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  if (self->layer_surface->output == NULL)
+    return NULL;
+
+  return self->layer_surface->output->data;
 }
