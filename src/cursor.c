@@ -35,6 +35,12 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 G_DEFINE_TYPE (PhocCursor, phoc_cursor, G_TYPE_OBJECT)
 
+static void handle_pointer_motion (struct wl_listener *listener, void *data);
+static void handle_pointer_motion_absolute (struct wl_listener *listener, void *data);
+static void handle_pointer_button (struct wl_listener *listener, void *data);
+static void handle_pointer_axis (struct wl_listener *listener, void *data);
+static void handle_pointer_frame (struct wl_listener *listener, void *data);
+
 static void
 phoc_cursor_set_property (GObject      *object,
 			  guint         property_id,
@@ -293,9 +299,26 @@ static void
 phoc_cursor_constructed (GObject *object)
 {
   PhocCursor *self = PHOC_CURSOR (object);
+  struct wlr_cursor *wlr_cursor = self->cursor;
 
+  g_assert (self->cursor);
   self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
   g_assert (self->xcursor_manager);
+
+  wl_signal_add (&wlr_cursor->events.motion, &self->motion);
+  self->motion.notify = handle_pointer_motion;
+
+  wl_signal_add (&wlr_cursor->events.motion_absolute, &self->motion_absolute);
+  self->motion_absolute.notify = handle_pointer_motion_absolute;
+
+  wl_signal_add (&wlr_cursor->events.button, &self->button);
+  self->button.notify = handle_pointer_button;
+
+  wl_signal_add (&wlr_cursor->events.axis, &self->axis);
+  self->axis.notify = handle_pointer_axis;
+
+  wl_signal_add (&wlr_cursor->events.frame, &self->frame);
+  self->frame.notify = handle_pointer_frame;
 
   G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 }
@@ -526,16 +549,21 @@ phoc_cursor_press_button (PhocCursor *self,
   }
 }
 
-void
-phoc_cursor_handle_motion (PhocCursor                      *self,
-                           struct wlr_event_pointer_motion *event)
+
+static void
+handle_pointer_motion (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, motion);
+  struct wlr_event_pointer_motion *event = data;
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
   double dx = event->delta_x;
   double dy = event->delta_y;
 
   double dx_unaccel = event->unaccel_dx;
   double dy_unaccel = event->unaccel_dy;
+
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
 
   wlr_relative_pointer_manager_v1_send_relative_motion (
     server->desktop->relative_pointer_manager,
@@ -572,13 +600,16 @@ phoc_cursor_handle_motion (PhocCursor                      *self,
   phoc_cursor_update_position (self, event->time_msec);
 }
 
-void
-phoc_cursor_handle_motion_absolute (PhocCursor                               *self,
-                                    struct wlr_event_pointer_motion_absolute *event)
+static void
+handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, motion_absolute);
+  struct wlr_event_pointer_motion_absolute *event = data;
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
   double lx, ly;
 
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   wlr_cursor_absolute_to_layout_coords (self->cursor, event->device, event->x,
                                         event->y, &lx, &ly);
 
@@ -603,25 +634,40 @@ phoc_cursor_handle_motion_absolute (PhocCursor                               *se
   phoc_cursor_update_position (self, event->time_msec);
 }
 
-void
-phoc_cursor_handle_button (PhocCursor                      *self,
-                           struct wlr_event_pointer_button *event)
+static void
+handle_pointer_button (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, button);
+  struct wlr_event_pointer_button *event = data;
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   phoc_cursor_press_button (self, event->device, event->time_msec,
                             event->button, event->state, self->cursor->x, self->cursor->y);
 }
 
-void
-phoc_cursor_handle_axis (PhocCursor                    *self,
-                         struct wlr_event_pointer_axis *event)
+static void
+handle_pointer_axis (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, axis);
+  struct wlr_event_pointer_axis *event = data;
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   wlr_seat_pointer_notify_axis (self->seat->seat, event->time_msec,
                                 event->orientation, event->delta, event->delta_discrete, event->source);
 }
 
-void
-phoc_cursor_handle_frame (PhocCursor *self)
+static void
+handle_pointer_frame (struct wl_listener *listener, void *data)
 {
+  PhocCursor *self = wl_container_of (listener, self, frame);
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+
+  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   wlr_seat_pointer_notify_frame (self->seat->seat);
 }
 

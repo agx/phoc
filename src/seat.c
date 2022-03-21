@@ -92,71 +92,6 @@ phoc_seat_get_property (GObject    *object,
   }
 }
 
-
-static void
-handle_cursor_motion (struct wl_listener *listener, void *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocCursor *cursor = wl_container_of (listener, cursor, motion);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_pointer_motion *event = data;
-
-  phoc_cursor_handle_motion (cursor, event);
-}
-
-static void
-handle_cursor_motion_absolute (struct wl_listener *listener,
-                               void               *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocCursor *cursor = wl_container_of (listener, cursor, motion_absolute);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_pointer_motion_absolute *event = data;
-
-  phoc_cursor_handle_motion_absolute (cursor, event);
-}
-
-static void
-handle_cursor_button (struct wl_listener *listener, void *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocCursor *cursor = wl_container_of (listener, cursor, button);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_pointer_button *event = data;
-
-  phoc_cursor_handle_button (cursor, event);
-}
-
-static void
-handle_cursor_axis (struct wl_listener *listener, void *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocCursor *cursor = wl_container_of (listener, cursor, axis);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_pointer_axis *event = data;
-
-  phoc_cursor_handle_axis (cursor, event);
-}
-
-static void
-handle_cursor_frame (struct wl_listener *listener, void *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocCursor *cursor = wl_container_of (listener, cursor, frame);
-  PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  phoc_cursor_handle_frame (cursor);
-}
-
 static void
 handle_swipe_begin (struct wl_listener *listener, void *data)
 {
@@ -673,22 +608,6 @@ phoc_seat_init_cursor (PhocSeat *seat)
   phoc_seat_configure_xcursor (seat);
 
   // add input signals
-  wl_signal_add (&wlr_cursor->events.motion, &seat->cursor->motion);
-  seat->cursor->motion.notify = handle_cursor_motion;
-
-  wl_signal_add (&wlr_cursor->events.motion_absolute,
-                 &seat->cursor->motion_absolute);
-  seat->cursor->motion_absolute.notify = handle_cursor_motion_absolute;
-
-  wl_signal_add (&wlr_cursor->events.button, &seat->cursor->button);
-  seat->cursor->button.notify = handle_cursor_button;
-
-  wl_signal_add (&wlr_cursor->events.axis, &seat->cursor->axis);
-  seat->cursor->axis.notify = handle_cursor_axis;
-
-  wl_signal_add (&wlr_cursor->events.frame, &seat->cursor->frame);
-  seat->cursor->frame.notify = handle_cursor_frame;
-
   wl_signal_add (&wlr_cursor->events.swipe_begin, &seat->cursor->swipe_begin);
   seat->cursor->swipe_begin.notify = handle_swipe_begin;
 
