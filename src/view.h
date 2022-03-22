@@ -92,6 +92,25 @@ struct _PhocView {
 	} events;
 };
 
+/**
+ * PhocViewClass:
+ * @parent_class: The object class structure needs to be the first
+ *   element in the widget class structure in order for the class mechanism
+ *   to work correctly. This allows a PhocViewClass pointer to be cast to
+ *   a GObjectClass pointer.
+ * @move: This is called by `PhocView` to move a view to a new position.
+ * @resize: This is called by `PhocView` to move resize a view.
+ * @move_resize: This is called by `PhocView` to move and resize a view a the same time.
+ * @want_auto_maximize: This is called by `PhocView` to determine if a view should
+ *   be automatically maximized
+ * @set_active: This is called by `PhocView` to make a view appear active.
+ * @set_fullscreen: This is called by `PhocView` to fullscreen a view
+ * @set_maximized: This is called by `PhocView` to maximize a view
+ * @set_tiled: This is called by `PhocView` to tile a view.
+ * @close: This is called by `PhocView` to close a view.
+ * @for_each_surface: This is used by `PhocView` to iterate over a surface and it's children.
+ * @get_geometry: This is called by `PhocView` to get a views geometry.
+ */
 typedef struct _PhocViewClass
 {
   GObjectClass parent_class;
