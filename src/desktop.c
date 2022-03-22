@@ -852,6 +852,8 @@ phoc_desktop_toggle_output_blank (PhocDesktop *self)
   }
 
   wl_list_for_each(output, &self->outputs, link) {
+    if (!wlr_output_layout_get (self->layout, output->wlr_output))
+      continue;
     wlr_output_enable (output->wlr_output, enable);
     wlr_output_commit (output->wlr_output);
     if (enable)
