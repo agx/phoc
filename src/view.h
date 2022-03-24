@@ -38,6 +38,15 @@ typedef enum {
   PHOC_VIEW_STATE_TILED,
 } PhocViewState;
 
+typedef enum roots_deco_part {
+  ROOTS_DECO_PART_NONE = 0,
+  ROOTS_DECO_PART_TOP_BORDER = (1 << 0),
+  ROOTS_DECO_PART_BOTTOM_BORDER = (1 << 1),
+  ROOTS_DECO_PART_LEFT_BORDER = (1 << 2),
+  ROOTS_DECO_PART_RIGHT_BORDER = (1 << 3),
+  ROOTS_DECO_PART_TITLEBAR = (1 << 4),
+} PhocViewDecoPart;
+
 /**
  * PhocView:
  * @type: The type of the toplevel
@@ -242,16 +251,6 @@ PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
 PhocXWaylandSurface *phoc_xwayland_surface_from_view(PhocView *view);
 bool   phoc_view_is_mapped (PhocView *view);
-
-enum roots_deco_part {
-	ROOTS_DECO_PART_NONE = 0,
-	ROOTS_DECO_PART_TOP_BORDER = (1 << 0),
-	ROOTS_DECO_PART_BOTTOM_BORDER = (1 << 1),
-	ROOTS_DECO_PART_LEFT_BORDER = (1 << 2),
-	ROOTS_DECO_PART_RIGHT_BORDER = (1 << 3),
-	ROOTS_DECO_PART_TITLEBAR = (1 << 4),
-};
-
 enum roots_deco_part view_get_deco_part(PhocView *view, double sx, double sy);
 
 void phoc_view_child_init(PhocViewChild *child,
