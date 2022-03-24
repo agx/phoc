@@ -834,16 +834,26 @@ phoc_desktop_new (PhocConfig *config)
 /**
  * phoc_desktop_toggle_output_blank:
  *
- * Blank or unblank all outputs depending on the current state
+ * Blank or unblank all outputs depending on the current state.
+ * Brings all outputs into consistent state (either all blanked
+ * or all enabled).
  */
 void
 phoc_desktop_toggle_output_blank (PhocDesktop *self)
 {
   PhocOutput *output;
 
+  gboolean enable = true;
   wl_list_for_each(output, &self->outputs, link) {
-    gboolean enable = !output->wlr_output->enabled;
+    if (output->wlr_output->enabled) {
+      enable = false;
+      break;
+    }
+  }
 
+  wl_list_for_each(output, &self->outputs, link) {
+    if (!wlr_output_layout_get (self->layout, output->wlr_output))
+      continue;
     wlr_output_enable (output->wlr_output, enable);
     wlr_output_commit (output->wlr_output);
     if (enable)
