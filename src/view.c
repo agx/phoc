@@ -88,8 +88,7 @@ void view_get_deco_box(const PhocView *view, struct wlr_box *box) {
 	box->height += (view->border_width * 2 + view->titlebar_height);
 }
 
-enum roots_deco_part view_get_deco_part(PhocView *view, double sx,
-		double sy) {
+PhocViewDecoPart view_get_deco_part(PhocView *view, double sx, double sy) {
 	if (!view->decorated) {
 		return PHOC_VIEW_DECO_PART_NONE;
 	}
@@ -103,7 +102,7 @@ enum roots_deco_part view_get_deco_part(PhocView *view, double sx,
 		return PHOC_VIEW_DECO_PART_TITLEBAR;
 	}
 
-	enum roots_deco_part parts = 0;
+	PhocViewDecoPart parts = 0;
 	if (sy >= -(titlebar_h + bw) &&
 			sy <= sh + bw) {
 		if (sx < 0 && sx > -bw) {
