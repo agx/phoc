@@ -1499,7 +1499,7 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
   bool unfullscreen = true;
 
 #ifdef PHOC_XWAYLAND
-  if (view && view->type == ROOTS_XWAYLAND_VIEW) {
+  if (view && view->type == PHOC_XWAYLAND_VIEW) {
     PhocXWaylandSurface *xwayland_surface =
       phoc_xwayland_surface_from_view (view);
     if (xwayland_surface->xwayland_surface->override_redirect) {
@@ -1532,7 +1532,7 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
   }
 
 #ifdef PHOC_XWAYLAND
-  if (view && view->type == ROOTS_XWAYLAND_VIEW) {
+  if (view && view->type == PHOC_XWAYLAND_VIEW) {
     PhocXWaylandSurface *xwayland_surface =
       phoc_xwayland_surface_from_view (view);
     if (!wlr_xwayland_or_surface_wants_focus (

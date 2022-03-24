@@ -21,9 +21,9 @@ typedef struct _PhocXdgSurface PhocXdgSurface;
 typedef struct _PhocXWaylandSurface PhocXWaylandSurface;
 
 typedef enum {
-	ROOTS_XDG_SHELL_VIEW,
+	PHOC_XDG_SHELL_VIEW,
 #ifdef PHOC_XWAYLAND
-	ROOTS_XWAYLAND_VIEW,
+	PHOC_XWAYLAND_VIEW,
 #endif
 } PhocViewType;
 

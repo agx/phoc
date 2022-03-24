@@ -112,13 +112,13 @@ static bool view_at(PhocView *view, double lx, double ly,
 	double _sx, _sy;
 	struct wlr_surface *_surface = NULL;
 	switch (view->type) {
-	case ROOTS_XDG_SHELL_VIEW:;
+	case PHOC_XDG_SHELL_VIEW:;
 		PhocXdgSurface *xdg_surface = phoc_xdg_surface_from_view(view);
 		_surface = wlr_xdg_surface_surface_at(xdg_surface->xdg_surface,
 			view_sx, view_sy, &_sx, &_sy);
 		break;
 #ifdef PHOC_XWAYLAND
-	case ROOTS_XWAYLAND_VIEW:
+	case PHOC_XWAYLAND_VIEW:
 		_surface = wlr_surface_surface_at(view->wlr_surface,
 			view_sx, view_sy, &_sx, &_sy);
 		break;
@@ -302,7 +302,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
   // XWayland parent relations can be complicated and aren't described by PhocView
   // relationships very well at the moment, so just make all XWayland windows visible
   // when some XWayland window is active for now
-  if (view->type == ROOTS_XWAYLAND_VIEW && top_view->type == ROOTS_XWAYLAND_VIEW) {
+  if (view->type == PHOC_XWAYLAND_VIEW && top_view->type == PHOC_XWAYLAND_VIEW) {
     return true;
   }
 #endif

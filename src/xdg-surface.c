@@ -269,7 +269,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
 static void
 phoc_xdg_surface_init (PhocXdgSurface *self)
 {
-  PHOC_VIEW (self)->type = ROOTS_XDG_SHELL_VIEW;
+  PHOC_VIEW (self)->type = PHOC_XDG_SHELL_VIEW;
 }
 
 
