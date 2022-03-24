@@ -40,6 +40,7 @@
 #include "view.h"
 #include "virtual.h"
 #include "xcursor.h"
+#include "xdg-activation-v1.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 
 #include "xdg-surface.h"
@@ -669,6 +670,12 @@ phoc_desktop_constructed (GObject *object)
 
   self->gtk_shell = phoc_gtk_shell_create(self, server->wl_display);
   self->phosh = phoc_phosh_private_new ();
+
+  self->xdg_activation_v1 = wlr_xdg_activation_v1_create (server->wl_display);
+  self->xdg_activation_v1_request_activate.notify = phoc_xdg_activation_v1_handle_request_activate;
+  wl_signal_add (&self->xdg_activation_v1->events.request_activate,
+                 &self->xdg_activation_v1_request_activate);
+
   self->virtual_keyboard = wlr_virtual_keyboard_manager_v1_create(
 								  server->wl_display);
   wl_signal_add(&self->virtual_keyboard->events.new_virtual_keyboard,
@@ -756,6 +763,7 @@ phoc_desktop_finalize (GObject *object)
   wl_list_remove (&self->output_manager_apply.link);
   wl_list_remove (&self->output_manager_test.link);
   wl_list_remove (&self->output_power_manager_set_mode.link);
+  wl_list_remove (&self->xdg_activation_v1_request_activate.link);
 
 #ifdef PHOC_XWAYLAND
   /* Disconnect XWayland listener before shutting it down */
