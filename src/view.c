@@ -91,7 +91,7 @@ void view_get_deco_box(const PhocView *view, struct wlr_box *box) {
 enum roots_deco_part view_get_deco_part(PhocView *view, double sx,
 		double sy) {
 	if (!view->decorated) {
-		return ROOTS_DECO_PART_NONE;
+		return PHOC_VIEW_DECO_PART_NONE;
 	}
 
 	int sw = view->wlr_surface->current.width;
@@ -100,24 +100,24 @@ enum roots_deco_part view_get_deco_part(PhocView *view, double sx,
 	int titlebar_h = view->titlebar_height;
 
 	if (sx > 0 && sx < sw && sy < 0 && sy > -view->titlebar_height) {
-		return ROOTS_DECO_PART_TITLEBAR;
+		return PHOC_VIEW_DECO_PART_TITLEBAR;
 	}
 
 	enum roots_deco_part parts = 0;
 	if (sy >= -(titlebar_h + bw) &&
 			sy <= sh + bw) {
 		if (sx < 0 && sx > -bw) {
-			parts |= ROOTS_DECO_PART_LEFT_BORDER;
+			parts |= PHOC_VIEW_DECO_PART_LEFT_BORDER;
 		} else if (sx > sw && sx < sw + bw) {
-			parts |= ROOTS_DECO_PART_RIGHT_BORDER;
+			parts |= PHOC_VIEW_DECO_PART_RIGHT_BORDER;
 		}
 	}
 
 	if (sx >= -bw && sx <= sw + bw) {
 		if (sy > sh && sy <= sh + bw) {
-			parts |= ROOTS_DECO_PART_BOTTOM_BORDER;
+			parts |= PHOC_VIEW_DECO_PART_BOTTOM_BORDER;
 		} else if (sy >= -(titlebar_h + bw) && sy < 0) {
-			parts |= ROOTS_DECO_PART_TOP_BORDER;
+			parts |= PHOC_VIEW_DECO_PART_TOP_BORDER;
 		}
 	}
 

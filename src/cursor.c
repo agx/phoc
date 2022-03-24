@@ -94,16 +94,16 @@ seat_view_deco_motion (PhocSeatView *view, double deco_sx, double deco_sy)
 
   enum roots_deco_part parts = view_get_deco_part (view->view, sx, sy);
 
-  bool is_titlebar = (parts & ROOTS_DECO_PART_TITLEBAR);
+  bool is_titlebar = (parts & PHOC_VIEW_DECO_PART_TITLEBAR);
   uint32_t edges = 0;
 
-  if (parts & ROOTS_DECO_PART_LEFT_BORDER) {
+  if (parts & PHOC_VIEW_DECO_PART_LEFT_BORDER) {
     edges |= WLR_EDGE_LEFT;
-  } else if (parts & ROOTS_DECO_PART_RIGHT_BORDER) {
+  } else if (parts & PHOC_VIEW_DECO_PART_RIGHT_BORDER) {
     edges |= WLR_EDGE_RIGHT;
-  } else if (parts & ROOTS_DECO_PART_BOTTOM_BORDER) {
+  } else if (parts & PHOC_VIEW_DECO_PART_BOTTOM_BORDER) {
     edges |= WLR_EDGE_BOTTOM;
-  } else if (parts & ROOTS_DECO_PART_TOP_BORDER) {
+  } else if (parts & PHOC_VIEW_DECO_PART_TOP_BORDER) {
     edges |= WLR_EDGE_TOP;
   }
 
@@ -147,7 +147,7 @@ seat_view_deco_button (PhocSeatView *view, double sx,
 
   enum roots_deco_part parts = view_get_deco_part (view->view, sx, sy);
 
-  if (state == WLR_BUTTON_RELEASED && (parts & ROOTS_DECO_PART_TITLEBAR)) {
+  if (state == WLR_BUTTON_RELEASED && (parts & PHOC_VIEW_DECO_PART_TITLEBAR)) {
     phoc_seat_maybe_set_cursor (view->seat, NULL);
   }
 }
