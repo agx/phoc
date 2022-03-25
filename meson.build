@@ -61,11 +61,9 @@ if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots = wlroots_proj.get_variable('wlroots')
         wlroots_conf = wlroots_proj.get_variable('conf_data')
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
-        wlroots_has_output_power_management = true
 else
         wlroots = dependency('wlroots', version: '== 0.15.0')
         wlroots_has_xwayland = cc.get_define('WLR_HAS_XWAYLAND', prefix: '#include <wlr/config.h>', dependencies: wlroots) == '1'
-        wlroots_has_output_power_management = cc.has_header('wlr/types/wlr_output_power_management_v1.h', dependencies: wlroots)
 endif
 
 if get_option('xwayland').enabled() and not wlroots_has_xwayland
