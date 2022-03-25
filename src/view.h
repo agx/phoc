@@ -185,16 +185,6 @@ typedef struct _PhocViewChild {
   struct wl_listener new_subsurface;
 } PhocViewChild;
 
-typedef struct roots_xdg_popup {
-  PhocViewChild child;
-  struct wlr_xdg_popup *wlr_popup;
-
-  struct wl_listener destroy;
-  struct wl_listener map;
-  struct wl_listener unmap;
-  struct wl_listener new_popup;
-} PhocXdgPopup;
-
 void view_appear_activated(PhocView *view, bool activated);
 void view_activate(PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
