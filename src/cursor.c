@@ -217,12 +217,14 @@ roots_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, in
       (right  && lx >= output_box->x + output_box->width - 1 - threshold)) {
     if (output->fullscreen_view) {
       output->force_shell_reveal = true;
+      phoc_layer_shell_update_focus ();
       phoc_output_damage_whole (output);
     }
     return true;
   } else {
     if (output->force_shell_reveal) {
       output->force_shell_reveal = false;
+      phoc_layer_shell_update_focus ();
       phoc_output_damage_whole (output);
     }
   }
