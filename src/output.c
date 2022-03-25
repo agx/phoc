@@ -18,6 +18,7 @@
 #include "layers.h"
 #include "output.h"
 #include "render.h"
+#include "render-private.h"
 #include "seat.h"
 #include "server.h"
 #include "utils.h"
@@ -318,6 +319,7 @@ phoc_output_constructed (GObject *object)
 {
   PhocOutput *self = PHOC_OUTPUT (object);
   PhocServer *server = phoc_server_get_default ();
+  PhocRenderer *renderer = phoc_server_get_renderer (server);
   PhocInput *input = server->input;
 
   assert (server->desktop);
@@ -335,6 +337,12 @@ phoc_output_constructed (GObject *object)
 
   self->wlr_output->data = self;
   wl_list_insert (&self->desktop->outputs, &self->link);
+
+  if (!wlr_output_init_render (self->wlr_output,
+                               phoc_renderer_get_wlr_allocator (renderer),
+                               phoc_renderer_get_wlr_renderer (renderer))) {
+    g_error ("Failed to init output render");
+  }
 
   self->damage = wlr_output_damage_create (self->wlr_output);
 

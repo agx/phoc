@@ -52,6 +52,7 @@ sources = files(
   'pointer.h',
   'render.c',
   'render.h',
+  'render-private.h',
   'seat.c',
   'seat.h',
   'server.c',

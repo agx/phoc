@@ -15,6 +15,7 @@
 #include "seat.h"
 #include "server.h"
 #include "render.h"
+#include "render-private.h"
 #include "xwayland-surface.h"
 #include "utils.h"
 
@@ -36,13 +37,11 @@
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/util/region.h>
 #include <wlr/version.h>
+#include <wlr/render/allocator.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
 /* Private wlr_allocator headers */
-struct wlr_gbm_allocator *wlr_gbm_allocator_create(int drm_fd);
-struct wlr_buffer *wlr_allocator_create_buffer (struct wlr_allocator *alloc, int width, int height, const struct wlr_drm_format *format);
-void wlr_allocator_destroy (struct wlr_allocator *alloc);
 struct wlr_drm_format *wlr_drm_format_create (uint32_t format);
 /* ----------------------------- */
 
@@ -81,7 +80,7 @@ static guint signals[N_SIGNALS] = { 0 };
 
 enum {
   PROP_0,
-  PROP_WLR_RENDERER,
+  PROP_WLR_BACKEND,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -89,8 +88,9 @@ static GParamSpec *props[PROP_LAST_PROP];
 struct _PhocRenderer {
   GObject               parent;
 
+  struct wlr_backend   *wlr_backend;
   struct wlr_renderer  *wlr_renderer;
-  struct wlr_allocator *allocator;
+  struct wlr_allocator *wlr_allocator;
 };
 G_DEFINE_TYPE (PhocRenderer, phoc_renderer, G_TYPE_OBJECT)
 
@@ -122,8 +122,8 @@ phoc_renderer_set_property (GObject      *object,
   PhocRenderer *self = PHOC_RENDERER (object);
 
   switch (property_id) {
-  case PROP_WLR_RENDERER:
-    self->wlr_renderer = g_value_get_pointer (value);
+  case PROP_WLR_BACKEND:
+    self->wlr_backend = g_value_get_pointer (value);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -141,8 +141,8 @@ phoc_renderer_get_property (GObject    *object,
   PhocRenderer *self = PHOC_RENDERER (object);
 
   switch (property_id) {
-  case PROP_WLR_RENDERER:
-    g_value_set_pointer (value, self->wlr_renderer);
+  case PROP_WLR_BACKEND:
+    g_value_set_pointer (value, self->wlr_backend);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -153,10 +153,6 @@ phoc_renderer_get_property (GObject    *object,
 
 static void scissor_output(struct wlr_output *wlr_output,
 		pixman_box32_t *rect) {
-	struct wlr_renderer *renderer =
-		wlr_backend_get_renderer(wlr_output->backend);
-	assert(renderer);
-
 	struct wlr_box box = {
 		.x = rect->x1,
 		.y = rect->y1,
@@ -171,7 +167,7 @@ static void scissor_output(struct wlr_output *wlr_output,
 		wlr_output_transform_invert(wlr_output->transform);
 	wlr_box_transform(&box, &box, transform, ow, oh);
 
-	wlr_renderer_scissor(renderer, &box);
+	wlr_renderer_scissor(wlr_output->renderer, &box);
 }
 
 static void render_texture(struct wlr_output *wlr_output,
@@ -179,10 +175,6 @@ static void render_texture(struct wlr_output *wlr_output,
 		const struct wlr_fbox *src_box, const struct wlr_box *dst_box,
 		const float matrix[static 9],
 		float rotation, float alpha) {
-	struct wlr_renderer *renderer =
-		wlr_backend_get_renderer(wlr_output->backend);
-	assert(renderer);
-
 	struct wlr_box rotated;
 	phoc_utils_rotated_bounds(&rotated, dst_box, rotation);
 
@@ -202,9 +194,11 @@ static void render_texture(struct wlr_output *wlr_output,
 		scissor_output(wlr_output, &rects[i]);
 
 		if (src_box != NULL) {
-			wlr_render_subtexture_with_matrix(renderer, texture, src_box, matrix, alpha);
+			wlr_render_subtexture_with_matrix(wlr_output->renderer,
+                                                          texture, src_box, matrix, alpha);
 		} else {
-			wlr_render_texture_with_matrix(renderer, texture, matrix, alpha);
+			wlr_render_texture_with_matrix(wlr_output->renderer,
+                                                       texture, matrix, alpha);
 		}
 	}
 
@@ -277,10 +271,6 @@ static void render_decorations(PhocOutput *output,
 		return;
 	}
 
-	struct wlr_renderer *renderer =
-		wlr_backend_get_renderer(output->wlr_output->backend);
-	assert(renderer);
-
 	struct wlr_box box;
 	phoc_output_get_decoration_box(output, view, &box);
 
@@ -304,7 +294,7 @@ static void render_decorations(PhocOutput *output,
 		pixman_region32_rectangles(&damage, &nrects);
 	for (int i = 0; i < nrects; ++i) {
 		scissor_output(output->wlr_output, &rects[i]);
-		wlr_render_quad_with_matrix(renderer, color, matrix);
+		wlr_render_quad_with_matrix(output->wlr_output->renderer, color, matrix);
 	}
 
 buffer_damage_finish:
@@ -469,24 +459,24 @@ render_touch_point_cb (gpointer data, gpointer user_data)
 
   PhocOutput *output = user_data;
   struct wlr_output *wlr_output = output->wlr_output;
+  struct wlr_renderer *wlr_renderer = wlr_output->renderer;
 
   int size = TOUCH_POINT_SIZE * wlr_output->scale;
   struct wlr_box point_box = wlr_box_from_touch_point (touch_point, size, size);
 
-  struct wlr_renderer *renderer = wlr_backend_get_renderer (wlr_output->backend);
-
   float color[4] = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
   color_hsv_to_rgb (color);
-  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
+  wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
 
   size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
   point_box = wlr_box_from_touch_point (touch_point, size, size);
-  wlr_render_rect (renderer, &point_box, (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
+  wlr_render_rect (wlr_renderer, &point_box,
+                   (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
 
   point_box = wlr_box_from_touch_point (touch_point, 8 * wlr_output->scale, 2 * wlr_output->scale);
-  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
+  wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
   point_box = wlr_box_from_touch_point (touch_point, 2 * wlr_output->scale, 8 * wlr_output->scale);
-  wlr_render_rect (renderer, &point_box, color, wlr_output->transform_matrix);
+  wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
 }
 
 static void
@@ -573,10 +563,10 @@ phoc_renderer_render_view_to_buffer (PhocRenderer *self,
   struct wlr_surface *surface = view->wlr_surface;
 
   g_return_val_if_fail (surface, false);
-  g_return_val_if_fail (self->allocator, false);
+  g_return_val_if_fail (self->wlr_allocator, false);
 
   struct wlr_drm_format *fmt = wlr_drm_format_create (DRM_FORMAT_ARGB8888);
-  struct wlr_buffer *buffer = wlr_allocator_create_buffer (self->allocator, width, height, fmt);
+  struct wlr_buffer *buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
 
   if (!buffer) {
     free (fmt);
@@ -816,10 +806,15 @@ static void
 phoc_renderer_constructed (GObject *object)
 {
   PhocRenderer *self = PHOC_RENDERER (object);
-  int drm_fd = fcntl (wlr_renderer_get_drm_fd (self->wlr_renderer), F_DUPFD_CLOEXEC, 0);
-  // TODO: use wlr_allocator_autocreate or retrieve a reference from wlr_renderer once possible
-  if (wlr_renderer_is_gles2 (self->wlr_renderer))
-    self->allocator = (struct wlr_allocator*) wlr_gbm_allocator_create (drm_fd);
+
+  self->wlr_renderer = wlr_renderer_autocreate (self->wlr_backend);
+  if (self->wlr_renderer == NULL)
+    g_error ("Could not create renderer");
+
+  self->wlr_allocator = wlr_allocator_autocreate (self->wlr_backend,
+                                                  self->wlr_renderer);
+  if (self->wlr_allocator == NULL)
+    g_error ("Could not create allocator");
 }
 
 
@@ -827,8 +822,8 @@ static void
 phoc_renderer_finalize (GObject *object)
 {
   PhocRenderer *self = PHOC_RENDERER (object);
-  if (self->allocator)
-    wlr_allocator_destroy (self->allocator);
+  if (self->wlr_allocator)
+    wlr_allocator_destroy (self->wlr_allocator);
   /* TODO: destroy wlr_renderer */
 }
 
@@ -844,12 +839,12 @@ phoc_renderer_class_init (PhocRendererClass *klass)
   object_class->finalize = phoc_renderer_finalize;
 
   /**
-   * PhocRenderer:wlr-renderer
+   * PhocRenderer:wlr-backend
    *
-   * The wlr-renderer from wlroots to use
+   * The wlr-backend to use for initializing the renderer
    */
-  props[PROP_WLR_RENDERER] =
-    g_param_spec_pointer ("wlr-renderer",
+  props[PROP_WLR_BACKEND] =
+    g_param_spec_pointer ("wlr-backend",
                           "",
                           "",
                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
@@ -890,9 +885,27 @@ phoc_renderer_init (PhocRenderer *self)
 
 
 PhocRenderer *
-phoc_renderer_new (struct wlr_renderer *wlr_renderer)
+phoc_renderer_new (struct wlr_backend *wlr_backend)
 {
   return PHOC_RENDERER (g_object_new (PHOC_TYPE_RENDERER,
-                                      "wlr-renderer", wlr_renderer,
+                                      "wlr-backend", wlr_backend,
                                       NULL));
+}
+
+
+struct wlr_renderer *
+phoc_renderer_get_wlr_renderer (PhocRenderer *self)
+{
+  g_assert (PHOC_IS_RENDERER (self));
+
+  return self->wlr_renderer;
+}
+
+
+struct wlr_allocator *
+phoc_renderer_get_wlr_allocator (PhocRenderer *self)
+{
+  g_assert (PHOC_IS_RENDERER (self));
+
+  return self->wlr_allocator;
 }
