@@ -16,6 +16,24 @@
 #include "server.h"
 #include "view.h"
 
+struct roots_xdg_toplevel_decoration {
+  struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
+  PhocXdgSurface *surface;
+  struct wl_listener destroy;
+  struct wl_listener request_mode;
+  struct wl_listener surface_commit;
+};
+
+typedef struct roots_xdg_popup {
+  PhocViewChild child;
+  struct wlr_xdg_popup *wlr_popup;
+
+  struct wl_listener destroy;
+  struct wl_listener map;
+  struct wl_listener unmap;
+  struct wl_listener new_popup;
+} PhocXdgPopup;
+
 static const struct phoc_view_child_interface popup_impl;
 
 static void popup_destroy(PhocViewChild *child) {

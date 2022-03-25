@@ -6,8 +6,6 @@
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_surface.h>
-#include <wlr/types/wlr_xdg_decoration_v1.h>
-#include <wlr/types/wlr_xdg_shell.h>
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -17,8 +15,6 @@ G_BEGIN_DECLS
 typedef struct _PhocView PhocView;
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
-typedef struct _PhocXdgSurface PhocXdgSurface;
-typedef struct _PhocXWaylandSurface PhocXWaylandSurface;
 
 typedef enum {
 	PHOC_XDG_SHELL_VIEW,
@@ -156,8 +152,6 @@ static inline gboolean PHOC_IS_VIEW_CLASS (gpointer ptr) {
 static inline PhocViewClass * PHOC_VIEW_GET_CLASS (gpointer ptr) {
   return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_get_type (), PhocViewClass); }
 
-struct roots_xdg_toplevel_decoration;
-
 typedef struct _PhocViewChild PhocViewChild;
 
 struct phoc_view_child_interface {
@@ -186,26 +180,6 @@ typedef struct _PhocViewChild {
   struct wl_listener commit;
   struct wl_listener new_subsurface;
 } PhocViewChild;
-
-typedef struct _PhocSubsurface PhocSubsurface;
-
-typedef struct roots_xdg_popup {
-  PhocViewChild child;
-  struct wlr_xdg_popup *wlr_popup;
-
-  struct wl_listener destroy;
-  struct wl_listener map;
-  struct wl_listener unmap;
-  struct wl_listener new_popup;
-} PhocXdgPopup;
-
-struct roots_xdg_toplevel_decoration {
-	struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
-	PhocXdgSurface *surface;
-	struct wl_listener destroy;
-	struct wl_listener request_mode;
-	struct wl_listener surface_commit;
-};
 
 void view_appear_activated(PhocView *view, bool activated);
 void view_activate(PhocView *view, bool activate);
@@ -248,8 +222,6 @@ void view_for_each_surface(PhocView *view,
 	wlr_surface_iterator_func_t iterator, void *user_data);
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
-PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
-PhocXWaylandSurface *phoc_xwayland_surface_from_view(PhocView *view);
 bool   phoc_view_is_mapped (PhocView *view);
 PhocViewDecoPart view_get_deco_part(PhocView *view, double sx, double sy);
 

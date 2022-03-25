@@ -45,6 +45,8 @@ typedef struct _PhocXWaylandSurface {
 } PhocXWaylandSurface;
 
 PhocXWaylandSurface *phoc_xwayland_surface_new (struct wlr_xwayland_surface *surface);
+PhocXWaylandSurface *phoc_xwayland_surface_from_view(PhocView *view);
+
 #endif
 
 G_END_DECLS
