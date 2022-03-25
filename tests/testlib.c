@@ -24,7 +24,7 @@ abgr_to_argb (PhocTestBuffer *buffer)
 		 buffer->format == WL_SHM_FORMAT_XBGR8888);
   guint8 *data = buffer->shm_data;
 
-  for (int i = 0; i < buffer->height * buffer->stride / 4; i += 4) {
+  for (int i = 0; i < buffer->height * buffer->stride; i += 4) {
       guint32 *px = (guint32 *)(data + i);
       guint8 r, g, b, a;
 
