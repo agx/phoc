@@ -156,8 +156,6 @@ static inline gboolean PHOC_IS_VIEW_CLASS (gpointer ptr) {
 static inline PhocViewClass * PHOC_VIEW_GET_CLASS (gpointer ptr) {
   return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_get_type (), PhocViewClass); }
 
-struct roots_xdg_toplevel_decoration;
-
 typedef struct _PhocViewChild PhocViewChild;
 
 struct phoc_view_child_interface {
