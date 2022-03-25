@@ -195,14 +195,6 @@ typedef struct roots_xdg_popup {
   struct wl_listener new_popup;
 } PhocXdgPopup;
 
-struct roots_xdg_toplevel_decoration {
-	struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
-	PhocXdgSurface *surface;
-	struct wl_listener destroy;
-	struct wl_listener request_mode;
-	struct wl_listener surface_commit;
-};
-
 void view_appear_activated(PhocView *view, bool activated);
 void view_activate(PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
