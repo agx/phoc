@@ -9,9 +9,3 @@
 
 /* Whether xwayland is enabled */
 #mesondefine PHOC_XWAYLAND
-
-/* Wheter we have needed functions for app startup tracking */
-/* Can be removed with wlroots 0.15.0                       */
-#mesondefine PHOC_HAVE_WLR_SET_STARTUP_ID
-#mesondefine PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
-#mesondefine PHOC_HAVE_WLR_XDG_ACTIVATION_V1_ADD_TOKEN
