@@ -54,6 +54,7 @@ sources = files(
   'virtual.c',
   'virtual.h',
   'xdg-activation-v1.c',
+  'xdg-activation-v1.h',
   'xdg_shell.c',
   'xdg-surface.c',
   'xdg-surface.h',
