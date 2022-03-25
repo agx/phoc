@@ -24,8 +24,10 @@
 #include "utils.h"
 #include "xwayland-surface.h"
 
+static void phoc_output_initable_iface_init (GInitableIface *iface);
 
-G_DEFINE_TYPE (PhocOutput, phoc_output, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_output_initable_iface_init));
 
 enum {
   PROP_0,
@@ -150,12 +152,12 @@ phoc_output_init (PhocOutput *self)
 }
 
 PhocOutput *
-phoc_output_new (PhocDesktop *desktop, struct wlr_output *wlr_output)
+phoc_output_new (PhocDesktop *desktop, struct wlr_output *wlr_output, GError **error)
 {
-  return g_object_new (PHOC_TYPE_OUTPUT,
-                       "desktop", desktop,
-                       "wlr-output", wlr_output,
-                       NULL);
+  return g_initable_new (PHOC_TYPE_OUTPUT, NULL, error,
+                         "desktop", desktop,
+                         "wlr-output", wlr_output,
+                         NULL);
 }
 
 static void
@@ -314,10 +316,13 @@ phoc_output_set_mode (struct wlr_output *output, PhocOutputConfig *oc)
   }
 }
 
-static void
-phoc_output_constructed (GObject *object)
+
+static gboolean
+phoc_output_initable_init (GInitable    *initable,
+                           GCancellable *cancellable,
+                           GError      **error)
 {
-  PhocOutput *self = PHOC_OUTPUT (object);
+  PhocOutput *self = PHOC_OUTPUT (initable);
   PhocServer *server = phoc_server_get_default ();
   PhocRenderer *renderer = phoc_server_get_renderer (server);
   PhocInput *input = server->input;
@@ -341,7 +346,10 @@ phoc_output_constructed (GObject *object)
   if (!wlr_output_init_render (self->wlr_output,
                                phoc_renderer_get_wlr_allocator (renderer),
                                phoc_renderer_get_wlr_renderer (renderer))) {
-    g_error ("Failed to init output render");
+    g_set_error (error,
+                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		 "Could not create renderer");
+    return FALSE;
   }
 
   self->damage = wlr_output_damage_create (self->wlr_output);
@@ -424,8 +432,7 @@ phoc_output_constructed (GObject *object)
 
   update_output_manager_config (self->desktop);
 
-  G_OBJECT_CLASS (phoc_output_parent_class)->constructed (object);
-
+  return TRUE;
 }
 
 static void
@@ -449,6 +456,12 @@ phoc_output_finalize (GObject *object)
 }
 
 static void
+phoc_output_initable_iface_init (GInitableIface *iface)
+{
+  iface->init = phoc_output_initable_init;
+}
+
+static void
 phoc_output_class_init (PhocOutputClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
@@ -456,7 +469,6 @@ phoc_output_class_init (PhocOutputClass *klass)
   object_class->set_property = phoc_output_set_property;
   object_class->get_property = phoc_output_get_property;
 
-  object_class->constructed = phoc_output_constructed;
   object_class->finalize = phoc_output_finalize;
 
   props[PROP_DESKTOP] =

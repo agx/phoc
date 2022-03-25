@@ -547,8 +547,14 @@ handle_output_destroy (PhocOutput *destroyed_output)
 static void
 handle_new_output (struct wl_listener *listener, void *data)
 {
+  g_autoptr (GError) error = NULL;
   PhocDesktop *self = wl_container_of (listener, self, new_output);
-  PhocOutput *output = phoc_output_new (self, (struct wlr_output *)data);
+  PhocOutput *output = phoc_output_new (self, (struct wlr_output *)data, &error);
+
+  if (output == NULL) {
+    g_critical ("Failed to init new output: %s", error->message);
+    return;
+  }
 
   g_signal_connect (output, "output-destroyed",
                     G_CALLBACK (handle_output_destroy),

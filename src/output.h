@@ -52,7 +52,8 @@ struct _PhocOutput {
 };
 
 PhocOutput *phoc_output_new (PhocDesktop       *desktop,
-                             struct wlr_output *wlr_output);
+                             struct wlr_output *wlr_output,
+                             GError           **error);
 /* Surface iterators */
 typedef void (*PhocSurfaceIterator)(PhocOutput         *self,
                                     struct wlr_surface *surface,
