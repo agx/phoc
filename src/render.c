@@ -43,6 +43,7 @@
 
 /* Private wlr_allocator headers */
 struct wlr_drm_format *wlr_drm_format_create (uint32_t format);
+bool wlr_drm_format_add(struct wlr_drm_format **fmt_ptr, uint64_t modifier);
 /* ----------------------------- */
 
 
@@ -565,13 +566,15 @@ phoc_renderer_render_view_to_buffer (PhocRenderer *self,
                                      void         *data)
 {
   struct wlr_surface *surface = view->wlr_surface;
+  struct wlr_buffer *buffer;
 
   g_return_val_if_fail (surface, false);
   g_return_val_if_fail (self->wlr_allocator, false);
 
   struct wlr_drm_format *fmt = wlr_drm_format_create (DRM_FORMAT_ARGB8888);
-  struct wlr_buffer *buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
 
+  wlr_drm_format_add(&fmt, DRM_FORMAT_MOD_INVALID);
+  buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
   if (!buffer) {
     free (fmt);
     g_return_val_if_reached (false);
