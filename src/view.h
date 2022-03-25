@@ -9,6 +9,7 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
+#include <glib-object.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
@@ -19,28 +20,10 @@ typedef struct _PhocOutput PhocOutput;
 typedef struct _PhocXdgSurface PhocXdgSurface;
 typedef struct _PhocXWaylandSurface PhocXWaylandSurface;
 
-typedef struct _PhocViewInterface {
-	void (*move)(PhocView *view, double x, double y);
-	void (*resize)(PhocView *view, uint32_t width, uint32_t height);
-	void (*move_resize)(PhocView *view, double x, double y,
-		uint32_t width, uint32_t height);
-	bool (*want_scaling)(PhocView *view);
-	bool (*want_auto_maximize)(PhocView *view);
-	void (*set_active)(PhocView *view, bool active);
-	void (*set_fullscreen)(PhocView *view, bool fullscreen);
-	void (*set_maximized)(PhocView *view, bool maximized);
-	void (*set_tiled)(PhocView *view, bool tiled);
-	void (*close)(PhocView *view);
-	void (*for_each_surface)(PhocView *view,
-		wlr_surface_iterator_func_t iterator, void *user_data);
-	void (*get_geometry)(PhocView *view, struct wlr_box *box);
-	void (*destroy)(PhocView *view);
-} PhocViewInterface;
-
 typedef enum {
-	ROOTS_XDG_SHELL_VIEW,
+	PHOC_XDG_SHELL_VIEW,
 #ifdef PHOC_XWAYLAND
-	ROOTS_XWAYLAND_VIEW,
+	PHOC_XWAYLAND_VIEW,
 #endif
 } PhocViewType;
 
@@ -55,22 +38,25 @@ typedef enum {
   PHOC_VIEW_STATE_TILED,
 } PhocViewState;
 
+typedef enum _PhocViewDecoPart {
+  PHOC_VIEW_DECO_PART_NONE          = 0,
+  PHOC_VIEW_DECO_PART_TOP_BORDER    = 1 << 0,
+  PHOC_VIEW_DECO_PART_BOTTOM_BORDER = 1 << 1,
+  PHOC_VIEW_DECO_PART_LEFT_BORDER   = 1 << 2,
+  PHOC_VIEW_DECO_PART_RIGHT_BORDER  = 1 << 3,
+  PHOC_VIEW_DECO_PART_TITLEBAR      = 1 << 4,
+} PhocViewDecoPart;
+
 /**
  * PhocView:
  * @type: The type of the toplevel
- * @impl: The interface imlementing the toplevel
  *
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
 struct _PhocView {
-        /* Ugly: Since PhocXdgSurfce is a GObject we need to put that
-         * here so that for a PhocXdgSurface PhocView, GObject and
-         * PhocXdgSurface start at the same address. Fixes itself once
-         * PhocView becomes a GObject */
-	GObject parent_;
+	GObject parent_instance;
 
 	PhocViewType type;
-	const PhocViewInterface *impl;
 	PhocDesktop *desktop;
 	struct wl_list link; // PhocDesktop::views
 	struct wl_list parent_link; // PhocView::stack
@@ -82,11 +68,6 @@ struct _PhocView {
 	bool decorated;
 	int border_width;
 	int titlebar_height;
-
-	char *title;
-	char *app_id;
-
-	GSettings *settings;
 
 	PhocViewState state;
 	PhocViewTileDirection tile_direction;
@@ -119,6 +100,61 @@ struct _PhocView {
 		struct wl_signal destroy;
 	} events;
 };
+
+/**
+ * PhocViewClass:
+ * @parent_class: The object class structure needs to be the first
+ *   element in the widget class structure in order for the class mechanism
+ *   to work correctly. This allows a PhocViewClass pointer to be cast to
+ *   a GObjectClass pointer.
+ * @move: This is called by `PhocView` to move a view to a new position.
+ * @resize: This is called by `PhocView` to move resize a view.
+ * @move_resize: This is called by `PhocView` to move and resize a view a the same time.
+ * @want_auto_maximize: This is called by `PhocView` to determine if a view should
+ *   be automatically maximized
+ * @set_active: This is called by `PhocView` to make a view appear active.
+ * @set_fullscreen: This is called by `PhocView` to fullscreen a view
+ * @set_maximized: This is called by `PhocView` to maximize a view
+ * @set_tiled: This is called by `PhocView` to tile a view.
+ * @close: This is called by `PhocView` to close a view.
+ * @for_each_surface: This is used by `PhocView` to iterate over a surface and it's children.
+ * @get_geometry: This is called by `PhocView` to get a views geometry.
+ */
+typedef struct _PhocViewClass
+{
+  GObjectClass parent_class;
+
+  void (*move)               (PhocView *self, double x, double y);
+  void (*resize)             (PhocView *self, uint32_t width, uint32_t height);
+  void (*move_resize)        (PhocView *self, double x, double y,
+                              uint32_t  width, uint32_t height);
+  bool (*want_scaling)       (PhocView *self);
+  bool (*want_auto_maximize) (PhocView *self);
+  void (*set_active)         (PhocView *self, bool active);
+  void (*set_fullscreen)     (PhocView *self, bool fullscreen);
+  void (*set_maximized)      (PhocView *self, bool maximized);
+  void (*set_tiled)          (PhocView *self, bool tiled);
+  void (*close)              (PhocView *self);
+  void (*for_each_surface)   (PhocView *self, wlr_surface_iterator_func_t iterator, void *user_data);
+  void (*get_geometry)       (PhocView *self, struct wlr_box *box);
+} PhocViewClass;
+
+
+#define PHOC_TYPE_VIEW (phoc_view_get_type ())
+
+GType phoc_view_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocView, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocViewClass, g_type_class_unref)
+static inline PhocView * PHOC_VIEW (gpointer ptr) {
+  return G_TYPE_CHECK_INSTANCE_CAST (ptr, phoc_view_get_type (), PhocView); }
+static inline PhocViewClass * PHOC_VIEW_CLASS (gpointer ptr) {
+  return G_TYPE_CHECK_CLASS_CAST (ptr, phoc_view_get_type (), PhocViewClass); }
+static inline gboolean PHOC_IS_VIEW (gpointer ptr) {
+  return G_TYPE_CHECK_INSTANCE_TYPE (ptr, phoc_view_get_type ()); }
+static inline gboolean PHOC_IS_VIEW_CLASS (gpointer ptr) {
+  return G_TYPE_CHECK_CLASS_TYPE (ptr, phoc_view_get_type ()); }
+static inline PhocViewClass * PHOC_VIEW_GET_CLASS (gpointer ptr) {
+  return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_get_type (), PhocViewClass); }
 
 struct roots_xdg_toplevel_decoration;
 
@@ -171,9 +207,6 @@ struct roots_xdg_toplevel_decoration {
 	struct wl_listener surface_commit;
 };
 
-void view_init(PhocView *view, const PhocViewInterface *impl,
-               PhocViewType type, PhocDesktop *desktop);
-void view_destroy(PhocView *view);
 void view_appear_activated(PhocView *view, bool activated);
 void view_activate(PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
@@ -218,17 +251,7 @@ PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
 PhocXWaylandSurface *phoc_xwayland_surface_from_view(PhocView *view);
 bool   phoc_view_is_mapped (PhocView *view);
-
-enum roots_deco_part {
-	ROOTS_DECO_PART_NONE = 0,
-	ROOTS_DECO_PART_TOP_BORDER = (1 << 0),
-	ROOTS_DECO_PART_BOTTOM_BORDER = (1 << 1),
-	ROOTS_DECO_PART_LEFT_BORDER = (1 << 2),
-	ROOTS_DECO_PART_RIGHT_BORDER = (1 << 3),
-	ROOTS_DECO_PART_TITLEBAR = (1 << 4),
-};
-
-enum roots_deco_part view_get_deco_part(PhocView *view, double sx, double sy);
+PhocViewDecoPart view_get_deco_part(PhocView *view, double sx, double sy);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,

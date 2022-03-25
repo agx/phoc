@@ -112,13 +112,13 @@ static bool view_at(PhocView *view, double lx, double ly,
 	double _sx, _sy;
 	struct wlr_surface *_surface = NULL;
 	switch (view->type) {
-	case ROOTS_XDG_SHELL_VIEW:;
+	case PHOC_XDG_SHELL_VIEW:;
 		PhocXdgSurface *xdg_surface = phoc_xdg_surface_from_view(view);
 		_surface = wlr_xdg_surface_surface_at(xdg_surface->xdg_surface,
 			view_sx, view_sy, &_sx, &_sy);
 		break;
 #ifdef PHOC_XWAYLAND
-	case ROOTS_XWAYLAND_VIEW:
+	case PHOC_XWAYLAND_VIEW:
 		_surface = wlr_surface_surface_at(view->wlr_surface,
 			view_sx, view_sy, &_sx, &_sy);
 		break;
@@ -202,7 +202,7 @@ static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
  * @ly: Y coordinate the surface to look up at in layout coordinates
  * @sx: (out) (not nullable): Surface-local x coordinate
  * @sy: (out) (not nullable): Surface-local y coordinate
- * @view: (out) (optional): The corresponding [struct@Phoc.View]
+ * @view: (out) (optional): The corresponding [class@Phoc.View]
  *
  * Looks up the surface at `lx,ly` and returns the topmost surface at
  * that position (if any) and the surface-local coordinates of `sx,sy`
@@ -302,7 +302,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
   // XWayland parent relations can be complicated and aren't described by PhocView
   // relationships very well at the moment, so just make all XWayland windows visible
   // when some XWayland window is active for now
-  if (view->type == ROOTS_XWAYLAND_VIEW && top_view->type == ROOTS_XWAYLAND_VIEW) {
+  if (view->type == PHOC_XWAYLAND_VIEW && top_view->type == PHOC_XWAYLAND_VIEW) {
     return true;
   }
 #endif

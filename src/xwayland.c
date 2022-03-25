@@ -20,7 +20,7 @@
 static void handle_destroy(struct wl_listener *listener, void *data) {
 	PhocXWaylandSurface *phoc_surface =
 		wl_container_of(listener, phoc_surface, destroy);
-	view_destroy(&phoc_surface->view);
+	g_object_unref (phoc_surface);
 }
 
 static void handle_request_configure(struct wl_listener *listener, void *data) {

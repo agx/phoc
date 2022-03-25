@@ -637,7 +637,7 @@ phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, vo
     phoc_output_view_for_each_surface (self, view, iterator, user_data);
 
 #ifdef PHOC_XWAYLAND
-    if (view->type == ROOTS_XWAYLAND_VIEW) {
+    if (view->type == PHOC_XWAYLAND_VIEW) {
       PhocXWaylandSurface *xwayland_surface =
         phoc_xwayland_surface_from_view (view);
       phoc_output_xwayland_children_for_each_surface (self,
@@ -720,8 +720,8 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
     return true;
   }
 #ifdef PHOC_XWAYLAND
-  if (self->fullscreen_view->type == ROOTS_XWAYLAND_VIEW &&
-      view->type == ROOTS_XWAYLAND_VIEW) {
+  if (self->fullscreen_view->type == PHOC_XWAYLAND_VIEW &&
+      view->type == PHOC_XWAYLAND_VIEW) {
     // Special case: accept damage from children
     struct wlr_xwayland_surface *xsurface =
       phoc_xwayland_surface_from_view (view)->xwayland_surface;

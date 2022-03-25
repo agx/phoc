@@ -22,7 +22,7 @@ enum {
 
 static GParamSpec *props[PROP_LAST_PROP];
 
-G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, G_TYPE_OBJECT)
+G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC_TYPE_VIEW)
 
 static void
 phoc_xdg_surface_set_property (GObject      *object,
@@ -209,36 +209,6 @@ static void get_geometry(PhocView *view, struct wlr_box *geom) {
         phoc_xdg_surface_get_geometry (phoc_xdg_surface_from_view (view), geom);
 }
 
-static void destroy(PhocView *view) {
-	PhocXdgSurface *phoc_xdg_surface =
-		phoc_xdg_surface_from_view (view);
-	g_object_unref(phoc_xdg_surface);
-}
-
-static const PhocViewInterface view_impl = {
-	.resize = resize,
-	.move_resize = move_resize,
-	.want_auto_maximize = want_auto_maximize,
-	.want_scaling = want_scaling,
-	.set_active = set_active,
-	.set_fullscreen = set_fullscreen,
-	.set_maximized = set_maximized,
-	.set_tiled = set_tiled,
-	.close = _close,
-	.for_each_surface = for_each_surface,
-	.get_geometry = get_geometry,
-	.destroy = destroy,
-};
-
-static void
-phoc_xdg_surface_constructed (GObject *object)
-{
-  PhocXdgSurface *self = PHOC_XDG_SURFACE (object);
-
-  G_OBJECT_CLASS (phoc_xdg_surface_parent_class)->constructed (object);
-
-  view_init(&self->view, &view_impl, ROOTS_XDG_SHELL_VIEW, NULL);
-}
 
 static void
 phoc_xdg_surface_finalize (GObject *object)
@@ -267,10 +237,22 @@ static void
 phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  PhocViewClass *view_class = PHOC_VIEW_CLASS (klass);
 
-  object_class->constructed = phoc_xdg_surface_constructed;
   object_class->finalize = phoc_xdg_surface_finalize;
   object_class->set_property = phoc_xdg_surface_set_property;
+
+  view_class->resize = resize;
+  view_class->move_resize = move_resize;
+  view_class->want_auto_maximize = want_auto_maximize;
+  view_class->want_scaling = want_scaling;
+  view_class->set_active = set_active;
+  view_class->set_fullscreen = set_fullscreen;
+  view_class->set_maximized = set_maximized;
+  view_class->set_tiled = set_tiled;
+  view_class->close = _close;
+  view_class->for_each_surface = for_each_surface;
+  view_class->get_geometry = get_geometry;
 
   /**
    * PhocXdgSurface:wlr-xdg-surface:
@@ -287,6 +269,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
 static void
 phoc_xdg_surface_init (PhocXdgSurface *self)
 {
+  PHOC_VIEW (self)->type = PHOC_XDG_SHELL_VIEW;
 }
 
 
@@ -306,6 +289,6 @@ phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom)
 
 PhocXdgSurface *
 phoc_xdg_surface_from_view (PhocView *view) {
-	g_assert(view->impl == &view_impl);
-	return (PhocXdgSurface *)view;
+	g_assert (PHOC_IS_XDG_SURFACE (view));
+	return PHOC_XDG_SURFACE (view);
 }

@@ -327,7 +327,7 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 static void handle_destroy(struct wl_listener *listener, void *data) {
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, destroy);
-	view_destroy(&phoc_xdg_surface->view);
+	g_object_unref (phoc_xdg_surface);
 }
 
 void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
