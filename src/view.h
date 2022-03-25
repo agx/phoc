@@ -226,7 +226,6 @@ void view_for_each_surface(PhocView *view,
 	wlr_surface_iterator_func_t iterator, void *user_data);
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
-PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
 PhocXWaylandSurface *phoc_xwayland_surface_from_view(PhocView *view);
 bool   phoc_view_is_mapped (PhocView *view);
 PhocViewDecoPart view_get_deco_part(PhocView *view, double sx, double sy);

@@ -52,4 +52,7 @@ G_DECLARE_FINAL_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC, XDG_SURFACE, PhocV
 PhocXdgSurface *phoc_xdg_surface_new (struct wlr_xdg_surface *xdg_surface);
 void            phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom);
 
+PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
+
+
 G_END_DECLS
