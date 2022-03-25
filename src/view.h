@@ -17,8 +17,6 @@ G_BEGIN_DECLS
 typedef struct _PhocView PhocView;
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
-typedef struct _PhocXdgSurface PhocXdgSurface;
-typedef struct _PhocXWaylandSurface PhocXWaylandSurface;
 
 typedef enum {
 	PHOC_XDG_SHELL_VIEW,
