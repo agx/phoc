@@ -24,14 +24,14 @@ typedef struct _PhocViewPrivate {
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
 
-struct _PhocSubsurface {
+typedef struct _PhocSubsurface {
   PhocViewChild child;
   struct wlr_subsurface *wlr_subsurface;
 
   struct wl_listener destroy;
   struct wl_listener map;
   struct wl_listener unmap;
-};
+} PhocSubsurface;
 
 
 gboolean view_is_floating(const PhocView *view)

@@ -187,8 +187,6 @@ typedef struct _PhocViewChild {
   struct wl_listener new_subsurface;
 } PhocViewChild;
 
-typedef struct _PhocSubsurface PhocSubsurface;
-
 typedef struct roots_xdg_popup {
   PhocViewChild child;
   struct wlr_xdg_popup *wlr_popup;
