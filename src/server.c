@@ -245,9 +245,9 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-  self->renderer = phoc_renderer_new (self->backend);
+  self->renderer = phoc_renderer_new (self->backend, error);
   if (self->renderer == NULL) {
-    /* TODO */
+    return FALSE;
   }
   wlr_renderer = phoc_renderer_get_wlr_renderer (self->renderer);
 

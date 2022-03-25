@@ -92,7 +92,11 @@ struct _PhocRenderer {
   struct wlr_renderer  *wlr_renderer;
   struct wlr_allocator *wlr_allocator;
 };
-G_DEFINE_TYPE (PhocRenderer, phoc_renderer, G_TYPE_OBJECT)
+
+static void phoc_renderer_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PhocRenderer, phoc_renderer, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_renderer_initable_iface_init));
 
 
 struct render_data {
@@ -802,19 +806,31 @@ send_frame_done:
 }
 
 
-static void
-phoc_renderer_constructed (GObject *object)
+static gboolean
+phoc_renderer_initable_init (GInitable    *initable,
+                             GCancellable *cancellable,
+                             GError      **error)
 {
-  PhocRenderer *self = PHOC_RENDERER (object);
+  PhocRenderer *self = PHOC_RENDERER (initable);
 
   self->wlr_renderer = wlr_renderer_autocreate (self->wlr_backend);
-  if (self->wlr_renderer == NULL)
-    g_error ("Could not create renderer");
+  if (self->wlr_renderer == NULL) {
+    g_set_error (error,
+                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		 "Could not create renderer");
+    return FALSE;
+  }
 
   self->wlr_allocator = wlr_allocator_autocreate (self->wlr_backend,
                                                   self->wlr_renderer);
-  if (self->wlr_allocator == NULL)
-    g_error ("Could not create allocator");
+  if (self->wlr_allocator == NULL) {
+    g_set_error (error,
+                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		 "Could not create allocator");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -829,13 +845,19 @@ phoc_renderer_finalize (GObject *object)
 
 
 static void
+phoc_renderer_initable_iface_init (GInitableIface *iface)
+{
+  iface->init = phoc_renderer_initable_init;
+}
+
+
+static void
 phoc_renderer_class_init (PhocRendererClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->get_property = phoc_renderer_get_property;
   object_class->set_property = phoc_renderer_set_property;
-  object_class->constructed = phoc_renderer_constructed;
   object_class->finalize = phoc_renderer_finalize;
 
   /**
@@ -885,11 +907,11 @@ phoc_renderer_init (PhocRenderer *self)
 
 
 PhocRenderer *
-phoc_renderer_new (struct wlr_backend *wlr_backend)
+phoc_renderer_new (struct wlr_backend *wlr_backend, GError **error)
 {
-  return PHOC_RENDERER (g_object_new (PHOC_TYPE_RENDERER,
-                                      "wlr-backend", wlr_backend,
-                                      NULL));
+  return PHOC_RENDERER (g_initable_new (PHOC_TYPE_RENDERER, NULL, error,
+                                        "wlr-backend", wlr_backend,
+                                        NULL));
 }
 
 
