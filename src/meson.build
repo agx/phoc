@@ -56,6 +56,7 @@ sources = files(
   'xdg-activation-v1.c',
   'xdg_shell.c',
   'xdg-surface.c',
+  'xdg-surface.h',
 )
 libphoc_generated_sources = [
   phoc_enum_sources,
