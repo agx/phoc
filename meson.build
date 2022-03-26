@@ -62,7 +62,7 @@ if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots_conf = wlroots_proj.get_variable('conf_data')
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
 else
-        wlroots = dependency('wlroots', version: '== 0.15.0')
+        wlroots = dependency('wlroots', version: '== 0.15.1')
         wlroots_has_xwayland = cc.get_define('WLR_HAS_XWAYLAND', prefix: '#include <wlr/config.h>', dependencies: wlroots) == '1'
 endif
 
