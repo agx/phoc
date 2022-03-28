@@ -448,7 +448,7 @@ phoc_output_finalize (GObject *object)
   g_clear_list (&self->debug_touch_points, g_free);
 
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
-    wl_list_remove (&self->layers[i]);
+    wl_list_init (&self->layers[i]);
 
   g_clear_object (&self->desktop);
 
