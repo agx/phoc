@@ -24,7 +24,7 @@ abgr_to_argb (PhocTestBuffer *buffer)
 		 buffer->format == WL_SHM_FORMAT_XBGR8888);
   guint8 *data = buffer->shm_data;
 
-  for (int i = 0; i < buffer->height * buffer->stride / 4; i += 4) {
+  for (int i = 0; i < buffer->height * buffer->stride; i += 4) {
       guint32 *px = (guint32 *)(data + i);
       guint8 r, g, b, a;
 
@@ -308,7 +308,7 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
     xdg_wm_base_add_listener(globals->xdg_shell, &wm_base_listener, NULL);
   } else if (!g_strcmp0 (interface, zwlr_layer_shell_v1_interface.name)) {
     globals->layer_shell = wl_registry_bind (registry, name,
-					     &zwlr_layer_shell_v1_interface, 1);
+					     &zwlr_layer_shell_v1_interface, 2);
   } else if (!g_strcmp0 (interface, zwlr_screencopy_manager_v1_interface.name)) {
     globals->screencopy_manager = wl_registry_bind (registry, name,
 						    &zwlr_screencopy_manager_v1_interface, 1);

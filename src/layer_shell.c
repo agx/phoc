@@ -352,6 +352,15 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	if (wlr_output != NULL) {
 		PhocOutput *output = wlr_output->data;
 		struct wlr_box old_geo = layer->geo;
+
+		bool layer_changed = layer->layer != layer_surface->current.layer;
+		if (layer_changed) {
+			wl_list_remove(&layer->link);
+			wl_list_insert(&output->layers[layer_surface->current.layer],
+				&layer->link);
+			layer->layer = layer_surface->current.layer;
+		}
+
 		phoc_layer_shell_arrange (output);
 		phoc_layer_shell_update_focus ();
 
@@ -370,13 +379,6 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 
 		bool geo_changed =
 			memcmp(&old_geo, &layer->geo, sizeof(struct wlr_box)) != 0;
-		bool layer_changed = layer->layer != layer_surface->current.layer;
-		if (layer_changed) {
-			wl_list_remove(&layer->link);
-			wl_list_insert(&output->layers[layer_surface->current.layer],
-				&layer->link);
-			layer->layer = layer_surface->current.layer;
-		}
 		if (geo_changed || layer_changed) {
 			phoc_output_damage_whole_local_surface(output, layer_surface->surface,
 							       old_geo.x, old_geo.y);
