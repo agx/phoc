@@ -149,7 +149,6 @@ test_client_layer_shell_exclusive_zone (PhocTestClientGlobals *globals, gpointer
 					  HEIGHT);
   g_assert_nonnull (ls_green);
   phoc_assert_screenshot (globals, "test-layer-shell-exclusive-zone-1.png");
-  wl_surface_commit (ls_green->wl_surface);
 
   ls_red = phoc_test_layer_surface_new (globals, WIDTH * 2, HEIGHT * 2, 0xFFFF0000,
                                         ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP, 0);
