@@ -242,6 +242,10 @@ void view_move_resize(PhocView *view, double x, double y,
 	bool update_y = y != view->box.y;
 	bool update_width = width != view->box.width;
 	bool update_height = height != view->box.height;
+
+	view->pending_move_resize.update_x = false;
+	view->pending_move_resize.update_y = false;
+
 	if (!update_x && !update_y) {
 		view_resize(view, width, height);
 		return;
