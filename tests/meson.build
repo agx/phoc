@@ -27,6 +27,7 @@ tests = [
   'run',
   'client',
   'layer-shell',
+  'layer-shell-effects',
   'xdg-shell',
   'phosh-private'
 ]
