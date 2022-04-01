@@ -322,6 +322,9 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
     globals->phosh = wl_registry_bind (registry, name, &phosh_private_interface, 6);
   } else if (!g_strcmp0 (interface, gtk_shell1_interface.name)) {
     globals->gtk_shell1 = wl_registry_bind (registry, name, &gtk_shell1_interface, 3);
+  } else if (!g_strcmp0 (interface, zphoc_layer_shell_effects_v1_interface.name)) {
+    globals->layer_shell_effects = wl_registry_bind (registry, name,
+                                                     &zphoc_layer_shell_effects_v1_interface, 1);
   }
 }
 
