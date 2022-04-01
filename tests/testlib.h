@@ -13,6 +13,8 @@
 #include "wlr-screencopy-unstable-v1-client-protocol.h"
 #include "phosh-private-client-protocol.h"
 
+#pragma once
+
 G_BEGIN_DECLS
 
 typedef struct _PhocTestWlGlobals PhocTestClientGlobals;
