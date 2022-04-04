@@ -73,6 +73,7 @@ typedef struct _PhocCursor {
   struct wl_listener                touch_down;
   struct wl_listener                touch_up;
   struct wl_listener                touch_motion;
+  struct wl_listener                touch_frame;
 
   struct wl_listener                tool_axis;
   struct wl_listener                tool_tip;

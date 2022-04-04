@@ -48,6 +48,7 @@ static void handle_pointer_motion_absolute (struct wl_listener *listener, void *
 static void handle_pointer_button (struct wl_listener *listener, void *data);
 static void handle_pointer_axis (struct wl_listener *listener, void *data);
 static void handle_pointer_frame (struct wl_listener *listener, void *data);
+static void handle_touch_frame (struct wl_listener *listener, void *data);
 
 static void
 phoc_cursor_set_property (GObject      *object,
@@ -370,6 +371,10 @@ phoc_cursor_constructed (GObject *object)
   wl_signal_add (&wlr_cursor->events.frame, &self->frame);
   self->frame.notify = handle_pointer_frame;
 
+  wl_signal_add (&wlr_cursor->events.touch_frame,
+                 &self->touch_frame);
+  self->touch_frame.notify = handle_touch_frame;
+
   G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 }
 
@@ -403,6 +408,7 @@ phoc_cursor_finalize (GObject *object)
   wl_list_remove (&self->touch_down.link);
   wl_list_remove (&self->touch_up.link);
   wl_list_remove (&self->touch_motion.link);
+  wl_list_remove (&self->touch_frame.link);
   wl_list_remove (&self->tool_axis.link);
   wl_list_remove (&self->tool_tip.link);
   wl_list_remove (&self->tool_proximity.link);
@@ -1047,6 +1053,17 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
     }
   }
 }
+
+
+static void
+handle_touch_frame (struct wl_listener *listener, void *data)
+{
+  PhocCursor *self = PHOC_CURSOR (wl_container_of (listener, self, touch_frame));
+  struct wlr_seat *wlr_seat = self->seat->seat;
+
+  wlr_seat_touch_notify_frame(wlr_seat);
+}
+
 
 void
 phoc_cursor_handle_tool_axis (PhocCursor                        *self,
