@@ -6,17 +6,6 @@
 
 #include "testlib.h"
 
-typedef struct _PhocTestXdgToplevelSurface
-{
-  struct wl_surface *wl_surface;
-  struct xdg_surface *xdg_surface;
-  struct xdg_toplevel *xdg_toplevel;
-  PhocTestBuffer buffer;
-  guint32 width, height;
-  gboolean configured;
-  gboolean toplevel_configured;
-} PhocTestXdgToplevelSurface;
-
 static void
 xdg_surface_handle_configure(void *data, struct xdg_surface *xdg_surface,
 			     uint32_t serial)

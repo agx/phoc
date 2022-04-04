@@ -7,19 +7,6 @@
 #include "testlib.h"
 #include "gtk-shell-client-protocol.h"
 
-typedef struct _PhocTestXdgToplevelSurface
-{
-  struct wl_surface *wl_surface;
-  struct xdg_surface *xdg_surface;
-  struct xdg_toplevel *xdg_toplevel;
-  PhocTestForeignToplevel *foreign_toplevel;
-  char* title;
-  PhocTestBuffer buffer;
-  guint32 width, height;
-  gboolean configured;
-  gboolean toplevel_configured;
-} PhocTestXdgToplevelSurface;
-
 typedef struct _PhocTestThumbnail
 {
   char* title;

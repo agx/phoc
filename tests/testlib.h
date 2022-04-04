@@ -75,6 +75,19 @@ typedef struct PhocTestClientIface {
   PhocTestClientFunc client_run;
 } PhocTestClientIface;
 
+typedef struct _PhocTestXdgToplevelSurface
+{
+  struct wl_surface *wl_surface;
+  struct xdg_surface *xdg_surface;
+  struct xdg_toplevel *xdg_toplevel;
+  PhocTestForeignToplevel *foreign_toplevel;
+  char* title;
+  PhocTestBuffer buffer;
+  guint32 width, height;
+  gboolean configured;
+  gboolean toplevel_configured;
+} PhocTestXdgToplevelSurface;
+
 /* Test client */
 void phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data);
 int  phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
