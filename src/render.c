@@ -226,7 +226,7 @@ collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wl
 }
 
 static void render_surface_iterator(PhocOutput *output,
-		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
+		struct wlr_surface *surface, struct wlr_box *box, float rotation,
 		float scale, void *_data) {
 	struct render_data *data = _data;
 	struct wlr_output *wlr_output = output->wlr_output;
@@ -241,7 +241,7 @@ static void render_surface_iterator(PhocOutput *output,
 	struct wlr_fbox src_box;
 	wlr_surface_get_buffer_source_box(surface, &src_box);
 
-	struct wlr_box dst_box = *_box;
+	struct wlr_box dst_box = *box;
 	phoc_output_scale_box (output, &dst_box, scale);
 	phoc_output_scale_box (output, &dst_box, wlr_output->scale);
 
@@ -330,7 +330,7 @@ render_layer (PhocOutput                     *output,
 }
 
 static void count_surface_iterator(PhocOutput *output,
-		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
+		struct wlr_surface *surface, struct wlr_box *box, float rotation,
 		float scale, void *data) {
 	size_t *n = data;
 	n++;
