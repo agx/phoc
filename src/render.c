@@ -314,14 +314,19 @@ static void render_view(PhocOutput *output, PhocView *view,
 	phoc_output_view_for_each_surface(output, view, render_surface_iterator, data);
 }
 
-static void render_layer(PhocOutput *output,
-		pixman_region32_t *damage, struct wl_list *layer_surfaces) {
-	struct render_data data = {
-		.damage = damage,
-		.alpha = 1.0f,
-	};
-	phoc_output_layer_for_each_surface(output, layer_surfaces,
-		render_surface_iterator, &data);
+static void
+render_layer (PhocOutput                     *output,
+              pixman_region32_t              *damage,
+              enum zwlr_layer_shell_v1_layer  layer)
+{
+  struct wl_list *layer_surfaces = &output->layers[layer];
+
+  struct render_data data = {
+    .damage = damage,
+    .alpha = 1.0f,
+  };
+
+  phoc_output_layer_for_each_surface(output, layer_surfaces, render_surface_iterator, &data);
 }
 
 static void count_surface_iterator(PhocOutput *output,
@@ -734,15 +739,12 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 
 		if (output->force_shell_reveal) {
 			// Render top layer above fullscreen view when requested
-			render_layer(output, &buffer_damage,
-				&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+			render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
 		}
 	} else {
 		// Render background and bottom layers under views
-		render_layer(output, &buffer_damage,
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND]);
-		render_layer(output, &buffer_damage,
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
+		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND);
+		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM);
 
 		PhocView *view;
 			// Render all views
@@ -753,14 +755,12 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 		}
 
 		// Render top layer above views
-		render_layer(output, &buffer_damage,
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
 	}
 
 	render_drag_icons(output, &buffer_damage, server->input);
 
-	render_layer(output, &buffer_damage,
-		&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
+	render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
 
 renderer_end:
 	wlr_output_render_software_cursors(wlr_output, &buffer_damage);
