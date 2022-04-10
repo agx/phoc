@@ -305,7 +305,10 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
   PhocLayerSurface *layer_surface;
   bool left = false, right = false, top = false, bottom = false;
 
-  wl_list_for_each (layer_surface, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], link) {
+  wl_list_for_each (layer_surface, &output->layer_surfaces, link) {
+    if (layer_surface->layer != ZWLR_LAYER_SHELL_V1_LAYER_TOP)
+      continue;
+
     struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
     struct wlr_layer_surface_v1_state *state = &wlr_layer_surface->current;
     const uint32_t both_horiz = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
@@ -1099,8 +1102,11 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
       struct wlr_box *output_box = wlr_output_layout_get_box (desktop->layout, wlr_output);
 
       PhocLayerSurface *layer_surface;
-      wl_list_for_each_reverse (layer_surface, &phoc_output->layers[wlr_layer_surface->current.layer], link)
+      wl_list_for_each_reverse (layer_surface, &phoc_output->layer_surfaces, link)
       {
+        if (layer_surface->layer != wlr_layer_surface->current.layer)
+          continue;
+
         if (layer_surface->layer_surface->surface == root) {
           sx = lx - layer_surface->geo.x - output_box->x;
           sy = ly - layer_surface->geo.y - output_box->y;
@@ -1109,8 +1115,11 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
         }
       }
       // try the overlay layer as well since the on-screen keyboard might have been elevated there
-      wl_list_for_each_reverse (layer_surface, &phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], link)
+      wl_list_for_each_reverse (layer_surface, &phoc_output->layer_surfaces, link)
       {
+        if (layer_surface->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY)
+          continue;
+
         if (layer_surface->layer_surface->surface == root) {
           sx = lx - layer_surface->geo.x - output_box->x;
           sy = ly - layer_surface->geo.y - output_box->y;

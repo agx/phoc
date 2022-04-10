@@ -424,8 +424,7 @@ phoc_output_initable_init (GInitable    *initable,
   self->damage_destroy.notify = phoc_output_damage_handle_destroy;
   wl_signal_add (&self->damage->events.destroy, &self->damage_destroy);
 
-  for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
-    wl_list_init (&self->layers[i]);
+  wl_list_init (&self->layer_surfaces);
 
   PhocOutputConfig *output_config = phoc_config_get_output (config, self->wlr_output);
 
@@ -505,8 +504,7 @@ phoc_output_finalize (GObject *object)
   g_clear_slist (&priv->frame_callbacks,
                  (GDestroyNotify)phoc_output_frame_callback_info_free);
 
-  for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
-    wl_list_init (&self->layers[i]);
+  wl_list_init (&self->layer_surfaces);
 
   g_clear_object (&priv->shield);
   g_clear_object (&self->desktop);
@@ -759,19 +757,25 @@ phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surf
  */
 void
 phoc_output_layer_for_each_surface (PhocOutput          *self,
-                                    struct wl_list      *layer_surfaces,
+                                    enum zwlr_layer_shell_v1_layer layer,
                                     PhocSurfaceIterator  iterator,
                                     void                *user_data)
 {
   PhocLayerSurface *layer_surface;
 
-  wl_list_for_each_reverse (layer_surface, layer_surfaces, link)
+  wl_list_for_each_reverse (layer_surface, &self->layer_surfaces, link)
   {
+    if (layer_surface->layer != layer)
+      continue;
+
     if (layer_surface->layer_surface->current.exclusive_zone <= 0) {
       phoc_output_layer_handle_surface (self, layer_surface, iterator, user_data);
     }
   }
-  wl_list_for_each (layer_surface, layer_surfaces, link) {
+  wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
+    if (layer_surface->layer != layer)
+      continue;
+
     if (layer_surface->layer_surface->current.exclusive_zone > 0) {
       phoc_output_layer_handle_surface (self, layer_surface, iterator, user_data);
     }
@@ -861,9 +865,9 @@ phoc_output_for_each_surface (PhocOutput          *self,
   phoc_output_drag_icons_for_each_surface (self, server->input,
                                            iterator, user_data);
 
-  for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i) {
-    phoc_output_layer_for_each_surface (self, &self->layers[i],
-                                        iterator, user_data);
+  for (enum zwlr_layer_shell_v1_layer layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
+       layer <= ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY; layer++) {
+    phoc_output_layer_for_each_surface (self, layer, iterator, user_data);
   }
 }
 
@@ -1322,4 +1326,26 @@ phoc_output_raise_shield (PhocOutput *self)
     priv->shield = phoc_output_shield_new (self);
 
   phoc_output_shield_raise (priv->shield);
+}
+
+/**
+ * phoc_output_has_layer:
+ * @self: The #PhocOutput
+ *
+ * Returns: %TRUE if the output has a Phoc.LayerSurface in the given layer.
+ *          %FALSE otherwise.
+ */
+gboolean
+phoc_output_has_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
+{
+  PhocLayerSurface *layer_surface;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
+    if (layer_surface->layer == layer)
+      return TRUE;
+  }
+
+  return FALSE;
 }
