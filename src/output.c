@@ -1140,7 +1140,7 @@ phoc_output_is_match (PhocOutput *self,
   return match;
 }
 
-/*
+/**
  * phoc_output_has_fullscreen_view:
  * @self: The #PhocOutput
  *
