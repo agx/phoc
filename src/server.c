@@ -53,10 +53,8 @@ wayland_event_source_dispatch (GSource     *base,
 }
 
 static GSourceFuncs wayland_event_source_funcs = {
-  wayland_event_source_prepare,
-  NULL,
-  wayland_event_source_dispatch,
-  NULL
+  .prepare = wayland_event_source_prepare,
+  .dispatch = wayland_event_source_dispatch
 };
 
 static GSource *
