@@ -226,7 +226,7 @@ collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wl
 }
 
 static void render_surface_iterator(PhocOutput *output,
-		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
+		struct wlr_surface *surface, struct wlr_box *box, float rotation,
 		float scale, void *_data) {
 	struct render_data *data = _data;
 	struct wlr_output *wlr_output = output->wlr_output;
@@ -241,9 +241,9 @@ static void render_surface_iterator(PhocOutput *output,
 	struct wlr_fbox src_box;
 	wlr_surface_get_buffer_source_box(surface, &src_box);
 
-	struct wlr_box dst_box = *_box;
-	phoc_output_scale_box(wlr_output->data, &dst_box, scale);
-	phoc_output_scale_box(wlr_output->data, &dst_box, wlr_output->scale);
+	struct wlr_box dst_box = *box;
+	phoc_output_scale_box (output, &dst_box, scale);
+	phoc_output_scale_box (output, &dst_box, wlr_output->scale);
 
 	float matrix[9];
 	enum wl_output_transform transform =
@@ -314,18 +314,23 @@ static void render_view(PhocOutput *output, PhocView *view,
 	phoc_output_view_for_each_surface(output, view, render_surface_iterator, data);
 }
 
-static void render_layer(PhocOutput *output,
-		pixman_region32_t *damage, struct wl_list *layer_surfaces) {
-	struct render_data data = {
-		.damage = damage,
-		.alpha = 1.0f,
-	};
-	phoc_output_layer_for_each_surface(output, layer_surfaces,
-		render_surface_iterator, &data);
+static void
+render_layer (PhocOutput                     *output,
+              pixman_region32_t              *damage,
+              enum zwlr_layer_shell_v1_layer  layer)
+{
+  struct wl_list *layer_surfaces = &output->layers[layer];
+
+  struct render_data data = {
+    .damage = damage,
+    .alpha = 1.0f,
+  };
+
+  phoc_output_layer_for_each_surface(output, layer_surfaces, render_surface_iterator, &data);
 }
 
 static void count_surface_iterator(PhocOutput *output,
-		struct wlr_surface *surface, struct wlr_box *_box, float rotation,
+		struct wlr_surface *surface, struct wlr_box *box, float rotation,
 		float scale, void *data) {
 	size_t *n = data;
 	n++;
@@ -734,15 +739,12 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 
 		if (output->force_shell_reveal) {
 			// Render top layer above fullscreen view when requested
-			render_layer(output, &buffer_damage,
-				&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+			render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
 		}
 	} else {
 		// Render background and bottom layers under views
-		render_layer(output, &buffer_damage,
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND]);
-		render_layer(output, &buffer_damage,
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
+		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND);
+		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM);
 
 		PhocView *view;
 			// Render all views
@@ -753,14 +755,12 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 		}
 
 		// Render top layer above views
-		render_layer(output, &buffer_damage,
-			&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
 	}
 
 	render_drag_icons(output, &buffer_damage, server->input);
 
-	render_layer(output, &buffer_damage,
-		&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
+	render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
 
 renderer_end:
 	wlr_output_render_software_cursors(wlr_output, &buffer_damage);
