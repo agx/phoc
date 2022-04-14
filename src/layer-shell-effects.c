@@ -697,6 +697,7 @@ phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surfac
 {
   struct wlr_layer_surface_v1 *layer = drag_surface->layer_surface->layer_surface;
   struct wlr_output *wlr_output = layer->output;
+  bool accept;
   PhocOutput *output;
   uint32_t *target;
   int32_t margin = 0;
@@ -740,23 +741,34 @@ phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surfac
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
     target = &layer->current.margin.top;
     margin = drag_surface->drag.start_margin + off_y;
+    accept = (layer->current.margin.top == drag_surface->current.unfolded) ? off_y < 0 : true;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_BOTTOM:
     target = &layer->current.margin.bottom;
     margin = drag_surface->drag.start_margin - off_y;
+    accept = (layer->current.margin.bottom == drag_surface->current.unfolded) ? off_y > 0 : true;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_LEFT:
     target = &layer->current.margin.left;
     margin = drag_surface->drag.start_margin + off_x;
+    accept = (layer->current.margin.left == drag_surface->current.unfolded) ? off_x < 0 : true;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_RIGHT:
     target = &layer->current.margin.right;
     margin = drag_surface->drag.start_margin - off_x;
+    accept = (layer->current.margin.right == drag_surface->current.unfolded) ? off_x > 0 : true;
     break;
   default:
     g_assert_not_reached ();
     break;
   }
+
+  /* Moved far enough but is it the right direction when unfolded? */
+  if (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_PENDING && !accept) {
+    drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_REJECTED;
+    return drag_surface->state;
+  }
+
   g_debug ("%s: %f,%f, margin %d", __func__, off_x, off_y, margin);
 
   if (margin >= drag_surface->current.unfolded)
