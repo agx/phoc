@@ -240,6 +240,47 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
   phoc_layer_shell_arrange (self);
 }
 
+static float
+phoc_output_compute_scale (struct wlr_output *output)
+{
+  int32_t width = 0, height = 0;
+
+  if (!output->phys_width || !output->phys_height) {
+    g_message ("Output '%s' has invalid physical size, "
+               "using default scale", output->name);
+    return 1;
+  }
+
+  // Use the pending mode if any
+  if (output->pending.committed & WLR_OUTPUT_STATE_MODE) {
+    switch (output->pending.mode_type) {
+    case WLR_OUTPUT_STATE_MODE_FIXED:
+      width = output->pending.mode->width;
+      height = output->pending.mode->height;
+      break;
+    case WLR_OUTPUT_STATE_MODE_CUSTOM:
+      width = output->pending.custom_mode.width;
+      height = output->pending.custom_mode.height;
+      break;
+    default:
+      break;
+    }
+  // Fall back to current mode
+  } else if (output->current_mode) {
+    width = output->current_mode->width;
+    height = output->current_mode->height;
+  }
+
+  if (!width || !height) {
+    g_message ("No valid mode set for output '%s', "
+               "using default scale", output->name);
+    return 1;
+  }
+
+  return phoc_utils_compute_scale (output->phys_width, output->phys_height,
+                                   width, height);
+}
+
 static void
 phoc_output_set_mode (struct wlr_output *output, PhocOutputConfig *oc)
 {
@@ -338,7 +379,12 @@ phoc_output_constructed (GObject *object)
         wlr_output_set_mode (self->wlr_output, preferred_mode);
       }
 
-      wlr_output_set_scale (self->wlr_output, output_config->scale);
+      if (!output_config->scale) {
+        wlr_output_set_scale (self->wlr_output,
+                              phoc_output_compute_scale (self->wlr_output));
+      } else {
+        wlr_output_set_scale (self->wlr_output, output_config->scale);
+      }
       wlr_output_set_transform (self->wlr_output, output_config->transform);
       wlr_output_layout_add (self->desktop->layout, self->wlr_output,
                              output_config->x, output_config->y);
@@ -349,6 +395,8 @@ phoc_output_constructed (GObject *object)
     if (preferred_mode != NULL) {
       wlr_output_set_mode (self->wlr_output, preferred_mode);
     }
+    wlr_output_set_scale (self->wlr_output,
+                          phoc_output_compute_scale (self->wlr_output));
     wlr_output_enable (self->wlr_output, true);
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
