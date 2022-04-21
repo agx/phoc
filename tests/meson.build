@@ -29,7 +29,8 @@ tests = [
   'layer-shell',
   'layer-shell-effects',
   'xdg-shell',
-  'phosh-private'
+  'phosh-private',
+  'utils'
 ]
 
 phoctest_sources = [
