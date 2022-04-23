@@ -103,10 +103,7 @@ static void popup_unconstrain (PhocXdgPopup* popup)
   anchor_lx += popup_lx;
   anchor_ly += popup_ly;
 
-  double dest_x = 0, dest_y = 0;
-  wlr_output_layout_closest_point (layout, NULL, anchor_lx, anchor_ly, &dest_x, &dest_y);
-
-  struct wlr_output *output = wlr_output_layout_output_at (layout, dest_x, dest_y);
+  struct wlr_output *output = wlr_output_layout_output_at (layout, view->box.x, view->box.y);
   if (output == NULL)
     return;
 
