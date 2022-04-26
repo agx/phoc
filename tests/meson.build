@@ -27,12 +27,14 @@ tests = [
   'run',
   'client',
   'layer-shell',
+  'layer-shell-effects',
   'xdg-shell',
   'phosh-private'
 ]
 
 phoctest_sources = [
   'testlib.c',
+  'testlib-layer-shell.c',
 ]
 
 phoctest_lib = static_library('phoctest', phoctest_sources, client_protos_headers,

@@ -576,10 +576,10 @@ phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surf
 }
 
 void
-phoc_output_layer_for_each_surface (PhocOutput                   *self,
-                                    struct wl_list               *layer_surfaces,
-                                    PhocSurfaceIterator iterator,
-                                    void                         *user_data)
+phoc_output_layer_for_each_surface (PhocOutput          *self,
+                                    struct wl_list      *layer_surfaces,
+                                    PhocSurfaceIterator  iterator,
+                                    void                *user_data)
 {
   PhocLayerSurface *layer_surface;
 
@@ -597,9 +597,10 @@ phoc_output_layer_for_each_surface (PhocOutput                   *self,
 }
 
 void
-phoc_output_drag_icons_for_each_surface (PhocOutput *self, PhocInput *input,
-                                         PhocSurfaceIterator
-                                         iterator, void *user_data)
+phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
+                                         PhocInput           *input,
+                                         PhocSurfaceIterator  iterator,
+                                         void                *user_data)
 {
   struct wlr_box *output_box =
     wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
@@ -625,8 +626,10 @@ phoc_output_drag_icons_for_each_surface (PhocOutput *self, PhocInput *input,
 }
 
 void
-phoc_output_for_each_surface (PhocOutput *self, PhocSurfaceIterator iterator, void
-                              *user_data, gboolean visible_only)
+phoc_output_for_each_surface (PhocOutput          *self,
+                              PhocSurfaceIterator  iterator,
+                              void                *user_data,
+                              gboolean             visible_only)
 {
   PhocDesktop *desktop = self->desktop;
   PhocServer *server = phoc_server_get_default ();
@@ -680,8 +683,7 @@ phoc_output_scale_box (PhocOutput *self, struct wlr_box *box, float scale)
 }
 
 void
-phoc_output_get_decoration_box (PhocOutput *self, PhocView *view,
-                                struct wlr_box *box)
+phoc_output_get_decoration_box (PhocOutput *self, PhocView *view, struct wlr_box *box)
 {
   struct wlr_box deco_box;
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gesture.h"
+
 #include <stdbool.h>
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
