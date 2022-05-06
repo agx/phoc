@@ -10,6 +10,8 @@
 
 #define G_LOG_DOMAIN "phoc-utils"
 
+#include <inttypes.h>
+#include <math.h>
 #include <wlr/version.h>
 #include "utils.h"
 
@@ -92,4 +94,51 @@ phoc_ease_out_cubic (double t)
 {
   double p = t - 1;
   return p * p * p + 1;
+}
+
+#define MIN_WIDTH       360.0
+#define MIN_HEIGHT      540.0
+#define MAX_DPI_TARGET  180.0
+#define INCH_IN_MM      25.4
+
+float
+phoc_utils_compute_scale (int32_t phys_width, int32_t phys_height,
+                          int32_t width, int32_t height)
+{
+  float dpi, long_side, short_side, max_scale, scale;
+
+  if (width > height) {
+    long_side = width;
+    short_side = height;
+  } else {
+    long_side = height;
+    short_side = width;
+  }
+  // Ensure scaled resolution won't be inferior to minimum values
+  max_scale = fminf (long_side / MIN_HEIGHT, short_side / MIN_WIDTH);
+
+  /*
+   * Round the maximum scale to a sensible value:
+   *   - never use a scaling factor < 1
+   *   - round to the lower 0.25 step below 2
+   *   - round to the lower 0.5 step between 2 and 3
+   *   - round to the lower integer value over 3
+   */
+  if (max_scale < 1) {
+    max_scale = 1;
+  } else if (max_scale < 2) {
+    max_scale = 0.25 * floorf (max_scale / 0.25);
+  } else if (max_scale < 3) {
+    max_scale = 0.5 * floorf (max_scale / 0.5);
+  } else {
+    max_scale = floorf (max_scale);
+  }
+
+  dpi = (float) height / (float) phys_height * INCH_IN_MM;
+  scale = fminf (ceilf (dpi / MAX_DPI_TARGET), max_scale);
+
+  g_debug ("Output DPI is %f for mode %" PRId32 "x%" PRId32", using scale %f",
+           dpi, width, height, scale);
+
+  return scale;
 }

@@ -31,5 +31,7 @@ void phoc_utils_rotate_child_position (double *sx, double *sy, double sw, double
                                        double pw, double ph, float rotation);
 double     phoc_ease_in_cubic               (double t);
 double     phoc_ease_out_cubic              (double t);
+float      phoc_utils_compute_scale         (int32_t phys_width, int32_t phys_height,
+                                             int32_t width, int32_t height);
 
 G_END_DECLS
