@@ -28,6 +28,8 @@ sources = files(
   'gesture-single.h',
   'gesture-swipe.c',
   'gesture-swipe.h',
+  'gesture-zoom.c',
+  'gesture-zoom.h',
   'gtk-shell.c',
   'gtk-shell.h',
   'input.c',
