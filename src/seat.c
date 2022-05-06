@@ -800,8 +800,6 @@ phoc_drag_icon_update_position (PhocDragIcon *icon)
   assert (wlr_drag != NULL);
 
   switch (seat->seat->drag->grab_type) {
-  case WLR_DRAG_GRAB_KEYBOARD:
-    assert (false);
   case WLR_DRAG_GRAB_KEYBOARD_POINTER:;
     struct wlr_cursor *cursor = seat->cursor->cursor;
     icon->x = cursor->x;
@@ -816,6 +814,7 @@ phoc_drag_icon_update_position (PhocDragIcon *icon)
     icon->x = seat->touch_x;
     icon->y = seat->touch_y;
     break;
+  case WLR_DRAG_GRAB_KEYBOARD:
   default:
     g_error ("Invalid drag grab type %d", seat->seat->drag->grab_type);
   }
