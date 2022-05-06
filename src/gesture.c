@@ -946,6 +946,77 @@ phoc_gesture_set_state (PhocGesture            *gesture,
   return handled;
 }
 
+
+/**
+ * phoc_gesture_get_sequences:
+ * @gesture: a #PhocGesture
+ *
+ * Returns the list of #PhocEventSequences currently being interpreted
+ * by @gesture.
+ *
+ * Returns: (transfer container) (element-type PhocEventSequence): A list
+ *          of #PhocEventSequence s, the list elements are owned by PHOC+
+ *          and must not be freed or modified, the list itself must be deleted
+ *          through g_list_free()
+ **/
+GList *
+phoc_gesture_get_sequences (PhocGesture *gesture)
+{
+  PhocEventSequence *sequence;
+  PhocGesturePrivate *priv;
+  GList *sequences = NULL;
+  GHashTableIter iter;
+  PointData *data;
+
+  g_return_val_if_fail (PHOC_IS_GESTURE (gesture), NULL);
+
+  priv = phoc_gesture_get_instance_private (gesture);
+  g_hash_table_iter_init (&iter, priv->points);
+
+  while (g_hash_table_iter_next (&iter, (gpointer *) &sequence, (gpointer *) &data)) {
+      if (data->state == PHOC_EVENT_SEQUENCE_DENIED)
+        continue;
+      if (data->event->type == PHOC_EVENT_TOUCH_END ||
+          data->event->type == PHOC_EVENT_BUTTON_RELEASE)
+        continue;
+
+      sequences = g_list_prepend (sequences, sequence);
+  }
+
+  return sequences;
+}
+
+/**
+ * phoc_gesture_get_last_event:
+ * @gesture: a #PhocGesture
+ * @sequence: (nullable): a #PhocEventSequence
+ *
+ * Returns the last event that was processed for @sequence.
+ *
+ * Note that the returned pointer is only valid as long as the @sequence
+ * is still interpreted by the @gesture. If in doubt, you should make
+ * a copy of the event.
+ *
+ * Returns: (transfer none) (nullable): The last event from @sequence
+ **/
+const PhocEvent *
+phoc_gesture_get_last_event (PhocGesture *gesture, PhocEventSequence *sequence)
+{
+  PhocGesturePrivate *priv;
+  PointData *data;
+
+  g_return_val_if_fail (PHOC_IS_GESTURE (gesture), NULL);
+
+  priv = phoc_gesture_get_instance_private (gesture);
+  data = g_hash_table_lookup (priv->points, sequence);
+
+  if (!data)
+    return NULL;
+
+  return data->event;
+}
+
+
 /**
  * phoc_gesture_get_point:
  * @self: a `PhocGesture`

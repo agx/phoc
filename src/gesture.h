@@ -61,10 +61,13 @@ gboolean         phoc_gesture_set_sequence_state     (PhocGesture            *se
                                                       PhocEventSequenceState  state);
 gboolean         phoc_gesture_set_state              (PhocGesture            *gesture,
                                                       PhocEventSequenceState  state);
+GList *          phoc_gesture_get_sequences          (PhocGesture            *gesture);
 gboolean         phoc_gesture_is_recognized          (PhocGesture            *self);
 void             phoc_gesture_group                  (PhocGesture            *group_gesture,
                                                       PhocGesture            *gesture);
 void             phoc_gesture_ungroup                (PhocGesture            *self);
+const PhocEvent *phoc_gesture_get_last_event         (PhocGesture            *gesture,
+                                                      PhocEventSequence      *sequence);
 gboolean         phoc_gesture_get_point              (PhocGesture            *self,
                                                       PhocEventSequence      *sequence,
                                                       double                 *lx,
