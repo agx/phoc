@@ -610,7 +610,7 @@ phoc_gesture_class_init (PhocGestureClass *klass)
   klass->reset = phoc_gesture_reset_impl;
 
   /**
-   * GtkGesture:n-points:
+   * PhocGesture:n-points:
    *
    * The number of touch points that trigger
    * recognition on this gesture.
@@ -692,7 +692,7 @@ phoc_gesture_class_init (PhocGestureClass *klass)
   /**
    * PhocGesture::sequence-state-changed:
    * @gesture: the object which received the signal
-   * @sequence: (nullable): the #GdkEventSequence that was cancelled
+   * @sequence: (nullable): the #PhocEventSequence that was cancelled
    * @state: the new sequence state
    *
    * This signal is emitted whenever a sequence state changes. See
@@ -911,7 +911,7 @@ phoc_gesture_set_sequence_state (PhocGesture           *gesture,
 
 /**
  * phoch_gesture_set_state:
- * @gesture: a `GtkGesture`
+ * @gesture: a `PhocGesture`
  * @state: the sequence state
  *
  * Sets the state of all sequences that @gesture is currently
