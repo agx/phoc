@@ -61,9 +61,16 @@ if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots = wlroots_proj.get_variable('wlroots')
         wlroots_conf = wlroots_proj.get_variable('conf_data')
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
+        have_wlr_seat_touch_notify_cancel = true
 else
         wlroots = dependency('wlroots', version: '== 0.15.1')
         wlroots_has_xwayland = cc.get_define('WLR_HAS_XWAYLAND', prefix: '#include <wlr/config.h>', dependencies: wlroots) == '1'
+        have_wlr_seat_touch_notify_cancel = false
+        if cc.has_function('wlr_seat_touch_notify_cancel',
+                           args: '-DWLR_USE_UNSTABLE',
+                           dependencies: wlroots)
+          have_wlr_seat_touch_notify_cancel = true
+        endif
 endif
 
 if get_option('xwayland').enabled() and not wlroots_has_xwayland
@@ -152,6 +159,7 @@ message('\n'.join(summary))
 config_h = configuration_data()
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland)
+config_h.set('PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL', have_wlr_seat_touch_notify_cancel)
 
 configure_file(
   input: 'config.h.in',
