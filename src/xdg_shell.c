@@ -82,55 +82,47 @@ static void popup_handle_new_popup(struct wl_listener *listener, void *data) {
 	popup_create(popup->child.view, wlr_popup);
 }
 
-static void popup_unconstrain(struct roots_xdg_popup *popup) {
-	// get the output of the popup's positioner anchor point and convert it to
-	// the toplevel parent's coordinate system and then pass it to
-	// wlr_xdg_popup_unconstrain_from_box
-	PhocView *view = popup->child.view;
+static void popup_unconstrain (PhocXdgPopup* popup)
+{
+  // get the output of the popup's positioner anchor point and convert it to
+  // the toplevel parent's coordinate system and then pass it to
+  // wlr_xdg_popup_unconstrain_from_box
+  PhocView *view = PHOC_VIEW (popup->child.view);
+  struct wlr_output_layout *layout = view->desktop->layout;
+  struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
 
-	struct wlr_output_layout *layout = view->desktop->layout;
-	struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
+  int anchor_lx, anchor_ly;
+  wlr_xdg_popup_get_anchor_point (wlr_popup, &anchor_lx, &anchor_ly);
 
-	int anchor_lx, anchor_ly;
-	wlr_xdg_popup_get_anchor_point(wlr_popup, &anchor_lx, &anchor_ly);
+  int popup_lx, popup_ly;
+  wlr_xdg_popup_get_toplevel_coords (wlr_popup, wlr_popup->geometry.x,
+                                     wlr_popup->geometry.y, &popup_lx, &popup_ly);
+  popup_lx += view->box.x;
+  popup_ly += view->box.y;
 
-	int popup_lx, popup_ly;
-	wlr_xdg_popup_get_toplevel_coords(wlr_popup, wlr_popup->geometry.x,
-		wlr_popup->geometry.y, &popup_lx, &popup_ly);
-	popup_lx += view->box.x;
-	popup_ly += view->box.y;
+  anchor_lx += popup_lx;
+  anchor_ly += popup_ly;
 
-	anchor_lx += popup_lx;
-	anchor_ly += popup_ly;
+  struct wlr_output *output = wlr_output_layout_output_at (layout, view->box.x, view->box.y);
+  if (output == NULL)
+    return;
 
-	double dest_x = 0, dest_y = 0;
-	wlr_output_layout_closest_point(layout, NULL, anchor_lx, anchor_ly,
-		&dest_x, &dest_y);
+  struct wlr_box *output_box = wlr_output_layout_get_box (view->desktop->layout, output);
+  PhocOutput *phoc_output = PHOC_OUTPUT (output->data);
+  struct wlr_box usable_area = phoc_output->usable_area;
+  usable_area.x += output_box->x;
+  usable_area.y += output_box->y;
 
-	struct wlr_output *output =
-		wlr_output_layout_output_at(layout, dest_x, dest_y);
-	if (output == NULL) {
-		return;
-	}
+  // the output box expressed in the coordinate system of the toplevel parent
+  // of the popup
+  struct wlr_box output_toplevel_sx_box = {
+    .x = usable_area.x - view->box.x,
+    .y = usable_area.y - view->box.y,
+    .width = usable_area.width,
+    .height = usable_area.height,
+  };
 
-	struct wlr_box *output_box =
-		wlr_output_layout_get_box(view->desktop->layout, output);
-	PhocOutput *phoc_output = output->data;
-	struct wlr_box usable_area = phoc_output->usable_area;
-	usable_area.x += output_box->x;
-	usable_area.y += output_box->y;
-
-	// the output box expressed in the coordinate system of the toplevel parent
-	// of the popup
-	struct wlr_box output_toplevel_sx_box = {
-		.x = usable_area.x - view->box.x,
-		.y = usable_area.y - view->box.y,
-		.width = usable_area.width,
-		.height = usable_area.height,
-	};
-
-	wlr_xdg_popup_unconstrain_from_box(
-			popup->wlr_popup, &output_toplevel_sx_box);
+  wlr_xdg_popup_unconstrain_from_box (popup->wlr_popup, &output_toplevel_sx_box);
 }
 
 static struct roots_xdg_popup *popup_create(PhocView *view,
