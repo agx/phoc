@@ -337,14 +337,6 @@ phoc_layer_shell_update_focus (void)
   }
 }
 
-static void handle_output_destroy(struct wl_listener *listener, void *data) {
-	PhocLayerSurface *layer =
-		wl_container_of(listener, layer, output_destroy);
-	layer->layer_surface->output = NULL;
-	wl_list_remove(&layer->output_destroy.link);
-	wlr_layer_surface_v1_destroy(layer->layer_surface);
-}
-
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocLayerSurface *layer =
@@ -797,10 +789,6 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&layer_surface->surface->events.commit,
 		&roots_surface->surface_commit);
-
-	roots_surface->output_destroy.notify = handle_output_destroy;
-	wl_signal_add(&layer_surface->output->events.destroy,
-		&roots_surface->output_destroy);
 
 	roots_surface->destroy.notify = handle_destroy;
 	wl_signal_add(&layer_surface->events.destroy, &roots_surface->destroy);

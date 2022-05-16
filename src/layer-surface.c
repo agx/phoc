@@ -23,6 +23,18 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 G_DEFINE_TYPE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT)
 
+
+static void
+handle_output_destroy (struct wl_listener *listener, void *data)
+{
+  PhocLayerSurface *self = wl_container_of (listener, self, output_destroy);
+
+  self->layer_surface->output = NULL;
+  wl_list_remove (&self->output_destroy.link);
+  wlr_layer_surface_v1_destroy (self->layer_surface);
+}
+
+
 static void
 phoc_layer_surface_set_property (GObject     *object,
                                  guint         property_id,
@@ -61,6 +73,18 @@ phoc_layer_surface_get_property (GObject    *object,
   }
 }
 
+static void
+phoc_layer_surface_constructed (GObject *object)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (object);
+
+  G_OBJECT_CLASS (phoc_layer_surface_parent_class)->constructed (object);
+
+  /* wlr signals */
+  self->output_destroy.notify = handle_output_destroy;
+  wl_signal_add (&self->layer_surface->output->events.destroy, &self->output_destroy);
+}
+
 
 static void
 phoc_layer_surface_finalize (GObject *object)
@@ -96,6 +120,7 @@ phoc_layer_surface_class_init (PhocLayerSurfaceClass *klass)
   object_class->set_property = phoc_layer_surface_set_property;
   object_class->get_property = phoc_layer_surface_get_property;
 
+  object_class->constructed = phoc_layer_surface_constructed;
   object_class->finalize = phoc_layer_surface_finalize;
 
   props[PROP_WLR_LAYER_SURFACE] =
