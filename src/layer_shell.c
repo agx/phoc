@@ -794,8 +794,6 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		return;
 	}
 
-	wl_list_init(&roots_surface->subsurfaces);
-
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&layer_surface->surface->events.commit,
 		&roots_surface->surface_commit);

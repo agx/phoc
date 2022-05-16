@@ -53,6 +53,7 @@ phoc_layer_surface_class_init (PhocLayerSurfaceClass *klass)
 static void
 phoc_layer_surface_init (PhocLayerSurface *self)
 {
+  wl_list_init(&self->subsurfaces);
 }
 
 
