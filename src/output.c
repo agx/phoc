@@ -3,7 +3,6 @@
 #include "config.h"
 
 #define _POSIX_C_SOURCE 200809L
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
@@ -327,7 +326,7 @@ phoc_output_initable_init (GInitable    *initable,
   PhocRenderer *renderer = phoc_server_get_renderer (server);
   PhocInput *input = server->input;
 
-  assert (server->desktop);
+  g_assert (PHOC_IS_DESKTOP (server->desktop));
 
   PhocConfig *config = self->desktop->config;
 
