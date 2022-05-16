@@ -13,7 +13,54 @@
 #include "layers.h"
 #include "output.h"
 
+enum {
+  PROP_0,
+  PROP_WLR_LAYER_SURFACE,
+  PROP_LAST_PROP,
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
+
 G_DEFINE_TYPE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT)
+
+static void
+phoc_layer_surface_set_property (GObject     *object,
+                                 guint         property_id,
+                                 const GValue *value,
+                                 GParamSpec   *pspec)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (object);
+
+  switch (property_id) {
+  case PROP_WLR_LAYER_SURFACE:
+    self->layer_surface = g_value_get_pointer (value);
+    self->layer_surface->data = self;
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_layer_surface_get_property (GObject    *object,
+                                 guint       property_id,
+                                 GValue     *value,
+                                 GParamSpec *pspec)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (object);
+
+  switch (property_id) {
+  case PROP_WLR_LAYER_SURFACE:
+    g_value_set_pointer (value, self->layer_surface);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
 
 static void
 phoc_layer_surface_finalize (GObject *object)
@@ -46,7 +93,16 @@ phoc_layer_surface_class_init (PhocLayerSurfaceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->set_property = phoc_layer_surface_set_property;
+  object_class->get_property = phoc_layer_surface_get_property;
+
   object_class->finalize = phoc_layer_surface_finalize;
+
+  props[PROP_WLR_LAYER_SURFACE] =
+    g_param_spec_pointer ("wlr-layer-surface", "", "",
+                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 
 
@@ -58,9 +114,11 @@ phoc_layer_surface_init (PhocLayerSurface *self)
 
 
 PhocLayerSurface *
-phoc_layer_surface_new (void)
+phoc_layer_surface_new (struct wlr_layer_surface_v1 *layer_surface)
 {
-  return PHOC_LAYER_SURFACE (g_object_new (PHOC_TYPE_LAYER_SURFACE, NULL));
+  return PHOC_LAYER_SURFACE (g_object_new (PHOC_TYPE_LAYER_SURFACE,
+                                           "wlr-layer-surface", layer_surface,
+                                           NULL));
 }
 
 

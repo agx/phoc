@@ -789,7 +789,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		}
 	}
 
-	PhocLayerSurface *roots_surface = phoc_layer_surface_new ();
+	PhocLayerSurface *roots_surface = phoc_layer_surface_new (layer_surface);
 	if (!roots_surface) {
 		return;
 	}
@@ -810,9 +810,6 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	wl_signal_add(&layer_surface->events.unmap, &roots_surface->unmap);
 	roots_surface->new_popup.notify = handle_new_popup;
 	wl_signal_add(&layer_surface->events.new_popup, &roots_surface->new_popup);
-
-	roots_surface->layer_surface = layer_surface;
-	layer_surface->data = roots_surface;
 
 	PhocOutput *output = layer_surface->output->data;
 	wl_list_insert(&output->layers[layer_surface->pending.layer], &roots_surface->link);
