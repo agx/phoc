@@ -782,9 +782,6 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	}
 
 	PhocLayerSurface *roots_surface = phoc_layer_surface_new (layer_surface);
-	if (!roots_surface) {
-		return;
-	}
 
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&layer_surface->surface->events.commit,
