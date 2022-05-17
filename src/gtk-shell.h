@@ -28,11 +28,12 @@ typedef struct PhocGtkSurface {
   } events;
 } PhocGtkSurface;
 
-PhocGtkShell *phoc_gtk_shell_create(PhocDesktop *desktop,
-				    struct wl_display *display);
-void phoc_gtk_shell_destroy(PhocGtkShell *gtk_shell);
-PhocGtkSurface *phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell *self, struct wlr_surface *wlr_surface);
-PhocGtkShell *phoc_gtk_shell_from_resource(struct wl_resource *resource);
-PhocGtkSurface *gtk_surface_from_resource(struct wl_resource *resource);
+PhocGtkShell   *phoc_gtk_shell_create                           (PhocDesktop        *desktop,
+                                                                 struct wl_display  *display);
+void            phoc_gtk_shell_destroy                          (PhocGtkShell       *gtk_shell);
+PhocGtkSurface *phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell       *self,
+                                                                 struct wlr_surface *wlr_surface);
+PhocGtkShell   *phoc_gtk_shell_from_resource                    (struct wl_resource *resource);
+PhocGtkSurface *phoc_gtk_surface_from_resource                  (struct wl_resource *resource);
 
 G_END_DECLS
