@@ -26,6 +26,24 @@
  * Implement just enough to raise windows for GTK based applications
  * until there's an agreed on upstream protocol.
  */
+struct _PhocGtkShell {
+  struct wl_global *global;
+  GSList *resources;
+  GSList *surfaces;
+};
+
+struct _PhocGtkSurface {
+  struct wl_resource *resource;
+  struct wlr_surface *wlr_surface;
+  PhocGtkShell *gtk_shell;
+  char *app_id;
+
+  struct wl_listener wlr_surface_handle_destroy;
+
+  struct {
+    struct wl_signal destroy;
+  } events;
+};
 
 static void
 handle_set_dbus_properties(struct wl_client *client,

@@ -4,30 +4,18 @@
  * Author: Guido Günther <agx@sigxcpu.org>
  */
 
+#include "desktop.h"
+#include <wlr/types/wlr_surface.h>
+#include <wayland-server-core.h>
+
 #pragma once
 
 G_BEGIN_DECLS
 
-typedef struct _PhocGtkShell {
-  struct wl_global *global;
-  GSList *resources;
-  GSList *surfaces;
+typedef struct _PhocGtkShell PhocGtkShell;
+typedef struct _PhocGtkSurface PhocGtkSurface;
 
-} PhocGtkShell;
-
-typedef struct PhocGtkSurface {
-  struct wl_resource *resource;
-  struct wlr_surface *wlr_surface;
-  PhocGtkShell *gtk_shell;
-  char *app_id;
-
-  struct wl_listener wlr_surface_handle_destroy;
-
-  struct {
-    struct wl_signal destroy;
-  } events;
-} PhocGtkSurface;
-
+typedef struct _PhocDesktop PhocDesktop;
 PhocGtkShell   *phoc_gtk_shell_create                           (PhocDesktop        *desktop,
                                                                  struct wl_display  *display);
 void            phoc_gtk_shell_destroy                          (PhocGtkShell       *gtk_shell);
