@@ -34,6 +34,8 @@ void            phoc_gtk_shell_destroy                          (PhocGtkShell   
 PhocGtkSurface *phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell       *self,
                                                                  struct wlr_surface *wlr_surface);
 PhocGtkShell   *phoc_gtk_shell_from_resource                    (struct wl_resource *resource);
+
 PhocGtkSurface *phoc_gtk_surface_from_resource                  (struct wl_resource *resource);
+const char     *phoc_gtk_surface_get_app_id                     (PhocGtkSurface     *gtk_surface);
 
 G_END_DECLS

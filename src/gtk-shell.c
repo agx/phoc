@@ -308,3 +308,10 @@ phoc_gtk_surface_from_resource (struct wl_resource *resource)
                                     &gtk_surface1_impl));
   return wl_resource_get_user_data (resource);
 }
+
+
+const char *
+phoc_gtk_surface_get_app_id (PhocGtkSurface *gtk_surface)
+{
+  return gtk_surface->app_id;
+}
