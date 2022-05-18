@@ -20,6 +20,7 @@
 #define LAYER_SHELL_EFFECTS_VERSION 1
 #define DRAG_ACCEPT_THRESHOLD_DISTANCE 16
 #define DRAG_REJECT_THRESHOLD_DISTANCE 24
+#define SLIDE_ANIM_DURATION_MS 400 /* ms */
 
 typedef enum {
   PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP = (ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
@@ -558,14 +559,6 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
   if (output == NULL)
     return G_SOURCE_REMOVE;
 
-  /* TODO: use a render clock independent timer */
-#define TICK 50
-  drag_surface->drag.anim_t += ((float)TICK) / 1000.0;
-
-  if (drag_surface->drag.anim_t > 1.0) {
-    drag_surface->drag.anim_t = 1.0;
-  }
-
   switch (layer->current.anchor) {
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
     margin = (int32_t)layer->current.margin.top;
@@ -606,6 +599,12 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
     drag_surface->drag.anim_id = 0;
     return G_SOURCE_REMOVE;
   } else {
+    gint64 now = g_get_monotonic_time ();
+
+    drag_surface->drag.anim_t += ((float)(now - last_frame)) / (SLIDE_ANIM_DURATION_MS * 1000);
+    if (drag_surface->drag.anim_t > 1.0)
+      drag_surface->drag.anim_t = 1.0;
+
     distance = (drag_surface->drag.anim_end - drag_surface->drag.anim_start) * phoc_ease_out_cubic (drag_surface->drag.anim_t);
     switch (drag_surface->drag.anim_dir) {
     case ANIM_DIR_OUT:
