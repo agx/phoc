@@ -7,6 +7,7 @@
 
 #define G_LOG_DOMAIN "phoc-layer-shell-effects"
 
+#include "anim/animatable.h"
 #include "config.h"
 #include "layers.h"
 #include "layer-shell-effects.h"
@@ -66,7 +67,7 @@ struct _PhocDraggableLayerSurface {
     /* Threshold until drag is rejected */
     int      pending_reject;
     /* Slide in/out animation */
-    gulong   anim_id;
+    guint    anim_id;
     float    anim_t;
     int32_t  anim_start;
     int32_t  anim_end;
@@ -262,7 +263,6 @@ static void
 phoc_draggable_layer_surface_destroy (PhocDraggableLayerSurface *drag_surface)
 {
   PhocLayerShellEffects *layer_shell_effects;
-  PhocRenderer *renderer;
 
   if (drag_surface == NULL)
     return;
@@ -271,16 +271,20 @@ phoc_draggable_layer_surface_destroy (PhocDraggableLayerSurface *drag_surface)
   layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (drag_surface->layer_shell_effects);
   g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (layer_shell_effects));
 
+  if (drag_surface->drag.anim_id && drag_surface->layer_surface) {
+    phoc_animatable_remove_frame_callback (PHOC_ANIMATABLE (drag_surface->layer_surface),
+                                           drag_surface->drag.anim_id);
+  }
   /* wlr signals */
   wl_list_remove (&drag_surface->surface_handle_commit.link);
   wl_list_remove (&drag_surface->layer_surface_handle_destroy.link);
 
-  g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_sufrace,
-                       drag_surface->layer_surface);
+  if (drag_surface->layer_surface) {
+    g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_sufrace,
+                         drag_surface->layer_surface);
+  }
   layer_shell_effects->drag_surfaces = g_slist_remove (layer_shell_effects->drag_surfaces,
                                                        drag_surface);
-  renderer = phoc_server_get_default()->renderer;
-  g_clear_signal_handler (&drag_surface->drag.anim_id, renderer);
 
   wl_resource_set_user_data (drag_surface->resource, NULL);
   g_free (drag_surface);
@@ -311,7 +315,7 @@ layer_surface_handle_destroy (struct wl_listener *listener, void *data)
   PhocDraggableLayerSurface *drag_surface =
     wl_container_of(listener, drag_surface, layer_surface_handle_destroy);
 
-  phoc_draggable_layer_surface_destroy (drag_surface);
+  drag_surface->layer_surface = NULL;
 }
 
 
@@ -392,13 +396,13 @@ handle_get_draggable_layer_surface (struct wl_client   *client,
                                   drag_surface,
                                   draggable_layer_surface_handle_resource_destroy);
 
-  drag_surface->layer_surface = wlr_layer_surface->data;
-  if (!drag_surface->layer_surface) {
+  if (!wlr_layer_surface->data) {
     wl_resource_post_error (layer_shell_effects_resource,
                             ZPHOC_LAYER_SHELL_EFFECTS_V1_ERROR_BAD_SURFACE,
                             "Layer surface not yet committed");
     return;
   }
+  drag_surface->layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
 
   g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
 
@@ -535,19 +539,24 @@ apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
 }
 
 
-static void
-on_render_start (PhocDraggableLayerSurface *drag_surface, PhocOutput *output, PhocRenderer *renderer)
+static gboolean
+on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpointer user_data)
+
 {
-  struct wlr_layer_surface_v1 *layer = drag_surface->layer_surface->layer_surface;
-  struct wlr_output *wlr_output = layer->output;
+  PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (animatable);
+  PhocDraggableLayerSurface *drag_surface = user_data;
+  PhocOutput *output;
+  struct wlr_layer_surface_v1 *layer = layer_surface->layer_surface;
   double margin, distance;
   bool done;
 
-  g_assert (PHOC_IS_OUTPUT (output));
+  g_assert (PHOC_IS_LAYER_SURFACE (layer_surface));
+  g_assert (drag_surface);
   g_assert (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING);
+  output = phoc_layer_surface_get_output (layer_surface);
 
-  if (output->wlr_output != wlr_output)
-    return;
+  if (output == NULL)
+    return G_SOURCE_REMOVE;
 
   /* TODO: use a render clock independent timer */
 #define TICK 50
@@ -580,7 +589,6 @@ on_render_start (PhocDraggableLayerSurface *drag_surface, PhocOutput *output, Ph
 
   if (done) {
     g_debug ("Ending animation for %p, margin: %f", drag_surface, margin);
-    g_clear_signal_handler (&drag_surface->drag.anim_id, renderer);
 
     switch (drag_surface->drag.anim_dir) {
     case ANIM_DIR_IN:
@@ -595,6 +603,8 @@ on_render_start (PhocDraggableLayerSurface *drag_surface, PhocOutput *output, Ph
     margin = drag_surface->drag.anim_end;
     zphoc_draggable_layer_surface_v1_send_drag_end (drag_surface->resource, drag_surface->drag.last_state);
     drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_NONE;
+    drag_surface->drag.anim_id = 0;
+    return G_SOURCE_REMOVE;
   } else {
     distance = (drag_surface->drag.anim_end - drag_surface->drag.anim_start) * phoc_ease_out_cubic (drag_surface->drag.anim_t);
     switch (drag_surface->drag.anim_dir) {
@@ -612,6 +622,8 @@ on_render_start (PhocDraggableLayerSurface *drag_surface, PhocOutput *output, Ph
   phoc_layer_shell_arrange (output);
   /* FIXME: way too much damage */
   phoc_output_damage_whole (output);
+
+  return G_SOURCE_CONTINUE;
 }
 
 
@@ -620,13 +632,10 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
 {
   struct wlr_layer_surface_v1 *layer = drag_surface->layer_surface->layer_surface;
   double margin;
-  PhocRenderer *renderer = phoc_server_get_default()->renderer;
   struct wlr_output *wlr_output = layer->output;
-  PhocOutput *output;
 
   if (wlr_output == NULL)
     return;
-  output = PHOC_OUTPUT (wlr_output->data);
 
   switch (layer->current.anchor) {
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
@@ -656,14 +665,17 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
 
   g_debug ("%s: start: %d, end: %d dir: %d", __func__,
           drag_surface->drag.anim_start, drag_surface->drag.anim_end, drag_surface->drag.anim_dir);
-  g_clear_signal_handler (&drag_surface->drag.anim_id, renderer);
-  drag_surface->drag.anim_id = g_signal_connect_swapped (renderer,
-                                                 "render-start",
-                                                 G_CALLBACK (on_render_start),
-                                                 drag_surface);
-  /* FIXME: way too much damage */
-  /* Make sure there's damage so a render run is triggered */
-  phoc_output_damage_whole (output);
+
+
+  if (drag_surface->drag.anim_id) {
+    phoc_animatable_remove_frame_callback (PHOC_ANIMATABLE (drag_surface->layer_surface),
+                                           drag_surface->drag.anim_id);
+  }
+  drag_surface->drag.anim_id = phoc_animatable_add_frame_callback (
+    PHOC_ANIMATABLE (drag_surface->layer_surface),
+    on_output_frame_callback,
+    drag_surface,
+    NULL);
 }
 
 
