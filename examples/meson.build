@@ -14,3 +14,8 @@ executable('layer-shell-effects',
 		 wlroots,
 		],
 )
+
+executable('phosh-private',
+  sources: ['phosh-private.c', client_protos_headers, protos_sources],
+  dependencies: [glib, wayland_client],
+)
