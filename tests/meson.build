@@ -27,6 +27,7 @@ tests = [
   'layer-shell',
   'layer-shell-effects',
   'phosh-private',
+  'property-easer',
   'run',
   'server',
   'utils',

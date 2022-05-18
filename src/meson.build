@@ -84,6 +84,7 @@ sources = files(
   'xdg-surface.h',
 ) + phoc_anim_sources
 libphoc_generated_sources = [
+  phoc_anim_enum_sources,
   phoc_enum_sources,
   phoc_marshalers,
   server_protos_headers,
