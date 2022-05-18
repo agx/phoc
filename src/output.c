@@ -18,6 +18,7 @@
 #include "settings.h"
 #include "layers.h"
 #include "output.h"
+#include "output-shield.h"
 #include "render.h"
 #include "render-private.h"
 #include "seat.h"
@@ -28,6 +29,8 @@
 static void phoc_output_initable_iface_init (GInitableIface *iface);
 
 typedef struct _PhocOutputPrivate {
+  PhocOutputShield *shield;
+
   GSList *frame_callbacks;
   gint    frame_callback_next_id;
   gint64  last_frame_us;
@@ -179,6 +182,7 @@ phoc_output_init (PhocOutput *self)
 
   priv->frame_callback_next_id = 1;
   priv->last_frame_us = g_get_monotonic_time ();
+  priv->shield = phoc_output_shield_new (self);
 }
 
 PhocOutput *
@@ -504,6 +508,7 @@ phoc_output_finalize (GObject *object)
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
     wl_list_init (&self->layers[i]);
 
+  g_clear_object (&priv->shield);
   g_clear_object (&self->desktop);
 
   G_OBJECT_CLASS (phoc_output_parent_class)->finalize (object);
@@ -1214,4 +1219,34 @@ phoc_output_has_frame_callbacks  (PhocOutput *self)
   priv = phoc_output_get_instance_private (self);
 
   return !!priv->frame_callbacks;
+}
+
+
+void
+phoc_output_lower_shield (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  if (priv->shield == NULL)
+    return;
+
+  phoc_output_shield_lower (priv->shield);
+}
+
+
+void
+phoc_output_raise_shield (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  if (priv->shield == NULL)
+    priv->shield = phoc_output_shield_new (self);
+
+  phoc_output_shield_raise (priv->shield);
 }

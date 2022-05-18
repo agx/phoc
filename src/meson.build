@@ -50,6 +50,8 @@ sources = files(
   'layers.h',
   'output.c',
   'output.h',
+  'output-shield.c',
+  'output-shield.h',
   'phosh-private.c',
   'phosh-private.h',
   'pointer.c',

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "animatable.h"
+#include "render.h"
 #include "view.h"
 
 #include <gio/gio.h>
@@ -131,4 +132,8 @@ guint       phoc_output_add_frame_callback   (PhocOutput        *self,
 void       phoc_output_remove_frame_callback (PhocOutput        *self,
                                               guint              id);
 bool       phoc_output_has_frame_callbacks   (PhocOutput        *self);
+
+void       phoc_output_lower_shield          (PhocOutput *self);
+void       phoc_output_raise_shield          (PhocOutput *self);
+
 G_END_DECLS
