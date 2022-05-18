@@ -1,3 +1,5 @@
+subdir('anim')
+
 phoc_enum_headers = files(
   [
     'phosh-private.h',
@@ -80,7 +82,7 @@ sources = files(
   'xdg_shell.c',
   'xdg-surface.c',
   'xdg-surface.h',
-)
+) + phoc_anim_sources
 libphoc_generated_sources = [
   phoc_enum_sources,
   phoc_marshalers,
@@ -114,12 +116,15 @@ phoc_lib = static_library(
   'phoc',
   sources,
   libphoc_generated_sources,
+  include_directories: phoc_anim_inc,
   dependencies: phoc_deps,
   install: false,
 )
 
 libphoc_dep = declare_dependency(
-  include_directories: [include_directories('.'), protocol_inc],
+  include_directories: [include_directories('.'),
+			phoc_anim_inc,
+			protocol_inc],
   link_with: phoc_lib,
   dependencies: phoc_deps,
   sources: libphoc_generated_sources)
