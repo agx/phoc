@@ -23,8 +23,9 @@ typedef enum {
 } PhocViewType;
 
 typedef enum {
-  PHOC_VIEW_TILE_LEFT,
-  PHOC_VIEW_TILE_RIGHT,
+  PHOC_VIEW_TILE_NONE  = 0,
+  PHOC_VIEW_TILE_LEFT  = 1 << 0,
+  PHOC_VIEW_TILE_RIGHT = 1 << 1,
 } PhocViewTileDirection;
 
 typedef enum {
