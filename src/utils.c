@@ -101,33 +101,6 @@ phoc_utils_rotated_bounds (struct wlr_box *dest, const struct wlr_box *box, floa
   dest->height = ceil (fmax (y1, y2) - fmin (y1, y2));
 }
 
-/**
- * phoc_ease_in_cubic:
- * @t: The term
- *
- * Ease in using cubic interpolation.
- */
-double
-phoc_ease_in_cubic (double t)
-{
-  double p = t;
-  return p * p * p;
-}
-
-
-/**
- * phoc_ease_out_cubic:
- * @t: The term
- *
- * Ease out using cubic interpolation
- */
-double
-phoc_ease_out_cubic (double t)
-{
-  double p = t - 1;
-  return p * p * p + 1;
-}
-
 #define MIN_WIDTH       360.0
 #define MIN_HEIGHT      540.0
 #define MAX_DPI_TARGET  180.0

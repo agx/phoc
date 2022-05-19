@@ -7,10 +7,10 @@
 
 #define G_LOG_DOMAIN "phoc-layer-shell-effects"
 
-#include "anim/animatable.h"
 #include "config.h"
 #include "layers.h"
 #include "layer-shell-effects.h"
+#include "phoc-animation.h"
 #include "phoc-enums.h"
 #include "server.h"
 #include "utils.h"
@@ -605,7 +605,8 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
     if (drag_surface->drag.anim_t > 1.0)
       drag_surface->drag.anim_t = 1.0;
 
-    distance = (drag_surface->drag.anim_end - drag_surface->drag.anim_start) * phoc_ease_out_cubic (drag_surface->drag.anim_t);
+    distance = (drag_surface->drag.anim_end - drag_surface->drag.anim_start) *
+      phoc_easing_ease (PHOC_EASING_EASE_OUT_CUBIC, drag_surface->drag.anim_t);
     switch (drag_surface->drag.anim_dir) {
     case ANIM_DIR_OUT:
     case ANIM_DIR_IN:
