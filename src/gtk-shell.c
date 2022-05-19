@@ -158,10 +158,6 @@ handle_get_gtk_surface(struct wl_client *client,
   PhocGtkSurface *gtk_surface;
 
   gtk_surface = g_new0 (PhocGtkSurface, 1);
-  if (gtk_surface == NULL) {
-    wl_client_post_no_memory (client);
-    return;
-  }
 
   int version = wl_resource_get_version(gtk_shell_resource);
   gtk_surface->gtk_shell = phoc_gtk_shell_from_resource (gtk_shell_resource);
