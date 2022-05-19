@@ -206,6 +206,8 @@ void view_move_resize(PhocView *view, double x, double y,
 	uint32_t width, uint32_t height);
 void view_auto_maximize(PhocView *view);
 void view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *output);
+PhocViewTileDirection
+     phoc_view_get_tile_direction (PhocView *view);
 void view_maximize(PhocView *view, struct wlr_output *output);
 void view_restore(PhocView *view);
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output);
