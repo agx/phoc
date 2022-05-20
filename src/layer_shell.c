@@ -238,11 +238,13 @@ static struct osk_origin find_osk(struct wl_list layers[LAYER_SHELL_LAYER_COUNT]
 }
 
 /// Adjusts keyboard properties
-static void change_osk(const struct osk_origin *osk, struct wl_list layers[LAYER_SHELL_LAYER_COUNT], bool force_overlay) {
-	if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY) {
-		wl_list_remove(&osk->surface->link);
-		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &osk->surface->link);
-	}
+static void
+change_osk (const struct osk_origin *osk, struct wl_list layers[LAYER_SHELL_LAYER_COUNT], bool force_overlay)
+{
+  if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY) {
+    wl_list_remove(&osk->surface->link);
+    wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &osk->surface->link);
+  }
 
 	if (!force_overlay && osk->layer != osk->surface->layer_surface->pending.layer) {
 		wl_list_remove(&osk->surface->link);
