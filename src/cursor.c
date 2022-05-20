@@ -302,12 +302,12 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
   struct wlr_box *output_box =
     wlr_output_layout_get_box (desktop->layout, wlr_output);
 
-  PhocLayerSurface *roots_surface;
+  PhocLayerSurface *layer_surface;
   bool left = false, right = false, top = false, bottom = false;
 
-  wl_list_for_each (roots_surface, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], link) {
-    struct wlr_layer_surface_v1 *layer = roots_surface->layer_surface;
-    struct wlr_layer_surface_v1_state *state = &layer->current;
+  wl_list_for_each (layer_surface, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], link) {
+    struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
+    struct wlr_layer_surface_v1_state *state = &wlr_layer_surface->current;
     const uint32_t both_horiz = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
                                 | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
     const uint32_t both_vert = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
