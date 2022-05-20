@@ -159,44 +159,40 @@ static PhocView *desktop_view_at(PhocDesktop *desktop,
 	return NULL;
 }
 
-static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
-                                             double oy, double *sx, double *sy)
+static struct wlr_surface *
+layer_surface_at (struct wl_list *layer, double ox, double oy, double *sx, double *sy)
 {
-	PhocLayerSurface *layer_surface;
+  PhocLayerSurface *layer_surface;
 
-	wl_list_for_each_reverse(layer_surface, layer, link) {
-		if (layer_surface->layer_surface->current.exclusive_zone <= 0) {
-			continue;
-		}
+  wl_list_for_each_reverse(layer_surface, layer, link) {
+    if (layer_surface->layer_surface->current.exclusive_zone <= 0)
+      continue;
 
-		double _sx = ox - layer_surface->geo.x;
-		double _sy = oy - layer_surface->geo.y;
+    double _sx = ox - layer_surface->geo.x;
+    double _sy = oy - layer_surface->geo.y;
 
-		struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
-			layer_surface->layer_surface, _sx, _sy, sx, sy);
+    struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
+      layer_surface->layer_surface, _sx, _sy, sx, sy);
 
-		if (sub) {
-			return sub;
-		}
-	}
+    if (sub)
+      return sub;
+  }
 
-	wl_list_for_each(layer_surface, layer, link) {
-		if (layer_surface->layer_surface->current.exclusive_zone > 0) {
-			continue;
-		}
+  wl_list_for_each(layer_surface, layer, link) {
+    if (layer_surface->layer_surface->current.exclusive_zone > 0)
+      continue;
 
-		double _sx = ox - layer_surface->geo.x;
-		double _sy = oy - layer_surface->geo.y;
+    double _sx = ox - layer_surface->geo.x;
+    double _sy = oy - layer_surface->geo.y;
 
-		struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
-			layer_surface->layer_surface, _sx, _sy, sx, sy);
+    struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
+      layer_surface->layer_surface, _sx, _sy, sx, sy);
 
-		if (sub) {
-			return sub;
-		}
-	}
+    if (sub)
+      return sub;
+  }
 
-	return NULL;
+  return NULL;
 }
 
 /**
