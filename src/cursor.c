@@ -269,7 +269,7 @@ seat_view_deco_button (PhocSeatView *view, double sx,
 }
 
 static bool
-roots_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int threshold)
+phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int threshold)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
@@ -349,7 +349,7 @@ roots_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, in
 }
 
 static void
-roots_passthrough_cursor (PhocCursor *self,
+phoc_passthrough_cursor (PhocCursor *self,
                           uint32_t    time)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -648,7 +648,7 @@ phoc_cursor_update_focus (PhocCursor *self)
 
   clock_gettime (CLOCK_MONOTONIC, &now);
 
-  roots_passthrough_cursor (self, timespec_to_msec (&now));
+  phoc_passthrough_cursor (self, timespec_to_msec (&now));
 }
 
 void
@@ -662,7 +662,7 @@ phoc_cursor_update_position (PhocCursor *self,
 
   switch (self->mode) {
   case PHOC_CURSOR_PASSTHROUGH:
-    roots_passthrough_cursor (self, time);
+    phoc_passthrough_cursor (self, time);
     break;
   case PHOC_CURSOR_MOVE:
     view = phoc_seat_get_focus (seat);
@@ -800,7 +800,7 @@ phoc_cursor_press_button (PhocCursor *self,
     }
   }
 
-  if (!roots_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch) {
+  if (!phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch) {
     wlr_seat_pointer_notify_button (seat->seat, time, button, state);
   }
 }
@@ -982,7 +982,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
   PhocView *view;
   struct wlr_surface *surface = phoc_desktop_surface_at (
     desktop, lx, ly, &sx, &sy, &view);
-  bool shell_revealed = roots_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
+  bool shell_revealed = phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
 
   if (!shell_revealed && surface && phoc_seat_allow_input (seat, surface->resource)) {
     wlr_seat_touch_notify_down (seat->seat, surface,
