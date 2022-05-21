@@ -215,9 +215,7 @@ handle_notify_launch(struct wl_client *client,
 
   g_debug ("%s: %s", __func__, startup_id);
   if (startup_id) {
-#ifdef PHOC_HAVE_WLR_XDG_ACTIVATION_V1_ADD_TOKEN
     wlr_xdg_activation_v1_add_token (server->desktop->xdg_activation_v1, startup_id);
-#endif
     phoc_phosh_private_notify_launch (server->desktop->phosh,
                                       startup_id,
                                       PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);

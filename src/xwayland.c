@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <wayland-server-core.h>
 #include <wlr/config.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
+#include <wlr/util/box.h>
 #include <wlr/xwayland.h>
 #include "cursor.h"
 #include "server.h"
@@ -16,6 +16,7 @@
 #include "view.h"
 #include "xwayland.h"
 #include "xwayland-surface.h"
+
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
 	PhocXWaylandSurface *phoc_surface =
@@ -122,7 +123,6 @@ static void handle_set_class(struct wl_listener *listener, void *data) {
 		phoc_surface->xwayland_surface->class);
 }
 
-#ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
 static void handle_set_startup_id(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 
@@ -134,7 +134,6 @@ static void handle_set_startup_id(struct wl_listener *listener, void *data) {
                                               phoc_surface->xwayland_surface->startup_id,
                                               PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
 }
-#endif /* PHOC_HAVE_WLR_SET_STARTUP_ID */
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	PhocXWaylandSurface *phoc_surface =
@@ -260,9 +259,7 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 	phoc_surface->set_class.notify = handle_set_class;
 	wl_signal_add(&surface->events.set_class,
 			&phoc_surface->set_class);
-#ifdef PHOC_HAVE_WLR_SET_STARTUP_ID
 	phoc_surface->set_startup_id.notify = handle_set_startup_id;
 	wl_signal_add(&surface->events.set_startup_id,
 			&phoc_surface->set_startup_id);
-#endif
 }

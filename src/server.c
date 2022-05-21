@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "render.h"
+#include "render-private.h"
 #include "utils.h"
 #include "seat.h"
 #include "server.h"
@@ -25,6 +26,7 @@ typedef struct {
   GSource source;
   struct wl_display *display;
 } WaylandEventSource;
+
 
 static gboolean
 wayland_event_source_prepare (GSource *base,
@@ -154,13 +156,12 @@ render_shield (PhocServer *self, PhocOutput *output, PhocRenderer *renderer)
 {
   struct wlr_output *wlr_output = output->wlr_output;
   struct wlr_box box = { 0, 0, wlr_output->width, wlr_output->height };
-  struct wlr_renderer *wlr_renderer = wlr_backend_get_renderer (wlr_output->backend);
   float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
   g_assert (PHOC_IS_RENDERER (renderer));
 
   color[3] = 1.0 - phoc_ease_in_cubic (self->fader_t);
-  wlr_render_rect (wlr_renderer, &box, color, wlr_output->transform_matrix);
+  wlr_render_rect (wlr_output->renderer, &box, color, wlr_output->transform_matrix);
 
   if (self->fader_t >= 1.0f) {
     g_debug ("Shield fade done");
@@ -244,17 +245,13 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-  wlr_renderer = wlr_backend_get_renderer(self->backend);
-  if (wlr_renderer == NULL) {
-    g_set_error (error,
-                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
-		 "Could not create renderer");
+  self->renderer = phoc_renderer_new (self->backend, error);
+  if (self->renderer == NULL) {
     return FALSE;
   }
-  self->renderer = phoc_renderer_new (wlr_renderer);
+  wlr_renderer = phoc_renderer_get_wlr_renderer (self->renderer);
 
-  self->data_device_manager =
-    wlr_data_device_manager_create(self->wl_display);
+  self->data_device_manager = wlr_data_device_manager_create(self->wl_display);
   wlr_renderer_init_wl_display(wlr_renderer, self->wl_display);
 
   self->compositor = wlr_compositor_create(self->wl_display,

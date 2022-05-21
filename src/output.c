@@ -18,13 +18,16 @@
 #include "layers.h"
 #include "output.h"
 #include "render.h"
+#include "render-private.h"
 #include "seat.h"
 #include "server.h"
 #include "utils.h"
 #include "xwayland-surface.h"
 
+static void phoc_output_initable_iface_init (GInitableIface *iface);
 
-G_DEFINE_TYPE (PhocOutput, phoc_output, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_output_initable_iface_init));
 
 enum {
   PROP_0,
@@ -85,7 +88,7 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
 
   struct wlr_box rotated_box;
 
-  wlr_box_rotated_bounds (&rotated_box, &box, data->rotation);
+  phoc_utils_rotated_bounds (&rotated_box, &box, data->rotation);
 
   struct wlr_box output_box = {0};
 
@@ -95,7 +98,7 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
 
   struct wlr_box intersection;
 
-  return wlr_box_intersection (&intersection, &output_box, &rotated_box);
+  return wlr_box_intersection (&intersection, &output_box, &box);
 }
 
 
@@ -149,12 +152,12 @@ phoc_output_init (PhocOutput *self)
 }
 
 PhocOutput *
-phoc_output_new (PhocDesktop *desktop, struct wlr_output *wlr_output)
+phoc_output_new (PhocDesktop *desktop, struct wlr_output *wlr_output, GError **error)
 {
-  return g_object_new (PHOC_TYPE_OUTPUT,
-                       "desktop", desktop,
-                       "wlr-output", wlr_output,
-                       NULL);
+  return g_initable_new (PHOC_TYPE_OUTPUT, NULL, error,
+                         "desktop", desktop,
+                         "wlr-output", wlr_output,
+                         NULL);
 }
 
 static void
@@ -313,11 +316,15 @@ phoc_output_set_mode (struct wlr_output *output, PhocOutputConfig *oc)
   }
 }
 
-static void
-phoc_output_constructed (GObject *object)
+
+static gboolean
+phoc_output_initable_init (GInitable    *initable,
+                           GCancellable *cancellable,
+                           GError      **error)
 {
-  PhocOutput *self = PHOC_OUTPUT (object);
+  PhocOutput *self = PHOC_OUTPUT (initable);
   PhocServer *server = phoc_server_get_default ();
+  PhocRenderer *renderer = phoc_server_get_renderer (server);
   PhocInput *input = server->input;
 
   assert (server->desktop);
@@ -335,6 +342,15 @@ phoc_output_constructed (GObject *object)
 
   self->wlr_output->data = self;
   wl_list_insert (&self->desktop->outputs, &self->link);
+
+  if (!wlr_output_init_render (self->wlr_output,
+                               phoc_renderer_get_wlr_allocator (renderer),
+                               phoc_renderer_get_wlr_renderer (renderer))) {
+    g_set_error (error,
+                 G_FILE_ERROR, G_FILE_ERROR_FAILED,
+		 "Could not create renderer");
+    return FALSE;
+  }
 
   self->damage = wlr_output_damage_create (self->wlr_output);
 
@@ -416,8 +432,7 @@ phoc_output_constructed (GObject *object)
 
   update_output_manager_config (self->desktop);
 
-  G_OBJECT_CLASS (phoc_output_parent_class)->constructed (object);
-
+  return TRUE;
 }
 
 static void
@@ -433,11 +448,17 @@ phoc_output_finalize (GObject *object)
   g_clear_list (&self->debug_touch_points, g_free);
 
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
-    wl_list_remove (&self->layers[i]);
+    wl_list_init (&self->layers[i]);
 
   g_clear_object (&self->desktop);
 
   G_OBJECT_CLASS (phoc_output_parent_class)->finalize (object);
+}
+
+static void
+phoc_output_initable_iface_init (GInitableIface *iface)
+{
+  iface->init = phoc_output_initable_init;
 }
 
 static void
@@ -448,7 +469,6 @@ phoc_output_class_init (PhocOutputClass *klass)
   object_class->set_property = phoc_output_set_property;
   object_class->get_property = phoc_output_get_property;
 
-  object_class->constructed = phoc_output_constructed;
   object_class->finalize = phoc_output_finalize;
 
   props[PROP_DESKTOP] =
@@ -614,9 +634,9 @@ phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surf
 
     double popup_sx, popup_sy;
     popup_sx = layer_surface->geo.x;
-    popup_sx += popup->popup->geometry.x - popup->geometry.x;
+    popup_sx += popup->popup->geometry.x - popup->current.geometry.x;
     popup_sy = layer_surface->geo.y;
-    popup_sy += popup->popup->geometry.y - popup->geometry.y;
+    popup_sy += popup->popup->geometry.y - popup->current.geometry.y;
 
     phoc_output_xdg_surface_for_each_surface (self, popup,
                                               popup_sx, popup_sy, iterator, user_data);
@@ -822,7 +842,7 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
   }
 
   if (*whole) {
-    wlr_box_rotated_bounds (&box, &box, rotation);
+    phoc_utils_rotated_bounds (&box, &box, rotation);
     wlr_output_damage_add_box (self->damage, &box);
   }
 

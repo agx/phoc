@@ -5,9 +5,9 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <wayland-server-core.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/box.h>
 
 G_BEGIN_DECLS
 
@@ -52,7 +52,8 @@ struct _PhocOutput {
 };
 
 PhocOutput *phoc_output_new (PhocDesktop       *desktop,
-                             struct wlr_output *wlr_output);
+                             struct wlr_output *wlr_output,
+                             GError           **error);
 /* Surface iterators */
 typedef void (*PhocSurfaceIterator)(PhocOutput         *self,
                                     struct wlr_surface *surface,

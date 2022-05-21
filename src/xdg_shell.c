@@ -7,9 +7,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <wayland-server-core.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/box.h>
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"
@@ -202,7 +202,7 @@ static void handle_request_maximize(struct wl_listener *listener, void *data) {
 		return;
 	}
 
-	if (surface->toplevel->client_pending.maximized) {
+	if (surface->toplevel->pending.maximized) {
 		view_maximize(view, NULL);
 	} else {
 		view_restore(view);
@@ -270,7 +270,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 
 	uint32_t pending_serial =
 		roots_surface->pending_move_resize_configure_serial;
-	if (pending_serial > 0 && pending_serial >= surface->configure_serial) {
+	if (pending_serial > 0 && pending_serial >= surface->current.configure_serial) {
 		double x = view->box.x;
 		double y = view->box.y;
 		if (view->pending_move_resize.update_x) {
@@ -291,7 +291,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		}
 		view_update_position(view, x, y);
 
-		if (pending_serial == surface->configure_serial) {
+		if (pending_serial == surface->current.configure_serial) {
 			roots_surface->pending_move_resize_configure_serial = 0;
 		}
 	}
@@ -365,11 +365,12 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 		PhocXdgSurface *parent = surface->toplevel->parent->data;
 		view_set_parent(&phoc_surface->view, &parent->view);
 	}
-	if (surface->toplevel->client_pending.maximized) {
+
+	if (surface->toplevel->pending.maximized) {
 		view_maximize(&phoc_surface->view, NULL);
 	}
-	phoc_view_set_fullscreen(&phoc_surface->view, surface->toplevel->client_pending.fullscreen,
-		surface->toplevel->client_pending.fullscreen_output);
+	phoc_view_set_fullscreen(&phoc_surface->view, surface->toplevel->pending.fullscreen,
+		surface->toplevel->requested.fullscreen_output);
 	view_auto_maximize(&phoc_surface->view);
 	view_set_title(&phoc_surface->view, surface->toplevel->title);
 
@@ -433,7 +434,7 @@ static void decoration_handle_request_mode(struct wl_listener *listener,
 		wl_container_of(listener, decoration, request_mode);
 
 	enum wlr_xdg_toplevel_decoration_v1_mode mode =
-		decoration->wlr_decoration->client_pending_mode;
+		decoration->wlr_decoration->requested_mode;
 	if (mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_NONE) {
 		mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
 	}
@@ -445,7 +446,7 @@ static void decoration_handle_surface_commit(struct wl_listener *listener,
 	struct roots_xdg_toplevel_decoration *decoration =
 		wl_container_of(listener, decoration, surface_commit);
 
-	bool decorated = decoration->wlr_decoration->current_mode ==
+	bool decorated = decoration->wlr_decoration->current.mode ==
 		WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
 	view_update_decorated(&decoration->surface->view, decorated);
 }

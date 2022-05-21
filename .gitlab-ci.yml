@@ -14,7 +14,7 @@ variables:
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
   XVFB_RUN: xvfb-run -s -noreset
-  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.20211205-wlroots0.14.1
+  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.20220327.wlroots_0.15.1
 
 .build: &build
   script:
@@ -99,7 +99,8 @@ build-gtkdoc:
     - git clean -dfx
     - 'echo "Build opts: ${BUILD_ARGS}"'
     - meson . _build $BUILD_ARGS
-    - ninja -C _build
+    - ninja -C _build || true
+    - test -f _build/doc/phoc-*/index.html
     - mv _build/doc/phoc-*/ _reference/
   artifacts:
     paths:
@@ -113,6 +114,7 @@ package-pureos-byzantium:arm64:
     L5_DOCKER_IMAGE: pureos/byzantium
   tags:
     - aarch64
+  when: manual
   extends: .l5-build-debian-package
 
 package-pureos-byzantium:sanitizers:arm64:

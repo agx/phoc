@@ -41,6 +41,7 @@ struct _PhocLayerSurface {
 
     struct wlr_box geo;
     enum zwlr_layer_shell_v1_layer layer;
+    bool mapped;
 };
 
 PhocLayerSurface *phoc_layer_surface_new (void);

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <wlr/config.h>
-#include <wlr/types/wlr_box.h>
+#include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
@@ -30,6 +30,7 @@
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/box.h>
 #include <wlr/version.h>
 #include "cursor.h"
 #include "layers.h"
@@ -507,7 +508,6 @@ void handle_xwayland_ready(struct wl_listener *listener, void *data) {
   xcb_disconnect (xcb_conn);
 }
 
-#ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
 static
 void handle_xwayland_remove_startup_id(struct wl_listener *listener, void *data) {
   PhocDesktop *desktop = wl_container_of (
@@ -521,7 +521,6 @@ void handle_xwayland_remove_startup_id(struct wl_listener *listener, void *data)
                                         ev->id,
                                         PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
 }
-#endif /* PHOC_HAVE_WLR_REMOVE_STARTUP_INFO */
 #endif /* PHOC_XWAYLAND */
 
 static void
@@ -548,12 +547,18 @@ handle_output_destroy (PhocOutput *destroyed_output)
 static void
 handle_new_output (struct wl_listener *listener, void *data)
 {
-	PhocDesktop *self = wl_container_of (listener, self, new_output);
-	PhocOutput *output = phoc_output_new (self, (struct wlr_output *)data);
+  g_autoptr (GError) error = NULL;
+  PhocDesktop *self = wl_container_of (listener, self, new_output);
+  PhocOutput *output = phoc_output_new (self, (struct wlr_output *)data, &error);
 
-	g_signal_connect (output, "output-destroyed",
-			  G_CALLBACK (handle_output_destroy),
-			  NULL);
+  if (output == NULL) {
+    g_critical ("Failed to init new output: %s", error->message);
+    return;
+  }
+
+  g_signal_connect (output, "output-destroyed",
+                    G_CALLBACK (handle_output_destroy),
+                    NULL);
 }
 
 
@@ -585,11 +590,9 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
 		  &self->xwayland_ready);
     self->xwayland_ready.notify = handle_xwayland_ready;
 
-#ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
     wl_signal_add(&self->xwayland->events.remove_startup_info,
 		  &self->xwayland_remove_startup_id);
     self->xwayland_remove_startup_id.notify = handle_xwayland_remove_startup_id;
-#endif
 
     g_setenv ("DISPLAY", self->xwayland->display_name, true);
 
@@ -774,9 +777,7 @@ phoc_desktop_finalize (GObject *object)
   if (self->xwayland) {
     wl_list_remove (&self->xwayland_surface.link);
     wl_list_remove (&self->xwayland_ready.link);
-#ifdef PHOC_HAVE_WLR_REMOVE_STARTUP_INFO
     wl_list_remove (&self->xwayland_remove_startup_id.link);
-#endif
   }
 
   g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);

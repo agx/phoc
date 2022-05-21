@@ -444,7 +444,7 @@ apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
   struct wlr_layer_surface_v1 *layer = drag_surface->layer_surface->layer_surface;
 
   /* The client is not supposed to update margin or exclusive zone so
-   * keep current client_pending in sync */
+   * keep current and pending in sync */
   g_debug ("%s: margin: %f %f", __func__, drag_surface->drag.anim_t, margin);
   switch (layer->current.anchor) {
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
@@ -465,11 +465,11 @@ apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
   }
   layer->current.exclusive_zone = -margin + drag_surface->current.exclusive;
 
-  layer->client_pending.margin.top = layer->current.margin.top;
-  layer->client_pending.margin.bottom = layer->current.margin.bottom;
-  layer->client_pending.margin.left = layer->current.margin.left;
-  layer->client_pending.margin.right = layer->current.margin.right;
-  layer->client_pending.exclusive_zone = layer->current.exclusive_zone;
+  layer->pending.margin.top = layer->current.margin.top;
+  layer->pending.margin.bottom = layer->current.margin.bottom;
+  layer->pending.margin.left = layer->current.margin.left;
+  layer->pending.margin.right = layer->current.margin.right;
+  layer->pending.exclusive_zone = layer->current.exclusive_zone;
 }
 
 
@@ -780,11 +780,11 @@ phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surfac
   *target = margin;
   layer->current.exclusive_zone = -margin + drag_surface->current.exclusive;
 
-  layer->client_pending.margin.top = layer->current.margin.top;
-  layer->client_pending.margin.bottom = layer->current.margin.bottom;
-  layer->client_pending.margin.left = layer->current.margin.left;
-  layer->client_pending.margin.right = layer->current.margin.right;
-  layer->client_pending.exclusive_zone = layer->current.exclusive_zone;
+  layer->pending.margin.top = layer->current.margin.top;
+  layer->pending.margin.bottom = layer->current.margin.bottom;
+  layer->pending.margin.left = layer->current.margin.left;
+  layer->pending.margin.right = layer->current.margin.right;
+  layer->pending.exclusive_zone = layer->current.exclusive_zone;
 
   zphoc_draggable_layer_surface_v1_send_dragged (drag_surface->resource, margin);
   phoc_layer_shell_arrange (output);

@@ -678,10 +678,10 @@ phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
 {
   struct wlr_subsurface *subsurface;
 
-  wl_list_for_each(subsurface, &surface->subsurfaces_below, parent_link)
+  wl_list_for_each(subsurface, &surface->current.subsurfaces_below, current.link)
     phoc_view_subsurface_create (view, subsurface);
 
-  wl_list_for_each(subsurface, &surface->subsurfaces_above, parent_link)
+  wl_list_for_each(subsurface, &surface->current.subsurfaces_above, current.link)
     phoc_view_subsurface_create (view, subsurface);
 }
 
@@ -690,10 +690,10 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
 {
   struct wlr_subsurface *subsurface;
 
-  wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link)
+  wl_list_for_each (subsurface, &surface->current.subsurfaces_below, current.link)
     phoc_view_child_subsurface_create (child, subsurface);
 
-  wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link)
+  wl_list_for_each (subsurface, &surface->current.subsurfaces_above, current.link)
     phoc_view_child_subsurface_create (child, subsurface);
 }
 
@@ -904,10 +904,10 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   view->wlr_surface = surface;
 
   struct wlr_subsurface *subsurface;
-  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_below, parent_link) {
+  wl_list_for_each(subsurface, &view->wlr_surface->current.subsurfaces_below, current.link) {
     phoc_view_subsurface_create(view, subsurface);
   }
-  wl_list_for_each(subsurface, &view->wlr_surface->subsurfaces_above, parent_link) {
+  wl_list_for_each(subsurface, &view->wlr_surface->current.subsurfaces_above, current.link) {
     phoc_view_subsurface_create(view, subsurface);
   }
 
