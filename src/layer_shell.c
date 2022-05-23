@@ -118,12 +118,12 @@ static void arrange_layer(struct wlr_output *output,
 		GSList *seats /* PhocSeat */,
 		struct wl_list *list /* PhocLayerSurface */,
 		struct wlr_box *usable_area, bool exclusive) {
-	PhocLayerSurface *roots_surface;
+	PhocLayerSurface *layer_surface;
 	struct wlr_box full_area = { 0 };
 	wlr_output_effective_resolution(output,
 			&full_area.width, &full_area.height);
-	wl_list_for_each_reverse(roots_surface, list, link) {
-		struct wlr_layer_surface_v1 *layer = roots_surface->layer_surface;
+	wl_list_for_each_reverse(layer_surface, list, link) {
+		struct wlr_layer_surface_v1 *layer = layer_surface->layer_surface;
 		struct wlr_layer_surface_v1_state *state = &layer->current;
 		if (exclusive != (state->exclusive_zone > 0)) {
 			continue;
@@ -188,8 +188,8 @@ static void arrange_layer(struct wlr_output *output,
 		}
 
 		// Apply
-		struct wlr_box old_geo = roots_surface->geo;
-		roots_surface->geo = box;
+		struct wlr_box old_geo = layer_surface->geo;
+		layer_surface->geo = box;
 		if (layer->mapped) {
 			apply_exclusive(usable_area, state->anchor, state->exclusive_zone,
 					state->margin.top, state->margin.right,
@@ -205,9 +205,9 @@ static void arrange_layer(struct wlr_output *output,
 		// Only update layer surfaces which kept their size (and so buffers) the
 		// same, because those with resized buffers will be handled separately.
 
-		if (roots_surface->geo.x != old_geo.x
-				|| roots_surface->geo.y != old_geo.y) {
-			update_cursors(roots_surface, seats);
+		if (layer_surface->geo.x != old_geo.x
+				|| layer_surface->geo.y != old_geo.y) {
+			update_cursors(layer_surface, seats);
 		}
 	}
 }
