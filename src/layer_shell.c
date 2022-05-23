@@ -741,21 +741,21 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 
 void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct wlr_layer_surface_v1 *layer_surface = data;
-	PhocDesktop *desktop =
-		wl_container_of(listener, desktop, layer_shell_surface);
+	struct wlr_layer_surface_v1 *wlr_layer_surface = data;
+	PhocDesktop *desktop = wl_container_of(listener, desktop, layer_shell_surface);
+
 	g_debug ("new layer surface: namespace %s layer %d anchor %d "
 			"size %dx%d margin %d,%d,%d,%d",
-		layer_surface->namespace, layer_surface->pending.layer,
-		layer_surface->pending.anchor,
-		layer_surface->pending.desired_width,
-		layer_surface->pending.desired_height,
-		layer_surface->pending.margin.top,
-		layer_surface->pending.margin.right,
-		layer_surface->pending.margin.bottom,
-		layer_surface->pending.margin.left);
+		wlr_layer_surface->namespace, wlr_layer_surface->pending.layer,
+		wlr_layer_surface->pending.anchor,
+		wlr_layer_surface->pending.desired_width,
+		wlr_layer_surface->pending.desired_height,
+		wlr_layer_surface->pending.margin.top,
+		wlr_layer_surface->pending.margin.right,
+		wlr_layer_surface->pending.margin.bottom,
+		wlr_layer_surface->pending.margin.left);
 
-	if (!layer_surface->output) {
+	if (!wlr_layer_surface->output) {
 		PhocInput *input = server->input;
 		PhocSeat *seat = phoc_input_get_last_active_seat(input);
 		assert(seat); // Technically speaking we should handle this case
@@ -771,38 +771,38 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 			output = wlr_output_layout_get_center_output(desktop->layout);
 		}
 		if (output) {
-			layer_surface->output = output;
+			wlr_layer_surface->output = output;
 		} else {
-			wlr_layer_surface_v1_destroy(layer_surface);
+			wlr_layer_surface_v1_destroy(wlr_layer_surface);
 			return;
 		}
 	}
 
-	PhocLayerSurface *roots_surface = phoc_layer_surface_new (layer_surface);
+	PhocLayerSurface *roots_surface = phoc_layer_surface_new (wlr_layer_surface);
 
 	roots_surface->surface_commit.notify = handle_surface_commit;
-	wl_signal_add(&layer_surface->surface->events.commit,
+	wl_signal_add(&wlr_layer_surface->surface->events.commit,
 		&roots_surface->surface_commit);
 
 	roots_surface->destroy.notify = handle_destroy;
-	wl_signal_add(&layer_surface->events.destroy, &roots_surface->destroy);
+	wl_signal_add(&wlr_layer_surface->events.destroy, &roots_surface->destroy);
 	roots_surface->map.notify = handle_map;
-	wl_signal_add(&layer_surface->events.map, &roots_surface->map);
+	wl_signal_add(&wlr_layer_surface->events.map, &roots_surface->map);
 	roots_surface->unmap.notify = handle_unmap;
-	wl_signal_add(&layer_surface->events.unmap, &roots_surface->unmap);
+	wl_signal_add(&wlr_layer_surface->events.unmap, &roots_surface->unmap);
 	roots_surface->new_popup.notify = handle_new_popup;
-	wl_signal_add(&layer_surface->events.new_popup, &roots_surface->new_popup);
+	wl_signal_add(&wlr_layer_surface->events.new_popup, &roots_surface->new_popup);
 
-	PhocOutput *output = layer_surface->output->data;
-	wl_list_insert(&output->layers[layer_surface->pending.layer], &roots_surface->link);
+	PhocOutput *output = wlr_layer_surface->output->data;
+	wl_list_insert(&output->layers[wlr_layer_surface->pending.layer], &roots_surface->link);
 
 	// Temporarily set the layer's current state to pending
 	// So that we can easily arrange it
-	struct wlr_layer_surface_v1_state old_state = layer_surface->current;
-	layer_surface->current = layer_surface->pending;
+	struct wlr_layer_surface_v1_state old_state = wlr_layer_surface->current;
+	wlr_layer_surface->current = wlr_layer_surface->pending;
 
 	phoc_layer_shell_arrange (output);
 	phoc_layer_shell_update_focus ();
 
-	layer_surface->current = old_state;
+	wlr_layer_surface->current = old_state;
 }
