@@ -307,7 +307,7 @@ phoc_layer_shell_update_focus (void)
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
   };
-  PhocLayerSurface *layer, *topmost = NULL;
+  PhocLayerSurface *layer_surface, *topmost = NULL;
   // Find topmost keyboard interactive layer, if such a layer exists
   // TODO: Make layer surface focus per-output based on cursor position
   PhocOutput *output;
@@ -317,9 +317,10 @@ phoc_layer_shell_update_focus (void)
         if (layers_above_shell[i] == ZWLR_LAYER_SHELL_V1_LAYER_TOP)
           continue;
       }
-      wl_list_for_each(layer, &output->layers[layers_above_shell[i]], link) {
-        if (layer->layer_surface->current.keyboard_interactive && layer->layer_surface->mapped) {
-          topmost = layer;
+      wl_list_for_each(layer_surface, &output->layers[layers_above_shell[i]], link) {
+        if (layer_surface->layer_surface->current.keyboard_interactive &&
+            layer_surface->layer_surface->mapped) {
+          topmost = layer_surface;
           break;
         }
       }
