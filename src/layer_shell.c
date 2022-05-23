@@ -727,16 +727,15 @@ static void handle_map(struct wl_listener *listener, void *data) {
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	PhocLayerSurface *layer = wl_container_of(
-			listener, layer, unmap);
+	PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, unmap);
 
 	struct roots_layer_subsurface *subsurface, *tmp;
-	wl_list_for_each_safe(subsurface, tmp, &layer->subsurfaces, link) {
+	wl_list_for_each_safe(subsurface, tmp, &layer_surface->subsurfaces, link) {
 		subsurface_destroy(subsurface);
 	}
-	wl_list_remove(&layer->new_subsurface.link);
+	wl_list_remove(&layer_surface->new_subsurface.link);
 
-	phoc_layer_surface_unmap (layer);
+	phoc_layer_surface_unmap (layer_surface);
 	phoc_input_update_cursor_focus(server->input);
 }
 
