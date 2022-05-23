@@ -5,7 +5,6 @@
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
 #endif
-#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -21,6 +20,8 @@
 #include "output.h"
 #include "seat.h"
 #include "server.h"
+
+#include <glib.h>
 
 #define LAYER_SHELL_LAYER_COUNT 4
 
@@ -758,7 +759,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	if (!wlr_layer_surface->output) {
 		PhocInput *input = server->input;
 		PhocSeat *seat = phoc_input_get_last_active_seat(input);
-		assert(seat); // Technically speaking we should handle this case
+		g_assert (PHOC_IS_SEAT (seat)); // Technically speaking we should handle this case
 		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		struct wlr_output *output =
 			wlr_output_layout_output_at(desktop->layout,
