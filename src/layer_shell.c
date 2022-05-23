@@ -86,8 +86,7 @@ static void apply_exclusive(struct wlr_box *usable_area,
 	}
 }
 
-static void update_cursors(PhocLayerSurface *roots_surface,
-		GSList *seats /* PhocSeat */) {
+static void update_cursors(PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */) {
 	PhocServer *server = phoc_server_get_default ();
 
 	for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
@@ -101,7 +100,7 @@ static void update_cursors(PhocLayerSurface *roots_surface,
 			server->desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
-		if (surface == roots_surface->layer_surface->surface) {
+		if (surface == layer_surface->layer_surface->surface) {
 			struct timespec time;
 			if (clock_gettime(CLOCK_MONOTONIC, &time) == 0) {
 				phoc_cursor_update_position(cursor,
