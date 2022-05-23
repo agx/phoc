@@ -390,9 +390,8 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
-	PhocLayerSurface *layer = wl_container_of(
-			listener, layer, destroy);
-	g_object_unref (layer);
+	PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, destroy);
+	g_object_unref (layer_surface);
 }
 
 static void subsurface_destroy(struct roots_layer_subsurface *subsurface) {
