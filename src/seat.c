@@ -1431,6 +1431,13 @@ seat_add_view (PhocSeat *seat, PhocView *view)
   return seat_view;
 }
 
+/**
+ * phoc_seat_view_from_view:
+ * @seat: The seat
+ * @view: A view
+ *
+ * Returns: (nullable)(transfer none): The seat view belonging to the given view.
+ */
 PhocSeatView *
 phoc_seat_view_from_view (PhocSeat *seat, PhocView *view)
 {
