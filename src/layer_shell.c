@@ -778,23 +778,27 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		}
 	}
 
-	PhocLayerSurface *roots_surface = phoc_layer_surface_new (wlr_layer_surface);
 
-	roots_surface->surface_commit.notify = handle_surface_commit;
+	PhocLayerSurface *layer_surface = phoc_layer_surface_new (wlr_layer_surface);
+
+	layer_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&wlr_layer_surface->surface->events.commit,
-		&roots_surface->surface_commit);
+		&layer_surface->surface_commit);
 
-	roots_surface->destroy.notify = handle_destroy;
-	wl_signal_add(&wlr_layer_surface->events.destroy, &roots_surface->destroy);
-	roots_surface->map.notify = handle_map;
-	wl_signal_add(&wlr_layer_surface->events.map, &roots_surface->map);
-	roots_surface->unmap.notify = handle_unmap;
-	wl_signal_add(&wlr_layer_surface->events.unmap, &roots_surface->unmap);
-	roots_surface->new_popup.notify = handle_new_popup;
-	wl_signal_add(&wlr_layer_surface->events.new_popup, &roots_surface->new_popup);
+	layer_surface->destroy.notify = handle_destroy;
+	wl_signal_add(&wlr_layer_surface->events.destroy, &layer_surface->destroy);
+	layer_surface->map.notify = handle_map;
+	wl_signal_add(&wlr_layer_surface->events.map, &layer_surface->map);
+	layer_surface->unmap.notify = handle_unmap;
+	wl_signal_add(&wlr_layer_surface->events.unmap, &layer_surface->unmap);
+	layer_surface->new_popup.notify = handle_new_popup;
+	wl_signal_add(&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
+
+	layer_surface->layer_surface = wlr_layer_surface;
+	wlr_layer_surface->data = layer_surface;
 
 	PhocOutput *output = wlr_layer_surface->output->data;
-	wl_list_insert(&output->layers[wlr_layer_surface->pending.layer], &roots_surface->link);
+	wl_list_insert(&output->layers[wlr_layer_surface->pending.layer], &layer_surface->link);
 
 	// Temporarily set the layer's current state to pending
 	// So that we can easily arrange it
