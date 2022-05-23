@@ -1380,7 +1380,7 @@ phoc_cursor_add_gesture (PhocCursor   *self,
  * @self: The Cursor
  *
  * Gets the currently registered gestures @self.
- * Returns: (transfer none) (nullable): The cursor's gestures
+ * Returns: (transfer none) (nullable) (element-type PhocGesture): The cursor's gestures
  */
 GSList *
 phoc_cursor_get_gestures (PhocCursor *self)
