@@ -554,7 +554,9 @@ phoc_output_class_init (PhocOutputClass *klass)
 
 static void
 phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
-                                       int sx, int sy, void *_data)
+                                       int                 sx,
+                                       int                 sy,
+                                       void               *_data)
 {
   PhocOutputSurfaceIteratorData *data = _data;
 
@@ -570,10 +572,12 @@ phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
 }
 
 void
-phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
-                                      *surface, double ox, double oy,
-                                      PhocSurfaceIterator iterator,
-                                      void *user_data)
+phoc_output_surface_for_each_surface (PhocOutput          *self,
+                                      struct wlr_surface  *surface,
+                                      double               ox,
+                                      double               oy,
+                                      PhocSurfaceIterator  iterator,
+                                      void                *user_data)
 {
   PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
@@ -592,11 +596,12 @@ phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
 }
 
 void
-phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
-                                          wlr_xdg_surface *xdg_surface, double
-                                          ox, double oy,
-                                          PhocSurfaceIterator
-                                          iterator, void *user_data)
+phoc_output_xdg_surface_for_each_surface (PhocOutput             *self,
+                                          struct wlr_xdg_surface *xdg_surface,
+                                          double                  ox,
+                                          double                  oy,
+                                          PhocSurfaceIterator     iterator,
+                                          void                   *user_data)
 {
   PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
@@ -615,9 +620,10 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
 }
 
 void
-phoc_output_view_for_each_surface (PhocOutput *self, PhocView *view,
-                                   PhocSurfaceIterator iterator, void
-                                   *user_data)
+phoc_output_view_for_each_surface (PhocOutput          *self,
+                                   PhocView            *view,
+                                   PhocSurfaceIterator  iterator,
+                                   void                *user_data)
 {
   struct wlr_box *output_box =
     wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
@@ -643,10 +649,10 @@ phoc_output_view_for_each_surface (PhocOutput *self, PhocView *view,
 
 #ifdef PHOC_XWAYLAND
 void
-phoc_output_xwayland_children_for_each_surface (PhocOutput *self, struct
-                                                wlr_xwayland_surface *surface,
-                                                PhocSurfaceIterator
-                                                iterator, void *user_data)
+phoc_output_xwayland_children_for_each_surface (PhocOutput                  *self,
+                                                struct wlr_xwayland_surface *surface,
+                                                PhocSurfaceIterator          iterator,
+                                                void                        *user_data)
 {
   struct wlr_box *output_box =
     wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
