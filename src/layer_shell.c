@@ -122,8 +122,8 @@ static void arrange_layer(struct wlr_output *output,
 	wlr_output_effective_resolution(output,
 			&full_area.width, &full_area.height);
 	wl_list_for_each_reverse(layer_surface, list, link) {
-		struct wlr_layer_surface_v1 *layer = layer_surface->layer_surface;
-		struct wlr_layer_surface_v1_state *state = &layer->current;
+		struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
+		struct wlr_layer_surface_v1_state *state = &wlr_layer_surface->current;
 		if (exclusive != (state->exclusive_zone > 0)) {
 			continue;
 		}
@@ -182,21 +182,21 @@ static void arrange_layer(struct wlr_output *output,
 		}
 		if (box.width < 0 || box.height < 0) {
 			// TODO: Bubble up a protocol error?
-			wlr_layer_surface_v1_destroy(layer);
+			wlr_layer_surface_v1_destroy(wlr_layer_surface);
 			continue;
 		}
 
 		// Apply
 		struct wlr_box old_geo = layer_surface->geo;
 		layer_surface->geo = box;
-		if (layer->mapped) {
+		if (wlr_layer_surface->mapped) {
 			apply_exclusive(usable_area, state->anchor, state->exclusive_zone,
 					state->margin.top, state->margin.right,
 					state->margin.bottom, state->margin.left);
 		}
 
 		if (box.width != old_geo.width || box.height != old_geo.height)
-			wlr_layer_surface_v1_configure(layer, box.width, box.height);
+			wlr_layer_surface_v1_configure(wlr_layer_surface, box.width, box.height);
 
 		// Having a cursor newly end up over the moved layer will not
 		// automatically send a motion event to the surface. The event needs to
