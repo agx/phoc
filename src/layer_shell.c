@@ -339,23 +339,22 @@ phoc_layer_shell_update_focus (void)
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	PhocLayerSurface *layer =
-		wl_container_of(listener, layer, surface_commit);
-	struct wlr_layer_surface_v1 *wlr_layer_surface = layer->layer_surface;
+	PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, surface_commit);
+	struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
 	struct wlr_output *wlr_output = wlr_layer_surface->output;
 	if (wlr_output != NULL) {
 		PhocOutput *output = wlr_output->data;
-		struct wlr_box old_geo = layer->geo;
+		struct wlr_box old_geo = layer_surface->geo;
 
 		bool layer_changed = false;
-		if (wlr_layer_surface->current.committed != 0 || layer->mapped != wlr_layer_surface->mapped) {
-			layer->mapped = wlr_layer_surface->mapped;
-			layer_changed = layer->layer != wlr_layer_surface->current.layer;
+		if (wlr_layer_surface->current.committed != 0 || layer_surface->mapped != wlr_layer_surface->mapped) {
+			layer_surface->mapped = wlr_layer_surface->mapped;
+			layer_changed = layer_surface->layer != wlr_layer_surface->current.layer;
 			if (layer_changed) {
-				wl_list_remove(&layer->link);
+				wl_list_remove(&layer_surface->link);
 				wl_list_insert(&output->layers[wlr_layer_surface->current.layer],
-					       &layer->link);
-				layer->layer = wlr_layer_surface->current.layer;
+					       &layer_surface->link);
+				layer_surface->layer = wlr_layer_surface->current.layer;
 			}
 
 			phoc_layer_shell_arrange (output);
@@ -372,19 +371,19 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		struct wlr_surface *surface = wlr_layer_surface->surface;
 		if (surface->previous.width != surface->current.width ||
 				surface->previous.height != surface->current.height) {
-			update_cursors(layer, phoc_input_get_seats (server->input));
+			update_cursors(layer_surface, phoc_input_get_seats (server->input));
 		}
 
 		bool geo_changed =
-			memcmp(&old_geo, &layer->geo, sizeof(struct wlr_box)) != 0;
+			memcmp(&old_geo, &layer_surface->geo, sizeof(struct wlr_box)) != 0;
 		if (geo_changed || layer_changed) {
 			phoc_output_damage_whole_local_surface(output, wlr_layer_surface->surface,
 							       old_geo.x, old_geo.y);
 			phoc_output_damage_whole_local_surface(output, wlr_layer_surface->surface,
-							       layer->geo.x, layer->geo.y);
+							       layer_surface->geo.x, layer_surface->geo.y);
 		} else {
 			phoc_output_damage_from_local_surface(output, wlr_layer_surface->surface,
-							      layer->geo.x, layer->geo.y);
+							      layer_surface->geo.x, layer_surface->geo.y);
 		}
 	}
 }
