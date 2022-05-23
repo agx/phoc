@@ -183,6 +183,9 @@ phoc_output_init (PhocOutput *self)
   priv->frame_callback_next_id = 1;
   priv->last_frame_us = g_get_monotonic_time ();
   priv->shield = phoc_output_shield_new (self);
+
+  self->debug_touch_points = NULL;
+  wl_list_init (&self->layer_surfaces);
 }
 
 PhocOutput *
@@ -408,8 +411,6 @@ phoc_output_initable_init (GInitable    *initable,
 
   self->damage = wlr_output_damage_create (self->wlr_output);
 
-  self->debug_touch_points = NULL;
-
   self->output_destroy.notify = phoc_output_handle_destroy;
   wl_signal_add (&self->wlr_output->events.destroy, &self->output_destroy);
   self->enable.notify = phoc_output_handle_enable;
@@ -423,8 +424,6 @@ phoc_output_initable_init (GInitable    *initable,
   wl_signal_add (&self->damage->events.frame, &self->damage_frame);
   self->damage_destroy.notify = phoc_output_damage_handle_destroy;
   wl_signal_add (&self->damage->events.destroy, &self->damage_destroy);
-
-  wl_list_init (&self->layer_surfaces);
 
   PhocOutputConfig *output_config = phoc_config_get_output (config, self->wlr_output);
 
