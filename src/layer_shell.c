@@ -696,8 +696,8 @@ static void handle_new_subsurface(struct wl_listener *listener, void *data) {
 
 static void handle_map(struct wl_listener *listener, void *data) {
 	struct wlr_layer_surface_v1 *wlr_layer_surface = data;
-	PhocLayerSurface *layer = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
-	PhocOutput *output = phoc_layer_surface_get_output (layer);
+	PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
+	PhocOutput *output = phoc_layer_surface_get_output (layer_surface);
 	if (!output) {
 		return;
 	}
@@ -706,22 +706,22 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	wl_list_for_each(subsurface, &wlr_layer_surface->surface->current.subsurfaces_below, current.link) {
 		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
 		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
-		roots_subsurface->parent_layer = layer;
-		wl_list_insert(&layer->subsurfaces, &roots_subsurface->link);
+		roots_subsurface->parent_layer = layer_surface;
+		wl_list_insert(&layer_surface->subsurfaces, &roots_subsurface->link);
 	}
 	wl_list_for_each(subsurface, &wlr_layer_surface->surface->current.subsurfaces_above, current.link) {
 		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
 		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
-		roots_subsurface->parent_layer = layer;
-		wl_list_insert(&layer->subsurfaces, &roots_subsurface->link);
+		roots_subsurface->parent_layer = layer_surface;
+		wl_list_insert(&layer_surface->subsurfaces, &roots_subsurface->link);
 	}
 
-	layer->new_subsurface.notify = handle_new_subsurface;
-	wl_signal_add(&wlr_layer_surface->surface->events.new_subsurface, &layer->new_subsurface);
+	layer_surface->new_subsurface.notify = handle_new_subsurface;
+	wl_signal_add(&wlr_layer_surface->surface->events.new_subsurface, &layer_surface->new_subsurface);
 
 	phoc_output_damage_whole_local_surface(output,
-					       wlr_layer_surface->surface, layer->geo.x,
-					       layer->geo.y);
+					       wlr_layer_surface->surface, layer_surface->geo.x,
+					       layer_surface->geo.y);
 	wlr_surface_send_enter(wlr_layer_surface->surface, output->wlr_output);
 }
 
