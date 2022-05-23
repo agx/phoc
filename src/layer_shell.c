@@ -222,11 +222,11 @@ static struct osk_origin find_osk(struct wl_list layers[LAYER_SHELL_LAYER_COUNT]
 	struct osk_origin origin = {0};
 	for (unsigned i = 0; i < LAYER_SHELL_LAYER_COUNT; i++) {
 		struct wl_list *list = &layers[i];
-		PhocLayerSurface *roots_surface;
-		wl_list_for_each(roots_surface, list, link) {
-			if (strcmp(roots_surface->layer_surface->namespace, "osk") == 0) {
-				origin.state = roots_surface->layer_surface->current;
-				origin.surface = roots_surface;
+		PhocLayerSurface *layer_surface;
+		wl_list_for_each(layer_surface, list, link) {
+			if (strcmp(layer_surface->layer_surface->namespace, "osk") == 0) {
+				origin.state = layer_surface->layer_surface->current;
+				origin.surface = layer_surface;
 				origin.layer = i;
 				return origin;
 			}
