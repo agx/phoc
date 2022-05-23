@@ -257,7 +257,9 @@ phoc_xwayland_surface_new (struct wlr_xwayland_surface *surface)
                                               NULL));
 }
 
-PhocXWaylandSurface *phoc_xwayland_surface_from_view(PhocView *view) {
-	g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
-	return PHOC_XWAYLAND_SURFACE (view);
+PhocXWaylandSurface *
+phoc_xwayland_surface_from_view (PhocView *view)
+{
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  return PHOC_XWAYLAND_SURFACE (view);
 }
