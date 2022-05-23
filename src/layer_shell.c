@@ -114,13 +114,15 @@ static void update_cursors(PhocLayerSurface *layer_surface, GSList *seats /* Pho
 	}
 }
 
-static void arrange_layer(struct wlr_output *output,
+static void arrange_layer(PhocOutput *output,
 		GSList *seats /* PhocSeat */,
 		struct wl_list *list /* PhocLayerSurface */,
 		struct wlr_box *usable_area, bool exclusive) {
 	PhocLayerSurface *layer_surface;
 	struct wlr_box full_area = { 0 };
-	wlr_output_effective_resolution(output,
+
+	g_assert (PHOC_IS_OUTPUT (output));
+	wlr_output_effective_resolution(output->wlr_output,
 			&full_area.width, &full_area.height);
 	wl_list_for_each_reverse(layer_surface, list, link) {
 		struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
@@ -281,7 +283,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   // Arrange exclusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
-    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, true);
+    arrange_layer (output, seats, &output->layers[layers[i]], &usable_area, true);
   output->usable_area = usable_area;
 
   PhocView *view;
@@ -297,7 +299,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   // Arrange non-exlusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
-    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, false);
+    arrange_layer (output, seats, &output->layers[layers[i]], &usable_area, false);
 }
 
 void
