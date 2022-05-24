@@ -26,6 +26,24 @@
  * Implement just enough to raise windows for GTK based applications
  * until there's an agreed on upstream protocol.
  */
+struct _PhocGtkShell {
+  struct wl_global *global;
+  GSList *resources;
+  GSList *surfaces;
+};
+
+struct _PhocGtkSurface {
+  struct wl_resource *resource;
+  struct wlr_surface *wlr_surface;
+  PhocGtkShell *gtk_shell;
+  char *app_id;
+
+  struct wl_listener wlr_surface_handle_destroy;
+
+  struct {
+    struct wl_signal destroy;
+  } events;
+};
 
 static void
 handle_set_dbus_properties(struct wl_client *client,
@@ -37,7 +55,7 @@ handle_set_dbus_properties(struct wl_client *client,
                            const char *application_object_path,
                            const char *unique_bus_name)
 {
-  PhocGtkSurface *gtk_surface = gtk_surface_from_resource (resource);
+  PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
   PhocView *view;
 
   g_debug ("Setting app-id %s for surface %p (res %p)", application_id, gtk_surface->wlr_surface, resource);
@@ -79,8 +97,7 @@ handle_request_focus(struct wl_client *client,
                      struct wl_resource *resource,
                      const char *startup_id)
 {
-  PhocGtkSurface *gtk_surface =
-    gtk_surface_from_resource (resource);
+  PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
   PhocServer *server = phoc_server_get_default ();
   PhocInput *input = server->input;
   PhocSeat *seat = phoc_input_get_last_active_seat (input);
@@ -106,8 +123,7 @@ static const struct gtk_surface1_interface gtk_surface1_impl = {
 static void
 gtk_surface_handle_resource_destroy(struct wl_resource *resource)
 {
-  PhocGtkSurface *gtk_surface =
-    gtk_surface_from_resource(resource);
+  PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
 
   g_debug ("Destroying gtk_surface %p (res %p)", gtk_surface,
            gtk_surface->resource);
@@ -304,9 +320,16 @@ phoc_gtk_shell_from_resource (struct wl_resource *resource)
 }
 
 PhocGtkSurface *
-gtk_surface_from_resource (struct wl_resource *resource)
+phoc_gtk_surface_from_resource (struct wl_resource *resource)
 {
   g_assert(wl_resource_instance_of (resource, &gtk_surface1_interface,
                                     &gtk_surface1_impl));
   return wl_resource_get_user_data (resource);
+}
+
+
+const char *
+phoc_gtk_surface_get_app_id (PhocGtkSurface *gtk_surface)
+{
+  return gtk_surface->app_id;
 }
