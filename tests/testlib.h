@@ -101,6 +101,15 @@ PhocTestBuffer *phoc_test_client_capture_output (PhocTestClientGlobals *globals,
 PhocTestForeignToplevel *phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
 								       const char *title);
 
+/* Test surfaces */
+PhocTestXdgToplevelSurface *
+                phoc_test_xdg_toplevel_new  (PhocTestClientGlobals     *globals,
+                                             guint32                    width,
+                                             guint32                    height,
+                                             const char                *title,
+                                             guint32                    color);
+void            phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs);
+
 /* Buffers */
 gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2);
 gboolean phoc_test_buffer_save (PhocTestBuffer *buffer, const gchar *filename);
