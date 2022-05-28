@@ -75,6 +75,19 @@ typedef struct PhocTestClientIface {
   PhocTestClientFunc client_run;
 } PhocTestClientIface;
 
+typedef struct _PhocTestXdgToplevelSurface
+{
+  struct wl_surface *wl_surface;
+  struct xdg_surface *xdg_surface;
+  struct xdg_toplevel *xdg_toplevel;
+  PhocTestForeignToplevel *foreign_toplevel;
+  char* title;
+  PhocTestBuffer buffer;
+  guint32 width, height;
+  gboolean configured;
+  gboolean toplevel_configured;
+} PhocTestXdgToplevelSurface;
+
 /* Test client */
 void phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data);
 int  phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
@@ -87,6 +100,15 @@ PhocTestBuffer *phoc_test_client_capture_output (PhocTestClientGlobals *globals,
 						 PhocTestOutput *output);
 PhocTestForeignToplevel *phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
 								       const char *title);
+
+/* Test surfaces */
+PhocTestXdgToplevelSurface *
+                phoc_test_xdg_toplevel_new  (PhocTestClientGlobals     *globals,
+                                             guint32                    width,
+                                             guint32                    height,
+                                             const char                *title,
+                                             guint32                    color);
+void            phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs);
 
 /* Buffers */
 gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2);
