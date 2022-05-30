@@ -667,6 +667,13 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
 }
 
 
+PhocLayerSurface*
+phoc_draggable_layer_surface_get_layer_surface (PhocDraggableLayerSurface *drag_surface)
+{
+  return drag_surface->layer_surface;
+}
+
+
 gboolean
 phoc_draggable_layer_surface_is_draggable (PhocDraggableLayerSurface *drag_surface)
 {
