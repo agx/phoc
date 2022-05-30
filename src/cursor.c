@@ -36,8 +36,10 @@ static GParamSpec *props[PROP_LAST_PROP];
 typedef struct _PhocCursorPrivate {
   /* Would be good to store on the surface itself */
   PhocDraggableLayerSurface *drag_surface;
-
   GSList *gestures;
+
+  /* The compositor tracked touch points */
+  GHashTable       *touch_points;
 } PhocCursorPrivate;
 
 
@@ -49,6 +51,70 @@ static void handle_pointer_button (struct wl_listener *listener, void *data);
 static void handle_pointer_axis (struct wl_listener *listener, void *data);
 static void handle_pointer_frame (struct wl_listener *listener, void *data);
 static void handle_touch_frame (struct wl_listener *listener, void *data);
+
+
+static PhocTouchPoint *
+phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_event_touch_down *event)
+{
+  PhocTouchPoint *touch_point = g_new0 (PhocTouchPoint, 1);
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
+  double lx, ly;
+
+  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device,
+                                        event->x, event->y, &lx, &ly);
+  touch_point->touch_id = event->touch_id;
+  touch_point->lx = lx;
+  touch_point->ly = ly;
+
+ if (!g_hash_table_insert (priv->touch_points,
+                           GINT_TO_POINTER (event->touch_id),
+                           touch_point)) {
+   g_critical ("Touch point %d already tracked, ignoring", event->touch_id);
+ }
+
+ return touch_point;
+}
+
+
+static PhocTouchPoint *
+phoc_cursor_update_touch_point (PhocCursor *self, struct wlr_event_touch_motion *event)
+{
+  PhocTouchPoint *touch_point;
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
+  double lx, ly;
+
+  touch_point = g_hash_table_lookup (priv->touch_points, GINT_TO_POINTER (event->touch_id));
+  if (touch_point == NULL) {
+    g_critical ("Touch point %d does not exist", event->touch_id);
+    return NULL;
+  }
+  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device,
+                                        event->x, event->y, &lx, &ly);
+  touch_point->lx = lx;
+  touch_point->ly = ly;
+
+  return touch_point;
+}
+
+
+static void
+phoc_cursor_remove_touch_point (PhocCursor *self, int touch_id)
+{
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
+
+  if (!g_hash_table_remove (priv->touch_points, GINT_TO_POINTER (touch_id)))
+    g_critical ("Touch point %d didn't exist", touch_id);
+}
+
+
+static PhocTouchPoint *
+phoc_cursor_get_touch_point (PhocCursor *self, int touch_id)
+{
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
+
+  return g_hash_table_lookup (priv->touch_points, GINT_TO_POINTER (touch_id));
+}
+
 
 static void
 phoc_cursor_set_property (GObject      *object,
@@ -392,6 +458,7 @@ phoc_cursor_finalize (GObject *object)
   PhocCursor *self = PHOC_CURSOR (object);
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
+  g_clear_pointer (&priv->touch_points, g_hash_table_destroy);
   g_clear_pointer (&priv->gestures, free_gestures);
 
   wl_list_remove (&self->motion.link);
@@ -488,7 +555,23 @@ on_drag_update (PhocGesture *gesture, double off_x, double off_y, PhocCursor *se
   state = phoc_draggable_layer_surface_drag_update (priv->drag_surface, off_x, off_y);
   switch (state) {
   case PHOC_DRAGGABLE_SURFACE_STATE_DRAGGING:
-    /* TODO: need to cancel client's touch */
+    if (phoc_seat_has_touch (self->seat)) {
+#ifdef PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL
+      GList *seqs = phoc_gesture_get_sequences (gesture);
+      g_assert (g_list_length (seqs) == 1);
+      int touch_id = GPOINTER_TO_INT (seqs->data);
+      struct wlr_touch_point *point = wlr_seat_touch_get_point (self->seat->seat, touch_id);
+      if (!point)
+        break;
+
+      g_debug ("Cancelling drag gesture for %s",
+               phoc_layer_surface_get_namespace (priv->drag_surface->layer_surface));
+      wlr_seat_touch_notify_cancel (self->seat->seat,
+                                    priv->drag_surface->layer_surface->layer_surface->surface);
+#else
+      g_warning_once ("wlroots lacks wlr_seat_touch_send_wl_cancel support, can't cancel gesture");
+#endif /* PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL */
+    }
     break;
   case PHOC_DRAGGABLE_SURFACE_STATE_REJECTED:
     phoc_gesture_reset (gesture);
@@ -532,10 +615,15 @@ static void
 phoc_cursor_init (PhocCursor *self)
 {
   g_autoptr (PhocGesture) gesture = NULL;
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   self->cursor = wlr_cursor_create ();
   self->default_xcursor = PHOC_XCURSOR_DEFAULT;
 
+  priv->touch_points = g_hash_table_new_full (g_direct_hash,
+                                              g_direct_equal,
+                                              NULL,
+                                              g_free);
   /*
    * Drag gesture starting at the current cursor position
    */
@@ -873,11 +961,12 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   PhocSeat *seat = self->seat;
+  PhocTouchPoint *touch_point;
   double lx, ly;
 
-  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device,
-                                        event->x, event->y, &lx, &ly);
-
+  touch_point = phoc_cursor_add_touch_point (self, event);
+  lx = touch_point->lx;
+  ly = touch_point->ly;
   handle_gestures_for_event_at (self, lx, ly, PHOC_EVENT_TOUCH_BEGIN, event, sizeof (*event));
 
   if (seat->touch_id == -1 && self->mode == PHOC_CURSOR_PASSTHROUGH) {
@@ -935,14 +1024,17 @@ phoc_cursor_handle_touch_up (PhocCursor                *self,
 {
   struct wlr_touch_point *point =
     wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
+  PhocTouchPoint *touch_point;
+
+  touch_point = phoc_cursor_get_touch_point (self, event->touch_id);
+  handle_gestures_for_event_at (self, touch_point->lx, touch_point->ly,
+                                PHOC_EVENT_TOUCH_END, event, sizeof (*event));
+  phoc_cursor_remove_touch_point (self, event->touch_id);
 
   if (self->seat->touch_id == event->touch_id)
     self->seat->touch_id = -1;
 
-  /* FIXME: need to get x,y from touch point for multitouch */
-  handle_gestures_for_event_at (self, self->seat->touch_x, self->seat->touch_y,
-                                PHOC_EVENT_TOUCH_END, event, sizeof (*event));
-
+  /* If the gesture got canceled don't notify any clients */
   if (!point)
     return;
 
@@ -961,14 +1053,18 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
-  struct wlr_touch_point *point =
-    wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
-
+  struct wlr_touch_point *point;
+  PhocTouchPoint *touch_point;
   double lx, ly;
-  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device,
-                                        event->x, event->y, &lx, &ly);
+
+  touch_point = phoc_cursor_update_touch_point (self, event);
+  g_return_if_fail (touch_point);
+  lx = touch_point->lx;
+  ly = touch_point->ly;
   handle_gestures_for_event_at (self, lx, ly, PHOC_EVENT_TOUCH_UPDATE, event, sizeof (*event));
 
+  point = wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
+  /* If the gesture got canceled don't notify any clients */
   if (!point)
     return;
 
