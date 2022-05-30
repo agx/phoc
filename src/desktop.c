@@ -862,8 +862,14 @@ phoc_desktop_toggle_output_blank (PhocDesktop *self)
   wl_list_for_each(output, &self->outputs, link) {
     if (!wlr_output_layout_get (self->layout, output->wlr_output))
       continue;
+    bool prior = output->wlr_output->enabled;
     wlr_output_enable (output->wlr_output, enable);
-    wlr_output_commit (output->wlr_output);
+    if (!wlr_output_commit (output->wlr_output)) {
+      /* Reset the enabled state if committing failed. */
+      g_warning ("Could not set output enabled state to %d", enable);
+      wlr_output_enable (output->wlr_output, prior);
+      continue;
+    }
     if (enable)
       phoc_output_damage_whole(output);
   }
