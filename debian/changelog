@@ -1,3 +1,79 @@
+phoc (0.20.0) byzantium; urgency=medium
+
+  [ Guido Günther ]
+  * render: Simplify render_layer invocations
+  * render: Use output directly
+  * render: Rename _box to box
+  * editorconfig: Bump line length to 100
+  * testlib: Include header only once
+  * test-layer-shell: Fix indent
+  * tests: Add code that lets us create layer surfaces easily
+  * output: Fix some indentation
+  * config.h: Add some comments
+  * Add gesture support
+  * Add layer-shell-effects protocol
+  * layer-shell-effects: Prevent drag in the wrong direction when unfolded
+  * Attach draggable surfaces to gestures
+  * Add layer-shell-effects example
+  * testlib: Fetch layer-shell-effects protocol
+  * tests: Add initial layer-surface-effects test
+  * xdg-shell: Reformat xdg_popup_unconstrain()
+  * xdg-shell: Use toplevels output when unconstraining popups
+  * subproject: Update wlroots to 0.15.1 plus our fixes
+  * d/control: Bump wlroots dependency to 0.15.1
+  * ci: Work around a crash in g-ir-compiler
+  * ci: Switch docker container to sid
+  * ci: Use wlroots 0.15.1 based container image
+  * ci: Mark PureOS byzantium job as manual
+  * Remove startup-id compilation
+  * build: Drop output power management related checks
+  * Adjust to render changes
+  * render: Allow to fail initialization
+  * desktop: Reindent handle_new_output
+  * output: Handle failure to create renderer
+  * renderer: Make sure the modifier list isn't empty
+  * build: Require wlroots 0.15.1
+  * output: Clear list of layers on finalize
+  * cursor: Handle touch frame event
+  * layer-shell-effects: Adjust to wlroots 0.15.x
+  * gtk-shell: Namespace phoc_gtk_surface_from_resource
+  * gtk-shell: Add getter for app_id
+  * gtk-shell: Make PhocGtk{Shell,Surface} private
+  * layer-shell-effects: Make drag-surface related structs private
+  * tests: Move xdg-suface helpers to testlib
+  * gtk-surface: Drop NULL check
+  * view: Make tiled state a bit mask
+  * view: Add getter for tile direction
+  * gtk-shell: Send edge constraints
+  * build: Sort gesture source files alphabetically
+  * gesture: Use Phoc prefix consistently
+  * seat: Don't use assert and g_error for the same thing
+  * cursor: Track and use compositor side touch points
+  * gesture: Add helpers needed for zoom and cancel
+  * Support zoom gestures
+  * build: Check for wlr_seat_touch_send_cancel at build time
+  * cursor: Cancel touch gestures
+
+  [ Pablo Barciela ]
+  * server: Fix [-Wmissing-field-initializers] warning
+  * testlib: Fix [-Wmissing-field-initializers] warning
+  * tests: move 'struct _PhocTestXdgToplevelSurface' to 'testlib.h'
+
+  [ Arnaud Ferraris ]
+  * utils: Add new function for calculating output scale
+  * output: Automatically compute scaling factor
+
+  [ Sebastian Krzyszkowiak ]
+  * Adjust to wlroots 0.15
+  * layer-shell-effects: Add phoc_draggable_layer_surface_get_layer_surface
+  * cursor: Use phoc_draggable_layer_surface_get_layer_surface
+  * subprojects: Switch wlroots repo to patch-queue/pureos/octarine branch
+
+  [ anteater ]
+  * desktop: Revert output enable when commit fails
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Mon, 30 May 2022 20:03:25 +0200
+
 phoc (0.13.1) byzantium; urgency=medium
 
   [ Sebastian Krzyszkowiak ]
