@@ -1350,6 +1350,16 @@ phoc_view_is_mapped (PhocView *view)
   return view && view->wlr_surface;
 }
 
+
+PhocViewTileDirection
+phoc_view_get_tile_direction (PhocView *self)
+{
+  g_return_val_if_fail (PHOC_IS_VIEW (self), PHOC_VIEW_TILE_NONE);
+
+  return self->tile_direction;
+}
+
+
 /**
  * phoc_view_child_destroy:
  * @child: The view child to destroy
