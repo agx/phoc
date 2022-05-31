@@ -10,6 +10,7 @@
 #include "server.h"
 #include "gesture.h"
 #include "gesture-drag.h"
+#include "layer-shell-effects.h"
 
 #define _XOPEN_SOURCE 700
 #include <assert.h>
@@ -557,6 +558,8 @@ on_drag_update (PhocGesture *gesture, double off_x, double off_y, PhocCursor *se
   case PHOC_DRAGGABLE_SURFACE_STATE_DRAGGING:
     if (phoc_seat_has_touch (self->seat)) {
 #ifdef PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL
+      PhocLayerSurface *layer_surface =
+        phoc_draggable_layer_surface_get_layer_surface (priv->drag_surface);
       GList *seqs = phoc_gesture_get_sequences (gesture);
       g_assert (g_list_length (seqs) == 1);
       int touch_id = GPOINTER_TO_INT (seqs->data);
@@ -565,9 +568,9 @@ on_drag_update (PhocGesture *gesture, double off_x, double off_y, PhocCursor *se
         break;
 
       g_debug ("Cancelling drag gesture for %s",
-               phoc_layer_surface_get_namespace (priv->drag_surface->layer_surface));
+               phoc_layer_surface_get_namespace (layer_surface));
       wlr_seat_touch_notify_cancel (self->seat->seat,
-                                    priv->drag_surface->layer_surface->layer_surface->surface);
+                                    layer_surface->layer_surface->surface);
 #else
       g_warning_once ("wlroots lacks wlr_seat_touch_send_wl_cancel support, can't cancel gesture");
 #endif /* PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL */

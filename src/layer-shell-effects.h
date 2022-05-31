@@ -56,6 +56,7 @@ void                   phoc_layer_shell_effects_send_drag_end   (PhocLayerShellE
 PhocDraggableLayerSurface *phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
   PhocLayerShellEffects *self, PhocLayerSurface *layer_surface);
 
+PhocLayerSurface        *phoc_draggable_layer_surface_get_layer_surface (PhocDraggableLayerSurface *self);
 gboolean                 phoc_draggable_layer_surface_is_draggable (PhocDraggableLayerSurface *self);
 PhocDraggableSurfaceState phoc_draggable_layer_surface_drag_start  (PhocDraggableLayerSurface *self,
                                                                     double                     lx,
