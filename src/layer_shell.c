@@ -337,14 +337,6 @@ phoc_layer_shell_update_focus (void)
   }
 }
 
-static void handle_output_destroy(struct wl_listener *listener, void *data) {
-	PhocLayerSurface *layer =
-		wl_container_of(listener, layer, output_destroy);
-	layer->layer_surface->output = NULL;
-	wl_list_remove(&layer->output_destroy.link);
-	wlr_layer_surface_v1_destroy(layer->layer_surface);
-}
-
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocLayerSurface *layer =
@@ -789,20 +781,11 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		}
 	}
 
-	PhocLayerSurface *roots_surface = phoc_layer_surface_new ();
-	if (!roots_surface) {
-		return;
-	}
-
-	wl_list_init(&roots_surface->subsurfaces);
+	PhocLayerSurface *roots_surface = phoc_layer_surface_new (layer_surface);
 
 	roots_surface->surface_commit.notify = handle_surface_commit;
 	wl_signal_add(&layer_surface->surface->events.commit,
 		&roots_surface->surface_commit);
-
-	roots_surface->output_destroy.notify = handle_output_destroy;
-	wl_signal_add(&layer_surface->output->events.destroy,
-		&roots_surface->output_destroy);
 
 	roots_surface->destroy.notify = handle_destroy;
 	wl_signal_add(&layer_surface->events.destroy, &roots_surface->destroy);
@@ -812,9 +795,6 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	wl_signal_add(&layer_surface->events.unmap, &roots_surface->unmap);
 	roots_surface->new_popup.notify = handle_new_popup;
 	wl_signal_add(&layer_surface->events.new_popup, &roots_surface->new_popup);
-
-	roots_surface->layer_surface = layer_surface;
-	layer_surface->data = roots_surface;
 
 	PhocOutput *output = layer_surface->output->data;
 	wl_list_insert(&output->layers[layer_surface->pending.layer], &roots_surface->link);

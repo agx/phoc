@@ -44,7 +44,7 @@ struct _PhocLayerSurface {
     bool mapped;
 };
 
-PhocLayerSurface *phoc_layer_surface_new (void);
+PhocLayerSurface *phoc_layer_surface_new (struct wlr_layer_surface_v1 *layer_surface);
 void              phoc_layer_surface_unmap (PhocLayerSurface *self);
 const char       *phoc_layer_surface_get_namespace (PhocLayerSurface *self);
 PhocOutput       *phoc_layer_surface_get_output (PhocLayerSurface *self);
