@@ -1030,6 +1030,11 @@ phoc_cursor_handle_touch_up (PhocCursor                *self,
   PhocTouchPoint *touch_point;
 
   touch_point = phoc_cursor_get_touch_point (self, event->touch_id);
+
+  /* Don't process unknown touch points */
+  if (!touch_point)
+    return;
+
   handle_gestures_for_event_at (self, touch_point->lx, touch_point->ly,
                                 PHOC_EVENT_TOUCH_END, event, sizeof (*event));
   phoc_cursor_remove_touch_point (self, event->touch_id);
