@@ -32,6 +32,11 @@ variables:
   - apk -q add alpine-sdk
   - apk -q add $ALPINE_EDGE_DEPS
 
+.before_script_pureos: &before_script_pureos
+  - echo "deb http://repo.pureos.net/pureos octarine main" > /etc/apt/sources.list.d/octarine.list
+  - apt-get -y update
+  - apt-get -y install -t octarine libwlroots-dev
+
 build-with-xwayland-debian-bookworm:
   stage: build
   image: ${DEBIAN_IMAGE}
@@ -112,6 +117,7 @@ build-gtkdoc:
 package-pureos-byzantium:arm64:
   variables:
     L5_DOCKER_IMAGE: pureos/byzantium
+  before_script: *before_script_pureos
   tags:
     - aarch64
   when: manual
@@ -121,6 +127,7 @@ package-pureos-byzantium:sanitizers:arm64:
   variables:
     L5_DOCKER_IMAGE: pureos/byzantium
     DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots pkg.phoc.sanitizers'
+  before_script: *before_script_pureos
   tags:
     - aarch64
   when: manual
