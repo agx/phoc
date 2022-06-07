@@ -120,7 +120,6 @@ package-pureos-byzantium:arm64:
   before_script: *before_script_pureos
   tags:
     - aarch64
-  when: manual
   extends: .l5-build-debian-package
 
 package-pureos-byzantium:sanitizers:arm64:
