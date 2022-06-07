@@ -5,7 +5,6 @@
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
 #endif
-#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -21,6 +20,8 @@
 #include "output.h"
 #include "seat.h"
 #include "server.h"
+
+#include <glib.h>
 
 #define LAYER_SHELL_LAYER_COUNT 4
 
@@ -86,8 +87,7 @@ static void apply_exclusive(struct wlr_box *usable_area,
 	}
 }
 
-static void update_cursors(PhocLayerSurface *roots_surface,
-		GSList *seats /* PhocSeat */) {
+static void update_cursors(PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */) {
 	PhocServer *server = phoc_server_get_default ();
 
 	for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
@@ -101,7 +101,7 @@ static void update_cursors(PhocLayerSurface *roots_surface,
 			server->desktop,
 			cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
-		if (surface == roots_surface->layer_surface->surface) {
+		if (surface == layer_surface->layer_surface->surface) {
 			struct timespec time;
 			if (clock_gettime(CLOCK_MONOTONIC, &time) == 0) {
 				phoc_cursor_update_position(cursor,
@@ -114,17 +114,19 @@ static void update_cursors(PhocLayerSurface *roots_surface,
 	}
 }
 
-static void arrange_layer(struct wlr_output *output,
+static void arrange_layer(PhocOutput *output,
 		GSList *seats /* PhocSeat */,
 		struct wl_list *list /* PhocLayerSurface */,
 		struct wlr_box *usable_area, bool exclusive) {
-	PhocLayerSurface *roots_surface;
+	PhocLayerSurface *layer_surface;
 	struct wlr_box full_area = { 0 };
-	wlr_output_effective_resolution(output,
+
+	g_assert (PHOC_IS_OUTPUT (output));
+	wlr_output_effective_resolution(output->wlr_output,
 			&full_area.width, &full_area.height);
-	wl_list_for_each_reverse(roots_surface, list, link) {
-		struct wlr_layer_surface_v1 *layer = roots_surface->layer_surface;
-		struct wlr_layer_surface_v1_state *state = &layer->current;
+	wl_list_for_each_reverse(layer_surface, list, link) {
+		struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
+		struct wlr_layer_surface_v1_state *state = &wlr_layer_surface->current;
 		if (exclusive != (state->exclusive_zone > 0)) {
 			continue;
 		}
@@ -183,21 +185,21 @@ static void arrange_layer(struct wlr_output *output,
 		}
 		if (box.width < 0 || box.height < 0) {
 			// TODO: Bubble up a protocol error?
-			wlr_layer_surface_v1_destroy(layer);
+			wlr_layer_surface_v1_destroy(wlr_layer_surface);
 			continue;
 		}
 
 		// Apply
-		struct wlr_box old_geo = roots_surface->geo;
-		roots_surface->geo = box;
-		if (layer->mapped) {
+		struct wlr_box old_geo = layer_surface->geo;
+		layer_surface->geo = box;
+		if (wlr_layer_surface->mapped) {
 			apply_exclusive(usable_area, state->anchor, state->exclusive_zone,
 					state->margin.top, state->margin.right,
 					state->margin.bottom, state->margin.left);
 		}
 
 		if (box.width != old_geo.width || box.height != old_geo.height)
-			wlr_layer_surface_v1_configure(layer, box.width, box.height);
+			wlr_layer_surface_v1_configure(wlr_layer_surface, box.width, box.height);
 
 		// Having a cursor newly end up over the moved layer will not
 		// automatically send a motion event to the surface. The event needs to
@@ -205,9 +207,9 @@ static void arrange_layer(struct wlr_output *output,
 		// Only update layer surfaces which kept their size (and so buffers) the
 		// same, because those with resized buffers will be handled separately.
 
-		if (roots_surface->geo.x != old_geo.x
-				|| roots_surface->geo.y != old_geo.y) {
-			update_cursors(roots_surface, seats);
+		if (layer_surface->geo.x != old_geo.x
+				|| layer_surface->geo.y != old_geo.y) {
+			update_cursors(layer_surface, seats);
 		}
 	}
 }
@@ -222,11 +224,11 @@ static struct osk_origin find_osk(struct wl_list layers[LAYER_SHELL_LAYER_COUNT]
 	struct osk_origin origin = {0};
 	for (unsigned i = 0; i < LAYER_SHELL_LAYER_COUNT; i++) {
 		struct wl_list *list = &layers[i];
-		PhocLayerSurface *roots_surface;
-		wl_list_for_each(roots_surface, list, link) {
-			if (strcmp(roots_surface->layer_surface->namespace, "osk") == 0) {
-				origin.state = roots_surface->layer_surface->current;
-				origin.surface = roots_surface;
+		PhocLayerSurface *layer_surface;
+		wl_list_for_each(layer_surface, list, link) {
+			if (strcmp(layer_surface->layer_surface->namespace, "osk") == 0) {
+				origin.state = layer_surface->layer_surface->current;
+				origin.surface = layer_surface;
 				origin.layer = i;
 				return origin;
 			}
@@ -281,7 +283,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   // Arrange exclusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
-    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, true);
+    arrange_layer (output, seats, &output->layers[layers[i]], &usable_area, true);
   output->usable_area = usable_area;
 
   PhocView *view;
@@ -297,7 +299,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   // Arrange non-exlusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
-    arrange_layer (output->wlr_output, seats, &output->layers[layers[i]], &usable_area, false);
+    arrange_layer (output, seats, &output->layers[layers[i]], &usable_area, false);
 }
 
 void
@@ -308,7 +310,7 @@ phoc_layer_shell_update_focus (void)
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
   };
-  PhocLayerSurface *layer, *topmost = NULL;
+  PhocLayerSurface *layer_surface, *topmost = NULL;
   // Find topmost keyboard interactive layer, if such a layer exists
   // TODO: Make layer surface focus per-output based on cursor position
   PhocOutput *output;
@@ -318,9 +320,10 @@ phoc_layer_shell_update_focus (void)
         if (layers_above_shell[i] == ZWLR_LAYER_SHELL_V1_LAYER_TOP)
           continue;
       }
-      wl_list_for_each(layer, &output->layers[layers_above_shell[i]], link) {
-        if (layer->layer_surface->current.keyboard_interactive && layer->layer_surface->mapped) {
-          topmost = layer;
+      wl_list_for_each(layer_surface, &output->layers[layers_above_shell[i]], link) {
+        if (layer_surface->layer_surface->current.keyboard_interactive &&
+            layer_surface->layer_surface->mapped) {
+          topmost = layer_surface;
           break;
         }
       }
@@ -339,23 +342,22 @@ phoc_layer_shell_update_focus (void)
 
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	PhocLayerSurface *layer =
-		wl_container_of(listener, layer, surface_commit);
-	struct wlr_layer_surface_v1 *layer_surface = layer->layer_surface;
-	struct wlr_output *wlr_output = layer_surface->output;
+	PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, surface_commit);
+	struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
+	struct wlr_output *wlr_output = wlr_layer_surface->output;
 	if (wlr_output != NULL) {
 		PhocOutput *output = wlr_output->data;
-		struct wlr_box old_geo = layer->geo;
+		struct wlr_box old_geo = layer_surface->geo;
 
 		bool layer_changed = false;
-		if (layer_surface->current.committed != 0 || layer->mapped != layer_surface->mapped) {
-			layer->mapped = layer_surface->mapped;
-			layer_changed = layer->layer != layer_surface->current.layer;
+		if (wlr_layer_surface->current.committed != 0 || layer_surface->mapped != wlr_layer_surface->mapped) {
+			layer_surface->mapped = wlr_layer_surface->mapped;
+			layer_changed = layer_surface->layer != wlr_layer_surface->current.layer;
 			if (layer_changed) {
-				wl_list_remove(&layer->link);
-				wl_list_insert(&output->layers[layer_surface->current.layer],
-					       &layer->link);
-				layer->layer = layer_surface->current.layer;
+				wl_list_remove(&layer_surface->link);
+				wl_list_insert(&output->layers[wlr_layer_surface->current.layer],
+					       &layer_surface->link);
+				layer_surface->layer = wlr_layer_surface->current.layer;
 			}
 
 			phoc_layer_shell_arrange (output);
@@ -369,31 +371,30 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		// the *new* layer surface.
 		// Another cursor move event is needed when the surface actually
 		// changes.
-		struct wlr_surface *surface = layer_surface->surface;
+		struct wlr_surface *surface = wlr_layer_surface->surface;
 		if (surface->previous.width != surface->current.width ||
 				surface->previous.height != surface->current.height) {
-			update_cursors(layer, phoc_input_get_seats (server->input));
+			update_cursors(layer_surface, phoc_input_get_seats (server->input));
 		}
 
 		bool geo_changed =
-			memcmp(&old_geo, &layer->geo, sizeof(struct wlr_box)) != 0;
+			memcmp(&old_geo, &layer_surface->geo, sizeof(struct wlr_box)) != 0;
 		if (geo_changed || layer_changed) {
-			phoc_output_damage_whole_local_surface(output, layer_surface->surface,
+			phoc_output_damage_whole_local_surface(output, wlr_layer_surface->surface,
 							       old_geo.x, old_geo.y);
-			phoc_output_damage_whole_local_surface(output, layer_surface->surface,
-							       layer->geo.x, layer->geo.y);
+			phoc_output_damage_whole_local_surface(output, wlr_layer_surface->surface,
+							       layer_surface->geo.x, layer_surface->geo.y);
 		} else {
-			phoc_output_damage_from_local_surface(output, layer_surface->surface,
-							      layer->geo.x, layer->geo.y);
+			phoc_output_damage_from_local_surface(output, wlr_layer_surface->surface,
+							      layer_surface->geo.x, layer_surface->geo.y);
 		}
 	}
 }
 
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
-	PhocLayerSurface *layer = wl_container_of(
-			listener, layer, destroy);
-	g_object_unref (layer);
+	PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, destroy);
+	g_object_unref (layer_surface);
 }
 
 static void subsurface_destroy(struct roots_layer_subsurface *subsurface) {
@@ -697,71 +698,70 @@ static void handle_new_subsurface(struct wl_listener *listener, void *data) {
 }
 
 static void handle_map(struct wl_listener *listener, void *data) {
-	struct wlr_layer_surface_v1 *layer_surface = data;
-	PhocLayerSurface *layer = PHOC_LAYER_SURFACE (layer_surface->data);
-	PhocOutput *output = phoc_layer_surface_get_output (layer);
+	struct wlr_layer_surface_v1 *wlr_layer_surface = data;
+	PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
+	PhocOutput *output = phoc_layer_surface_get_output (layer_surface);
 	if (!output) {
 		return;
 	}
 
 	struct wlr_subsurface *subsurface;
-	wl_list_for_each(subsurface, &layer_surface->surface->current.subsurfaces_below, current.link) {
+	wl_list_for_each(subsurface, &wlr_layer_surface->surface->current.subsurfaces_below, current.link) {
 		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
 		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
-		roots_subsurface->parent_layer = layer;
-		wl_list_insert(&layer->subsurfaces, &roots_subsurface->link);
+		roots_subsurface->parent_layer = layer_surface;
+		wl_list_insert(&layer_surface->subsurfaces, &roots_subsurface->link);
 	}
-	wl_list_for_each(subsurface, &layer_surface->surface->current.subsurfaces_above, current.link) {
+	wl_list_for_each(subsurface, &wlr_layer_surface->surface->current.subsurfaces_above, current.link) {
 		struct roots_layer_subsurface *roots_subsurface = layer_subsurface_create(subsurface);
 		roots_subsurface->parent_type = LAYER_PARENT_LAYER;
-		roots_subsurface->parent_layer = layer;
-		wl_list_insert(&layer->subsurfaces, &roots_subsurface->link);
+		roots_subsurface->parent_layer = layer_surface;
+		wl_list_insert(&layer_surface->subsurfaces, &roots_subsurface->link);
 	}
 
-	layer->new_subsurface.notify = handle_new_subsurface;
-	wl_signal_add(&layer_surface->surface->events.new_subsurface, &layer->new_subsurface);
+	layer_surface->new_subsurface.notify = handle_new_subsurface;
+	wl_signal_add(&wlr_layer_surface->surface->events.new_subsurface, &layer_surface->new_subsurface);
 
 	phoc_output_damage_whole_local_surface(output,
-					       layer_surface->surface, layer->geo.x,
-					       layer->geo.y);
-	wlr_surface_send_enter(layer_surface->surface, output->wlr_output);
+					       wlr_layer_surface->surface, layer_surface->geo.x,
+					       layer_surface->geo.y);
+	wlr_surface_send_enter(wlr_layer_surface->surface, output->wlr_output);
 }
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	PhocLayerSurface *layer = wl_container_of(
-			listener, layer, unmap);
+	PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, unmap);
 
 	struct roots_layer_subsurface *subsurface, *tmp;
-	wl_list_for_each_safe(subsurface, tmp, &layer->subsurfaces, link) {
+	wl_list_for_each_safe(subsurface, tmp, &layer_surface->subsurfaces, link) {
 		subsurface_destroy(subsurface);
 	}
-	wl_list_remove(&layer->new_subsurface.link);
+	wl_list_remove(&layer_surface->new_subsurface.link);
 
-	phoc_layer_surface_unmap (layer);
+	phoc_layer_surface_unmap (layer_surface);
 	phoc_input_update_cursor_focus(server->input);
 }
 
 void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
-	struct wlr_layer_surface_v1 *layer_surface = data;
-	PhocDesktop *desktop =
-		wl_container_of(listener, desktop, layer_shell_surface);
+	struct wlr_layer_surface_v1 *wlr_layer_surface = data;
+	PhocDesktop *desktop = wl_container_of(listener, desktop, layer_shell_surface);
+
 	g_debug ("new layer surface: namespace %s layer %d anchor %d "
 			"size %dx%d margin %d,%d,%d,%d",
-		layer_surface->namespace, layer_surface->pending.layer,
-		layer_surface->pending.anchor,
-		layer_surface->pending.desired_width,
-		layer_surface->pending.desired_height,
-		layer_surface->pending.margin.top,
-		layer_surface->pending.margin.right,
-		layer_surface->pending.margin.bottom,
-		layer_surface->pending.margin.left);
+		wlr_layer_surface->namespace, wlr_layer_surface->pending.layer,
+		wlr_layer_surface->pending.anchor,
+		wlr_layer_surface->pending.desired_width,
+		wlr_layer_surface->pending.desired_height,
+		wlr_layer_surface->pending.margin.top,
+		wlr_layer_surface->pending.margin.right,
+		wlr_layer_surface->pending.margin.bottom,
+		wlr_layer_surface->pending.margin.left);
 
-	if (!layer_surface->output) {
+	if (!wlr_layer_surface->output) {
 		PhocInput *input = server->input;
 		PhocSeat *seat = phoc_input_get_last_active_seat(input);
-		assert(seat); // Technically speaking we should handle this case
+		g_assert (PHOC_IS_SEAT (seat)); // Technically speaking we should handle this case
 		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		struct wlr_output *output =
 			wlr_output_layout_output_at(desktop->layout,
@@ -774,38 +774,42 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 			output = wlr_output_layout_get_center_output(desktop->layout);
 		}
 		if (output) {
-			layer_surface->output = output;
+			wlr_layer_surface->output = output;
 		} else {
-			wlr_layer_surface_v1_destroy(layer_surface);
+			wlr_layer_surface_v1_destroy(wlr_layer_surface);
 			return;
 		}
 	}
 
-	PhocLayerSurface *roots_surface = phoc_layer_surface_new (layer_surface);
 
-	roots_surface->surface_commit.notify = handle_surface_commit;
-	wl_signal_add(&layer_surface->surface->events.commit,
-		&roots_surface->surface_commit);
+	PhocLayerSurface *layer_surface = phoc_layer_surface_new (wlr_layer_surface);
 
-	roots_surface->destroy.notify = handle_destroy;
-	wl_signal_add(&layer_surface->events.destroy, &roots_surface->destroy);
-	roots_surface->map.notify = handle_map;
-	wl_signal_add(&layer_surface->events.map, &roots_surface->map);
-	roots_surface->unmap.notify = handle_unmap;
-	wl_signal_add(&layer_surface->events.unmap, &roots_surface->unmap);
-	roots_surface->new_popup.notify = handle_new_popup;
-	wl_signal_add(&layer_surface->events.new_popup, &roots_surface->new_popup);
+	layer_surface->surface_commit.notify = handle_surface_commit;
+	wl_signal_add(&wlr_layer_surface->surface->events.commit,
+		&layer_surface->surface_commit);
 
-	PhocOutput *output = layer_surface->output->data;
-	wl_list_insert(&output->layers[layer_surface->pending.layer], &roots_surface->link);
+	layer_surface->destroy.notify = handle_destroy;
+	wl_signal_add(&wlr_layer_surface->events.destroy, &layer_surface->destroy);
+	layer_surface->map.notify = handle_map;
+	wl_signal_add(&wlr_layer_surface->events.map, &layer_surface->map);
+	layer_surface->unmap.notify = handle_unmap;
+	wl_signal_add(&wlr_layer_surface->events.unmap, &layer_surface->unmap);
+	layer_surface->new_popup.notify = handle_new_popup;
+	wl_signal_add(&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
+
+	layer_surface->layer_surface = wlr_layer_surface;
+	wlr_layer_surface->data = layer_surface;
+
+	PhocOutput *output = wlr_layer_surface->output->data;
+	wl_list_insert(&output->layers[wlr_layer_surface->pending.layer], &layer_surface->link);
 
 	// Temporarily set the layer's current state to pending
 	// So that we can easily arrange it
-	struct wlr_layer_surface_v1_state old_state = layer_surface->current;
-	layer_surface->current = layer_surface->pending;
+	struct wlr_layer_surface_v1_state old_state = wlr_layer_surface->current;
+	wlr_layer_surface->current = wlr_layer_surface->pending;
 
 	phoc_layer_shell_arrange (output);
 	phoc_layer_shell_update_focus ();
 
-	layer_surface->current = old_state;
+	wlr_layer_surface->current = old_state;
 }

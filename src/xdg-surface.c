@@ -289,8 +289,18 @@ phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom)
   wlr_xdg_surface_get_geometry (self->xdg_surface, geom);
 }
 
+/**
+ * phoc_xdg_surface_from_view:
+ * @view: A view
+ *
+ * Returns the [class@XdgSurface] associated with this
+ * [type@Phoc.View]. It is a programming error if the [class@View]
+ * isn't a [type@XdgSurface].
+ *
+ * Returns: (transfer none): Returns the [type@XdgSurface]
+ */
 PhocXdgSurface *
 phoc_xdg_surface_from_view (PhocView *view) {
-	g_assert (PHOC_IS_XDG_SURFACE (view));
-	return PHOC_XDG_SURFACE (view);
+  g_assert (PHOC_IS_XDG_SURFACE (view));
+  return PHOC_XDG_SURFACE (view);
 }

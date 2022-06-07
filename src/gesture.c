@@ -698,8 +698,6 @@ phoc_gesture_class_init (PhocGestureClass *klass)
    * This signal is emitted whenever a sequence state changes. See
    * phoc_gesture_set_sequence_state() to know more about the expectable
    * sequence lifetimes.
-   *
-   * Since: 3.14
    */
   signals[SEQUENCE_STATE_CHANGED] =
     g_signal_new ("sequence-state-changed",

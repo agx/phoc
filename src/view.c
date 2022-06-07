@@ -1317,9 +1317,9 @@ phoc_view_init (PhocView *self)
  * phoc_view_from_wlr_surface:
  * @wlr_surface: The wlr_surface
  *
- * Given a #wlr_surface return the corresponding view
+ * Given a `wlr_surface` return the corresponding [class@View].
  *
- * Returns: The corresponding view
+ * Returns: (transfer none): The corresponding view
  */
 PhocView *
 phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface)

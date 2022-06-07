@@ -1346,6 +1346,13 @@ phoc_seat_has_meta_pressed (PhocSeat *seat)
   return false;
 }
 
+
+/**
+ * phoc_seat_get_focus:
+ * @seat: The seat
+ *
+ * Returns: (nullable)(transfer none): The currently focused view
+ */
 PhocView *
 phoc_seat_get_focus (PhocSeat *seat)
 {
@@ -1424,6 +1431,13 @@ seat_add_view (PhocSeat *seat, PhocView *view)
   return seat_view;
 }
 
+/**
+ * phoc_seat_view_from_view:
+ * @seat: The seat
+ * @view: A view
+ *
+ * Returns: (nullable)(transfer none): The seat view belonging to the given view.
+ */
 PhocSeatView *
 phoc_seat_view_from_view (PhocSeat *seat, PhocView *view)
 {

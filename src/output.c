@@ -554,7 +554,9 @@ phoc_output_class_init (PhocOutputClass *klass)
 
 static void
 phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
-                                       int sx, int sy, void *_data)
+                                       int                 sx,
+                                       int                 sy,
+                                       void               *_data)
 {
   PhocOutputSurfaceIteratorData *data = _data;
 
@@ -569,11 +571,24 @@ phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
                        data->scale, data->user_data);
 }
 
+/**
+ * phoc_output_surface_for_each_surface:
+ * @self: the output
+ * @surface: The wlr_surface
+ * @ox: x position in output coordinates
+ * @oy: y position in output coordinates
+ * @iterator: (scope call): The callback invoked on each iteration
+ * @user_data: Callback user data
+ *
+ * Iterate over surfaces in a `wlr_surface`s surface tree.
+ */
 void
-phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
-                                      *surface, double ox, double oy,
-                                      PhocSurfaceIterator iterator,
-                                      void *user_data)
+phoc_output_surface_for_each_surface (PhocOutput          *self,
+                                      struct wlr_surface  *surface,
+                                      double               ox,
+                                      double               oy,
+                                      PhocSurfaceIterator  iterator,
+                                      void                *user_data)
 {
   PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
@@ -591,12 +606,24 @@ phoc_output_surface_for_each_surface (PhocOutput *self, struct wlr_surface
                                 phoc_output_for_each_surface_iterator, &data);
 }
 
+/**
+ * phoc_output_xdg_surface_for_each_surface:
+ * @self: the output
+ * @xdg_surface: The wlr_xdg_surface
+ * @ox: x position in output coordinates
+ * @oy: y position in output coordinates
+ * @iterator: (scope call): The callback invoked on each iteration
+ * @user_data: Callback user data
+ *
+ * Iterate over surfaces in a `wlr_xdg_surface`s surface tree.
+ */
 void
-phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
-                                          wlr_xdg_surface *xdg_surface, double
-                                          ox, double oy,
-                                          PhocSurfaceIterator
-                                          iterator, void *user_data)
+phoc_output_xdg_surface_for_each_surface (PhocOutput             *self,
+                                          struct wlr_xdg_surface *xdg_surface,
+                                          double                  ox,
+                                          double                  oy,
+                                          PhocSurfaceIterator     iterator,
+                                          void                   *user_data)
 {
   PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
@@ -614,10 +641,20 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput *self, struct
                                     phoc_output_for_each_surface_iterator, &data);
 }
 
+/**
+ * phoc_output_view_for_each_surface:
+ * @self: the output
+ * @view: The [type@View]
+ * @iterator: (scope call): The callback invoked on each iteration
+ * @user_data: Callback user data
+ *
+ * Iterate over surfaces in a [type@View]s surface tree.
+ */
 void
-phoc_output_view_for_each_surface (PhocOutput *self, PhocView *view,
-                                   PhocSurfaceIterator iterator, void
-                                   *user_data)
+phoc_output_view_for_each_surface (PhocOutput          *self,
+                                   PhocView            *view,
+                                   PhocSurfaceIterator  iterator,
+                                   void                *user_data)
 {
   struct wlr_box *output_box =
     wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
@@ -642,11 +679,20 @@ phoc_output_view_for_each_surface (PhocOutput *self, PhocView *view,
 }
 
 #ifdef PHOC_XWAYLAND
+/**
+ * phoc_output_xwayland_children_for_each_surface:
+ * @self: the output
+ * @surface: The wlr_xwayland_surface
+ * @iterator: (scope call): The callback invoked on each iteration
+ * @user_data: Callback user data
+ *
+ * Iterate over children of a `wlr_xwayland_surface`.
+ */
 void
-phoc_output_xwayland_children_for_each_surface (PhocOutput *self, struct
-                                                wlr_xwayland_surface *surface,
-                                                PhocSurfaceIterator
-                                                iterator, void *user_data)
+phoc_output_xwayland_children_for_each_surface (PhocOutput                  *self,
+                                                struct wlr_xwayland_surface *surface,
+                                                PhocSurfaceIterator          iterator,
+                                                void                        *user_data)
 {
   struct wlr_box *output_box =
     wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
@@ -702,6 +748,15 @@ phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surf
   }
 }
 
+/**
+ * phoc_output_layer_for_each_surface:
+ * @self: the output
+ * @layer_surfaces: The list of [type@LayerSurface]s of a layer
+ * @iterator: (scope call): The callback invoked on each iteration
+ * @user_data: Callback user data
+ *
+ * Iterate over [type@LayerSurface]s in a layer.
+ */
 void
 phoc_output_layer_for_each_surface (PhocOutput          *self,
                                     struct wl_list      *layer_surfaces,
@@ -723,6 +778,15 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
   }
 }
 
+/**
+ * phoc_output_drag_icons_for_each_surface:
+ * @self: the output
+ * @input: a [type@Input]
+ * @iterator: (scope call): The iterator
+ * @user_data: Callback user data
+ *
+ * Iterate over the surface tree of the drag icon's surface of an input's seats.
+ */
 void
 phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
                                          PhocInput           *input,
@@ -752,6 +816,15 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
   }
 }
 
+/**
+ * phoc_output_for_each_surface:
+ * @self: the output
+ * @iterator: (scope call): The iterator
+ * @user_data: Callback user data
+ * @visible_only: Whether to only iterate over visible surfaces
+ *
+ * Iterate over surfaces on the output.
+ */
 void
 phoc_output_for_each_surface (PhocOutput          *self,
                               PhocSurfaceIterator  iterator,
@@ -1140,7 +1213,7 @@ phoc_output_is_match (PhocOutput *self,
   return match;
 }
 
-/*
+/**
  * phoc_output_has_fullscreen_view:
  * @self: The #PhocOutput
  *

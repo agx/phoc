@@ -269,7 +269,7 @@ seat_view_deco_button (PhocSeatView *view, double sx,
 }
 
 static bool
-roots_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int threshold)
+phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int threshold)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
@@ -302,12 +302,12 @@ roots_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, in
   struct wlr_box *output_box =
     wlr_output_layout_get_box (desktop->layout, wlr_output);
 
-  PhocLayerSurface *roots_surface;
+  PhocLayerSurface *layer_surface;
   bool left = false, right = false, top = false, bottom = false;
 
-  wl_list_for_each (roots_surface, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], link) {
-    struct wlr_layer_surface_v1 *layer = roots_surface->layer_surface;
-    struct wlr_layer_surface_v1_state *state = &layer->current;
+  wl_list_for_each (layer_surface, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], link) {
+    struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
+    struct wlr_layer_surface_v1_state *state = &wlr_layer_surface->current;
     const uint32_t both_horiz = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
                                 | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
     const uint32_t both_vert = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
@@ -349,7 +349,7 @@ roots_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, in
 }
 
 static void
-roots_passthrough_cursor (PhocCursor *self,
+phoc_passthrough_cursor (PhocCursor *self,
                           uint32_t    time)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -648,7 +648,7 @@ phoc_cursor_update_focus (PhocCursor *self)
 
   clock_gettime (CLOCK_MONOTONIC, &now);
 
-  roots_passthrough_cursor (self, timespec_to_msec (&now));
+  phoc_passthrough_cursor (self, timespec_to_msec (&now));
 }
 
 void
@@ -662,7 +662,7 @@ phoc_cursor_update_position (PhocCursor *self,
 
   switch (self->mode) {
   case PHOC_CURSOR_PASSTHROUGH:
-    roots_passthrough_cursor (self, time);
+    phoc_passthrough_cursor (self, time);
     break;
   case PHOC_CURSOR_MOVE:
     view = phoc_seat_get_focus (seat);
@@ -800,7 +800,7 @@ phoc_cursor_press_button (PhocCursor *self,
     }
   }
 
-  if (!roots_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch) {
+  if (!phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch) {
     wlr_seat_pointer_notify_button (seat->seat, time, button, state);
   }
 }
@@ -982,7 +982,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
   PhocView *view;
   struct wlr_surface *surface = phoc_desktop_surface_at (
     desktop, lx, ly, &sx, &sy, &view);
-  bool shell_revealed = roots_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
+  bool shell_revealed = phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
 
   if (!shell_revealed && surface && phoc_seat_allow_input (seat, surface->resource)) {
     wlr_seat_touch_notify_down (seat->seat, surface,
@@ -1095,25 +1095,25 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
 
     struct wlr_surface *root = wlr_surface_get_root_surface (surface);
     if (wlr_surface_is_layer_surface (root)) {
-      struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_from_wlr_surface (root);
+      struct wlr_layer_surface_v1 *wlr_layer_surface = wlr_layer_surface_v1_from_wlr_surface (root);
       struct wlr_box *output_box = wlr_output_layout_get_box (desktop->layout, wlr_output);
 
-      PhocLayerSurface *layer;
-      wl_list_for_each_reverse (layer, &phoc_output->layers[layer_surface->current.layer], link)
+      PhocLayerSurface *layer_surface;
+      wl_list_for_each_reverse (layer_surface, &phoc_output->layers[wlr_layer_surface->current.layer], link)
       {
-        if (layer->layer_surface->surface == root) {
-          sx = lx - layer->geo.x - output_box->x;
-          sy = ly - layer->geo.y - output_box->y;
+        if (layer_surface->layer_surface->surface == root) {
+          sx = lx - layer_surface->geo.x - output_box->x;
+          sy = ly - layer_surface->geo.y - output_box->y;
           found = true;
           break;
         }
       }
       // try the overlay layer as well since the on-screen keyboard might have been elevated there
-      wl_list_for_each_reverse (layer, &phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], link)
+      wl_list_for_each_reverse (layer_surface, &phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], link)
       {
-        if (layer->layer_surface->surface == root) {
-          sx = lx - layer->geo.x - output_box->x;
-          sy = ly - layer->geo.y - output_box->y;
+        if (layer_surface->layer_surface->surface == root) {
+          sx = lx - layer_surface->geo.x - output_box->x;
+          sy = ly - layer_surface->geo.y - output_box->y;
           found = true;
           break;
         }
@@ -1380,7 +1380,7 @@ phoc_cursor_add_gesture (PhocCursor   *self,
  * @self: The Cursor
  *
  * Gets the currently registered gestures @self.
- * Returns: (transfer none) (nullable): The cursor's gestures
+ * Returns: (transfer none) (nullable) (element-type PhocGesture): The cursor's gestures
  */
 GSList *
 phoc_cursor_get_gestures (PhocCursor *self)
