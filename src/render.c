@@ -28,6 +28,7 @@
 #include <time.h>
 #include <wlr/backend.h>
 #include <wlr/config.h>
+#include <wlr/render/drm_format_set.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/gles2.h>
 #include <wlr/render/egl.h>
@@ -40,11 +41,6 @@
 #include <wlr/render/allocator.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-
-/* Private wlr_allocator headers */
-struct wlr_drm_format *wlr_drm_format_create (uint32_t format);
-bool wlr_drm_format_add(struct wlr_drm_format **fmt_ptr, uint64_t modifier);
-/* ----------------------------- */
 
 
 static void wlr_box_from_pixman_box32(struct wlr_box *dest, const pixman_box32_t box) {
@@ -571,12 +567,14 @@ phoc_renderer_render_view_to_buffer (PhocRenderer *self,
   g_return_val_if_fail (surface, false);
   g_return_val_if_fail (self->wlr_allocator, false);
 
-  struct wlr_drm_format *fmt = wlr_drm_format_create (DRM_FORMAT_ARGB8888);
+  struct wlr_drm_format_set fmt_set = {};
+  wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_INVALID);
 
-  wlr_drm_format_add(&fmt, DRM_FORMAT_MOD_INVALID);
+  const struct wlr_drm_format *fmt = wlr_drm_format_set_get (&fmt_set, DRM_FORMAT_ARGB8888);
+
   buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
   if (!buffer) {
-    free (fmt);
+    wlr_drm_format_set_finish (&fmt_set);
     g_return_val_if_reached (false);
   }
 
@@ -593,7 +591,7 @@ phoc_renderer_render_view_to_buffer (PhocRenderer *self,
   wlr_renderer_end (self->wlr_renderer);
 
   wlr_buffer_drop (buffer);
-  free(fmt);
+  wlr_drm_format_set_finish (&fmt_set);
 
   return true;
 }
