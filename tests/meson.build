@@ -23,14 +23,15 @@ test_link_args = [
 ]
 
 tests = [
-  'server',
-  'run',
   'client',
   'layer-shell',
   'layer-shell-effects',
-  'xdg-shell',
   'phosh-private',
-  'utils'
+  'property-easer',
+  'run',
+  'server',
+  'utils',
+  'xdg-shell',
 ]
 
 phoctest_sources = [

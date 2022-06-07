@@ -1,5 +1,7 @@
 #pragma once
 
+#include "animatable.h"
+#include "render.h"
 #include "view.h"
 
 #include <gio/gio.h>
@@ -121,5 +123,17 @@ gboolean    phoc_output_is_match (PhocOutput *self,
                                   const char *model,
                                   const char *serial);
 gboolean    phoc_output_has_fullscreen_view (PhocOutput *self);
+
+guint       phoc_output_add_frame_callback   (PhocOutput        *self,
+                                              PhocAnimatable    *animatable,
+                                              PhocFrameCallback  callback,
+                                              gpointer           user_data,
+                                              GDestroyNotify     notify);
+void       phoc_output_remove_frame_callback (PhocOutput        *self,
+                                              guint              id);
+bool       phoc_output_has_frame_callbacks   (PhocOutput        *self);
+
+void       phoc_output_lower_shield          (PhocOutput *self);
+void       phoc_output_raise_shield          (PhocOutput *self);
 
 G_END_DECLS

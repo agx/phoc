@@ -9,6 +9,7 @@
 
 #include "config.h"
 
+#include "anim/animatable.h"
 #include "layer-surface.h"
 #include "layers.h"
 #include "output.h"
@@ -21,7 +22,35 @@ enum {
 static GParamSpec *props[PROP_LAST_PROP];
 
 
-G_DEFINE_TYPE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT)
+static void phoc_animatable_interface_init (PhocAnimatableInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (PHOC_TYPE_ANIMATABLE,
+                                                phoc_animatable_interface_init))
+
+static guint
+phoc_layer_surface_add_frame_callback (PhocAnimatable    *iface,
+                                       PhocFrameCallback  callback,
+                                       gpointer           user_data,
+                                       GDestroyNotify     notify)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (iface);
+  PhocOutput *output = phoc_layer_surface_get_output (self);
+
+  return phoc_output_add_frame_callback (output, iface, callback, user_data, notify);
+}
+
+
+static void
+phoc_layer_surface_remove_frame_callback (PhocAnimatable *iface, guint id)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (iface);
+  PhocOutput *output = phoc_layer_surface_get_output (self);
+
+  /* Only remove frame callback if output is not inert */
+  if (self->layer_surface->output)
+    phoc_output_remove_frame_callback (output, id);
+}
 
 
 static void
@@ -109,6 +138,14 @@ phoc_layer_surface_finalize (GObject *object)
   }
 
   G_OBJECT_CLASS (phoc_layer_surface_parent_class)->finalize (object);
+}
+
+
+static void
+phoc_animatable_interface_init (PhocAnimatableInterface *iface)
+{
+  iface->add_frame_callback = phoc_layer_surface_add_frame_callback;
+  iface->remove_frame_callback = phoc_layer_surface_remove_frame_callback;
 }
 
 

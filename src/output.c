@@ -13,9 +13,12 @@
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/region.h>
+
+#include "anim/animatable.h"
 #include "settings.h"
 #include "layers.h"
 #include "output.h"
+#include "output-shield.h"
 #include "render.h"
 #include "render-private.h"
 #include "seat.h"
@@ -25,7 +28,16 @@
 
 static void phoc_output_initable_iface_init (GInitableIface *iface);
 
+typedef struct _PhocOutputPrivate {
+  PhocOutputShield *shield;
+
+  GSList *frame_callbacks;
+  gint    frame_callback_next_id;
+  gint64  last_frame_us;
+} PhocOutputPrivate;
+
 G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
+                         G_ADD_PRIVATE (PhocOutput)
                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_output_initable_iface_init));
 
 enum {
@@ -44,6 +56,15 @@ static guint signals[N_SIGNALS] = { 0 };
 
 
 typedef struct {
+  PhocAnimatable    *animatable;
+  PhocFrameCallback  callback;
+  gpointer           user_data;
+  GDestroyNotify     notify;
+  guint              id;
+} PhocOutputFrameCallbackInfo;
+
+
+typedef struct {
   PhocSurfaceIterator  user_iterator;
   void                *user_data;
 
@@ -52,6 +73,15 @@ typedef struct {
   int                  width, height;
   float                rotation, scale;
 } PhocOutputSurfaceIteratorData;
+
+
+static void
+phoc_output_frame_callback_info_free (PhocOutputFrameCallbackInfo *cb_info)
+{
+  if (cb_info->notify && cb_info->user_data)
+    cb_info->notify (cb_info->user_data);
+  g_free (cb_info);
+}
 
 
 static bool
@@ -148,6 +178,11 @@ phoc_output_get_property (GObject    *object,
 static void
 phoc_output_init (PhocOutput *self)
 {
+  PhocOutputPrivate *priv = phoc_output_get_instance_private(self);
+
+  priv->frame_callback_next_id = 1;
+  priv->last_frame_us = g_get_monotonic_time ();
+  priv->shield = phoc_output_shield_new (self);
 }
 
 PhocOutput *
@@ -204,10 +239,30 @@ phoc_output_damage_handle_frame (struct wl_listener *listener,
                                  void               *data)
 {
   PhocOutput *self = wl_container_of (listener, self, damage_frame);
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   PhocServer *server = phoc_server_get_default ();
   PhocRenderer *renderer = phoc_server_get_renderer (server);
 
+  GSList *l = priv->frame_callbacks;
+  while (l != NULL) {
+    GSList *next = l->next;
+    PhocOutputFrameCallbackInfo *cb_info = l->data;
+    gboolean ret;
+
+    ret = cb_info->callback(cb_info->animatable, priv->last_frame_us, cb_info->user_data);
+    if (ret == G_SOURCE_REMOVE) {
+      phoc_output_frame_callback_info_free (cb_info);
+      priv->frame_callbacks = g_slist_delete_link (priv->frame_callbacks, l);
+    }
+    l = next;
+  }
+  priv->last_frame_us = g_get_monotonic_time ();
+
   phoc_renderer_render_output (renderer, self);
+
+  /* Want frame clock ticking as long as we have frame callbacks */
+  if (priv->frame_callbacks)
+    wlr_output_schedule_frame(self->wlr_output);
 }
 
 static void
@@ -438,6 +493,7 @@ static void
 phoc_output_finalize (GObject *object)
 {
   PhocOutput *self = PHOC_OUTPUT (object);
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
 
   wl_list_remove (&self->link);
   wl_list_remove (&self->enable.link);
@@ -445,10 +501,14 @@ phoc_output_finalize (GObject *object)
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);
   g_clear_list (&self->debug_touch_points, g_free);
+  /* Remove all frame callbacks, this will also free associzted user data */
+  g_clear_slist (&priv->frame_callbacks,
+                 (GDestroyNotify)phoc_output_frame_callback_info_free);
 
   for (size_t i = 0; i < G_N_ELEMENTS (self->layers); ++i)
     wl_list_init (&self->layers[i]);
 
+  g_clear_object (&priv->shield);
   g_clear_object (&self->desktop);
 
   G_OBJECT_CLASS (phoc_output_parent_class)->finalize (object);
@@ -1093,4 +1153,100 @@ phoc_output_has_fullscreen_view (PhocOutput *self)
   g_assert (PHOC_IS_OUTPUT (self));
 
   return self->fullscreen_view != NULL && self->fullscreen_view->wlr_surface != NULL;
+}
+
+
+guint
+phoc_output_add_frame_callback  (PhocOutput        *self,
+                                 PhocAnimatable    *animatable,
+                                 PhocFrameCallback  callback,
+                                 gpointer           user_data,
+                                 GDestroyNotify     notify)
+{
+  PhocOutputPrivate *priv;
+  PhocOutputFrameCallbackInfo *cb_info = g_new0 (PhocOutputFrameCallbackInfo, 1);
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  *cb_info = (PhocOutputFrameCallbackInfo) {
+    .animatable = animatable,
+    .callback = callback,
+    .user_data = user_data,
+    .notify = notify,
+    .id = priv->frame_callback_next_id,
+  };
+
+  if (priv->frame_callbacks == NULL) {
+    priv->last_frame_us = g_get_monotonic_time ();
+    /* No other frame callbacks so need to schedule a frame to keep
+     * frame clock ticking */
+    wlr_output_schedule_frame (self->wlr_output);
+  }
+
+  priv->frame_callbacks = g_slist_prepend (priv->frame_callbacks, cb_info);
+  return priv->frame_callback_next_id++;
+}
+
+
+void
+phoc_output_remove_frame_callback  (PhocOutput *self, guint id)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  for (GSList *elem = priv->frame_callbacks; elem; elem = elem->next) {
+    PhocOutputFrameCallbackInfo *cb_info = elem->data;
+
+    if (cb_info->id == id) {
+      phoc_output_frame_callback_info_free (cb_info);
+      priv->frame_callbacks = g_slist_delete_link (priv->frame_callbacks, elem);
+      return;
+    }
+  }
+  g_return_if_reached();
+}
+
+
+bool
+phoc_output_has_frame_callbacks  (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  return !!priv->frame_callbacks;
+}
+
+
+void
+phoc_output_lower_shield (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  if (priv->shield == NULL)
+    return;
+
+  phoc_output_shield_lower (priv->shield);
+}
+
+
+void
+phoc_output_raise_shield (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  if (priv->shield == NULL)
+    priv->shield = phoc_output_shield_new (self);
+
+  phoc_output_shield_raise (priv->shield);
 }
