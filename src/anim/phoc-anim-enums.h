@@ -29,7 +29,6 @@ typedef enum {
 
 /**
  * PhocEasing:
- *
  * @PHOC_EASING_NONE: No easing, linear tweening.
  * @PHOC_EASING_EASE_IN_QUAD: Quadratic tweening.
  * @PHOC_EASING_EASE_OUT_QUAD: Quadratic tweening, inverse of `PHOC_EASING_EASE_IN_QUAD`.
