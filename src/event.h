@@ -98,7 +98,7 @@ typedef enum
 
 
 /**
- * GtkEventSequenceState:
+ * PhocEventSequenceState:
  * @PHOC_EVENT_SEQUENCE_NONE: The sequence is handled, but not grabbed.
  * @PHOC_EVENT_SEQUENCE_CLAIMED: The sequence is handled and grabbed.
  * @PHOC_EVENT_SEQUENCE_DENIED: The sequence is denied.
