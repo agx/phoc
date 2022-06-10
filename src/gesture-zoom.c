@@ -188,7 +188,6 @@ phoc_gesture_zoom_class_init (PhocGestureZoomClass *klass)
 
 /**
  * phoc_gesture_zoom_new:
- * @widget: a #PhocWidget
  *
  * Returns a newly created #PhocGesture that recognizes zoom
  * in/out gestures (usually known as pinch/zoom).
