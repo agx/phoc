@@ -141,8 +141,10 @@ if get_option('gtk_doc')
     phoc_gir_extra_args += '-DPHOC_XWAYLAND'
   endif
 
+  gir_sources = sources + phoc_anim_enum_sources + phoc_enum_sources
+
   phoc_gir = gnome.generate_gir(phoc_lib,
-                 sources: sources,
+                 sources: gir_sources,
                nsversion: '0',
                namespace: 'Phoc',
          export_packages: 'phoc-0',

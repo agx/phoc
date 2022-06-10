@@ -19,7 +19,7 @@ G_BEGIN_DECLS
  * Describes the possible states of an [type@PhocTimedAnimation].
  *
  * The state can be controlled with [method@PhocTimedAnimation.play]
- * and [method@PhocAnimation.skip].
+ * and [method@PhocTimedAnimation.skip].
  */
 typedef enum {
   PHOC_TIMED_ANIMATION_IDLE = 0,
@@ -29,7 +29,6 @@ typedef enum {
 
 /**
  * PhocEasing:
- *
  * @PHOC_EASING_NONE: No easing, linear tweening.
  * @PHOC_EASING_EASE_IN_QUAD: Quadratic tweening.
  * @PHOC_EASING_EASE_OUT_QUAD: Quadratic tweening, inverse of `PHOC_EASING_EASE_IN_QUAD`.

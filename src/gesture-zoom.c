@@ -188,7 +188,6 @@ phoc_gesture_zoom_class_init (PhocGestureZoomClass *klass)
 
 /**
  * phoc_gesture_zoom_new:
- * @widget: a #PhocWidget
  *
  * Returns a newly created #PhocGesture that recognizes zoom
  * in/out gestures (usually known as pinch/zoom).
@@ -203,7 +202,7 @@ phoc_gesture_zoom_new (void)
 
 /**
  * phoc_gesture_zoom_get_scale_delta:
- * @gesture: a #PhocGestureZoom
+ * @gesture: The zoom gesture
  *
  * If @gesture is active, this function returns the zooming difference
  * since the gesture was recognized (hence the starting point is

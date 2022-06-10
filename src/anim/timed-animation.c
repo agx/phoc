@@ -36,8 +36,8 @@ static guint signals[N_SIGNALS];
 /**
  * PhocTimedAnimation:
  *
- * `PhocTimedAnimation` implements a timed animation using the given
- * `Phoc.PropertyEaser` to animate properties of the `PhocAnimtable`.
+ * [type@TimedAnimation] implements a timed animation using the given
+ * [type@PropertyEaser] to animate properties of the [type@Animatable].
  */
 struct _PhocTimedAnimation {
   GObject              parent;
@@ -333,6 +333,12 @@ phoc_timed_animation_new (void)
 }
 
 
+/**
+ * phoc_timed_animation_get_property_easer:
+ * @self: a `PhocTimedAnimation`
+ *
+ * Returns: (transfer none): The property easer of this time animation.
+ */
 PhocPropertyEaser *
 phoc_timed_animation_get_property_easer (PhocTimedAnimation *self)
 {
@@ -365,6 +371,12 @@ phoc_timed_animation_get_duration (PhocTimedAnimation *self)
 }
 
 
+/**
+ * phoc_timed_animation_get_animatable:
+ * @self: a `PhocTimedAnimation`
+ *
+ * Returns: (transfer none): The animatable of this timed animation.
+ */
 PhocAnimatable *
 phoc_timed_animation_get_animatable (PhocTimedAnimation *self)
 {
@@ -459,8 +471,6 @@ phoc_timed_animation_get_state (PhocTimedAnimation *self)
  * Resets the animation for @self.
  *
  * Sets [property@Phoc.TimedAnimation:state] to `PHOC_TIMED_ANIMATION_IDLE`.
- *
- * Since: 1.0
  */
 void
 phoc_timed_animation_reset (PhocTimedAnimation *self)

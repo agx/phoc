@@ -56,17 +56,16 @@ void                   phoc_layer_shell_effects_send_drag_end   (PhocLayerShellE
 PhocDraggableLayerSurface *phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
   PhocLayerShellEffects *self, PhocLayerSurface *layer_surface);
 
-PhocLayerSurface        *phoc_draggable_layer_surface_get_layer_surface (PhocDraggableLayerSurface *self);
-gboolean                 phoc_draggable_layer_surface_is_draggable (PhocDraggableLayerSurface *self);
-PhocDraggableSurfaceState phoc_draggable_layer_surface_drag_start  (PhocDraggableLayerSurface *self,
+PhocLayerSurface        *phoc_draggable_layer_surface_get_layer_surface (PhocDraggableLayerSurface *drag_surface);
+PhocDraggableSurfaceState phoc_draggable_layer_surface_drag_start  (PhocDraggableLayerSurface *drag_surface,
                                                                     double                     lx,
                                                                     double                     ly);
-PhocDraggableSurfaceState phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *self,
+PhocDraggableSurfaceState phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surface,
                                                                     double                     lx,
                                                                     double                     ly);
-void                     phoc_draggable_layer_surface_drag_end    (PhocDraggableLayerSurface  *self,
+void                     phoc_draggable_layer_surface_drag_end    (PhocDraggableLayerSurface  *drag_surface,
                                                                    double                      lx,
                                                                    double                      ly);
-void                     phoc_draggable_layer_surface_slide       (PhocDraggableLayerSurface  *self,
+void                     phoc_draggable_layer_surface_slide       (PhocDraggableLayerSurface  *drag_surface,
                                                                    PhocAnimDir             anim_dir);
 G_END_DECLS

@@ -62,7 +62,6 @@ struct _PhocDraggableLayerSurface {
   struct {
     /* Margin at gesture start */
     int      start_margin;
-    int      draggable;
     /* Threshold until drag is accepted */
     int      pending_accept;
     /* Threshold until drag is rejected */
@@ -141,7 +140,6 @@ handle_draggable_layer_surface_set_margins (struct wl_client   *client,
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_LEFT:
     G_GNUC_FALLTHROUGH;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_RIGHT:
-    drag_surface->drag.draggable = drag_surface->layer_surface->layer_surface->current.anchor;
     break;
   default:
     wl_resource_post_error (resource, ZPHOC_LAYER_SHELL_EFFECTS_V1_ERROR_BAD_ANCHORS,
@@ -679,17 +677,16 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
 }
 
 
+/**
+ * phoc_draggable_layer_surface_get_layer_surface:
+ * @drag_surface: The dragable layer suface
+ *
+ * Returns: (transfer none): The underlying layer surface
+ */
 PhocLayerSurface*
 phoc_draggable_layer_surface_get_layer_surface (PhocDraggableLayerSurface *drag_surface)
 {
   return drag_surface->layer_surface;
-}
-
-
-gboolean
-phoc_draggable_layer_surface_is_draggable (PhocDraggableLayerSurface *drag_surface)
-{
-  return !!drag_surface->drag.draggable;
 }
 
 

@@ -252,7 +252,7 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
   object_class->finalize = phoc_output_shield_finalize;
 
   /**
-   * PhocOutputShield:output:
+   * PhocOutputShield:alpha:
    *
    * The current transparency of this shield.
    */
@@ -294,6 +294,7 @@ phoc_output_shield_new (PhocOutput *output)
 
 /**
  * phoc_output_shield_raise:
+ * @self: The shield
  *
  * Draw the shield to cover the whole output.
  */
@@ -311,7 +312,8 @@ phoc_output_shield_raise (PhocOutputShield *self)
 
 
 /**
- * phoc_output_shield_raise:
+ * phoc_output_shield_lower
+ * @self: The shield
  *
  * Lower the shield exposing the output's content.
  */

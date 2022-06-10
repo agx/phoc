@@ -22,6 +22,6 @@ struct _PhocGestureZoomClass {
 };
 
 PhocGestureZoom *phoc_gesture_zoom_new (void);
-gdouble          phoc_gesture_zoom_get_scale_delta (PhocGestureZoom *self);
+gdouble          phoc_gesture_zoom_get_scale_delta (PhocGestureZoom *gesture);
 
 G_END_DECLS
