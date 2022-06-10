@@ -265,7 +265,8 @@ phoc_layer_shell_arrange (PhocOutput *output)
       PhocSeat *seat = PHOC_SEAT (elem->data);
 
       g_assert (PHOC_IS_SEAT (seat));
-      if (seat->focused_layer && seat->focused_layer->pending.layer >= osk->layer_surface->pending.layer) {
+      if (seat->focused_layer && seat->focused_layer->pending.layer >= osk->layer_surface->pending.layer &&
+          phoc_input_method_relay_is_enabled (&seat->im_relay, seat->focused_layer->surface)) {
         osk_force_overlay = true;
         break;
       }
