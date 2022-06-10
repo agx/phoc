@@ -679,6 +679,12 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
 }
 
 
+/**
+ * phoc_draggable_surface_get_layer_surface:
+ * @drag_surface: The dragable layer suface
+ *
+ * Returns: (transfer none): The underlying layer surface
+ */
 PhocLayerSurface*
 phoc_draggable_layer_surface_get_layer_surface (PhocDraggableLayerSurface *drag_surface)
 {
