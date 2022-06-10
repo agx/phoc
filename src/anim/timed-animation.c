@@ -36,8 +36,8 @@ static guint signals[N_SIGNALS];
 /**
  * PhocTimedAnimation:
  *
- * `PhocTimedAnimation` implements a timed animation using the given
- * `Phoc.PropertyEaser` to animate properties of the `PhocAnimtable`.
+ * [type@TimedAnimation] implements a timed animation using the given
+ * [type@PropertyEaser] to animate properties of the [type@Animatable].
  */
 struct _PhocTimedAnimation {
   GObject              parent;
