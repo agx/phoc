@@ -37,7 +37,7 @@ struct _PhocLayerSurface {
     struct wl_listener output_destroy;
     struct wl_listener new_popup;
     struct wl_listener new_subsurface;
-    struct wl_list subsurfaces; // roots_layer_subsurface::link
+    struct wl_list subsurfaces; // phoc_layer_subsurface::link
 
     struct wlr_box geo;
     enum zwlr_layer_shell_v1_layer layer;
