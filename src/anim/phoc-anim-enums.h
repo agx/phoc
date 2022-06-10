@@ -19,7 +19,7 @@ G_BEGIN_DECLS
  * Describes the possible states of an [type@PhocTimedAnimation].
  *
  * The state can be controlled with [method@PhocTimedAnimation.play]
- * and [method@PhocAnimation.skip].
+ * and [method@PhocTimedAnimation.skip].
  */
 typedef enum {
   PHOC_TIMED_ANIMATION_IDLE = 0,
