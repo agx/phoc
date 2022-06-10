@@ -202,7 +202,7 @@ phoc_gesture_zoom_new (void)
 
 /**
  * phoc_gesture_zoom_get_scale_delta:
- * @gesture: a #PhocGestureZoom
+ * @gesture: The zoom gesture
  *
  * If @gesture is active, this function returns the zooming difference
  * since the gesture was recognized (hence the starting point is
