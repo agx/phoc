@@ -333,6 +333,12 @@ phoc_timed_animation_new (void)
 }
 
 
+/**
+ * phoc_timed_animation_get_property_easer:
+ * @self: a `PhocTimedAnimation`
+ *
+ * Returns: (transfer none): The property easer of this time animation.
+ */
 PhocPropertyEaser *
 phoc_timed_animation_get_property_easer (PhocTimedAnimation *self)
 {
@@ -365,6 +371,12 @@ phoc_timed_animation_get_duration (PhocTimedAnimation *self)
 }
 
 
+/**
+ * phoc_timed_animation_get_animatable:
+ * @self: a `PhocTimedAnimation`
+ *
+ * Returns: (transfer none): The animatable of this timed animation.
+ */
 PhocAnimatable *
 phoc_timed_animation_get_animatable (PhocTimedAnimation *self)
 {
