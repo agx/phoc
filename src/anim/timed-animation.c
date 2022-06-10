@@ -459,8 +459,6 @@ phoc_timed_animation_get_state (PhocTimedAnimation *self)
  * Resets the animation for @self.
  *
  * Sets [property@Phoc.TimedAnimation:state] to `PHOC_TIMED_ANIMATION_IDLE`.
- *
- * Since: 1.0
  */
 void
 phoc_timed_animation_reset (PhocTimedAnimation *self)
