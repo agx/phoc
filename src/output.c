@@ -748,7 +748,7 @@ phoc_output_layer_handle_surface (PhocOutput *self, PhocLayerSurface *layer_surf
 /**
  * phoc_output_layer_for_each_surface:
  * @self: the output
- * @layer_surfaces: The list of [type@LayerSurface]s of a layer
+ * @layer: The layer that should be iterated over
  * @iterator: (scope call): The callback invoked on each iteration
  * @user_data: Callback user data
  *
