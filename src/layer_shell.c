@@ -116,7 +116,7 @@ static void update_cursors(PhocLayerSurface *layer_surface, GSList *seats /* Pho
 
 static void arrange_layer(PhocOutput *output,
 		GSList *seats /* PhocSeat */,
-		struct wl_list *list /* PhocLayerSurface */,
+		enum zwlr_layer_shell_v1_layer layer,
 		struct wlr_box *usable_area, bool exclusive) {
 	PhocLayerSurface *layer_surface;
 	struct wlr_box full_area = { 0 };
@@ -124,9 +124,13 @@ static void arrange_layer(PhocOutput *output,
 	g_assert (PHOC_IS_OUTPUT (output));
 	wlr_output_effective_resolution(output->wlr_output,
 			&full_area.width, &full_area.height);
-	wl_list_for_each_reverse(layer_surface, list, link) {
+	wl_list_for_each_reverse(layer_surface, &output->layer_surfaces, link) {
 		struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
 		struct wlr_layer_surface_v1_state *state = &wlr_layer_surface->current;
+
+		if (layer_surface->layer != layer)
+		  continue;
+
 		if (exclusive != (state->exclusive_zone > 0)) {
 			continue;
 		}
@@ -214,40 +218,28 @@ static void arrange_layer(PhocOutput *output,
 	}
 }
 
-struct osk_origin {
-	struct wlr_layer_surface_v1_state state;
-	PhocLayerSurface *surface;
-	enum zwlr_layer_shell_v1_layer layer;
-};
+static PhocLayerSurface *
+find_osk (PhocOutput *output)
+{
+  PhocLayerSurface *layer_surface;
 
-static struct osk_origin find_osk(struct wl_list layers[LAYER_SHELL_LAYER_COUNT]) {
-	struct osk_origin origin = {0};
-	for (unsigned i = 0; i < LAYER_SHELL_LAYER_COUNT; i++) {
-		struct wl_list *list = &layers[i];
-		PhocLayerSurface *layer_surface;
-		wl_list_for_each(layer_surface, list, link) {
-			if (strcmp(layer_surface->layer_surface->namespace, "osk") == 0) {
-				origin.state = layer_surface->layer_surface->current;
-				origin.surface = layer_surface;
-				origin.layer = i;
-				return origin;
-			}
-		}
-	}
-	return origin;
+  wl_list_for_each(layer_surface, &output->layer_surfaces, link) {
+    if (strcmp(layer_surface->layer_surface->namespace, "osk") == 0)
+      return layer_surface;
+  }
+
+  return NULL;
 }
 
 /// Adjusts keyboard properties
-static void change_osk(const struct osk_origin *osk, struct wl_list layers[LAYER_SHELL_LAYER_COUNT], bool force_overlay) {
-	if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY) {
-		wl_list_remove(&osk->surface->link);
-		wl_list_insert(&layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &osk->surface->link);
-	}
+static void
+change_osk (PhocLayerSurface *osk, struct wl_list layer_surfaces, bool force_overlay)
+{
+  if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY)
+    osk->layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
 
-	if (!force_overlay && osk->layer != osk->surface->layer_surface->pending.layer) {
-		wl_list_remove(&osk->surface->link);
-		wl_list_insert(&layers[osk->surface->layer_surface->pending.layer], &osk->surface->link);
-	}
+  if (!force_overlay && osk->layer != osk->layer_surface->pending.layer)
+    osk->layer = osk->layer_surface->pending.layer;
 }
 
 void
@@ -265,25 +257,25 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   wlr_output_effective_resolution (output->wlr_output, &usable_area.width, &usable_area.height);
 
-  struct osk_origin osk_place = find_osk (output->layers);
-  if (osk_place.surface) {
+  PhocLayerSurface *osk = find_osk (output);
+  if (osk) {
     bool osk_force_overlay = false;
 
     for (GSList *elem = seats; elem; elem = elem->next) {
       PhocSeat *seat = PHOC_SEAT (elem->data);
 
       g_assert (PHOC_IS_SEAT (seat));
-      if (seat->focused_layer && seat->focused_layer->pending.layer >= osk_place.surface->layer_surface->pending.layer) {
+      if (seat->focused_layer && seat->focused_layer->pending.layer >= osk->layer_surface->pending.layer) {
         osk_force_overlay = true;
         break;
       }
     }
-    change_osk (&osk_place, output->layers, osk_force_overlay);
+    change_osk (osk, output->layer_surfaces, osk_force_overlay);
   }
 
   // Arrange exclusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
-    arrange_layer (output, seats, &output->layers[layers[i]], &usable_area, true);
+    arrange_layer (output, seats, layers[i], &usable_area, true);
   output->usable_area = usable_area;
 
   PhocView *view;
@@ -299,7 +291,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   // Arrange non-exlusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
-    arrange_layer (output, seats, &output->layers[layers[i]], &usable_area, false);
+    arrange_layer (output, seats, layers[i], &usable_area, false);
 }
 
 void
@@ -320,7 +312,10 @@ phoc_layer_shell_update_focus (void)
         if (layers_above_shell[i] == ZWLR_LAYER_SHELL_V1_LAYER_TOP)
           continue;
       }
-      wl_list_for_each(layer_surface, &output->layers[layers_above_shell[i]], link) {
+      wl_list_for_each(layer_surface, &output->layer_surfaces, link) {
+        if (layer_surface->layer != layers_above_shell[i])
+          continue;
+
         if (layer_surface->layer_surface->current.keyboard_interactive &&
             layer_surface->layer_surface->mapped) {
           topmost = layer_surface;
@@ -353,13 +348,8 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		if (wlr_layer_surface->current.committed != 0 || layer_surface->mapped != wlr_layer_surface->mapped) {
 			layer_surface->mapped = wlr_layer_surface->mapped;
 			layer_changed = layer_surface->layer != wlr_layer_surface->current.layer;
-			if (layer_changed) {
-				wl_list_remove(&layer_surface->link);
-				wl_list_insert(&output->layers[wlr_layer_surface->current.layer],
-					       &layer_surface->link);
-				layer_surface->layer = wlr_layer_surface->current.layer;
-			}
 
+			layer_surface->layer = wlr_layer_surface->current.layer;
 			phoc_layer_shell_arrange (output);
 			phoc_layer_shell_update_focus ();
 		}
@@ -801,7 +791,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	wlr_layer_surface->data = layer_surface;
 
 	PhocOutput *output = wlr_layer_surface->output->data;
-	wl_list_insert(&output->layers[wlr_layer_surface->pending.layer], &layer_surface->link);
+	wl_list_insert(&output->layer_surfaces, &layer_surface->link);
 
 	// Temporarily set the layer's current state to pending
 	// So that we can easily arrange it

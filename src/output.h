@@ -7,6 +7,7 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <wayland-server-core.h>
+#include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
@@ -37,7 +38,7 @@ struct _PhocOutput {
   struct wl_list            link; // PhocDesktop::outputs
 
   PhocView                 *fullscreen_view;
-  struct wl_list            layers[4]; // layer_surface::link
+  struct wl_list            layer_surfaces; // layer_surface::link
   bool                      force_shell_reveal;
 
   struct wlr_output_damage *damage;
@@ -84,7 +85,7 @@ void        phoc_output_drag_icons_for_each_surface  (PhocOutput *self,
                                                       PhocSurfaceIterator iterator,
                                                       void *user_data);
 void        phoc_output_layer_for_each_surface       (PhocOutput *self,
-                                                      struct wl_list *layer_surfaces,
+                                                      enum zwlr_layer_shell_v1_layer layer,
                                                       PhocSurfaceIterator iterator,
                                                       void *user_data);
 #ifdef PHOC_XWAYLAND
@@ -123,6 +124,7 @@ gboolean    phoc_output_is_match (PhocOutput *self,
                                   const char *model,
                                   const char *serial);
 gboolean    phoc_output_has_fullscreen_view (PhocOutput *self);
+gboolean    phoc_output_has_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer);
 
 guint       phoc_output_add_frame_callback   (PhocOutput        *self,
                                               PhocAnimatable    *animatable,

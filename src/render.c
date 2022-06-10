@@ -321,14 +321,12 @@ render_layer (PhocOutput                     *output,
               pixman_region32_t              *damage,
               enum zwlr_layer_shell_v1_layer  layer)
 {
-  struct wl_list *layer_surfaces = &output->layers[layer];
-
   struct render_data data = {
     .damage = damage,
     .alpha = 1.0f,
   };
 
-  phoc_output_layer_for_each_surface(output, layer_surfaces, render_surface_iterator, &data);
+  phoc_output_layer_for_each_surface(output, layer, render_surface_iterator, &data);
 }
 
 static void count_surface_iterator(PhocOutput *output,
@@ -352,9 +350,8 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 		}
 	}
 
-	if (!wl_list_empty(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY])) {
+	if (phoc_output_has_layer (output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
 		return false;
-	}
 
 	struct wlr_output_cursor *cursor;
 	wl_list_for_each(cursor, &wlr_output->cursors, link) {

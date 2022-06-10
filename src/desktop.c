@@ -159,44 +159,51 @@ static PhocView *desktop_view_at(PhocDesktop *desktop,
 	return NULL;
 }
 
-static struct wlr_surface *layer_surface_at(struct wl_list *layer, double ox,
-                                             double oy, double *sx, double *sy)
+static struct wlr_surface *
+layer_surface_at (PhocOutput                     *output,
+                  enum zwlr_layer_shell_v1_layer  layer,
+                  double                          ox,
+                  double                          oy,
+                  double                         *sx,
+                  double                         *sy)
 {
-	PhocLayerSurface *layer_surface;
+  PhocLayerSurface *layer_surface;
 
-	wl_list_for_each_reverse(layer_surface, layer, link) {
-		if (layer_surface->layer_surface->current.exclusive_zone <= 0) {
-			continue;
-		}
+  wl_list_for_each_reverse(layer_surface, &output->layer_surfaces, link) {
+    if (layer_surface->layer != layer)
+      continue;
 
-		double _sx = ox - layer_surface->geo.x;
-		double _sy = oy - layer_surface->geo.y;
+    if (layer_surface->layer_surface->current.exclusive_zone <= 0)
+      continue;
 
-		struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
-			layer_surface->layer_surface, _sx, _sy, sx, sy);
+    double _sx = ox - layer_surface->geo.x;
+    double _sy = oy - layer_surface->geo.y;
 
-		if (sub) {
-			return sub;
-		}
-	}
+    struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
+      layer_surface->layer_surface, _sx, _sy, sx, sy);
 
-	wl_list_for_each(layer_surface, layer, link) {
-		if (layer_surface->layer_surface->current.exclusive_zone > 0) {
-			continue;
-		}
+    if (sub)
+      return sub;
+  }
 
-		double _sx = ox - layer_surface->geo.x;
-		double _sy = oy - layer_surface->geo.y;
+  wl_list_for_each(layer_surface, &output->layer_surfaces, link) {
+    if (layer_surface->layer != layer)
+      continue;
 
-		struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
-			layer_surface->layer_surface, _sx, _sy, sx, sy);
+    if (layer_surface->layer_surface->current.exclusive_zone > 0)
+      continue;
 
-		if (sub) {
-			return sub;
-		}
-	}
+    double _sx = ox - layer_surface->geo.x;
+    double _sy = oy - layer_surface->geo.y;
 
-	return NULL;
+    struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
+      layer_surface->layer_surface, _sx, _sy, sx, sy);
+
+    if (sub)
+      return sub;
+  }
+
+  return NULL;
 }
 
 /**
@@ -227,10 +234,10 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 	}
 
 	if (wlr_output) {
-		phoc_output = wlr_output->data;
+		phoc_output = PHOC_OUTPUT (wlr_output->data);
 		wlr_output_layout_output_coords(desktop->layout, wlr_output, &ox, &oy);
 
-		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
@@ -239,7 +246,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		if (output != NULL && output->fullscreen_view != NULL) {
 
 			if (output->force_shell_reveal) {
-				if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+				if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
 								ox, oy, sx, sy))) {
 					return surface;
 				}
@@ -255,7 +262,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 			}
 		}
 
-		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
@@ -270,11 +277,11 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 	}
 
 	if (wlr_output) {
-		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
-		if ((surface = layer_surface_at(&phoc_output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
+		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
