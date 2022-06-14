@@ -787,9 +787,6 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 	layer_surface->new_popup.notify = handle_new_popup;
 	wl_signal_add(&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
 
-	layer_surface->layer_surface = wlr_layer_surface;
-	wlr_layer_surface->data = layer_surface;
-
 	PhocOutput *output = wlr_layer_surface->output->data;
 	wl_list_insert(&output->layer_surfaces, &layer_surface->link);
 
