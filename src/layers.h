@@ -17,11 +17,11 @@ enum layer_parent {
 	LAYER_PARENT_SUBSURFACE
 };
 
-struct roots_layer_popup {
+typedef struct phoc_layer_popup {
 	enum layer_parent parent_type;
 	union {
 		PhocLayerSurface *parent_layer;
-		struct roots_layer_popup *parent_popup;
+		struct phoc_layer_popup *parent_popup;
 	};
 
 	struct wlr_xdg_popup *wlr_popup;
@@ -31,15 +31,15 @@ struct roots_layer_popup {
 	struct wl_listener commit;
 	struct wl_listener new_popup;
 	struct wl_listener new_subsurface;
-	struct wl_list subsurfaces; // roots_layer_subsurface::link
-};
+	struct wl_list subsurfaces; // phoc_layer_subsurface::link
+} PhocLayerPopup;
 
-struct roots_layer_subsurface {
+typedef struct phoc_layer_subsurface {
 	enum layer_parent parent_type;
 	union {
 		PhocLayerSurface *parent_layer;
-		struct roots_layer_popup *parent_popup;
-		struct roots_layer_subsurface *parent_subsurface;
+		struct phoc_layer_popup *parent_popup;
+		struct phoc_layer_subsurface *parent_subsurface;
 	};
 	struct wl_list link;
 
@@ -49,8 +49,8 @@ struct roots_layer_subsurface {
 	struct wl_listener destroy;
 	struct wl_listener commit;
 	struct wl_listener new_subsurface;
-	struct wl_list subsurfaces; // roots_layer_subsurface::link
-};
+	struct wl_list subsurfaces; // phoc_layer_subsurface::link
+} PhocLayerSubsurface;
 
 void phoc_layer_shell_arrange (PhocOutput *output);
 void phoc_layer_shell_update_focus (void);
