@@ -17,6 +17,7 @@
 #include "anim/animatable.h"
 #include "settings.h"
 #include "layers.h"
+#include "layer-shell-effects.h"
 #include "output.h"
 #include "output-shield.h"
 #include "render.h"
@@ -1362,6 +1363,28 @@ gboolean
 phoc_output_has_shell_revealed (PhocOutput *self)
 {
   PhocServer *server = phoc_server_get_default();
+  PhocLayerSurface *layer_surface;
   g_assert (PHOC_IS_OUTPUT (self));
+
+  /* is our layer-surface focused on some seat? */
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+    if (seat->focused_layer && seat->focused_layer->output == self->wlr_output) {
+      return true;
+    }
+  }
+
+  /* is some draggable surface unfolded, being dragged or animated? */
+  wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
+    PhocDraggableLayerSurface *draggable =
+        phoc_desktop_get_draggable_layer_surface (server->desktop, layer_surface);
+    if (draggable &&
+        (phoc_draggable_layer_surface_get_state (draggable) != PHOC_DRAGGABLE_SURFACE_STATE_NONE ||
+         phoc_draggable_layer_surface_is_unfolded (draggable))) {
+      return true;
+    }
+  }
+
+  /* is shell reveal forced by user gesture? */
   return self->force_shell_reveal;
 }
