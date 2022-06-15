@@ -950,6 +950,13 @@ phoc_draggable_layer_surface_drag_end (PhocDraggableLayerSurface *drag_surface,
 }
 
 
+PhocDraggableSurfaceState
+phoc_draggable_layer_surface_get_state (PhocDraggableLayerSurface *drag_surface)
+{
+  return drag_surface->state;
+}
+
+
 /**
  * phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface:
  * @self: The effects object that tracks the surfaces
