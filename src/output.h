@@ -125,6 +125,7 @@ gboolean    phoc_output_is_match (PhocOutput *self,
                                   const char *serial);
 gboolean    phoc_output_has_fullscreen_view (PhocOutput *self);
 gboolean    phoc_output_has_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer);
+gboolean    phoc_output_has_shell_revealed (PhocOutput *self);
 
 guint       phoc_output_add_frame_callback   (PhocOutput        *self,
                                               PhocAnimatable    *animatable,

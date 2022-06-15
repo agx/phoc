@@ -1348,3 +1348,20 @@ phoc_output_has_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
 
   return FALSE;
 }
+
+
+/**
+ * phoc_output_has_shell_revealed:
+ * @self: The #PhocOutput
+ *
+ * Returns: %TRUE if layer-shell's TOP layer should appear on top
+ *          of fullscreen windows on this output.
+ *          %FALSE otherwise.
+ */
+gboolean
+phoc_output_has_shell_revealed (PhocOutput *self)
+{
+  PhocServer *server = phoc_server_get_default();
+  g_assert (PHOC_IS_OUTPUT (self));
+  return self->force_shell_reveal;
+}
