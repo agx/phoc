@@ -5,7 +5,6 @@
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #endif
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -703,7 +702,7 @@ phoc_view_child_init (PhocViewChild *child,
                       PhocView *view,
                       struct wlr_surface *wlr_surface)
 {
-  assert(impl->destroy);
+  g_assert (impl->destroy);
   child->impl = impl;
   child->view = view;
   child->wlr_surface = wlr_surface;
@@ -722,7 +721,7 @@ phoc_view_child_init (PhocViewChild *child,
 static const struct phoc_view_child_interface subsurface_impl;
 
 static void subsurface_destroy(PhocViewChild *child) {
-	assert(child->impl == &subsurface_impl);
+	g_assert (child->impl == &subsurface_impl);
 	PhocSubsurface *subsurface = (PhocSubsurface *)child;
 	wl_list_remove(&subsurface->destroy.link);
 	wl_list_remove(&subsurface->map.link);
@@ -899,7 +898,7 @@ void
 phoc_view_map (PhocView *view, struct wlr_surface *surface)
 {
   PhocServer *server = phoc_server_get_default ();
-  assert(view->wlr_surface == NULL);
+  g_assert (view->wlr_surface == NULL);
 
   view->wlr_surface = surface;
 
@@ -934,7 +933,7 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
 }
 
 void view_unmap(PhocView *view) {
-	assert(view->wlr_surface != NULL);
+	g_assert (view->wlr_surface != NULL);
 
 	bool was_visible = phoc_desktop_view_is_visible(view->desktop, view);
 
