@@ -19,6 +19,8 @@ typedef struct _PhocViewPrivate {
   char *title;
   char *app_id;
   GSettings *settings;
+
+  gulong notify_scale_to_fit_id;
 } PhocViewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
@@ -854,33 +856,32 @@ view_update_scale (PhocView *view)
     return;
 
   bool scaling_enabled = false;
-
   if (priv->settings)
     scaling_enabled = g_settings_get_boolean (priv->settings, "scale-to-fit");
-
-  if (!scaling_enabled && !phoc_desktop_get_scale_to_fit (server->desktop)) {
-    return;
-  }
 
   struct wlr_output *output = view_get_output(view);
   if (!output)
     return;
 
   PhocOutput *phoc_output = output->data;
-
   float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
-  scalex = phoc_output->usable_area.width / (float)view->box.width;
-  scaley = phoc_output->usable_area.height / (float)view->box.height;
-  if (scaley < scalex)
-    view->scale = scaley;
-  else
-    view->scale = scalex;
 
-  if (view->scale < 0.5f)
-    view->scale = 0.5f;
+  if (scaling_enabled || phoc_desktop_get_scale_to_fit (server->desktop)) {
+    scalex = phoc_output->usable_area.width / (float)view->box.width;
+    scaley = phoc_output->usable_area.height / (float)view->box.height;
+    if (scaley < scalex)
+      view->scale = scaley;
+    else
+      view->scale = scalex;
 
-  if (view->scale > 1.0f || view_is_fullscreen (view))
-    view->scale = 1.0f;
+    if (view->scale < 0.5f)
+      view->scale = 0.5f;
+
+    if (view->scale > 1.0f || view_is_fullscreen (view))
+      view->scale = 1.0f;
+  } else {
+    view->scale = 1.0;
+  }
 
   if (view->scale != oldscale) {
     if (view_is_maximized(view)) {
@@ -893,12 +894,21 @@ view_update_scale (PhocView *view)
   }
 }
 
+
+static void
+on_global_scale_to_fit_changed (PhocView *self, GParamSpec *pspec, gpointer unused)
+{
+  view_update_scale (self);
+}
+
+
 void
 phoc_view_map (PhocView *view, struct wlr_surface *surface)
 {
   PhocServer *server = phoc_server_get_default ();
-  g_assert (view->wlr_surface == NULL);
+  PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
+  g_assert (view->wlr_surface == NULL);
   view->wlr_surface = surface;
 
   struct wlr_subsurface *subsurface;
@@ -929,9 +939,17 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   wl_list_insert(&view->desktop->views, &view->link);
   phoc_view_damage_whole (view);
   phoc_input_update_cursor_focus(server->input);
+
+  priv->notify_scale_to_fit_id =
+    g_signal_connect_swapped (view->desktop,
+                              "notify::scale-to-fit",
+                              G_CALLBACK (on_global_scale_to_fit_changed),
+                              view);
 }
 
 void view_unmap(PhocView *view) {
+	PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+
 	g_assert (view->wlr_surface != NULL);
 
 	bool was_visible = phoc_desktop_view_is_visible(view->desktop, view);
@@ -972,6 +990,8 @@ void view_unmap(PhocView *view) {
 		wlr_foreign_toplevel_handle_v1_destroy(view->toplevel_handle);
 		view->toplevel_handle = NULL;
 	}
+
+	g_clear_signal_handler (&priv->notify_scale_to_fit_id, view->desktop);
 }
 
 void view_initial_focus(PhocView *view) {
