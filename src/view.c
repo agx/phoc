@@ -841,57 +841,56 @@ munge_app_id (const gchar *app_id)
   return id;
 }
 
-static void view_update_scale(PhocView *view) {
-	PhocServer *server = phoc_server_get_default ();
-	PhocViewPrivate *priv;
+static void
+view_update_scale (PhocView *view)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocViewPrivate *priv;
 
-	g_assert (PHOC_IS_VIEW (view));
-	priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
 
-	if (!PHOC_VIEW_GET_CLASS (view)->want_scaling(view)) {
-		return;
-	}
+  if (!PHOC_VIEW_GET_CLASS (view)->want_scaling(view))
+    return;
 
-	bool scaling_enabled = false;
+  bool scaling_enabled = false;
 
-	if (priv->settings) {
-		scaling_enabled = g_settings_get_boolean (priv->settings, "scale-to-fit");
-	}
+  if (priv->settings)
+    scaling_enabled = g_settings_get_boolean (priv->settings, "scale-to-fit");
 
-	if (!scaling_enabled && !phoc_desktop_get_scale_to_fit (server->desktop)) {
-		return;
-	}
+  if (!scaling_enabled && !phoc_desktop_get_scale_to_fit (server->desktop)) {
+    return;
+  }
 
-	struct wlr_output *output = view_get_output(view);
-	if (!output) {
-		return;
-	}
+  struct wlr_output *output = view_get_output(view);
+  if (!output)
+    return;
 
-	PhocOutput *phoc_output = output->data;
+  PhocOutput *phoc_output = output->data;
 
-	float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
-	scalex = phoc_output->usable_area.width / (float)view->box.width;
-	scaley = phoc_output->usable_area.height / (float)view->box.height;
-	if (scaley < scalex) {
-		view->scale = scaley;
-	} else {
-		view->scale = scalex;
-	}
-	if (view->scale < 0.5f) {
-		view->scale = 0.5f;
-	}
-	if (view->scale > 1.0f || view_is_fullscreen (view)) {
-		view->scale = 1.0f;
-	}
-	if (view->scale != oldscale) {
-		if (view_is_maximized(view)) {
-			view_arrange_maximized(view, NULL);
-		} else if (view_is_tiled(view)) {
-			view_arrange_tiled(view, NULL);
-		} else {
-			view_center(view, NULL);
-		}
-	}
+  float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
+  scalex = phoc_output->usable_area.width / (float)view->box.width;
+  scaley = phoc_output->usable_area.height / (float)view->box.height;
+  if (scaley < scalex)
+    view->scale = scaley;
+  else
+    view->scale = scalex;
+
+  if (view->scale < 0.5f)
+    view->scale = 0.5f;
+
+  if (view->scale > 1.0f || view_is_fullscreen (view))
+    view->scale = 1.0f;
+
+  if (view->scale != oldscale) {
+    if (view_is_maximized(view)) {
+      view_arrange_maximized (view, NULL);
+    } else if (view_is_tiled (view)) {
+      view_arrange_tiled (view, NULL);
+    } else {
+      view_center (view, NULL);
+    }
+  }
 }
 
 void
