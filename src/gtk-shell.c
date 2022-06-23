@@ -70,7 +70,7 @@ handle_set_dbus_properties(struct wl_client *client,
 
   view = phoc_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
-    view_set_app_id (view, application_id);
+    phoc_view_set_app_id (view, application_id);
 }
 
 static void

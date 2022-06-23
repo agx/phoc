@@ -119,7 +119,7 @@ static void handle_set_class(struct wl_listener *listener, void *data) {
 	PhocXWaylandSurface *phoc_surface =
 		wl_container_of(listener, phoc_surface, set_class);
 
-	view_set_app_id(&phoc_surface->view,
+	phoc_view_set_app_id(&phoc_surface->view,
 		phoc_surface->xwayland_surface->class);
 }
 
@@ -232,7 +232,7 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 	phoc_surface->view.box.height = surface->height;
 
 	view_set_title(&phoc_surface->view, surface->title);
-	view_set_app_id(&phoc_surface->view, surface->class);
+	phoc_view_set_app_id(&phoc_surface->view, surface->class);
 
 	phoc_surface->destroy.notify = handle_destroy;
 	wl_signal_add(&surface->events.destroy, &phoc_surface->destroy);

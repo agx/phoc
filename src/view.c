@@ -1177,27 +1177,27 @@ void view_set_parent(PhocView *view, PhocView *parent) {
 		                                          view->parent ? view->parent->toplevel_handle : NULL);
 }
 
-void view_set_app_id(PhocView *view, const char *app_id) {
-	PhocViewPrivate *priv;
+void
+phoc_view_set_app_id (PhocView *view, const char *app_id)
+{
+  PhocViewPrivate *priv;
 
-	g_assert (PHOC_IS_VIEW (view));
-	priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
 
-	free(priv->app_id);
-	priv->app_id = g_strdup (app_id);
+  g_free (priv->app_id);
+  priv->app_id = g_strdup (app_id);
 
-	g_clear_object (&priv->settings);
-	if (app_id) {
-		g_autofree gchar *munged_app_id = munge_app_id (app_id);
-		g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
-		priv->settings = g_settings_new_with_path ("sm.puri.phoc.application", path);
-	}
+  g_clear_object (&priv->settings);
+  if (app_id) {
+    g_autofree gchar *munged_app_id = munge_app_id (app_id);
+    g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
+    priv->settings = g_settings_new_with_path ("sm.puri.phoc.application", path);
+  }
 
-	view_update_scale(view);
-
-	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle, app_id ?: "");
-	}
+  view_update_scale (view);
+  if (view->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_app_id (view->toplevel_handle, app_id ?: "");
 }
 
 static void handle_toplevel_handle_request_maximize(struct wl_listener *listener,
