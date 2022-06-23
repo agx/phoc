@@ -226,6 +226,8 @@ PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
 bool   phoc_view_is_mapped (PhocView *view);
 PhocViewDecoPart view_get_deco_part(PhocView *view, double sx, double sy);
+void     phoc_view_set_scale_to_fit (PhocView *self, gboolean enable);
+gboolean phoc_view_get_scale_to_fit (PhocView *self);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,
