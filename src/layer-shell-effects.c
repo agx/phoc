@@ -538,6 +538,14 @@ apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
 }
 
 
+static void
+apply_state (PhocDraggableLayerSurface *drag_surface, PhocDraggableSurfaceState state)
+{
+  drag_surface->state = state;
+  phoc_output_update_shell_reveal (PHOC_OUTPUT (drag_surface->layer_surface->layer_surface->output->data));
+}
+
+
 static gboolean
 on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpointer user_data)
 
@@ -593,7 +601,7 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
     }
     margin = drag_surface->drag.anim_end;
     zphoc_draggable_layer_surface_v1_send_drag_end (drag_surface->resource, drag_surface->drag.last_state);
-    drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_NONE;
+    apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_NONE);
     drag_surface->drag.anim_id = 0;
     return G_SOURCE_REMOVE;
   } else {
@@ -659,7 +667,7 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
   drag_surface->drag.anim_end = (anim_dir == ANIM_DIR_OUT) ?
     drag_surface->current.unfolded : drag_surface->current.folded;
 
-  drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING;
+  apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING);
 
   g_debug ("%s: start: %d, end: %d dir: %d", __func__,
           drag_surface->drag.anim_start, drag_surface->drag.anim_end, drag_surface->drag.anim_dir);
@@ -745,7 +753,7 @@ phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface
   drag_surface->drag.pending_accept = 0;
   drag_surface->drag.pending_reject = 0;
 
-  drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_PENDING;
+  apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_PENDING);
   return drag_surface->state;
 }
 
@@ -782,12 +790,12 @@ phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surfac
 
   if (drag_surface->state != PHOC_DRAGGABLE_SURFACE_STATE_PENDING &&
       drag_surface->state != PHOC_DRAGGABLE_SURFACE_STATE_DRAGGING) {
-    drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_REJECTED;
+    apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_REJECTED);
     return drag_surface->state;
   }
 
   if (!wlr_output) {
-    drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_REJECTED;
+    apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_REJECTED);
     return drag_surface->state;
   }
 
@@ -805,7 +813,7 @@ phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surfac
   /* Too much motion in the wrong orientation, reject gesture */
   if (ABS (drag_surface->drag.pending_reject) > DRAG_REJECT_THRESHOLD_DISTANCE &&
       drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_PENDING) {
-    drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_REJECTED;
+    apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_REJECTED);
     return drag_surface->state;
   }
 
@@ -843,7 +851,7 @@ phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surfac
 
   /* Moved far enough but is it the right direction when unfolded? */
   if (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_PENDING && !accept) {
-    drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_REJECTED;
+    apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_REJECTED);
     return drag_surface->state;
   }
 
@@ -870,7 +878,7 @@ phoc_draggable_layer_surface_drag_update (PhocDraggableLayerSurface *drag_surfac
   /* FIXME: way too much damage */
   phoc_output_damage_whole (output);
 
-  drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_DRAGGING;
+  apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_DRAGGING);
   return drag_surface->state;
 }
 
@@ -946,7 +954,7 @@ phoc_draggable_layer_surface_drag_end (PhocDraggableLayerSurface *drag_surface,
 
   phoc_draggable_layer_surface_slide (drag_surface, dir);
 
-  drag_surface->state = PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING;
+  apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING);
 }
 
 
