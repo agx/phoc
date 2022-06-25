@@ -58,6 +58,7 @@
 enum {
   PROP_0,
   PROP_CONFIG,
+  PROP_SCALE_TO_FIT,
   PROP_LAST_PROP,
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -78,6 +79,9 @@ phoc_desktop_set_property (GObject     *object,
     self->config = g_value_get_pointer (value);
     g_object_notify_by_pspec (G_OBJECT (self), props[PROP_CONFIG]);
     break;
+  case PROP_SCALE_TO_FIT:
+    phoc_desktop_set_scale_to_fit (self, g_value_get_boolean (value));
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     break;
@@ -96,6 +100,9 @@ phoc_desktop_get_property (GObject    *object,
   switch (property_id) {
   case PROP_CONFIG:
     g_value_set_pointer (value, self->config);
+    break;
+  case PROP_SCALE_TO_FIT:
+    g_value_set_boolean (value, phoc_desktop_get_scale_to_fit (self));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -460,19 +467,6 @@ auto_maximize_changed_cb (PhocDesktop *self,
   phoc_desktop_set_auto_maximize (self, max);
 }
 
-static void
-scale_to_fit_changed_cb (PhocDesktop *self,
-			  const gchar *key,
-			  GSettings   *settings)
-{
-    gboolean max = g_settings_get_boolean (settings, key);
-
-    g_return_if_fail (PHOC_IS_DESKTOP (self));
-    g_return_if_fail (G_IS_SETTINGS (settings));
-
-    phoc_desktop_set_scale_to_fit (self, max);
-}
-
 #ifdef PHOC_XWAYLAND
 static const char *atom_map[XWAYLAND_ATOM_LAST] = {
 	"_NET_WM_WINDOW_TYPE_NORMAL",
@@ -752,9 +746,8 @@ phoc_desktop_constructed (GObject *object)
   g_signal_connect_swapped(self->settings, "changed::auto-maximize",
 			   G_CALLBACK (auto_maximize_changed_cb), self);
   auto_maximize_changed_cb(self, "auto-maximize", self->settings);
-  g_signal_connect_swapped(self->settings, "changed::scale-to-fit",
-			   G_CALLBACK (scale_to_fit_changed_cb), self);
-  scale_to_fit_changed_cb(self, "scale-to-fit", self->settings);
+
+  g_settings_bind (self->settings, "scale-to-fit", self, "scale-to-fit", G_SETTINGS_BIND_DEFAULT);
 }
 
 
@@ -822,6 +815,16 @@ phoc_desktop_class_init (PhocDesktopClass *klass)
       "Config",
       "The config object",
       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * PhocDesktop:scale-to-fit:
+   *
+   * If %TRUE all surfaces will be scaled down to fit the screen.
+   */
+  props[PROP_SCALE_TO_FIT] =
+    g_param_spec_boolean ("scale-to-fit", "", "",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
@@ -929,8 +932,15 @@ phoc_desktop_get_auto_maximize (PhocDesktop *self)
 void
 phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean enable)
 {
-    g_debug ("scale to fit: %d", enable);
-    self->scale_to_fit = enable;
+  g_return_if_fail (PHOC_IS_DESKTOP (self));
+
+  if (self->scale_to_fit == enable)
+    return;
+
+  g_debug ("scale to fit: %d", enable);
+  self->scale_to_fit = enable;
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SCALE_TO_FIT]);
 }
 
 gboolean

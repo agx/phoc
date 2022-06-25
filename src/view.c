@@ -5,7 +5,6 @@
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #endif
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -16,10 +15,21 @@
 #include "server.h"
 #include "view.h"
 
+
+enum {
+  PROP_0,
+  PROP_SCALE_TO_FIT,
+  PROP_LAST_PROP
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
 typedef struct _PhocViewPrivate {
   char *title;
   char *app_id;
   GSettings *settings;
+
+  gulong notify_scale_to_fit_id;
+  gboolean scale_to_fit;
 } PhocViewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
@@ -703,7 +713,7 @@ phoc_view_child_init (PhocViewChild *child,
                       PhocView *view,
                       struct wlr_surface *wlr_surface)
 {
-  assert(impl->destroy);
+  g_assert (impl->destroy);
   child->impl = impl;
   child->view = view;
   child->wlr_surface = wlr_surface;
@@ -722,7 +732,7 @@ phoc_view_child_init (PhocViewChild *child,
 static const struct phoc_view_child_interface subsurface_impl;
 
 static void subsurface_destroy(PhocViewChild *child) {
-	assert(child->impl == &subsurface_impl);
+	g_assert (child->impl == &subsurface_impl);
 	PhocSubsurface *subsurface = (PhocSubsurface *)child;
 	wl_list_remove(&subsurface->destroy.link);
 	wl_list_remove(&subsurface->map.link);
@@ -842,65 +852,68 @@ munge_app_id (const gchar *app_id)
   return id;
 }
 
-static void view_update_scale(PhocView *view) {
-	PhocServer *server = phoc_server_get_default ();
-	PhocViewPrivate *priv;
+static void
+view_update_scale (PhocView *view)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocViewPrivate *priv;
 
-	g_assert (PHOC_IS_VIEW (view));
-	priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
 
-	if (!PHOC_VIEW_GET_CLASS (view)->want_scaling(view)) {
-		return;
-	}
+  if (!PHOC_VIEW_GET_CLASS (view)->want_scaling(view))
+    return;
 
-	bool scaling_enabled = false;
+  struct wlr_output *output = view_get_output(view);
+  if (!output)
+    return;
 
-	if (priv->settings) {
-		scaling_enabled = g_settings_get_boolean (priv->settings, "scale-to-fit");
-	}
+  PhocOutput *phoc_output = output->data;
+  float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
 
-	if (!scaling_enabled && !phoc_desktop_get_scale_to_fit (server->desktop)) {
-		return;
-	}
+  if (priv->scale_to_fit || phoc_desktop_get_scale_to_fit (server->desktop)) {
+    scalex = phoc_output->usable_area.width / (float)view->box.width;
+    scaley = phoc_output->usable_area.height / (float)view->box.height;
+    if (scaley < scalex)
+      view->scale = scaley;
+    else
+      view->scale = scalex;
 
-	struct wlr_output *output = view_get_output(view);
-	if (!output) {
-		return;
-	}
+    if (view->scale < 0.5f)
+      view->scale = 0.5f;
 
-	PhocOutput *phoc_output = output->data;
+    if (view->scale > 1.0f || view_is_fullscreen (view))
+      view->scale = 1.0f;
+  } else {
+    view->scale = 1.0;
+  }
 
-	float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
-	scalex = phoc_output->usable_area.width / (float)view->box.width;
-	scaley = phoc_output->usable_area.height / (float)view->box.height;
-	if (scaley < scalex) {
-		view->scale = scaley;
-	} else {
-		view->scale = scalex;
-	}
-	if (view->scale < 0.5f) {
-		view->scale = 0.5f;
-	}
-	if (view->scale > 1.0f || view_is_fullscreen (view)) {
-		view->scale = 1.0f;
-	}
-	if (view->scale != oldscale) {
-		if (view_is_maximized(view)) {
-			view_arrange_maximized(view, NULL);
-		} else if (view_is_tiled(view)) {
-			view_arrange_tiled(view, NULL);
-		} else {
-			view_center(view, NULL);
-		}
-	}
+  if (view->scale != oldscale) {
+    if (view_is_maximized(view)) {
+      view_arrange_maximized (view, NULL);
+    } else if (view_is_tiled (view)) {
+      view_arrange_tiled (view, NULL);
+    } else {
+      view_center (view, NULL);
+    }
+  }
 }
+
+
+static void
+on_global_scale_to_fit_changed (PhocView *self, GParamSpec *pspec, gpointer unused)
+{
+  view_update_scale (self);
+}
+
 
 void
 phoc_view_map (PhocView *view, struct wlr_surface *surface)
 {
   PhocServer *server = phoc_server_get_default ();
-  assert(view->wlr_surface == NULL);
+  PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
+  g_assert (view->wlr_surface == NULL);
   view->wlr_surface = surface;
 
   struct wlr_subsurface *subsurface;
@@ -931,10 +944,18 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   wl_list_insert(&view->desktop->views, &view->link);
   phoc_view_damage_whole (view);
   phoc_input_update_cursor_focus(server->input);
+
+  priv->notify_scale_to_fit_id =
+    g_signal_connect_swapped (view->desktop,
+                              "notify::scale-to-fit",
+                              G_CALLBACK (on_global_scale_to_fit_changed),
+                              view);
 }
 
 void view_unmap(PhocView *view) {
-	assert(view->wlr_surface != NULL);
+	PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+
+	g_assert (view->wlr_surface != NULL);
 
 	bool was_visible = phoc_desktop_view_is_visible(view->desktop, view);
 
@@ -974,6 +995,8 @@ void view_unmap(PhocView *view) {
 		wlr_foreign_toplevel_handle_v1_destroy(view->toplevel_handle);
 		view->toplevel_handle = NULL;
 	}
+
+	g_clear_signal_handler (&priv->notify_scale_to_fit_id, view->desktop);
 }
 
 void view_initial_focus(PhocView *view) {
@@ -1159,27 +1182,45 @@ void view_set_parent(PhocView *view, PhocView *parent) {
 		                                          view->parent ? view->parent->toplevel_handle : NULL);
 }
 
-void view_set_app_id(PhocView *view, const char *app_id) {
-	PhocViewPrivate *priv;
 
-	g_assert (PHOC_IS_VIEW (view));
-	priv = phoc_view_get_instance_private (view);
+static void
+bind_scale_to_fit_setting (PhocView *self)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
 
-	free(priv->app_id);
-	priv->app_id = g_strdup (app_id);
+  g_clear_object (&priv->settings);
 
-	g_clear_object (&priv->settings);
-	if (app_id) {
-		g_autofree gchar *munged_app_id = munge_app_id (app_id);
-		g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
-		priv->settings = g_settings_new_with_path ("sm.puri.phoc.application", path);
-	}
+  if (priv->app_id) {
+    g_autofree gchar *munged_app_id = munge_app_id (priv->app_id);
+    g_autofree gchar *path = g_strconcat ("/sm/puri/phoc/application/", munged_app_id, "/", NULL);
+    priv->settings = g_settings_new_with_path ("sm.puri.phoc.application", path);
 
-	view_update_scale(view);
+    g_settings_bind (priv->settings,
+                     "scale-to-fit",
+                     self,
+                     "scale-to-fit",
+                     G_SETTINGS_BIND_GET);
+  }
+}
 
-	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle, app_id ?: "");
-	}
+
+void
+phoc_view_set_app_id (PhocView *view, const char *app_id)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+
+  if (g_strcmp0 (priv->app_id, app_id)) {
+    g_free (priv->app_id);
+    priv->app_id = g_strdup (app_id);
+
+    bind_scale_to_fit_setting (view);
+  }
+
+  if (view->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_app_id (view->toplevel_handle, app_id ?: "");
 }
 
 static void handle_toplevel_handle_request_maximize(struct wl_listener *listener,
@@ -1253,6 +1294,45 @@ void view_create_foreign_toplevel_handle(PhocView *view) {
 
 
 static void
+phoc_view_set_property (GObject      *object,
+			  guint         property_id,
+			  const GValue *value,
+			  GParamSpec   *pspec)
+{
+  PhocView *self = PHOC_VIEW (object);
+
+  switch (property_id) {
+  case PROP_SCALE_TO_FIT:
+    phoc_view_set_scale_to_fit (self, g_value_get_boolean (value));
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_view_get_property (GObject    *object,
+			  guint       property_id,
+			  GValue     *value,
+			  GParamSpec *pspec)
+{
+  PhocView *self = PHOC_VIEW (object);
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
+
+  switch (property_id) {
+  case PROP_SCALE_TO_FIT:
+    g_value_set_boolean (value, priv->scale_to_fit);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
 phoc_view_finalize (GObject *object)
 {
   PhocView *self = PHOC_VIEW (object);
@@ -1297,6 +1377,20 @@ phoc_view_class_init (PhocViewClass *klass)
   GObjectClass *object_class = (GObjectClass *)klass;
 
   object_class->finalize = phoc_view_finalize;
+  object_class->get_property = phoc_view_get_property;
+  object_class->set_property = phoc_view_set_property;
+
+  /**
+   * PhocView:scale-to-fit:
+   *
+   * If %TRUE if surface will be scaled down to fit the screen.
+   */
+  props[PROP_SCALE_TO_FIT] =
+    g_param_spec_boolean ("scale-to-fit", "", "",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 
 
@@ -1428,4 +1522,42 @@ phoc_view_child_damage_whole (PhocViewChild *child)
 
   /* TODO: just damage the whole child instead of the whole view */
   phoc_view_damage_whole (child->view);
+}
+
+
+/**
+ * phoc_view_set_scale_to_fit:
+ *
+ * Turn auto scaling if oversized for this surface on (%TRUE) or off (%FALSE)
+ */
+void
+phoc_view_set_scale_to_fit (PhocView *self, gboolean enable)
+{
+  PhocViewPrivate *priv;
+
+  g_return_if_fail (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (priv->scale_to_fit == enable)
+    return;
+
+  priv->scale_to_fit = enable;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SCALE_TO_FIT]);
+
+  view_update_scale (self);
+}
+
+/**
+ * phoc_view_get_scale_to_fit:
+ *
+ * Returns: %TRUE if scaling of oversized surfaces is enabled, %FALSE otherwise
+ */
+gboolean
+phoc_view_get_scale_to_fit (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->scale_to_fit;
 }

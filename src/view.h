@@ -217,7 +217,7 @@ void view_send_frame_done_if_not_visible (PhocView *view);
 void view_setup(PhocView *view);
 void view_set_title(PhocView *view, const char *title);
 void view_set_parent(PhocView *view, PhocView *parent);
-void view_set_app_id(PhocView *view, const char *app_id);
+void phoc_view_set_app_id(PhocView *view, const char *app_id);
 void view_create_foreign_toplevel_handle(PhocView *view);
 void view_get_deco_box(const PhocView *view, struct wlr_box *box);
 void view_for_each_surface(PhocView *view,
@@ -226,6 +226,8 @@ PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
 bool   phoc_view_is_mapped (PhocView *view);
 PhocViewDecoPart view_get_deco_part(PhocView *view, double sx, double sy);
+void     phoc_view_set_scale_to_fit (PhocView *self, gboolean enable);
+gboolean phoc_view_get_scale_to_fit (PhocView *self);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,
