@@ -957,6 +957,13 @@ phoc_draggable_layer_surface_get_state (PhocDraggableLayerSurface *drag_surface)
 }
 
 
+gboolean
+phoc_draggable_layer_surface_is_unfolded (PhocDraggableLayerSurface *drag_surface)
+{
+  return drag_surface->drag.last_state == ZPHOC_DRAGGABLE_LAYER_SURFACE_V1_DRAG_END_STATE_UNFOLDED;
+}
+
+
 /**
  * phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface:
  * @self: The effects object that tracks the surfaces
