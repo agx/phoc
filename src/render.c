@@ -661,15 +661,7 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 
 	// Check if we can delegate the fullscreen surface to the output
 	if (phoc_output_has_fullscreen_view (output)) {
-		static bool last_scanned_out = false;
 		bool scanned_out = scan_out_fullscreen_view(output);
-
-		if (scanned_out && !last_scanned_out) {
-			g_debug ("Starting fullscreen view scan out");
-		} else if (!scanned_out && last_scanned_out) {
-			g_debug ("Stopping fullscreen view scan out");
-		}
-		last_scanned_out = scanned_out;
 
 		if (scanned_out) {
 			goto send_frame_done;
