@@ -1632,6 +1632,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
         phoc_seat_set_focus (seat, NULL);
       }
       phoc_layer_shell_arrange (output);
+      phoc_output_update_shell_reveal (output);
     }
     return;
   }
@@ -1660,6 +1661,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
 
   phoc_cursor_update_focus (seat->cursor);
   phoc_input_method_relay_set_focus (&seat->im_relay, layer->surface);
+  phoc_output_update_shell_reveal (PHOC_OUTPUT (layer->output->data));
 }
 
 void
