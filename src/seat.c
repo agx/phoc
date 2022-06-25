@@ -1619,9 +1619,9 @@ void
 phoc_seat_set_focus_layer (PhocSeat                    *seat,
                            struct wlr_layer_surface_v1 *layer)
 {
-  PhocServer *server = phoc_server_get_default ();
   if (!layer) {
     if (seat->focused_layer) {
+      PhocOutput *output = PHOC_OUTPUT (seat->focused_layer->output->data);
       seat->focused_layer = NULL;
       if (!wl_list_empty (&seat->views)) {
         // Focus first view
@@ -1631,10 +1631,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
       } else {
         phoc_seat_set_focus (seat, NULL);
       }
-      PhocOutput *output;
-      wl_list_for_each (output, &server->desktop->outputs, link) {
-        phoc_layer_shell_arrange (output);
-      }
+      phoc_layer_shell_arrange (output);
     }
     return;
   }
