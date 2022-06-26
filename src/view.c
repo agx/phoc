@@ -231,9 +231,8 @@ void view_activate(PhocView *view, bool activate) {
 			activate);
 	}
 
-	if (activate && view_is_fullscreen (view) && view->fullscreen_output->force_shell_reveal) {
-		view->fullscreen_output->force_shell_reveal = false;
-		phoc_output_damage_whole(view->fullscreen_output);
+	if (activate && view_is_fullscreen (view)) {
+		phoc_output_force_shell_reveal (view->fullscreen_output, false);
 	}
 }
 
@@ -491,7 +490,7 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 			output_box->height);
 
 		phoc_output->fullscreen_view = view;
-		phoc_output->force_shell_reveal = false;
+		phoc_output_force_shell_reveal (phoc_output, false);
 		view->fullscreen_output = phoc_output;
 		phoc_output_damage_whole(phoc_output);
 	}

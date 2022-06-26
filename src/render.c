@@ -732,7 +732,7 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 		}
 #endif
 
-		if (output->force_shell_reveal) {
+		if (phoc_output_has_shell_revealed (output)) {
 			// Render top layer above fullscreen view when requested
 			render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
 		}

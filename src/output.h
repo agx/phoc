@@ -39,7 +39,6 @@ struct _PhocOutput {
 
   PhocView                 *fullscreen_view;
   struct wl_list            layer_surfaces; // layer_surface::link
-  bool                      force_shell_reveal;
 
   struct wlr_output_damage *damage;
   GList                    *debug_touch_points;
@@ -118,6 +117,8 @@ void        phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr
 void        phoc_output_scale_box (PhocOutput *self, struct wlr_box *box, float scale);
 void        phoc_output_get_decoration_box (PhocOutput *self, PhocView *view,
                                             struct wlr_box *box);
+void        phoc_output_update_shell_reveal (PhocOutput *self);
+void        phoc_output_force_shell_reveal (PhocOutput *self, gboolean force);
 gboolean    phoc_output_is_builtin (PhocOutput *output);
 gboolean    phoc_output_is_match (PhocOutput *self,
                                   const char *make,
@@ -125,6 +126,7 @@ gboolean    phoc_output_is_match (PhocOutput *self,
                                   const char *serial);
 gboolean    phoc_output_has_fullscreen_view (PhocOutput *self);
 gboolean    phoc_output_has_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer);
+gboolean    phoc_output_has_shell_revealed (PhocOutput *self);
 
 guint       phoc_output_add_frame_callback   (PhocOutput        *self,
                                               PhocAnimatable    *animatable,

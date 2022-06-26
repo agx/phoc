@@ -17,6 +17,7 @@
 #include "anim/animatable.h"
 #include "settings.h"
 #include "layers.h"
+#include "layer-shell-effects.h"
 #include "output.h"
 #include "output-shield.h"
 #include "render.h"
@@ -34,6 +35,9 @@ typedef struct _PhocOutputPrivate {
   GSList *frame_callbacks;
   gint    frame_callback_next_id;
   gint64  last_frame_us;
+
+  gboolean shell_revealed;
+  gboolean force_shell_reveal;
 } PhocOutputPrivate;
 
 G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
@@ -1347,4 +1351,98 @@ phoc_output_has_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
   }
 
   return FALSE;
+}
+
+
+static gboolean
+should_reveal_shell (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+  PhocServer *server = phoc_server_get_default();
+  PhocLayerSurface *layer_surface;
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  /* is our layer-surface focused on some seat? */
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+    if (seat->focused_layer && seat->focused_layer->output == self->wlr_output) {
+      return true;
+    }
+  }
+
+  /* is some draggable surface unfolded, being dragged or animated? */
+  wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
+    PhocDraggableLayerSurface *draggable =
+        phoc_desktop_get_draggable_layer_surface (server->desktop, layer_surface);
+    if (draggable &&
+        (phoc_draggable_layer_surface_get_state (draggable) != PHOC_DRAGGABLE_SURFACE_STATE_NONE ||
+         phoc_draggable_layer_surface_is_unfolded (draggable))) {
+      return true;
+    }
+  }
+
+  /* is shell reveal forced by user gesture? */
+  return priv->force_shell_reveal;
+}
+
+
+/**
+ * phoc_output_update_shell_reveal:
+ * @self: The #PhocOutput
+ *
+ * Updates shell reveal status of given output.
+ */
+void
+phoc_output_update_shell_reveal (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+  gboolean old;
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  old = priv->shell_revealed;
+  priv->shell_revealed = should_reveal_shell (self);
+
+  if (priv->shell_revealed != old) {
+    phoc_output_damage_whole (self);
+  }
+}
+
+
+/**
+ * phoc_output_force_shell_reveal:
+ * @self: The #PhocOutput
+ * @force: %TRUE to forcefully reveal shell; %FALSE otherwise.
+ *
+ * Allows to force shell reveal status regardless of whether
+ * other conditions are being fulfilled.
+ */
+void
+phoc_output_force_shell_reveal (PhocOutput *self, gboolean force)
+{
+  PhocOutputPrivate *priv;
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  priv->force_shell_reveal = force;
+  phoc_output_update_shell_reveal (self);
+}
+
+
+/**
+ * phoc_output_has_shell_revealed:
+ * @self: The #PhocOutput
+ *
+ * Returns: %TRUE if layer-shell's TOP layer should appear on top
+ *          of fullscreen windows on this output.
+ *          %FALSE otherwise.
+ */
+gboolean
+phoc_output_has_shell_revealed (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+  return priv->shell_revealed;
 }

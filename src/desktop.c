@@ -252,7 +252,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		PhocOutput *output = wlr_output->data;
 		if (output != NULL && output->fullscreen_view != NULL) {
 
-			if (output->force_shell_reveal) {
+			if (phoc_output_has_shell_revealed (output)) {
 				if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
 								ox, oy, sx, sy))) {
 					return surface;

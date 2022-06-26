@@ -68,4 +68,7 @@ void                     phoc_draggable_layer_surface_drag_end    (PhocDraggable
                                                                    double                      ly);
 void                     phoc_draggable_layer_surface_slide       (PhocDraggableLayerSurface  *drag_surface,
                                                                    PhocAnimDir             anim_dir);
+
+PhocDraggableSurfaceState phoc_draggable_layer_surface_get_state (PhocDraggableLayerSurface *drag_surface);
+gboolean                  phoc_draggable_layer_surface_is_unfolded (PhocDraggableLayerSurface *drag_surface);
 G_END_DECLS
