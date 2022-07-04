@@ -526,7 +526,6 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 
   struct view_render_data *data = _data;
   PhocView *view = data->view;
-  struct wlr_surface *root = view->wlr_surface;
 
   struct wlr_box box;
   view_get_box (view, &box);
@@ -542,8 +541,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 
   wlr_matrix_scale (mat, scale, scale);
   wlr_matrix_translate (mat, -geo.x, -geo.y);
-  wlr_matrix_scale (mat, 1 / (float)root->current.scale, 1 / (float)root->current.scale);
-  wlr_matrix_scale (mat, root->current.scale / surface->current.scale, root->current.scale / surface->current.scale);
+  wlr_matrix_scale (mat, 1 / (float)surface->current.scale, 1 / (float)surface->current.scale);
 
   wlr_render_texture (self->wlr_renderer,
                       view_texture, mat, sx * surface->current.scale,
