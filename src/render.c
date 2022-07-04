@@ -537,7 +537,10 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
   float mat[16];
   wlr_matrix_identity (mat);
 
-  wlr_matrix_scale (mat, data->width / (float)geo.width, data->height / (float)geo.height);
+  float scale = fmin(data->width / (float)geo.width,
+                     data->height / (float)geo.height);
+
+  wlr_matrix_scale (mat, scale, scale);
   wlr_matrix_scale (mat, 1 / (float)root->current.scale, 1 / (float)root->current.scale);
   wlr_matrix_scale (mat, view->scale, view->scale);
   wlr_matrix_scale (mat, root->current.scale / surface->current.scale, root->current.scale / surface->current.scale);
