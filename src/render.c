@@ -540,13 +540,10 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
                      data->height / (float)geo.height);
 
   wlr_matrix_scale (mat, scale, scale);
-  wlr_matrix_translate (mat, -geo.x, -geo.y);
+  wlr_matrix_translate (mat, sx - geo.x, sy - geo.y);
   wlr_matrix_scale (mat, 1 / (float)surface->current.scale, 1 / (float)surface->current.scale);
 
-  wlr_render_texture (self->wlr_renderer,
-                      view_texture, mat, sx * surface->current.scale,
-                      sy * surface->current.scale,
-                      1.0);
+  wlr_render_texture (self->wlr_renderer, view_texture, mat, 0, 0, 1.0);
 }
 
 gboolean
