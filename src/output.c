@@ -961,24 +961,22 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
   int center_x = box.x + box.width/2;
   int center_y = box.y + box.height/2;
 
-  if (pixman_region32_not_empty (&surface->buffer_damage)) {
-    pixman_region32_t damage;
-    pixman_region32_init (&damage);
-    wlr_surface_get_effective_damage (surface, &damage);
-    wlr_region_scale (&damage, &damage, scale);
-    wlr_region_scale (&damage, &damage, self->wlr_output->scale);
-    if (ceil (self->wlr_output->scale) > surface->current.scale) {
-      // When scaling up a surface, it'll become blurry so we need to
-      // expand the damage region
-      wlr_region_expand (&damage, &damage,
-                         ceil (self->wlr_output->scale) - surface->current.scale);
-    }
-    pixman_region32_translate (&damage, box.x, box.y);
-    wlr_region_rotated_bounds (&damage, &damage, rotation,
-                               center_x, center_y);
-    wlr_output_damage_add (self->damage, &damage);
-    pixman_region32_fini (&damage);
+  pixman_region32_t damage;
+  pixman_region32_init (&damage);
+  wlr_surface_get_effective_damage (surface, &damage);
+  wlr_region_scale (&damage, &damage, scale);
+  wlr_region_scale (&damage, &damage, self->wlr_output->scale);
+  if (ceil (self->wlr_output->scale) > surface->current.scale) {
+    // When scaling up a surface, it'll become blurry so we need to
+    // expand the damage region
+    wlr_region_expand (&damage, &damage,
+                       ceil (self->wlr_output->scale) - surface->current.scale);
   }
+  pixman_region32_translate (&damage, box.x, box.y);
+  wlr_region_rotated_bounds (&damage, &damage, rotation,
+                             center_x, center_y);
+  wlr_output_damage_add (self->damage, &damage);
+  pixman_region32_fini (&damage);
 
   if (*whole) {
     phoc_utils_rotated_bounds (&box, &box, rotation);
