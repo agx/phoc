@@ -69,6 +69,7 @@ struct _PhocDraggableLayerSurface {
     /* Slide in/out animation */
     guint    anim_id;
     float    anim_t;
+    int32_t  anim_duration;
     int32_t  anim_start;
     int32_t  anim_end;
     PhocAnimDir anim_dir;
@@ -612,7 +613,7 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
   } else {
     gint64 now = g_get_monotonic_time ();
 
-    drag_surface->drag.anim_t += ((float)(now - last_frame)) / (SLIDE_ANIM_DURATION_MS * 1000);
+    drag_surface->drag.anim_t += ((float)(now - last_frame)) / drag_surface->drag.anim_duration;
     if (drag_surface->drag.anim_t > 1.0)
       drag_surface->drag.anim_t = 1.0;
 
@@ -671,6 +672,9 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
   drag_surface->drag.anim_dir = anim_dir;
   drag_surface->drag.anim_end = (anim_dir == ANIM_DIR_OUT) ?
     drag_surface->current.unfolded : drag_surface->current.folded;
+  drag_surface->drag.anim_duration = SLIDE_ANIM_DURATION_MS * 1000 *
+    cbrt (ABS (drag_surface->drag.anim_end - drag_surface->drag.anim_start) /
+          (float) ABS (drag_surface->current.unfolded - drag_surface->current.folded));
 
   apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING);
 
