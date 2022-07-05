@@ -311,9 +311,14 @@ phoc_wlr_layer_surface_from_resource (struct wl_resource *resource)
 static void
 layer_surface_handle_destroy (struct wl_listener *listener, void *data)
 {
+  PhocLayerShellEffects *layer_shell_effects;
   PhocDraggableLayerSurface *drag_surface =
     wl_container_of(listener, drag_surface, layer_surface_handle_destroy);
 
+  /* Remove from the hash table as long as we have a valid layer_surface */
+  layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (drag_surface->layer_shell_effects);
+  g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_sufrace,
+                       drag_surface->layer_surface);
   drag_surface->layer_surface = NULL;
 }
 
