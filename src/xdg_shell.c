@@ -202,7 +202,7 @@ static void handle_request_maximize(struct wl_listener *listener, void *data) {
 		return;
 	}
 
-	if (surface->toplevel->pending.maximized) {
+	if (surface->toplevel->requested.maximized) {
 		view_maximize(view, NULL);
 	} else {
 		view_restore(view);
@@ -366,10 +366,10 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 		view_set_parent(&phoc_surface->view, &parent->view);
 	}
 
-	if (surface->toplevel->pending.maximized) {
+	if (surface->toplevel->requested.maximized) {
 		view_maximize(&phoc_surface->view, NULL);
 	}
-	phoc_view_set_fullscreen(&phoc_surface->view, surface->toplevel->pending.fullscreen,
+	phoc_view_set_fullscreen(&phoc_surface->view, surface->toplevel->requested.fullscreen,
 		surface->toplevel->requested.fullscreen_output);
 	view_auto_maximize(&phoc_surface->view);
 	view_set_title(&phoc_surface->view, surface->toplevel->title);
