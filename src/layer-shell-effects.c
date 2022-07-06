@@ -775,45 +775,52 @@ phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface
 {
   PhocServer *server = phoc_server_get_default ();
   struct wlr_layer_surface_v1 *layer = drag_surface->layer_surface->layer_surface;
-  struct wlr_box *output_box;
-  double sx, sy;
+  struct wlr_box *output_box = wlr_output_layout_get_box (server->desktop->layout, layer->output);
+  double sx = lx - drag_surface->geo.x - output_box->x;
+  double sy = ly - drag_surface->geo.y - output_box->y;
   bool is_handle = false;
+  int32_t start_margin;
 
   if (drag_surface->current.drag_mode == ZPHOC_DRAGGABLE_LAYER_SURFACE_V1_DRAG_MODE_NONE)
     return PHOC_DRAGGABLE_SURFACE_STATE_REJECTED;
 
-  /* The user "catched" the surface during an animation */
-  if (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING) {
-    /* TODO: better to end the animation and stick to finger */
-    return drag_surface->state;
-  }
-  g_return_val_if_fail (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_NONE, drag_surface->state);
-
-  output_box = wlr_output_layout_get_box (server->desktop->layout, layer->output);
-  sx = lx - drag_surface->geo.x - output_box->x;
-  sy = ly - drag_surface->geo.y - output_box->y;
-
   switch (layer->current.anchor) {
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
-    drag_surface->drag.start_margin = (int32_t)layer->current.margin.top;
+    start_margin = (int32_t)layer->current.margin.top;
     is_handle = sy > drag_surface->current.drag_handle;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_BOTTOM:
-    drag_surface->drag.start_margin = (int32_t)layer->current.margin.bottom;
+    start_margin = (int32_t)layer->current.margin.bottom;
     is_handle = sy < drag_surface->current.drag_handle;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_LEFT:
-    drag_surface->drag.start_margin = (int32_t)layer->current.margin.left;
+    start_margin = (int32_t)layer->current.margin.left;
     is_handle = sx > drag_surface->current.drag_handle;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_RIGHT:
-    drag_surface->drag.start_margin = (int32_t)layer->current.margin.right;
+    start_margin = (int32_t)layer->current.margin.right;
     is_handle = sx < drag_surface->current.drag_handle;
     break;
   default:
     g_assert_not_reached ();
     break;
   }
+
+  /* The user "catched" the surface during an animation */
+  if (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING) {
+    if (drag_surface->drag.anim_id) {
+      phoc_animatable_remove_frame_callback (PHOC_ANIMATABLE (drag_surface->layer_surface),
+                                             drag_surface->drag.anim_id);
+    }
+    drag_surface->drag.start_margin = start_margin;
+    drag_surface->drag.anim_id = 0;
+    accept_drag (drag_surface, 0, 0);
+    return drag_surface->state;
+  }
+
+  g_return_val_if_fail (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_NONE, drag_surface->state);
+
+  drag_surface->drag.start_margin = start_margin;
 
   if (drag_surface->current.drag_mode == ZPHOC_DRAGGABLE_LAYER_SURFACE_V1_DRAG_MODE_HANDLE) {
     if (!is_handle)
