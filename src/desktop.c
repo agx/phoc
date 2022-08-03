@@ -177,6 +177,9 @@ layer_surface_at (PhocOutput                     *output,
   PhocLayerSurface *layer_surface;
 
   wl_list_for_each_reverse(layer_surface, &output->layer_surfaces, link) {
+    if (!layer_surface->mapped)
+      continue;
+
     if (layer_surface->layer != layer)
       continue;
 
@@ -194,6 +197,9 @@ layer_surface_at (PhocOutput                     *output,
   }
 
   wl_list_for_each(layer_surface, &output->layer_surfaces, link) {
+    if (!layer_surface->mapped)
+      continue;
+
     if (layer_surface->layer != layer)
       continue;
 

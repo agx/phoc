@@ -342,8 +342,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 		struct wlr_box old_geo = layer_surface->geo;
 
 		bool layer_changed = false;
-		if (wlr_layer_surface->current.committed != 0 || layer_surface->mapped != wlr_layer_surface->mapped) {
-			layer_surface->mapped = wlr_layer_surface->mapped;
+		if (wlr_layer_surface->current.committed != 0) {
 			layer_changed = layer_surface->layer != wlr_layer_surface->current.layer;
 
 			layer_surface->layer = wlr_layer_surface->current.layer;
@@ -692,6 +691,8 @@ static void handle_map(struct wl_listener *listener, void *data) {
 		return;
 	}
 
+	layer_surface->mapped = true;
+
 	struct wlr_subsurface *subsurface;
 	wl_list_for_each(subsurface, &wlr_layer_surface->surface->current.subsurfaces_below, current.link) {
 		struct phoc_layer_subsurface *phoc_subsurface = layer_subsurface_create(subsurface);
@@ -713,11 +714,17 @@ static void handle_map(struct wl_listener *listener, void *data) {
 					       wlr_layer_surface->surface, layer_surface->geo.x,
 					       layer_surface->geo.y);
 	wlr_surface_send_enter(wlr_layer_surface->surface, output->wlr_output);
+
+	phoc_layer_shell_arrange (output);
+	phoc_layer_shell_update_focus ();
 }
 
 static void handle_unmap(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, unmap);
+	PhocOutput *output = phoc_layer_surface_get_output (layer_surface);
+
+	layer_surface->mapped = false;
 
 	struct phoc_layer_subsurface *subsurface, *tmp;
 	wl_list_for_each_safe(subsurface, tmp, &layer_surface->subsurfaces, link) {
@@ -727,6 +734,10 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 
 	phoc_layer_surface_unmap (layer_surface);
 	phoc_input_update_cursor_focus(server->input);
+
+	if (output)
+		phoc_layer_shell_arrange (output);
+	phoc_layer_shell_update_focus ();
 }
 
 void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
