@@ -609,7 +609,6 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
     zphoc_draggable_layer_surface_v1_send_drag_end (drag_surface->resource, drag_surface->drag.last_state);
     apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_NONE);
     drag_surface->drag.anim_id = 0;
-    return G_SOURCE_REMOVE;
   } else {
     gint64 now = g_get_monotonic_time ();
 
@@ -635,7 +634,7 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
   /* FIXME: way too much damage */
   phoc_output_damage_whole (output);
 
-  return G_SOURCE_CONTINUE;
+  return done ? G_SOURCE_REMOVE : G_SOURCE_CONTINUE;
 }
 
 
