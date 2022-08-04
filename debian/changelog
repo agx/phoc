@@ -1,3 +1,27 @@
+phoc (0.21.0) byzantium; urgency=medium
+
+  [ Guido Günther ]
+  * layer-shell-effects: Make sure we remove the mapping
+
+  [ Sebastian Krzyszkowiak ]
+  * xdg-shell: Use correct state for maximized and fullscreen flags
+  * xdg-surface: Don't schedule configure when the size doesn't change
+  * output: Don't check for empty buffer damage in damage_surface_iterator
+  * view: Handle initial mapped state of PhocViewChild
+  * layer-shell-effects: Calculate slide duration based on distance to travel
+  * layer-shell-effect: Split accept_drag out of drag_update
+  * layer-shell-effects: Accept drag immediatelly during an animation
+  * render: Keep the aspect ratio when rendering into buffer
+  * render: Don't take view scale into account when drawing into buffer
+  * render: Apply geometry before scaling to buffer coordinates
+  * render: Simplify scale handling when rendering to buffer
+  * render: Position the surface using matrix when rendering to buffer
+  * layer-shell: Move handling of mapped property out of commit handler
+  * desktop: Ignore unmapped surfaces in layer_surface_at
+  * layer-shell-effects: Make sure to apply new margin on animation end
+
+ -- Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>  Thu, 04 Aug 2022 12:38:07 +0200
+
 phoc (0.21.0~beta1) byzantium; urgency=medium
 
   [ Guido Günther ]
