@@ -226,6 +226,11 @@ view_appear_activated (PhocView *view, bool activated)
 void
 phoc_view_activate (PhocView *self, bool activate)
 {
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
   if (!self->desktop->maximize) {
     view_appear_activated(self, activate);
   }
@@ -237,6 +242,13 @@ phoc_view_activate (PhocView *self, bool activate)
 
   if (activate && view_is_fullscreen (self)) {
     phoc_output_force_shell_reveal (self->fullscreen_output, false);
+  }
+
+  if (priv->activation_token) {
+    phoc_phosh_private_notify_startup_id (phoc_server_get_default()->desktop->phosh,
+                                          priv->activation_token,
+                                          PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
+    phoc_view_set_activation_token (self, NULL);
   }
 }
 
@@ -955,6 +967,11 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
                               "notify::scale-to-fit",
                               G_CALLBACK (on_global_scale_to_fit_changed),
                               view);
+
+
+  /* Process pending activation */
+  if (priv->activation_token)
+    phoc_view_activate (view, TRUE);
 }
 
 void view_unmap(PhocView *view) {
