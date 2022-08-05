@@ -1528,6 +1528,8 @@ phoc_view_child_damage_whole (PhocViewChild *child)
 
 /**
  * phoc_view_set_scale_to_fit:
+ * @self: The view
+ * @enable: Whether to enable or disable scale to fit
  *
  * Turn auto scaling if oversized for this surface on (%TRUE) or off (%FALSE)
  */
@@ -1550,6 +1552,7 @@ phoc_view_set_scale_to_fit (PhocView *self, gboolean enable)
 
 /**
  * phoc_view_get_scale_to_fit:
+ * @self: The view
  *
  * Returns: %TRUE if scaling of oversized surfaces is enabled, %FALSE otherwise
  */
