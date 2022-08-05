@@ -182,7 +182,7 @@ typedef struct _PhocViewChild {
 } PhocViewChild;
 
 void view_appear_activated(PhocView *view, bool activated);
-void view_activate(PhocView *view, bool activate);
+void phoc_view_activate (PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
 void phoc_view_damage_whole (PhocView *view);
 gboolean view_is_floating(const PhocView *view);

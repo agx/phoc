@@ -223,19 +223,21 @@ view_appear_activated (PhocView *view, bool activated)
     PHOC_VIEW_GET_CLASS (view)->set_active (view, activated);
 }
 
-void view_activate(PhocView *view, bool activate) {
-	if (!view->desktop->maximize) {
-		view_appear_activated(view, activate);
-	}
+void
+phoc_view_activate (PhocView *self, bool activate)
+{
+  if (!self->desktop->maximize) {
+    view_appear_activated(self, activate);
+  }
 
-	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_activated(view->toplevel_handle,
-			activate);
-	}
+  if (self->toplevel_handle) {
+    wlr_foreign_toplevel_handle_v1_set_activated(self->toplevel_handle,
+                                                 activate);
+  }
 
-	if (activate && view_is_fullscreen (view)) {
-		phoc_output_force_shell_reveal (view->fullscreen_output, false);
-	}
+  if (activate && view_is_fullscreen (self)) {
+    phoc_output_force_shell_reveal (self->fullscreen_output, false);
+  }
 }
 
 void view_resize(PhocView *view, uint32_t width, uint32_t height) {

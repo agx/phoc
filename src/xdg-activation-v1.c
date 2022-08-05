@@ -44,7 +44,7 @@ phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
     return;
 
   g_debug ("Activating view %p via token '%s'", view, token->token);
-  view_activate (view, true);
+  phoc_view_activate (view, true);
   phoc_phosh_private_notify_startup_id (server->desktop->phosh,
                                         token->token,
                                         PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
