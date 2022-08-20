@@ -206,16 +206,11 @@ handle_touch_up (struct wl_listener *listener, void *data)
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_up);
   struct wlr_event_touch_up *event = data;
   PhocDesktop *desktop = server->desktop;
-  PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
-                                            event->device->name);
 
-  /* handle touch up regardless of output status so events don't become stuck */
-  phoc_cursor_handle_touch_up (cursor, event);
-  if (output && !output->wlr_output->enabled) {
-    g_debug ("Touch event ignored since output '%s' is disabled.",
-             output->wlr_output->name);
+  if (!phoc_cursor_is_active_touch_id (cursor, event->touch_id)) {
     return;
   }
+  phoc_cursor_handle_touch_up (cursor, event);
   wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
 }
 
@@ -226,17 +221,11 @@ handle_touch_motion (struct wl_listener *listener, void *data)
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_motion);
   struct wlr_event_touch_motion *event = data;
   PhocDesktop *desktop = server->desktop;
-  PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
-                                            event->device->name);
 
-  /* handle touch motion regardless of output status so events don't become
-     stuck */
-  phoc_cursor_handle_touch_motion (cursor, event);
-  if (output && !output->wlr_output->enabled) {
-    g_debug ("Touch event ignored since output '%s' is disabled.",
-             output->wlr_output->name);
+  if (!phoc_cursor_is_active_touch_id (cursor, event->touch_id)) {
     return;
   }
+  phoc_cursor_handle_touch_motion (cursor, event);
   wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
 }
 

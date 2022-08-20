@@ -1394,3 +1394,18 @@ phoc_cursor_get_gestures (PhocCursor *self)
 
   return priv->gestures;
 }
+
+
+/**
+ * phoc_cursor_is_active_touch_id:
+ * @self: The Cursor
+ * @touch_id: touch point ID
+ *
+ * Returns: %TRUE if the touch point is active, otherwise %FALSE
+ */
+gboolean
+phoc_cursor_is_active_touch_id (PhocCursor *self, int touch_id)
+{
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
+  return !!g_hash_table_lookup(priv->touch_points, GINT_TO_POINTER (touch_id));
+}
