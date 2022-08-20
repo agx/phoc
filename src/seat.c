@@ -1566,7 +1566,7 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
 
   // Deactivate the old view if it is not focused by some other seat
   if (prev_focus != NULL && !phoc_input_view_has_focus (seat->input, prev_focus)) {
-    view_activate (prev_focus, false);
+    phoc_view_activate (prev_focus, false);
   }
 
   if (view == NULL) {
@@ -1583,7 +1583,7 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
     return;
   }
 
-  view_activate (view, true);
+  phoc_view_activate (view, true);
   seat->has_focus = true;
 
   // An existing keyboard grab might try to deny setting focus, so cancel it
@@ -1644,7 +1644,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   if (seat->has_focus) {
     PhocView *prev_focus = phoc_seat_get_focus (seat);
     wlr_seat_keyboard_clear_focus (seat->seat);
-    view_activate (prev_focus, false);
+    phoc_view_activate (prev_focus, false);
   }
   seat->has_focus = false;
   if (layer->current.layer >= ZWLR_LAYER_SHELL_V1_LAYER_TOP) {
