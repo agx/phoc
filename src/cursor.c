@@ -54,6 +54,109 @@ static void handle_pointer_frame (struct wl_listener *listener, void *data);
 static void handle_touch_frame (struct wl_listener *listener, void *data);
 
 
+static bool
+should_ignore_touch_grab (PhocSeat           *seat,
+                          struct wlr_surface *surface)
+{
+  // ignore seat grab when interacting with layer-surface
+
+  if (!surface)
+    return false;
+
+  struct wlr_surface *root = wlr_surface_get_root_surface (surface);
+
+  // FIXME: return false if the grab comes from a xdg-popup that belongs to a layer-surface
+  return wlr_seat_touch_has_grab (seat->seat) && wlr_surface_is_layer_surface (root);
+}
+
+
+static void
+send_touch_down (PhocSeat                    *seat,
+                 struct wlr_surface          *surface,
+                 struct wlr_touch_down_event *event,
+                 double                       sx,
+                 double                       sy)
+{
+  if (should_ignore_touch_grab (seat, surface)) {
+    // currently wlr_seat_touch_send_* functions don't work, so temporarily
+    // restore grab to the default one and use notify_* instead
+    // See https://gitlab.freedesktop.org/wlroots/wlroots/-/issues/3478
+    struct wlr_seat_touch_grab *grab = seat->seat->touch_state.grab;
+    seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
+    wlr_seat_touch_notify_down (seat->seat, surface, event->time_msec,
+                                event->touch_id, sx, sy);
+    seat->seat->touch_state.grab = grab;
+    return;
+  }
+
+  wlr_seat_touch_notify_down (seat->seat, surface, event->time_msec,
+                              event->touch_id, sx, sy);
+}
+
+
+static void
+send_touch_motion (PhocSeat                      *seat,
+                   struct wlr_surface            *surface,
+                   struct wlr_touch_motion_event *event,
+                   double                         sx,
+                   double                         sy)
+{
+  if (should_ignore_touch_grab (seat, surface)) {
+    // currently wlr_seat_touch_send_* functions don't work, so temporarily
+    // restore grab to the default one and use notify_* instead
+    // See https://gitlab.freedesktop.org/wlroots/wlroots/-/issues/3478
+    struct wlr_seat_touch_grab *grab = seat->seat->touch_state.grab;
+    seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
+    wlr_seat_touch_notify_motion (seat->seat, event->time_msec,
+                                  event->touch_id, sx, sy);
+    seat->seat->touch_state.grab = grab;
+    return;
+  }
+
+  wlr_seat_touch_notify_motion (seat->seat, event->time_msec,
+                                event->touch_id, sx, sy);
+}
+
+
+static void
+send_touch_up (PhocSeat                  *seat,
+               struct wlr_surface        *surface,
+               struct wlr_touch_up_event *event)
+{
+  if (should_ignore_touch_grab (seat, surface)) {
+    // currently wlr_seat_touch_send_* functions don't work, so temporarily
+    // restore grab to the default one and use notify_* instead
+    // See https://gitlab.freedesktop.org/wlroots/wlroots/-/issues/3478
+    struct wlr_seat_touch_grab *grab = seat->seat->touch_state.grab;
+    seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
+    wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
+    seat->seat->touch_state.grab = grab;
+    return;
+  }
+
+  wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
+}
+
+
+static void
+send_touch_cancel (PhocSeat                  *seat,
+                   struct wlr_surface        *surface)
+{
+  if (should_ignore_touch_grab (seat, surface)) {
+    // currently, wlr_seat_touch_send_* functions don't work, so temporarily
+    // restore grab to the default one and use notify_* instead
+    // See https://gitlab.freedesktop.org/wlroots/wlroots/-/issues/3478
+    struct wlr_seat_touch_grab *grab = seat->seat->touch_state.grab;
+    seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
+    wlr_seat_touch_notify_cancel (seat->seat, surface);
+    seat->seat->touch_state.grab = grab;
+    return;
+  }
+
+  wlr_seat_touch_notify_cancel (seat->seat, surface);
+}
+
+
 static PhocTouchPoint *
 phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_touch_down_event *event)
 {
@@ -563,8 +666,7 @@ on_drag_update (PhocGesture *gesture, double off_x, double off_y, PhocCursor *se
 
       g_debug ("Cancelling drag gesture for %s",
                phoc_layer_surface_get_namespace (layer_surface));
-      wlr_seat_touch_notify_cancel (self->seat->seat,
-                                    layer_surface->layer_surface->surface);
+      send_touch_cancel (self->seat, layer_surface->layer_surface->surface);
     }
     break;
   case PHOC_DRAGGABLE_SURFACE_STATE_REJECTED:
@@ -949,6 +1051,8 @@ handle_pointer_frame (struct wl_listener *listener, void *data)
   wlr_seat_pointer_notify_frame (self->seat->seat);
 }
 
+
+
 void
 phoc_cursor_handle_touch_down (PhocCursor                  *self,
                                struct wlr_touch_down_event *event)
@@ -972,17 +1076,13 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
 
   double sx, sy;
   PhocView *view;
-  struct wlr_surface *surface = phoc_desktop_surface_at (
-    desktop, lx, ly, &sx, &sy, &view);
+  struct wlr_surface *surface = phoc_desktop_surface_at (desktop, lx, ly, &sx, &sy, &view);
   bool shell_revealed = phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
 
   if (!shell_revealed && surface && phoc_seat_allow_input (seat, surface->resource)) {
     struct wlr_surface *root = wlr_surface_get_root_surface (surface);
 
-    wlr_seat_touch_notify_down (seat->seat, surface,
-                                event->time_msec, event->touch_id, sx, sy);
-    wlr_seat_touch_point_focus (seat->seat, surface,
-                                event->time_msec, event->touch_id, sx, sy);
+    send_touch_down (seat, surface, event, sx, sy);
 
     if (view)
       phoc_seat_set_focus (seat, view);
@@ -1015,6 +1115,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
   }
 }
 
+
 void
 phoc_cursor_handle_touch_up (PhocCursor                *self,
                              struct wlr_touch_up_event *event)
@@ -1045,9 +1146,9 @@ phoc_cursor_handle_touch_up (PhocCursor                *self,
     phoc_cursor_update_focus (self);
   }
 
-  wlr_seat_touch_notify_up (self->seat->seat, event->time_msec,
-                            event->touch_id);
+  send_touch_up (self->seat, point->surface, event);
 }
+
 
 void
 phoc_cursor_handle_touch_motion (PhocCursor                    *self,
@@ -1079,7 +1180,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
   PhocOutput *phoc_output = wlr_output->data;
 
   double sx, sy;
-  struct wlr_surface *surface = point->focus_surface;
+  struct wlr_surface *surface = point->surface;
 
   // TODO: test with input regions
 
@@ -1141,11 +1242,9 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
         sub = subsurface->parent;
       }
     }
-  }
 
-  if (surface && phoc_seat_allow_input (self->seat, surface->resource)) {
-    wlr_seat_touch_notify_motion (self->seat->seat, event->time_msec,
-                                  event->touch_id, sx, sy);
+    if (phoc_seat_allow_input (self->seat, surface->resource))
+      send_touch_motion (self->seat, surface, event, sx, sy);
   }
 
   if (event->touch_id == self->seat->touch_id) {
@@ -1167,6 +1266,9 @@ handle_touch_frame (struct wl_listener *listener, void *data)
   struct wlr_seat *wlr_seat = self->seat->seat;
 
   wlr_seat_touch_notify_frame(wlr_seat);
+
+  // make sure to always send frame events when necessary even when bypassing seat grabs
+  wlr_seat_touch_send_frame (wlr_seat);
 }
 
 
