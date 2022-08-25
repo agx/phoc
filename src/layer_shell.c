@@ -294,6 +294,8 @@ phoc_layer_shell_arrange (PhocOutput *output)
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
     arrange_layer (output, seats, layers[i], &usable_area, false);
 
+  phoc_output_update_shell_reveal (output);
+
   if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL)) {
     PhocLayerSurface *layer_surface;
     g_message ("Dumping layers:");
