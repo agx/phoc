@@ -981,6 +981,8 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
   bool shell_revealed = phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
 
   if (!shell_revealed && surface && phoc_seat_allow_input (seat, surface->resource)) {
+    struct wlr_surface *root = wlr_surface_get_root_surface (surface);
+
     wlr_seat_touch_notify_down (seat->seat, surface,
                                 event->time_msec, event->touch_id, sx, sy);
     wlr_seat_touch_point_focus (seat->seat, surface,
@@ -989,8 +991,8 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
     if (view)
       phoc_seat_set_focus (seat, view);
 
-    if (wlr_surface_is_layer_surface (surface)) {
-      struct wlr_layer_surface_v1 *wlr_layer = wlr_layer_surface_v1_from_wlr_surface (surface);
+    if (wlr_surface_is_layer_surface (root)) {
+      struct wlr_layer_surface_v1 *wlr_layer = wlr_layer_surface_v1_from_wlr_surface (root);
 
       /* TODO: Use press gesture */
       if (wlr_layer->current.keyboard_interactive) {
