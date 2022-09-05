@@ -122,10 +122,12 @@ handle_draggable_layer_surface_set_margins (struct wl_client   *client,
   PhocDraggableLayerSurface *drag_surface = wl_resource_get_user_data (resource);
 
   g_assert (drag_surface);
-  g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
 
   g_debug ("Draggable Layer surface margins for %p: %d,%d", drag_surface,
            margin_folded, margin_unfolded);
+
+  if (drag_surface->layer_surface == NULL)
+    return;
 
   if (margin_unfolded <= margin_folded) {
     wl_resource_post_error (resource, ZPHOC_LAYER_SHELL_EFFECTS_V1_ERROR_BAD_MARGIN,
@@ -160,7 +162,11 @@ handle_draggable_layer_surface_set_exclusive (struct wl_client   *client,
 {
   PhocDraggableLayerSurface *drag_surface = wl_resource_get_user_data (resource);
 
-  g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
+  g_assert (drag_surface);
+  g_debug ("Draggable Layer surface exclusive for %p: %u", drag_surface, exclusive);
+  if (drag_surface->layer_surface == NULL)
+    return;
+
   drag_surface->pending.exclusive = exclusive;
 }
 
@@ -173,10 +179,12 @@ handle_draggable_layer_surface_set_threshold (struct wl_client   *client,
   PhocDraggableLayerSurface *drag_surface = wl_resource_get_user_data (resource);
   double threshold;
 
-  g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
-
+  g_assert (drag_surface);
   threshold = wl_fixed_to_double (threshold_f);
   g_debug ("Draggable Layer surface threshold for %p: %f", drag_surface, threshold);
+  if (drag_surface->layer_surface == NULL)
+    return;
+
   threshold = (threshold < 1.0) ? threshold : 1.0;
   threshold = (threshold > 0.0) ? threshold : 0.0;
 
@@ -191,8 +199,10 @@ handle_draggable_layer_surface_set_drag_mode (struct wl_client   *client,
 {
   PhocDraggableLayerSurface *drag_surface = wl_resource_get_user_data (resource);
 
-  g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
+  g_assert (drag_surface);
   g_debug ("Draggable Layer surface drag-mode for %p: %d", drag_surface, drag_mode);
+  if (drag_surface->layer_surface == NULL)
+    return;
 
   drag_surface->pending.drag_mode = drag_mode;
 }
@@ -205,8 +215,10 @@ handle_draggable_layer_surface_set_drag_handle (struct wl_client   *client,
 {
   PhocDraggableLayerSurface *drag_surface = wl_resource_get_user_data (resource);
 
-  g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
+  g_assert (drag_surface);
   g_debug ("Draggable Layer surface drag-handle for %p: %d", drag_surface, drag_handle);
+  if (drag_surface->layer_surface == NULL)
+    return;
 
   drag_surface->pending.drag_handle = drag_handle;
 }
@@ -220,7 +232,9 @@ handle_draggable_layer_surface_set_state (struct wl_client *client,
   PhocDraggableLayerSurface *drag_surface = wl_resource_get_user_data (resource);
   PhocAnimDir dir;
 
-  g_assert (drag_surface->layer_surface);
+  g_assert (drag_surface);
+  if (drag_surface->layer_surface == NULL)
+    return;
 
   switch (state) {
   case ZPHOC_DRAGGABLE_LAYER_SURFACE_V1_DRAG_END_STATE_FOLDED:
@@ -641,9 +655,15 @@ on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpoint
 void
 phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, PhocAnimDir anim_dir)
 {
-  struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
   double margin;
-  struct wlr_output *wlr_output = wlr_layer_surface->output;
+  struct wlr_output *wlr_output;
+
+  if (drag_surface->layer_surface == NULL)
+    return;
+
+  wlr_layer_surface = drag_surface->layer_surface->layer_surface;
+  wlr_output = wlr_layer_surface->output;
 
   if (wlr_output == NULL)
     return;
