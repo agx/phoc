@@ -285,6 +285,7 @@ phoc_draggable_layer_surface_destroy (PhocDraggableLayerSurface *drag_surface)
   layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (drag_surface->layer_shell_effects);
   g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (layer_shell_effects));
 
+  /* End any ongoing animations */
   if (drag_surface->drag.anim_id && drag_surface->layer_surface) {
     phoc_animatable_remove_frame_callback (PHOC_ANIMATABLE (drag_surface->layer_surface),
                                            drag_surface->drag.anim_id);
@@ -300,6 +301,7 @@ phoc_draggable_layer_surface_destroy (PhocDraggableLayerSurface *drag_surface)
   layer_shell_effects->drag_surfaces = g_slist_remove (layer_shell_effects->drag_surfaces,
                                                        drag_surface);
 
+  drag_surface->layer_surface = NULL;
   wl_resource_set_user_data (drag_surface->resource, NULL);
   g_free (drag_surface);
 }
@@ -330,10 +332,12 @@ layer_surface_handle_destroy (struct wl_listener *listener, void *data)
   PhocDraggableLayerSurface *drag_surface =
     wl_container_of(listener, drag_surface, layer_surface_handle_destroy);
 
-  /* Remove from the hash table as long as we have a valid layer_surface */
+  /* Drop the gone layer-surface form the layer-surface -> drag-surface mapping */
   layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (drag_surface->layer_shell_effects);
   g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_sufrace,
                        drag_surface->layer_surface);
+
+  /* The layer-surface is unusable for us now */
   drag_surface->layer_surface = NULL;
 }
 
@@ -421,9 +425,9 @@ handle_get_draggable_layer_surface (struct wl_client   *client,
                             "Layer surface not yet committed");
     return;
   }
-  drag_surface->layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
 
-  g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
+  g_assert (PHOC_IS_LAYER_SURFACE (wlr_layer_surface->data));
+  drag_surface->layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
 
   drag_surface->surface_handle_commit.notify = surface_handle_commit;
   wl_signal_add (&wlr_surface->events.commit, &drag_surface->surface_handle_commit);
@@ -570,16 +574,21 @@ static gboolean
 on_output_frame_callback (PhocAnimatable *animatable, guint64 last_frame, gpointer user_data)
 
 {
-  PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (animatable);
   PhocDraggableLayerSurface *drag_surface = user_data;
+  PhocLayerSurface *layer_surface;
   PhocOutput *output;
-  struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
   double margin, distance;
   bool done;
 
-  g_assert (PHOC_IS_LAYER_SURFACE (layer_surface));
   g_assert (drag_surface);
+  g_assert (PHOC_IS_LAYER_SURFACE (animatable));
+
+  layer_surface = PHOC_LAYER_SURFACE (animatable);
+  g_assert (layer_surface == drag_surface->layer_surface);
+
   g_assert (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING);
+  wlr_layer_surface = drag_surface->layer_surface->layer_surface;
   output = phoc_layer_surface_get_output (layer_surface);
 
   if (output == NULL)
