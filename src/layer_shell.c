@@ -233,7 +233,7 @@ find_osk (PhocOutput *output)
 
 /// Adjusts keyboard properties
 static void
-change_osk (PhocLayerSurface *osk, struct wl_list layer_surfaces, bool force_overlay)
+change_osk (PhocLayerSurface *osk, bool force_overlay)
 {
   if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY)
     osk->layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
@@ -271,7 +271,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
         break;
       }
     }
-    change_osk (osk, output->layer_surfaces, osk_force_overlay);
+    change_osk (osk, osk_force_overlay);
   }
 
   // Arrange exclusive surfaces from top->bottom
