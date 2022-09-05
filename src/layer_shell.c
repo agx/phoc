@@ -293,6 +293,22 @@ phoc_layer_shell_arrange (PhocOutput *output)
   // Arrange non-exlusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
     arrange_layer (output, seats, layers[i], &usable_area, false);
+
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL)) {
+    PhocLayerSurface *layer_surface;
+    g_message ("Dumping layers:");
+    wl_list_for_each (layer_surface, &output->layer_surfaces, link) {
+      g_message ("layer-surface: %-20s, l: %d, m: %d, cm: %4d,%4d,%4d,%4d, e: %4d",
+                 layer_surface->layer_surface->namespace,
+                 layer_surface->layer,
+                 layer_surface->mapped,
+                 layer_surface->layer_surface->current.margin.top,
+                 layer_surface->layer_surface->current.margin.right,
+                 layer_surface->layer_surface->current.margin.bottom,
+                 layer_surface->layer_surface->current.margin.left,
+                 layer_surface->layer_surface->current.exclusive_zone);
+    }
+  }
 }
 
 void
