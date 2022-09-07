@@ -287,8 +287,8 @@ keyboard_keysyms_raw(PhocKeyboard *self,
 }
 
 static void
-phoc_keyboard_handle_key(PhocKeyboard *self,
-                         struct wlr_event_keyboard_key *event) {
+phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_event_keyboard_key *event)
+{
   xkb_keycode_t keycode = event->keycode + 8;
 
   bool handled = false;
