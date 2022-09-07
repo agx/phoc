@@ -297,11 +297,8 @@ phoc_keyboard_handle_key(PhocKeyboard *self,
   size_t keysyms_len;
 
   // Handle translated keysyms
-
-  keysyms_len = keyboard_keysyms_translated(self, keycode, &keysyms,
-                                            &modifiers);
-  pressed_keysyms_update(self->pressed_keysyms_translated, keysyms,
-                         keysyms_len, event->state);
+  keysyms_len = keyboard_keysyms_translated (self, keycode, &keysyms, &modifiers);
+  pressed_keysyms_update (self->pressed_keysyms_translated, keysyms, keysyms_len, event->state);
   if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     handled = keyboard_execute_binding(self,
                                        self->pressed_keysyms_translated, modifiers, keysyms,
