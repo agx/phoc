@@ -136,8 +136,8 @@ config_h.set('PHOC_XWAYLAND', have_xwayland)
 config_h.set('PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL', have_wlr_seat_touch_notify_cancel)
 
 phoc_config_h = configure_file(
-  input: 'config.h.in',
-  output: 'config.h',
+  input: 'phoc-config.h.in',
+  output: 'phoc-config.h',
   configuration: config_h,
 )
 

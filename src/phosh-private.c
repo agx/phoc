@@ -7,7 +7,7 @@
 
 #define G_LOG_DOMAIN "phoc-phosh-private"
 
-#include "config.h"
+#include "phoc-config.h"
 #include "phoc-enums.h"
 #include "phosh-private.h"
 

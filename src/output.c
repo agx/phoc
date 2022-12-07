@@ -1,6 +1,6 @@
 #define G_LOG_DOMAIN "phoc-output"
 
-#include "config.h"
+#include "phoc-config.h"
 
 #define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>

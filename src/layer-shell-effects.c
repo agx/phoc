@@ -7,7 +7,7 @@
 
 #define G_LOG_DOMAIN "phoc-layer-shell-effects"
 
-#include "config.h"
+#include "phoc-config.h"
 #include "layers.h"
 #include "layer-shell-effects.h"
 #include "phoc-animation.h"

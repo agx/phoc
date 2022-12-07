@@ -5,7 +5,7 @@
  *
  * Keybindings stored in gsettings
  */
-#include "config.h"
+#include "phoc-config.h"
 #include "keybindings.h"
 #include "seat.h"
 #include "keyboard.h"
