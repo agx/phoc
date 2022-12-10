@@ -1,6 +1,6 @@
 #define G_LOG_DOMAIN "phoc-layer-shell"
 
-#include "config.h"
+#include "phoc-config.h"
 
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L

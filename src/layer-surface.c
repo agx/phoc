@@ -7,7 +7,7 @@
 
 #define G_LOG_DOMAIN "phoc-layer-surface"
 
-#include "config.h"
+#include "phoc-config.h"
 
 #include "anim/animatable.h"
 #include "layer-surface.h"

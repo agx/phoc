@@ -10,7 +10,7 @@
 
 #define G_LOG_DOMAIN "phoc-render"
 
-#include "config.h"
+#include "phoc-config.h"
 #include "layers.h"
 #include "seat.h"
 #include "server.h"
