@@ -572,8 +572,6 @@ phoc_keybindings_constructed (GObject *object)
 		       "toggle-tiled-left", handle_tile_left);
   phoc_add_keybinding (self, self->mutter_settings,
 		       "toggle-tiled-right", handle_tile_right);
-
-  G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
 }
 
 
