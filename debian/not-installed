@@ -1,5 +1,0 @@
-usr/include/wlr/*
-usr/include/wlr/backend/*
-usr/include/wlr/types/*
-usr/lib/*/libwlroots.*
-usr/lib/*/pkgconfig/wlroots.pc
