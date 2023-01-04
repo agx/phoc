@@ -592,6 +592,7 @@ phoc_renderer_render_view_to_buffer (PhocRenderer         *self,
   wlr_renderer_clear (self->wlr_renderer, (float[])COLOR_TRANSPARENT);
   wlr_surface_for_each_surface (surface, view_render_iterator, &render_data);
 
+  wl_shm_buffer_begin_access (shm_buffer);
   void *data = wl_shm_buffer_get_data (shm_buffer);
 
   wlr_renderer_read_pixels (self->wlr_renderer, DRM_FORMAT_ARGB8888, NULL, stride, width, height, 0, 0, 0, 0, data);
@@ -599,6 +600,8 @@ phoc_renderer_render_view_to_buffer (PhocRenderer         *self,
 
   wlr_buffer_drop (buffer);
   wlr_drm_format_set_finish (&fmt_set);
+
+  wl_shm_buffer_end_access(shm_buffer);
 
   return true;
 }
