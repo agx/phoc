@@ -88,6 +88,9 @@ unit-test-with-xwayland-debian-bookworm:
   coverage: '/^\s+lines\.+:\s+([\d.]+\%)\s+/'
   artifacts:
     when: always
+    reports:
+      junit:
+        - _build/meson-logs/testlog.junit.xml
     paths:
       - _build
   except:
