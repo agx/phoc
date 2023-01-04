@@ -1,4 +1,0 @@
-Test-Command: /usr/bin/phoc --help
-Restrictions: superficial
-Depends: phoc
-
