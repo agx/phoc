@@ -1,0 +1,6 @@
+phosh 0.23.0
+------------
+Released Janyary 2023
+* Fix pixman renderer
+* Contributors:
+	Guido Günther
