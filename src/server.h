@@ -35,6 +35,7 @@ typedef enum _PhocServerDebugFlags {
   PHOC_SERVER_DEBUG_FLAG_NO_QUIT         = 1 << 2,
   PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS    = 1 << 3,
   PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL     = 1 << 4,
+  PHOC_SERVER_DEBUG_FLAG_CUTOUTS         = 1 << 5,
 } PhocServerDebugFlags;
 
 /**
