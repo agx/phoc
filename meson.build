@@ -43,6 +43,7 @@ gmobile        = subproject('gmobile',
                    'gtk_doc=false',
                    'tests=false',
                  ])
+gmobile_dep    = gmobile.get_variable('gmobile_dep')
 
 embed_wlroots = get_option('embed-wlroots')
 

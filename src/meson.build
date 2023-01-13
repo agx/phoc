@@ -99,6 +99,7 @@ phoc_deps = [
   drm,
   gio,
   glesv2,
+  gmobile_dep,
   gnome_desktop,
   gsettings_desktop_schemas_dep,
   math,
