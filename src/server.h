@@ -82,5 +82,6 @@ gboolean     phoc_server_setup (PhocServer *server, const char *config_path,
                                 PhocServerDebugFlags debug_flags);
 gint          phoc_server_get_session_exit_status (PhocServer *self);
 PhocRenderer *phoc_server_get_renderer (PhocServer *self);
+PhocDesktop  *phoc_server_get_desktop (PhocServer *self);
 
 G_END_DECLS

@@ -403,3 +403,16 @@ phoc_server_get_renderer (PhocServer *self)
 
   return self->renderer;
 }
+
+/**
+ * phoc_server_get_desktop:
+ *
+ * Returns: (transfer none): The desktop
+ */
+PhocDesktop *
+phoc_server_get_desktop (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->desktop;
+}
