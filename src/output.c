@@ -11,10 +11,12 @@
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
+#include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/region.h>
 
 #include "anim/animatable.h"
+#include "cutouts-overlay.h"
 #include "settings.h"
 #include "layers.h"
 #include "layer-shell-effects.h"
@@ -47,6 +49,10 @@ typedef struct _PhocOutputPrivate {
   GSList *frame_callbacks;
   gint    frame_callback_next_id;
   gint64  last_frame_us;
+
+  PhocCutoutsOverlay *cutouts;
+  gulong              render_cutouts_id;
+  struct wlr_texture *cutouts_texture;
 
   gboolean shell_revealed;
   gboolean force_shell_reveal;
@@ -85,7 +91,6 @@ phoc_output_frame_callback_info_free (PhocOutputFrameCallbackInfo *cb_info)
     cb_info->notify (cb_info->user_data);
   g_free (cb_info);
 }
-
 
 static bool
 get_surface_box (PhocOutputSurfaceIteratorData *data,
@@ -240,6 +245,29 @@ phoc_output_handle_enable (struct wl_listener *listener, void *data)
   update_output_manager_config (self->desktop);
 }
 
+
+static void
+render_cutouts (PhocRenderer *renderer, PhocOutput *self)
+{
+  struct wlr_output *wlr_output = self->wlr_output;
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  g_assert (PHOC_IS_RENDERER (renderer));
+
+  if (priv->cutouts_texture) {
+    float matrix[9];
+    struct wlr_box box;
+    struct wlr_texture *texture = priv->cutouts_texture;
+
+    box = (struct wlr_box){ 0, 0, texture->width, texture->height };
+    wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL,
+                           0, wlr_output->transform_matrix);
+    wlr_render_texture_with_matrix (phoc_renderer_get_wlr_renderer (renderer),  texture, matrix, 1.0);
+  }
+}
+
+
 static void
 phoc_output_damage_handle_frame (struct wl_listener *listener,
                                  void               *data)
@@ -264,12 +292,18 @@ phoc_output_damage_handle_frame (struct wl_listener *listener,
   }
   priv->last_frame_us = g_get_monotonic_time ();
 
+  if (priv->cutouts_texture) {
+    struct wlr_box box = { 0, 0, priv->cutouts_texture->width, priv->cutouts_texture->height };
+    wlr_output_damage_add_box (self->damage, &box);
+  }
+
   phoc_renderer_render_output (renderer, self);
 
   /* Want frame clock ticking as long as we have frame callbacks */
   if (priv->frame_callbacks)
     wlr_output_schedule_frame(self->wlr_output);
 }
+
 
 static void
 phoc_output_damage_handle_destroy (struct wl_listener *listener,
@@ -487,6 +521,20 @@ phoc_output_initable_init (GInitable    *initable,
 
   update_output_manager_config (self->desktop);
 
+  if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_CUTOUTS) {
+    PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+
+    priv->cutouts = phoc_cutouts_overlay_new (phoc_server_get_compatibles (server));
+    if (priv->cutouts) {
+      priv->cutouts_texture = phoc_cutouts_overlay_get_cutouts_texture (priv->cutouts, self);
+      priv->render_cutouts_id =  g_signal_connect (renderer, "render-end",
+                                                   G_CALLBACK (render_cutouts),
+                                                   self);
+    } else {
+      g_warning ("Could't create cutout overlay");
+    }
+  }
+
   return TRUE;
 }
 
@@ -508,6 +556,9 @@ phoc_output_finalize (GObject *object)
 
   wl_list_init (&self->layer_surfaces);
 
+  g_clear_object (&priv->cutouts);
+  g_clear_pointer (&priv->cutouts_texture, wlr_texture_destroy);
+  g_clear_signal_handler (&priv->render_cutouts_id, self);
   g_clear_object (&priv->shield);
   g_clear_object (&self->desktop);
 

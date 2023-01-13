@@ -18,6 +18,8 @@ phoc_marshalers = gnome.genmarshal('phoc-marshalers',
 sources = files(
   'cursor.c',
   'cursor.h',
+  'cutouts-overlay.c',
+  'cutouts-overlay.h',
   'desktop.c',
   'desktop.h',
   'event.c',
