@@ -1470,3 +1470,13 @@ phoc_output_has_shell_revealed (PhocOutput *self)
   priv = phoc_output_get_instance_private (self);
   return priv->shell_revealed;
 }
+
+
+float
+phoc_output_get_scale (PhocOutput *self)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+  g_assert (self->wlr_output);
+
+  return self->wlr_output->scale;
+}
