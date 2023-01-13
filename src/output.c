@@ -27,23 +27,6 @@
 #include "utils.h"
 #include "xwayland-surface.h"
 
-static void phoc_output_initable_iface_init (GInitableIface *iface);
-
-typedef struct _PhocOutputPrivate {
-  PhocOutputShield *shield;
-
-  GSList *frame_callbacks;
-  gint    frame_callback_next_id;
-  gint64  last_frame_us;
-
-  gboolean shell_revealed;
-  gboolean force_shell_reveal;
-} PhocOutputPrivate;
-
-G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
-                         G_ADD_PRIVATE (PhocOutput)
-                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_output_initable_iface_init));
-
 enum {
   PROP_0,
   PROP_DESKTOP,
@@ -58,6 +41,22 @@ enum {
 };
 static guint signals[N_SIGNALS] = { 0 };
 
+typedef struct _PhocOutputPrivate {
+  PhocOutputShield *shield;
+
+  GSList *frame_callbacks;
+  gint    frame_callback_next_id;
+  gint64  last_frame_us;
+
+  gboolean shell_revealed;
+  gboolean force_shell_reveal;
+} PhocOutputPrivate;
+
+static void phoc_output_initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
+                         G_ADD_PRIVATE (PhocOutput)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_output_initable_iface_init));
 
 typedef struct {
   PhocAnimatable    *animatable;
