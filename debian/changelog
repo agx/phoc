@@ -1,3 +1,38 @@
+phoc (0.23.0) experimental; urgency=medium
+
+  * build: Add configure file to generated sources.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/310
+  * Rename config.h to phoc-config.h.
+    This makes sure we don't accidentally include a config.h from another
+    project - e.g. when include paths aren't set up correcty.
+  * gitignore: Remove copy / paste artifact.
+    Fixes: c960805d9f87c157b4d9b0ae0fadd6cfdad5459b
+  * Switch development branch to main (Closes: #256)
+  * keybindings: Remove unused property getter / setter
+  * keybindings: Don't chain up to contruct twice.
+    We already do so at the top of phoc_keybindings_constructed
+  * ci: Collect junit reports.
+    Phosh added this about 1y ago, let phoc catch up
+  * render: Pass wl_shm_buffer to phoc_renderer_render_view_to_buffer.
+    So far only the pointer to the data was passed. This is error prone as
+    the data pointer is constrained by wl_shm access restrictions. We also
+    reduce the number of parameters passed around.
+  * render: Don't access interleaving shm buffers
+    wl_shm_buffer_{begin,end}_access docs say
+    It is safe to nest calls to these functions as long as the nested calls
+    are all accessing the same buffer.
+    So let's not access interleaving buffers.
+    This fixes the pixman renderer. (Closes: #290)
+  * tests: Run thumbnail test when using pixman renderer.
+    When we're pretty certain we're using pixman we can enable the
+    thumbnail tests.
+  * ci: Use pixman renderer for tests.
+    This allows us to run the thumbnail tests again
+  * d/gbp.conf: Bump meson version automatically.
+    Less manual work
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 12 Jan 2023 11:24:10 +0100
+
 phoc (0.21.1) byzantium; urgency=medium
 
   [ Guido Günther ]
