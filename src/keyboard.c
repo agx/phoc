@@ -143,8 +143,8 @@ pressed_keysyms_update(xkb_keysym_t *pressed_keysyms,
  * Execute a built-in, hardcoded compositor binding. These are triggered from a
  * single keysym.
  *
- * Returns true if the keysym was handled by a binding and false if the event
- * should be propagated to clients.
+ * Returns `true` if the keysym was handled by a binding and `false` if the event
+ * should be propagated further.
  */
 static bool
 keyboard_execute_compositor_binding(PhocKeyboard *self,
@@ -196,8 +196,8 @@ keyboard_execute_power_key (PhocKeyboard *self, const xkb_keysym_t *keysyms, siz
  * Execute keyboard bindings. These include compositor bindings and user-defined
  * bindings.
  *
- * Returns true if the keysym was handled by a binding and false if the event
- * should be propagated to clients.
+ * Returns `true` if the keysym was handled by a binding and `false` if the event
+ * should be propagated further.
  */
 static bool
 keyboard_execute_binding(PhocKeyboard *self,
@@ -228,8 +228,8 @@ keyboard_execute_binding(PhocKeyboard *self,
 /*
  * Forward keyboard bindings.
  *
- * Returns true if the keysym was handled by forwarding and false if the event
- * should be propagated to clients.
+ * Returns `true` if the keysym was handled by forwarding and `false` if the event
+ * should be propagated further.
  */
 static bool
 keyboard_execute_subscribed_binding(PhocKeyboard *self,
