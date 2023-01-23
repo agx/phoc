@@ -112,7 +112,7 @@ if have_xwayland
   sources += ['xwayland.c',
               'xwayland-surface.c',
               'xwayland-surface.h',
-	     ]
+             ]
   phoc_deps += dependency('xcb')
 endif
 
@@ -127,8 +127,8 @@ phoc_lib = static_library(
 
 libphoc_dep = declare_dependency(
   include_directories: [include_directories('.'),
-			phoc_anim_inc,
-			protocol_inc],
+                        phoc_anim_inc,
+                        protocol_inc],
   link_with: phoc_lib,
   dependencies: phoc_deps,
   sources: libphoc_generated_sources)
