@@ -153,20 +153,6 @@ subdir('data')
 subdir('doc')
 subdir('examples')
 
-summary = [
-        '',
-        '--------------------------',
-        'phoc @0@'.format(meson.project_version()),
-        '',
-        '           xwayland: @0@'.format(have_xwayland),
-        ' wlroots subproject: @0@'.format(not embed_wlroots.disabled() and wlroots_proj.found()),
-        '    wlroots version: @0@'.format(wlroots.version()),
-        '      Documentation: @0@'.format(get_option('gtk_doc')),
-        '--------------------------',
-        ''
-]
-message('\n'.join(summary))
-
 run_data = configuration_data()
 run_data.set('ABS_BUILDDIR', meson.current_build_dir())
 run_data.set('ABS_SRCDIR', meson.current_source_dir())
@@ -175,3 +161,12 @@ configure_file(
   output: 'run',
   configuration: run_data)
 
+summary({
+     'wlroots version': wlroots.version(),
+     'wlroots as submodule': not embed_wlroots.disabled() and wlroots_proj.found(),
+     'XWayland': have_xwayland,
+     'Documentation': get_option('gtk_doc'),
+  },
+  bool_yn: true,
+  section: 'Build',
+)
