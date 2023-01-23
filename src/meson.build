@@ -116,7 +116,7 @@ if have_xwayland
   phoc_deps += dependency('xcb')
 endif
 
-phoc_lib = static_library(
+phoc_lib = both_libraries(
   'phoc',
   sources,
   libphoc_generated_sources,
