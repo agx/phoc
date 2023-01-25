@@ -1288,6 +1288,32 @@ phoc_output_remove_frame_callback  (PhocOutput *self, guint id)
 }
 
 
+/**
+ * phoc_output_remove_frame_callbacks_by_animatable:
+ * @self: The output to remove the frame callbacks from
+ * @animatable: The animatable to remove
+ *
+ * Remove all frame callbacks for the given #PhocAnimatable.
+ */
+void
+phoc_output_remove_frame_callbacks_by_animatable  (PhocOutput *self, PhocAnimatable *animatable)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  for (GSList *elem = priv->frame_callbacks; elem; elem = elem->next) {
+    PhocOutputFrameCallbackInfo *cb_info = elem->data;
+
+    if (cb_info->animatable == animatable) {
+      phoc_output_frame_callback_info_free (cb_info);
+      priv->frame_callbacks = g_slist_delete_link (priv->frame_callbacks, elem);
+    }
+  }
+}
+
+
 bool
 phoc_output_has_frame_callbacks  (PhocOutput *self)
 {
