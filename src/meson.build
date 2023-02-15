@@ -18,6 +18,8 @@ phoc_marshalers = gnome.genmarshal('phoc-marshalers',
 sources = files(
   'cursor.c',
   'cursor.h',
+  'cutouts-overlay.c',
+  'cutouts-overlay.h',
   'desktop.c',
   'desktop.h',
   'event.c',
@@ -99,6 +101,7 @@ phoc_deps = [
   drm,
   gio,
   glesv2,
+  gmobile_dep,
   gnome_desktop,
   gsettings_desktop_schemas_dep,
   math,
@@ -112,11 +115,11 @@ if have_xwayland
   sources += ['xwayland.c',
               'xwayland-surface.c',
               'xwayland-surface.h',
-	     ]
+             ]
   phoc_deps += dependency('xcb')
 endif
 
-phoc_lib = static_library(
+phoc_lib = both_libraries(
   'phoc',
   sources,
   libphoc_generated_sources,
@@ -127,8 +130,8 @@ phoc_lib = static_library(
 
 libphoc_dep = declare_dependency(
   include_directories: [include_directories('.'),
-			phoc_anim_inc,
-			protocol_inc],
+                        phoc_anim_inc,
+                        protocol_inc],
   link_with: phoc_lib,
   dependencies: phoc_deps,
   sources: libphoc_generated_sources)
