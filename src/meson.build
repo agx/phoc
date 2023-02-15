@@ -136,6 +136,14 @@ libphoc_dep = declare_dependency(
   dependencies: phoc_deps,
   sources: libphoc_generated_sources)
 
+libphoc_static_dep = declare_dependency(
+  include_directories: [include_directories('.'),
+                        phoc_anim_inc,
+                        protocol_inc],
+  link_with: phoc_lib.get_static_lib(),
+  dependencies: phoc_deps,
+  sources: libphoc_generated_sources)
+
 if get_option('gtk_doc')
   phoc_gir_extra_args = [
     '--quiet',
@@ -164,6 +172,6 @@ endif
 executable(
   'phoc',
   sources: 'main.c',
-  dependencies: libphoc_dep,
+  dependencies: libphoc_static_dep,
   install: true,
 )
