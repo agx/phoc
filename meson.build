@@ -1,7 +1,7 @@
 project('phoc', 'c',
           version: '0.24.0',
           license: 'GPLv3+',
-    meson_version: '>= 0.54.0',
+    meson_version: '>= 0.56.0',
   default_options: [
     'warning_level=1',
     'buildtype=debugoptimized',
@@ -11,7 +11,7 @@ project('phoc', 'c',
 
 add_project_arguments([
   '-DWLR_USE_UNSTABLE',
-  '-I' + meson.build_root(),
+  '-I' + meson.project_build_root(),
 ], language: 'c')
 
 root_inc = include_directories('.')

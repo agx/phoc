@@ -1,6 +1,6 @@
 fs = import('fs')
 
-wl_protocol_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
+wl_protocol_dir = wayland_protos.get_variable(pkgconfig: 'pkgdatadir')
 
 wayland_scanner = find_program('wayland-scanner')
 
