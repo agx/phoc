@@ -5,6 +5,7 @@ Uploaders: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
 Build-Depends:
  debhelper (>= 12),
  gsettings-desktop-schemas,
+ gi-docgen <!nodoc>,
  libglib2.0-dev,
  libgnome-desktop-3-dev,
  libinput-dev,
@@ -19,10 +20,6 @@ Build-Depends:
  libxcb1-dev,
  libwlroots-dev (>= 0.15.1) <!pkg.phoc.embedwlroots>,
  libwlroots-dev (<< 0.16.0) <!pkg.phoc.embedwlroots>,
- python3-jinja2 <!nodoc>,
- python3-pygments <!nodoc>,
- python3-toml <!nodoc>,
- python3-typogrify <!nodoc>,
 # For wlroots subproject build
  libavformat-dev <pkg.phoc.embedwlroots>,
  libavcodec-dev <pkg.phoc.embedwlroots>,
