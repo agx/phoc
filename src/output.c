@@ -768,11 +768,20 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
 }
 #endif
 
-static void
-phoc_output_layer_handle_surface (PhocOutput          *self,
-                                  PhocLayerSurface    *layer_surface,
-                                  PhocSurfaceIterator  iterator,
-                                  void                *user_data)
+/**
+ * phoc_output_layer_surface_for_each_surface:
+ * @self: the output
+ * @layer: The layer surface to iterate over
+ * @iterator: (scope call): The callback invoked on each iteration
+ * @user_data: Callback user data
+ *
+ * Iterate over a [type@LayerSurface] and it's popups.
+ */
+void
+phoc_output_layer_surface_for_each_surface (PhocOutput          *self,
+                                            PhocLayerSurface    *layer_surface,
+                                            PhocSurfaceIterator  iterator,
+                                            void                *user_data)
 {
   struct wlr_layer_surface_v1 *wlr_layer_surface_v1 = layer_surface->layer_surface;
 
@@ -807,7 +816,7 @@ phoc_output_layer_handle_surface (PhocOutput          *self,
  *
  * Iterate over [type@LayerSurface]s in a layer.
  */
-void
+static void
 phoc_output_layer_for_each_surface (PhocOutput          *self,
                                     enum zwlr_layer_shell_v1_layer layer,
                                     PhocSurfaceIterator  iterator,
@@ -820,14 +829,14 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone <= 0)
-      phoc_output_layer_handle_surface (self, layer_surface, iterator, user_data);
+      phoc_output_layer_surface_for_each_surface (self, layer_surface, iterator, user_data);
   }
   wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
     if (layer_surface->layer != layer)
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone > 0)
-      phoc_output_layer_handle_surface (self, layer_surface, iterator, user_data);
+      phoc_output_layer_surface_for_each_surface (self, layer_surface, iterator, user_data);
   }
 }
 
