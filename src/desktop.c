@@ -123,10 +123,12 @@ static bool view_at(PhocView *view, double lx, double ly,
 	double _sx, _sy;
 	struct wlr_surface *_surface = NULL;
 	switch (view->type) {
-	case PHOC_XDG_SHELL_VIEW:;
-		PhocXdgSurface *xdg_surface = phoc_xdg_surface_from_view(view);
-		_surface = wlr_xdg_surface_surface_at(xdg_surface->xdg_surface,
-			view_sx, view_sy, &_sx, &_sy);
+	case PHOC_XDG_SHELL_VIEW:
+                _surface = phoc_xdg_surface_get_wlr_surface_at (PHOC_XDG_SURFACE (view),
+                                                                view_sx,
+                                                                view_sy,
+                                                                &_sx,
+                                                                &_sy);
 		break;
 #ifdef PHOC_XWAYLAND
 	case PHOC_XWAYLAND_VIEW:

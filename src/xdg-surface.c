@@ -568,6 +568,20 @@ phoc_xdg_surface_from_view (PhocView *view) {
   return PHOC_XDG_SURFACE (view);
 }
 
+
+struct wlr_surface *
+phoc_xdg_surface_get_wlr_surface_at (PhocXdgSurface *self,
+                                     double           sx,
+                                     double           sy,
+                                     double          *sub_x,
+                                     double          *sub_y)
+{
+  g_assert (PHOC_IS_XDG_SURFACE (self));
+
+  return wlr_xdg_surface_surface_at (self->xdg_surface, sx, sy, sub_x, sub_y);
+}
+
+
 void
 phoc_xdg_surface_set_decoration (PhocXdgSurface            *self,
                                  PhocXdgToplevelDecoration *decoration)
