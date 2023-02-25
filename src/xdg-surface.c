@@ -269,211 +269,205 @@ static void get_geometry(PhocView *view, struct wlr_box *geom) {
 }
 
 
-static void get_size(PhocView *view, struct wlr_box *box) {
-	struct wlr_xdg_surface *xdg_surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
+static void
+get_size (PhocView *view, struct wlr_box *box)
+{
+  struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
-	struct wlr_box geo_box;
-	wlr_xdg_surface_get_geometry(xdg_surface, &geo_box);
-	box->width = geo_box.width;
-	box->height = geo_box.height;
+  struct wlr_box geo_box;
+  wlr_xdg_surface_get_geometry (xdg_surface, &geo_box);
+  box->width = geo_box.width;
+  box->height = geo_box.height;
 }
 
 
-static
-void handle_surface_commit (struct wl_listener *listener, void *data)
+static void
+handle_surface_commit (struct wl_listener *listener, void *data)
 {
-  PhocXdgSurface *phoc_surface =
-    wl_container_of(listener, phoc_surface, surface_commit);
-  PhocView *view = PHOC_VIEW (phoc_surface);
-  struct wlr_xdg_surface *surface = phoc_surface->xdg_surface;
+  PhocXdgSurface *self = wl_container_of (listener, self, surface_commit);
+  PhocView *view = PHOC_VIEW (self);
+  struct wlr_xdg_surface *surface = self->xdg_surface;
 
-  if (!surface->mapped) {
+  if (!surface->mapped)
     return;
-  }
 
-  phoc_view_apply_damage(view);
+  phoc_view_apply_damage (view);
 
   struct wlr_box size;
-  get_size(view, &size);
-  view_update_size(view, size.width, size.height);
+  get_size (view, &size);
+  view_update_size (view, size.width, size.height);
 
-  uint32_t pending_serial =
-    phoc_surface->pending_move_resize_configure_serial;
+  uint32_t pending_serial = self->pending_move_resize_configure_serial;
   if (pending_serial > 0 && pending_serial >= surface->current.configure_serial) {
     double x = view->box.x;
     double y = view->box.y;
+
     if (view->pending_move_resize.update_x) {
-      if (view_is_floating (view)) {
-        x = view->pending_move_resize.x + view->pending_move_resize.width -
-          size.width;
-      } else {
+      if (view_is_floating (view))
+        x = view->pending_move_resize.x + view->pending_move_resize.width - size.width;
+      else
         x = view->pending_move_resize.x;
-      }
     }
     if (view->pending_move_resize.update_y) {
-      if (view_is_floating (view)) {
-        y = view->pending_move_resize.y + view->pending_move_resize.height -
-          size.height;
-      } else {
+      if (view_is_floating (view))
+        y = view->pending_move_resize.y + view->pending_move_resize.height - size.height;
+      else
         y = view->pending_move_resize.y;
-      }
     }
-    view_update_position(view, x, y);
+    view_update_position (view, x, y);
 
-    if (pending_serial == surface->current.configure_serial) {
-      phoc_surface->pending_move_resize_configure_serial = 0;
-    }
+    if (pending_serial == surface->current.configure_serial)
+      self->pending_move_resize_configure_serial = 0;
   }
 
   struct wlr_box geometry;
-  phoc_xdg_surface_get_geometry (phoc_surface, &geometry);
-  if (phoc_surface->saved_geometry.x != geometry.x || phoc_surface->saved_geometry.y != geometry.y) {
-    view_update_position(view,
-                         view->box.x + (phoc_surface->saved_geometry.x - geometry.x) * view->scale,
-                         view->box.y + (phoc_surface->saved_geometry.y - geometry.y) * view->scale);
+  phoc_xdg_surface_get_geometry (self, &geometry);
+  if (self->saved_geometry.x != geometry.x || self->saved_geometry.y != geometry.y) {
+    view_update_position (view,
+                          view->box.x + (self->saved_geometry.x - geometry.x) * view->scale,
+                          view->box.y + (self->saved_geometry.y - geometry.y) * view->scale);
   }
-  phoc_surface->saved_geometry = geometry;
+  self->saved_geometry = geometry;
 }
 
 
 static void
 handle_destroy (struct wl_listener *listener, void *data)
 {
-  PhocXdgSurface *phoc_xdg_surface =
-    wl_container_of(listener, phoc_xdg_surface, destroy);
-  g_object_unref (phoc_xdg_surface);
+  PhocXdgSurface *self = wl_container_of (listener, self, destroy);
+  g_object_unref (self);
 }
 
 
-static void handle_map(struct wl_listener *listener, void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, map);
-	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
+static void
+handle_map (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, map);
+  PhocView *view = PHOC_VIEW (self);
+  struct wlr_box box;
 
-	struct wlr_box box;
-	get_size(view, &box);
-	view->box.width = box.width;
-	view->box.height = box.height;
-	phoc_xdg_surface_get_geometry (phoc_xdg_surface, &phoc_xdg_surface->saved_geometry);
+  get_size (view, &box);
+  view->box.width = box.width;
+  view->box.height = box.height;
+  phoc_xdg_surface_get_geometry (self, &self->saved_geometry);
 
-	phoc_view_map(view, phoc_xdg_surface->xdg_surface->surface);
-	view_setup(view);
+  phoc_view_map (view, self->xdg_surface->surface);
+  view_setup (view);
 }
 
 
-static void handle_unmap(struct wl_listener *listener, void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, unmap);
-	view_unmap (PHOC_VIEW (phoc_xdg_surface));
+static void
+handle_unmap (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, unmap);
+  view_unmap (PHOC_VIEW (self));
 }
 
 
-static void handle_request_move(struct wl_listener *listener, void *data) {
-	PhocServer *server = phoc_server_get_default ();
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, request_move);
-	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
-	PhocInput *input = server->input;
-	struct wlr_xdg_toplevel_move_event *e = data;
-	PhocSeat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
+static void
+handle_request_move (struct wl_listener *listener, void *data)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocXdgSurface *self = wl_container_of (listener, self, request_move);
+  PhocInput *input = server->input;
+  struct wlr_xdg_toplevel_move_event *e = data;
+  PhocSeat *seat = phoc_input_seat_from_wlr_seat (input, e->seat->seat);
 
-	// TODO verify event serial
-	if (!seat || phoc_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
-		return;
-	}
-	phoc_seat_begin_move(seat, view);
+  // TODO verify event serial
+  if (!seat || phoc_seat_get_cursor (seat)->mode != PHOC_CURSOR_PASSTHROUGH)
+    return;
+
+  phoc_seat_begin_move (seat, PHOC_VIEW (self));
 }
 
 
-static void handle_request_resize(struct wl_listener *listener, void *data) {
-	PhocServer *server = phoc_server_get_default ();
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, request_resize);
-	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
-	PhocInput *input = server->input;
-	struct wlr_xdg_toplevel_resize_event *e = data;
-	PhocSeat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
+static void
+handle_request_resize (struct wl_listener *listener, void *data)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocXdgSurface *self = wl_container_of (listener, self, request_resize);
+  PhocInput *input = server->input;
+  struct wlr_xdg_toplevel_resize_event *e = data;
+  PhocSeat *seat = phoc_input_seat_from_wlr_seat (input, e->seat->seat);
 
-	// TODO verify event serial
-	g_assert (seat);
-	if (!seat || phoc_seat_get_cursor(seat)->mode != PHOC_CURSOR_PASSTHROUGH) {
-		return;
-	}
-	phoc_seat_begin_resize(seat, view, e->edges);
+  // TODO verify event serial
+  g_assert (seat);
+  if (!seat || phoc_seat_get_cursor (seat)->mode != PHOC_CURSOR_PASSTHROUGH)
+    return;
+
+  phoc_seat_begin_resize (seat, PHOC_VIEW (self), e->edges);
 }
 
 
-static void handle_request_maximize(struct wl_listener *listener, void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, request_maximize);
-	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
-	struct wlr_xdg_surface *surface = phoc_xdg_surface->xdg_surface;
+static void
+handle_request_maximize (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, request_maximize);
+  struct wlr_xdg_surface *surface = self->xdg_surface;
 
-	if (surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		return;
-	}
+  if (surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    return;
 
-	if (surface->toplevel->requested.maximized) {
-		view_maximize(view, NULL);
-	} else {
-		view_restore(view);
-	}
+  if (surface->toplevel->requested.maximized)
+    view_maximize (PHOC_VIEW (self), NULL);
+  else
+    view_restore (PHOC_VIEW (self));
 }
 
 
-static void handle_request_fullscreen(struct wl_listener *listener,
-		void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, request_fullscreen);
-	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
-	struct wlr_xdg_surface *surface = phoc_xdg_surface->xdg_surface;
-	struct wlr_xdg_toplevel_set_fullscreen_event *e = data;
+static void
+handle_request_fullscreen (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, request_fullscreen);
+  struct wlr_xdg_surface *surface = self->xdg_surface;
+  struct wlr_xdg_toplevel_set_fullscreen_event *e = data;
 
-	if (surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		return;
-	}
+  if (surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    return;
 
-	phoc_view_set_fullscreen(view, e->fullscreen, e->output);
+  phoc_view_set_fullscreen (PHOC_VIEW (self), e->fullscreen, e->output);
 }
 
 
-static void handle_set_title(struct wl_listener *listener, void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, set_title);
+static void
+handle_set_title (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, set_title);
 
-	view_set_title(&phoc_xdg_surface->view,
-			phoc_xdg_surface->xdg_surface->toplevel->title);
+  view_set_title (PHOC_VIEW (self), self->xdg_surface->toplevel->title);
 }
 
 
-static void handle_set_app_id(struct wl_listener *listener, void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, set_app_id);
+static void
+handle_set_app_id (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, set_app_id);
 
-	phoc_view_set_app_id(&phoc_xdg_surface->view,
-			     phoc_xdg_surface->xdg_surface->toplevel->app_id);
+  phoc_view_set_app_id (PHOC_VIEW (self), self->xdg_surface->toplevel->app_id);
 }
 
 
-static void handle_set_parent(struct wl_listener *listener, void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, set_parent);
+static void
+handle_set_parent (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, set_parent);
 
-	if (phoc_xdg_surface->xdg_surface->toplevel->parent) {
-		PhocXdgSurface *parent = phoc_xdg_surface->xdg_surface->toplevel->parent->data;
-		view_set_parent(&phoc_xdg_surface->view, &parent->view);
-	} else {
-		view_set_parent(&phoc_xdg_surface->view, NULL);
-	}
+  if (self->xdg_surface->toplevel->parent) {
+    PhocXdgSurface *parent = self->xdg_surface->toplevel->parent->data;
+    view_set_parent (PHOC_VIEW (self), &parent->view);
+  } else {
+    view_set_parent (PHOC_VIEW (self), NULL);
+  }
 }
 
 
-static void handle_new_popup(struct wl_listener *listener, void *data) {
-	PhocXdgSurface *phoc_xdg_surface =
-		wl_container_of(listener, phoc_xdg_surface, new_popup);
-	struct wlr_xdg_popup *wlr_popup = data;
-	phoc_xdg_popup_create (PHOC_VIEW (phoc_xdg_surface), wlr_popup);
+static void
+handle_new_popup (struct wl_listener *listener, void *data)
+{
+  PhocXdgSurface *self = wl_container_of (listener, self, new_popup);
+  struct wlr_xdg_popup *wlr_popup = data;
+
+  phoc_xdg_popup_create (PHOC_VIEW (self), wlr_popup);
 }
 
 
