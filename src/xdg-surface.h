@@ -57,6 +57,4 @@ struct wlr_surface *phoc_xdg_surface_get_wlr_surface_at (PhocXdgSurface *self,
                                                          double          *sub_x,
                                                          double          *sub_y);
 
-PhocXdgSurface *phoc_xdg_surface_from_view(PhocView *view);
-
 G_END_DECLS
