@@ -27,6 +27,39 @@ enum {
 
 static GParamSpec *props[PROP_LAST_PROP];
 
+/**
+ * PhocXdgSurface:
+ *
+ * An xdg surface.
+ *
+ * For how to setup such an object see handle_xdg_shell_surface.
+ */
+typedef struct _PhocXdgSurface {
+  PhocView view;
+
+  struct wlr_xdg_surface *xdg_surface;
+
+  struct wlr_box saved_geometry;
+
+  struct wl_listener destroy;
+  struct wl_listener new_popup;
+  struct wl_listener map;
+  struct wl_listener unmap;
+  struct wl_listener request_move;
+  struct wl_listener request_resize;
+  struct wl_listener request_maximize;
+  struct wl_listener request_fullscreen;
+  struct wl_listener set_title;
+  struct wl_listener set_app_id;
+  struct wl_listener set_parent;
+
+  struct wl_listener surface_commit;
+
+  uint32_t pending_move_resize_configure_serial;
+
+  PhocXdgToplevelDecoration *decoration;
+} PhocXdgSurface;
+
 G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC_TYPE_VIEW)
 
 static void
