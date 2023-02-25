@@ -163,7 +163,7 @@ static void handle_request_move(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, request_move);
-	PhocView *view = &phoc_xdg_surface->view;
+	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
 	PhocInput *input = server->input;
 	struct wlr_xdg_toplevel_move_event *e = data;
 	PhocSeat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
@@ -179,7 +179,7 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 	PhocServer *server = phoc_server_get_default ();
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, request_resize);
-	PhocView *view = &phoc_xdg_surface->view;
+	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
 	PhocInput *input = server->input;
 	struct wlr_xdg_toplevel_resize_event *e = data;
 	PhocSeat *seat = phoc_input_seat_from_wlr_seat(input, e->seat->seat);
@@ -195,7 +195,7 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 static void handle_request_maximize(struct wl_listener *listener, void *data) {
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, request_maximize);
-	PhocView *view = &phoc_xdg_surface->view;
+	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
 	struct wlr_xdg_surface *surface = phoc_xdg_surface->xdg_surface;
 
 	if (surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
@@ -213,7 +213,7 @@ static void handle_request_fullscreen(struct wl_listener *listener,
 		void *data) {
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, request_fullscreen);
-	PhocView *view = &phoc_xdg_surface->view;
+	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
 	struct wlr_xdg_surface *surface = phoc_xdg_surface->xdg_surface;
 	struct wlr_xdg_toplevel_set_fullscreen_event *e = data;
 
@@ -255,7 +255,7 @@ static void handle_set_parent(struct wl_listener *listener, void *data) {
 static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	PhocXdgSurface *phoc_surface =
 		wl_container_of(listener, phoc_surface, surface_commit);
-	PhocView *view = &phoc_surface->view;
+	PhocView *view = PHOC_VIEW (phoc_surface);
 	struct wlr_xdg_surface *surface = phoc_surface->xdg_surface;
 
 	if (!surface->mapped) {
@@ -310,13 +310,13 @@ static void handle_new_popup(struct wl_listener *listener, void *data) {
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, new_popup);
 	struct wlr_xdg_popup *wlr_popup = data;
-	popup_create(&phoc_xdg_surface->view, wlr_popup);
+	popup_create(PHOC_VIEW (phoc_xdg_surface), wlr_popup);
 }
 
 static void handle_map(struct wl_listener *listener, void *data) {
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, map);
-	PhocView *view = &phoc_xdg_surface->view;
+	PhocView *view = PHOC_VIEW (phoc_xdg_surface);
 
 	struct wlr_box box;
 	get_size(view, &box);
@@ -331,7 +331,7 @@ static void handle_map(struct wl_listener *listener, void *data) {
 static void handle_unmap(struct wl_listener *listener, void *data) {
 	PhocXdgSurface *phoc_xdg_surface =
 		wl_container_of(listener, phoc_xdg_surface, unmap);
-	view_unmap(&phoc_xdg_surface->view);
+	view_unmap (PHOC_VIEW (phoc_xdg_surface));
 }
 
 static void handle_destroy(struct wl_listener *listener, void *data) {
@@ -358,28 +358,28 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 	wlr_xdg_surface_ping(surface);
 
 	PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (surface);
-	phoc_surface->view.desktop = desktop;
+	PHOC_VIEW (phoc_surface)->desktop = desktop;
 
 	// catch up with state accumulated before commiting
 	if (surface->toplevel->parent) {
 		PhocXdgSurface *parent = surface->toplevel->parent->data;
-		view_set_parent(&phoc_surface->view, &parent->view);
+		view_set_parent (PHOC_VIEW (phoc_surface), PHOC_VIEW (parent));
 	}
 
 	if (surface->toplevel->requested.maximized) {
-		view_maximize(&phoc_surface->view, NULL);
+		view_maximize (PHOC_VIEW (phoc_surface), NULL);
 	}
-	phoc_view_set_fullscreen(&phoc_surface->view, surface->toplevel->requested.fullscreen,
+	phoc_view_set_fullscreen (PHOC_VIEW (phoc_surface), surface->toplevel->requested.fullscreen,
 		surface->toplevel->requested.fullscreen_output);
-	view_auto_maximize(&phoc_surface->view);
-	view_set_title(&phoc_surface->view, surface->toplevel->title);
+	view_auto_maximize (PHOC_VIEW (phoc_surface));
+	view_set_title (PHOC_VIEW (phoc_surface), surface->toplevel->title);
 
 	// Check for app-id override coming from gtk-shell
 	PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (desktop->gtk_shell, surface->surface);
 	if (gtk_surface && phoc_gtk_surface_get_app_id (gtk_surface)) {
-          phoc_view_set_app_id (&phoc_surface->view, phoc_gtk_surface_get_app_id (gtk_surface));
+          phoc_view_set_app_id (PHOC_VIEW (phoc_surface), phoc_gtk_surface_get_app_id (gtk_surface));
 	} else {
-		phoc_view_set_app_id (&phoc_surface->view, surface->toplevel->app_id);
+		phoc_view_set_app_id (PHOC_VIEW (phoc_surface), surface->toplevel->app_id);
 	}
 
 	phoc_surface->surface_commit.notify = handle_surface_commit;
@@ -421,7 +421,7 @@ static void decoration_handle_destroy(struct wl_listener *listener,
 		wl_container_of(listener, decoration, destroy);
 
 	decoration->surface->xdg_toplevel_decoration = NULL;
-	view_update_decorated(&decoration->surface->view, false);
+	view_update_decorated (PHOC_VIEW (decoration->surface), false);
 	wl_list_remove(&decoration->destroy.link);
 	wl_list_remove(&decoration->request_mode.link);
 	wl_list_remove(&decoration->surface_commit.link);
@@ -448,7 +448,7 @@ static void decoration_handle_surface_commit(struct wl_listener *listener,
 
 	bool decorated = decoration->wlr_decoration->current.mode ==
 		WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
-	view_update_decorated(&decoration->surface->view, decorated);
+	view_update_decorated (PHOC_VIEW (decoration->surface), decorated);
 }
 
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data) {
