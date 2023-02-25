@@ -492,6 +492,22 @@ phoc_xdg_surface_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_xdg_surface_parent_class)->constructed (object);
 
+  // catch up with state accumulated before commiting
+  if (self->xdg_surface->toplevel->parent) {
+    PhocXdgSurface *parent = self->xdg_surface->toplevel->parent->data;
+    view_set_parent (PHOC_VIEW (self), PHOC_VIEW (parent));
+  }
+
+  if (self->xdg_surface->toplevel->requested.maximized)
+    view_maximize (PHOC_VIEW (self), NULL);
+
+  phoc_view_set_fullscreen (PHOC_VIEW (self),
+                            self->xdg_surface->toplevel->requested.fullscreen,
+                            self->xdg_surface->toplevel->requested.fullscreen_output);
+  view_auto_maximize (PHOC_VIEW (self));
+  view_set_title (PHOC_VIEW (self), self->xdg_surface->toplevel->title);
+
+  /* Register all handlers */
   self->surface_commit.notify = handle_surface_commit;
   wl_signal_add (&self->xdg_surface->surface->events.commit, &self->surface_commit);
 

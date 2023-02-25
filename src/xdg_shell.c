@@ -168,20 +168,6 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 
 	PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (surface);
 
-	// catch up with state accumulated before commiting
-	if (surface->toplevel->parent) {
-		PhocXdgSurface *parent = surface->toplevel->parent->data;
-		view_set_parent (PHOC_VIEW (phoc_surface), PHOC_VIEW (parent));
-	}
-
-	if (surface->toplevel->requested.maximized) {
-		view_maximize (PHOC_VIEW (phoc_surface), NULL);
-	}
-	phoc_view_set_fullscreen (PHOC_VIEW (phoc_surface), surface->toplevel->requested.fullscreen,
-		surface->toplevel->requested.fullscreen_output);
-	view_auto_maximize (PHOC_VIEW (phoc_surface));
-	view_set_title (PHOC_VIEW (phoc_surface), surface->toplevel->title);
-
 	// Check for app-id override coming from gtk-shell
 	PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (desktop->gtk_shell, surface->surface);
 	if (gtk_surface && phoc_gtk_surface_get_app_id (gtk_surface)) {
