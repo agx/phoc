@@ -98,116 +98,120 @@ phoc_xdg_surface_from_view (PhocView *view) {
 }
 
 
-static void set_active(PhocView *view, bool active) {
-	struct wlr_xdg_surface *xdg_surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
-	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		wlr_xdg_toplevel_set_activated(xdg_surface, active);
-	}
+static void
+set_active (PhocView *view, bool active)
+{
+  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+
+  if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    wlr_xdg_toplevel_set_activated (xdg_surface, active);
 }
 
-static void apply_size_constraints(struct wlr_xdg_surface *xdg_surface,
-		uint32_t width, uint32_t height, uint32_t *dest_width,
-		uint32_t *dest_height) {
-	*dest_width = width;
-	*dest_height = height;
+static void
+apply_size_constraints (struct wlr_xdg_surface *wlr_xdg_surface,
+                        uint32_t                width,
+                        uint32_t                height,
+                        uint32_t               *dest_width,
+                        uint32_t               *dest_height)
+{
+  *dest_width = width;
+  *dest_height = height;
 
-	struct wlr_xdg_toplevel_state *state = &xdg_surface->toplevel->current;
-	if (width < state->min_width) {
-		*dest_width = state->min_width;
-	} else if (state->max_width > 0 &&
-			width > state->max_width) {
-		*dest_width = state->max_width;
-	}
-	if (height < state->min_height) {
-		*dest_height = state->min_height;
-	} else if (state->max_height > 0 &&
-			height > state->max_height) {
-		*dest_height = state->max_height;
-	}
+  struct wlr_xdg_toplevel_state *state = &wlr_xdg_surface->toplevel->current;
+  if (width < state->min_width) {
+    *dest_width = state->min_width;
+  } else if (state->max_width > 0 && width > state->max_width) {
+    *dest_width = state->max_width;
+  }
+  if (height < state->min_height) {
+    *dest_height = state->min_height;
+  } else if (state->max_height > 0 && height > state->max_height) {
+    *dest_height = state->max_height;
+  }
 }
 
-static void resize(PhocView *view, uint32_t width, uint32_t height) {
-	struct wlr_xdg_surface *xdg_surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
-	if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		return;
-	}
+static void
+resize (PhocView *view, uint32_t width, uint32_t height)
+{
+  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
 
-	uint32_t constrained_width, constrained_height;
-	apply_size_constraints(xdg_surface, width, height, &constrained_width,
-		&constrained_height);
+  if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    return;
 
-	if (xdg_surface->toplevel->scheduled.width == constrained_width &&
-	    xdg_surface->toplevel->scheduled.height == constrained_height)
-		return;
+  uint32_t constrained_width, constrained_height;
+  apply_size_constraints (xdg_surface, width, height, &constrained_width, &constrained_height);
 
-	wlr_xdg_toplevel_set_size(xdg_surface, constrained_width,
-		constrained_height);
+  if (xdg_surface->toplevel->scheduled.width == constrained_width &&
+      xdg_surface->toplevel->scheduled.height == constrained_height)
+    return;
 
-	view_send_frame_done_if_not_visible (view);
+  wlr_xdg_toplevel_set_size (xdg_surface, constrained_width, constrained_height);
+
+  view_send_frame_done_if_not_visible (view);
 }
 
-static void move_resize(PhocView *view, double x, double y,
-		uint32_t width, uint32_t height) {
-	PhocXdgSurface *xdg_surface =
-		phoc_xdg_surface_from_view (view);
-	struct wlr_xdg_surface *wlr_xdg_surface = xdg_surface->xdg_surface;
-	if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		return;
-	}
+static void
+move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height)
+{
+  PhocXdgSurface *xdg_surface = phoc_xdg_surface_from_view (view);
+  struct wlr_xdg_surface *wlr_xdg_surface = xdg_surface->xdg_surface;
 
-	bool update_x = x != view->box.x;
-	bool update_y = y != view->box.y;
+  if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+    return;
+  }
 
-	uint32_t constrained_width, constrained_height;
-	apply_size_constraints(wlr_xdg_surface, width, height, &constrained_width,
-		&constrained_height);
+  bool update_x = x != view->box.x;
+  bool update_y = y != view->box.y;
 
-	if (update_x) {
-		x = x + width - constrained_width;
-	}
-	if (update_y) {
-		y = y + height - constrained_height;
-	}
+  uint32_t constrained_width, constrained_height;
+  apply_size_constraints (wlr_xdg_surface, width, height, &constrained_width, &constrained_height);
 
-	view->pending_move_resize.update_x = update_x;
-	view->pending_move_resize.update_y = update_y;
-	view->pending_move_resize.x = x;
-	view->pending_move_resize.y = y;
-	view->pending_move_resize.width = constrained_width;
-	view->pending_move_resize.height = constrained_height;
+  if (update_x)
+    x = x + width - constrained_width;
 
-	if (wlr_xdg_surface->toplevel->scheduled.width == constrained_width &&
-	    wlr_xdg_surface->toplevel->scheduled.height == constrained_height) {
-		view_update_position(view, x, y);
-	} else {
-		xdg_surface->pending_move_resize_configure_serial =
-			wlr_xdg_toplevel_set_size(wlr_xdg_surface, constrained_width, constrained_height);
-	}
+  if (update_y)
+    y = y + height - constrained_height;
 
-	view_send_frame_done_if_not_visible (view);
+  view->pending_move_resize.update_x = update_x;
+  view->pending_move_resize.update_y = update_y;
+  view->pending_move_resize.x = x;
+  view->pending_move_resize.y = y;
+  view->pending_move_resize.width = constrained_width;
+  view->pending_move_resize.height = constrained_height;
+
+  if (wlr_xdg_surface->toplevel->scheduled.width == constrained_width &&
+      wlr_xdg_surface->toplevel->scheduled.height == constrained_height) {
+    view_update_position (view, x, y);
+  } else {
+    xdg_surface->pending_move_resize_configure_serial =
+      wlr_xdg_toplevel_set_size (wlr_xdg_surface, constrained_width, constrained_height);
+  }
+
+  view_send_frame_done_if_not_visible (view);
 }
 
-static bool want_scaling(PhocView *view) {
-	return true;
+static bool
+want_scaling(PhocView *view)
+{
+  return true;
 }
 
-static bool want_auto_maximize(PhocView *view) {
-	struct wlr_xdg_surface *surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
+static bool
+want_auto_maximize(PhocView *view) {
+  struct wlr_xdg_surface *surface = phoc_xdg_surface_from_view (view)->xdg_surface;
 
-	return surface->toplevel && !surface->toplevel->parent;
+  return surface->toplevel && !surface->toplevel->parent;
 }
 
-static void set_maximized(PhocView *view, bool maximized) {
-	struct wlr_xdg_surface *xdg_surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
-	if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		return;
-	}
+static void
+set_maximized (PhocView *view, bool maximized)
+{
+  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
 
-	wlr_xdg_toplevel_set_maximized(xdg_surface, maximized);
+  if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    return;
+
+  wlr_xdg_toplevel_set_maximized (xdg_surface, maximized);
 }
 
 static void
@@ -235,37 +239,45 @@ set_tiled (PhocView *view, bool tiled)
   }
 }
 
-static void set_fullscreen(PhocView *view, bool fullscreen) {
-	struct wlr_xdg_surface *xdg_surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
-	if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		return;
-	}
+static void
+set_fullscreen (PhocView *view, bool fullscreen)
+{
+  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
 
-	wlr_xdg_toplevel_set_fullscreen(xdg_surface, fullscreen);
+  if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    return;
+
+  wlr_xdg_toplevel_set_fullscreen (xdg_surface, fullscreen);
 }
 
-static void _close(PhocView *view) {
-	struct wlr_xdg_surface *xdg_surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
-	struct wlr_xdg_popup *popup, *tmp = NULL;
-	wl_list_for_each_safe (popup, tmp, &xdg_surface->popups, link) {
-		wlr_xdg_popup_destroy(popup->base);
-	}
-	wlr_xdg_toplevel_send_close(xdg_surface);
+static void
+_close(PhocView *view)
+{
+  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_popup *popup, *tmp = NULL;
 
-	view_send_frame_done_if_not_visible (view);
+  wl_list_for_each_safe (popup, tmp, &xdg_surface->popups, link) {
+    wlr_xdg_popup_destroy (popup->base);
+  }
+  wlr_xdg_toplevel_send_close (xdg_surface);
+
+  view_send_frame_done_if_not_visible (view);
 }
 
-static void for_each_surface(PhocView *view,
-		wlr_surface_iterator_func_t iterator, void *user_data) {
-	struct wlr_xdg_surface *xdg_surface =
-		phoc_xdg_surface_from_view (view)->xdg_surface;
-	wlr_xdg_surface_for_each_surface(xdg_surface, iterator, user_data);
+static void
+for_each_surface (PhocView                    *view,
+                  wlr_surface_iterator_func_t  iterator,
+                  void                        *user_data)
+{
+  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+
+  wlr_xdg_surface_for_each_surface (xdg_surface, iterator, user_data);
 }
 
-static void get_geometry(PhocView *view, struct wlr_box *geom) {
-        phoc_xdg_surface_get_geometry (phoc_xdg_surface_from_view (view), geom);
+static void
+get_geometry (PhocView *view, struct wlr_box *geom)
+{
+  phoc_xdg_surface_get_geometry (phoc_xdg_surface_from_view (view), geom);
 }
 
 
