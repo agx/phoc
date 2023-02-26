@@ -1443,6 +1443,8 @@ phoc_view_init (PhocView *self)
   wl_signal_init(&self->events.destroy);
   wl_list_init(&self->child_surfaces);
   wl_list_init(&self->stack);
+
+  self->desktop = phoc_server_get_default ()->desktop;
 }
 
 

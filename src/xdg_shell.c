@@ -167,7 +167,6 @@ void handle_xdg_shell_surface(struct wl_listener *listener, void *data) {
 	wlr_xdg_surface_ping(surface);
 
 	PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (surface);
-	PHOC_VIEW (phoc_surface)->desktop = desktop;
 
 	// catch up with state accumulated before commiting
 	if (surface->toplevel->parent) {
