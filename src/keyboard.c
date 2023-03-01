@@ -297,6 +297,29 @@ keyboard_keysyms_raw(PhocKeyboard *self,
                                           keycode, layout_index, 0, keysyms);
 }
 
+static struct wlr_input_method_keyboard_grab_v2 *
+phoc_keyboard_get_grab (PhocKeyboard *self)
+{
+  PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
+  PhocSeat *seat = phoc_input_device_get_seat (input_device);
+  struct wlr_input_device *device = phoc_input_device_get_device (input_device);
+  struct wlr_input_method_v2 *input_method = seat->im_relay.input_method;
+  struct wlr_virtual_keyboard_v1 *virtual_keyboard =
+    wlr_input_device_get_virtual_keyboard (device);
+
+  if (!input_method || !input_method->keyboard_grab)
+    return NULL;
+
+  // Do not forward virtual events back to the client that generated them
+  if (virtual_keyboard
+      && wl_resource_get_client (input_method->keyboard_grab->resource)
+      == wl_resource_get_client (virtual_keyboard->resource)) {
+    return NULL;
+  }
+
+  return input_method->keyboard_grab;
+}
+
 static void
 phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_event_keyboard_key *event)
 {
@@ -339,12 +362,23 @@ phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_event_keyboard_key *eve
 
   if (!handled) {
     PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
-    PhocSeat *seat = phoc_input_device_get_seat (input_device);
     struct wlr_input_device *device = phoc_input_device_get_device (input_device);
+    struct wlr_input_method_keyboard_grab_v2 *grab = phoc_keyboard_get_grab (self);
 
-    wlr_seat_set_keyboard(seat->seat, device);
-    wlr_seat_keyboard_notify_key(seat->seat, event->time_msec,
-                                 event->keycode, event->state);
+    if (grab) {
+      wlr_input_method_keyboard_grab_v2_set_keyboard (grab, device->keyboard);
+      wlr_input_method_keyboard_grab_v2_send_key (grab,
+                                                  event->time_msec,
+                                                  event->keycode,
+                                                  event->state);
+    } else {
+      PhocSeat *seat = phoc_input_device_get_seat (input_device);
+      wlr_seat_set_keyboard (seat->seat, device);
+      wlr_seat_keyboard_notify_key (seat->seat,
+                                    event->time_msec,
+                                    event->keycode,
+                                    event->state);
+    }
   }
 }
 
@@ -352,11 +386,17 @@ static void
 phoc_keyboard_handle_modifiers(PhocKeyboard *self)
 {
   PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
-  PhocSeat *seat = phoc_input_device_get_seat (input_device);
   struct wlr_input_device *device = phoc_input_device_get_device (input_device);
+  struct wlr_input_method_keyboard_grab_v2 *grab = phoc_keyboard_get_grab (self);
 
-  wlr_seat_set_keyboard(seat->seat, device);
-  wlr_seat_keyboard_notify_modifiers(seat->seat, &device->keyboard->modifiers);
+  if (grab) {
+    wlr_input_method_keyboard_grab_v2_set_keyboard (grab, device->keyboard);
+    wlr_input_method_keyboard_grab_v2_send_modifiers (grab, &device->keyboard->modifiers);
+  } else {
+    PhocSeat *seat = phoc_input_device_get_seat (input_device);
+    wlr_seat_set_keyboard (seat->seat, device);
+    wlr_seat_keyboard_notify_modifiers (seat->seat, &device->keyboard->modifiers);
+  }
 }
 
 
