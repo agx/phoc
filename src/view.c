@@ -31,6 +31,9 @@ typedef struct _PhocViewPrivate {
 
   float       alpha;
   float       scale;
+  gboolean    decorated;
+  int         titlebar_height;
+  int         border_width;
 
   gulong      notify_scale_to_fit_id;
   gboolean    scale_to_fit;
@@ -102,28 +105,38 @@ view_get_geometry (PhocView *view, struct wlr_box *geom)
 
 
 void view_get_deco_box(PhocView *view, struct wlr_box *box) {
+        PhocViewPrivate *priv;
+
+        g_assert (PHOC_IS_VIEW (view));
+        priv = phoc_view_get_instance_private (view);
+
 	view_get_box(view, box);
-	if (!view->decorated) {
+	if (!priv->decorated) {
 		return;
 	}
 
-	box->x -= view->border_width;
-	box->y -= (view->border_width + view->titlebar_height);
-	box->width += view->border_width * 2;
-	box->height += (view->border_width * 2 + view->titlebar_height);
+	box->x -= priv->border_width;
+	box->y -= (priv->border_width + priv->titlebar_height);
+	box->width += priv->border_width * 2;
+	box->height += (priv->border_width * 2 + priv->titlebar_height);
 }
 
 PhocViewDecoPart view_get_deco_part(PhocView *view, double sx, double sy) {
-	if (!view->decorated) {
+       PhocViewPrivate *priv;
+
+        g_assert (PHOC_IS_VIEW (view));
+        priv = phoc_view_get_instance_private (view);
+
+	if (!priv->decorated) {
 		return PHOC_VIEW_DECO_PART_NONE;
 	}
 
 	int sw = view->wlr_surface->current.width;
 	int sh = view->wlr_surface->current.height;
-	int bw = view->border_width;
-	int titlebar_h = view->titlebar_height;
+	int bw = priv->border_width;
+	int titlebar_h = priv->titlebar_height;
 
-	if (sx > 0 && sx < sw && sy < 0 && sy > -view->titlebar_height) {
+	if (sx > 0 && sx < sw && sy < 0 && sy > -priv->titlebar_height) {
 		return PHOC_VIEW_DECO_PART_TITLEBAR;
 	}
 
@@ -1194,18 +1207,21 @@ void view_update_size(PhocView *view, int width, int height) {
 }
 
 void view_update_decorated(PhocView *view, bool decorated) {
-	if (view->decorated == decorated) {
+	PhocViewPrivate *priv;
+
+	g_assert (PHOC_IS_VIEW (view));
+	priv = phoc_view_get_instance_private (view);
+
+
+	if (priv->decorated == decorated) {
 		return;
 	}
 
 	phoc_view_damage_whole (view);
-	view->decorated = decorated;
 	if (decorated) {
-		view->border_width = 4;
-		view->titlebar_height = 12;
+		phoc_view_set_decoration (view, TRUE, 12, 4);
 	} else {
-		view->border_width = 0;
-		view->titlebar_height = 0;
+		phoc_view_set_decoration (view, FALSE, 0, 0);
 	}
 	phoc_view_damage_whole (view);
 }
@@ -1730,4 +1746,44 @@ phoc_view_get_scale (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->scale;
+}
+
+/**
+ * phoc_view_set_decoration
+ * @self: The view
+ * @decorated: Whether the compositor should draw window decorations
+ * @titlebar_height: The height of the titlebar
+ * @border_width: The border width
+ *
+ * Sets whether the window is decorated. If so also specifies the
+ * decoration.
+ */
+void
+phoc_view_set_decoration (PhocView *self, gboolean decorated, int titlebar_height, int border_width)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  priv->decorated = decorated;
+  if (decorated) {
+    priv->titlebar_height = titlebar_height;
+    priv->border_width = border_width;
+  } else {
+    priv->titlebar_height = 0;
+    priv->border_width = 0;
+  }
+}
+
+
+gboolean
+phoc_view_is_decorated (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->decorated;
 }

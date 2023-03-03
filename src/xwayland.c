@@ -190,12 +190,8 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	phoc_view_map(view, surface->surface);
 
 	if (!surface->override_redirect) {
-		if (surface->decorations == WLR_XWAYLAND_SURFACE_DECORATIONS_ALL) {
-			view->decorated = true;
-			view->border_width = 4;
-			view->titlebar_height = 12;
-		}
-
+		if (surface->decorations == WLR_XWAYLAND_SURFACE_DECORATIONS_ALL)
+                        phoc_view_set_decoration (view, TRUE, 12, 4);
 		view_setup(view);
 	} else {
 		view_initial_focus(view);

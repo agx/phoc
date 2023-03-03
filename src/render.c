@@ -268,7 +268,7 @@ static void render_surface_iterator(PhocOutput *output,
 
 static void render_decorations(PhocOutput *output,
 		PhocView *view, struct render_data *data) {
-	if (!view->decorated || !phoc_view_is_mapped (view)) {
+	if (!phoc_view_is_decorated (view) || !phoc_view_is_mapped (view)) {
 		return;
 	}
 

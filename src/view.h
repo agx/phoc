@@ -50,10 +50,6 @@ struct _PhocView {
 
 	struct wlr_box box;
 
-	bool decorated;
-	int border_width;
-	int titlebar_height;
-
 	PhocViewState state;
 	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;
@@ -221,6 +217,11 @@ void                 phoc_view_set_activation_token (PhocView *self, const char*
 const char          *phoc_view_get_activation_token (PhocView *self);
 float                phoc_view_get_alpha (PhocView *self);
 float                phoc_view_get_scale (PhocView *self);
+void                 phoc_view_set_decoration (PhocView *self,
+                                               gboolean  decorated,
+                                               int       titlebar_height,
+                                               int       border_width);
+gboolean             phoc_view_is_decorated (PhocView *self);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,
