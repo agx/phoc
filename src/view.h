@@ -49,7 +49,6 @@ struct _PhocView {
 	struct wl_list parent_link; // PhocView::stack
 
 	struct wlr_box box;
-	float scale;
 
 	bool decorated;
 	int border_width;
@@ -187,7 +186,7 @@ void phoc_view_map (PhocView *view, struct wlr_surface *surface);
 void view_unmap(PhocView *view);
 void view_arrange_maximized(PhocView *view, struct wlr_output *output);
 void view_arrange_tiled(PhocView *view, struct wlr_output *output);
-void view_get_box(const PhocView *view, struct wlr_box *box);
+void view_get_box(PhocView *view, struct wlr_box *box);
 void view_get_geometry(PhocView *view, struct wlr_box *box);
 void view_move(PhocView *view, double x, double y);
 bool view_move_to_next_output (PhocView *view, enum wlr_direction direction);
@@ -209,7 +208,7 @@ void view_set_title(PhocView *view, const char *title);
 void view_set_parent(PhocView *view, PhocView *parent);
 void phoc_view_set_app_id(PhocView *view, const char *app_id);
 void view_create_foreign_toplevel_handle(PhocView *view);
-void view_get_deco_box(const PhocView *view, struct wlr_box *box);
+void view_get_deco_box(PhocView *view, struct wlr_box *box);
 void view_for_each_surface(PhocView *view,
 	wlr_surface_iterator_func_t iterator, void *user_data);
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
@@ -221,6 +220,7 @@ gboolean             phoc_view_get_scale_to_fit (PhocView *self);
 void                 phoc_view_set_activation_token (PhocView *self, const char* token);
 const char          *phoc_view_get_activation_token (PhocView *self);
 float                phoc_view_get_alpha (PhocView *self);
+float                phoc_view_get_scale (PhocView *self);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,

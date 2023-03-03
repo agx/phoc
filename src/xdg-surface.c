@@ -335,9 +335,11 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   struct wlr_box geometry;
   phoc_xdg_surface_get_geometry (self, &geometry);
   if (self->saved_geometry.x != geometry.x || self->saved_geometry.y != geometry.y) {
-    view_update_position (view,
-                          view->box.x + (self->saved_geometry.x - geometry.x) * view->scale,
-                          view->box.y + (self->saved_geometry.y - geometry.y) * view->scale);
+    float scale = phoc_view_get_scale (view);
+
+    view_update_position(view,
+                         view->box.x + (self->saved_geometry.x - geometry.x) * scale,
+                         view->box.y + (self->saved_geometry.y - geometry.y) * scale);
   }
   self->saved_geometry = geometry;
 }

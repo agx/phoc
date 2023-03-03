@@ -118,8 +118,8 @@ static bool view_at(PhocView *view, double lx, double ly,
 		return false;
 	}
 
-	double view_sx = lx / view->scale - view->box.x;
-	double view_sy = ly / view->scale - view->box.y;
+	double view_sx = lx / phoc_view_get_scale (view) - view->box.x;
+	double view_sy = ly / phoc_view_get_scale (view) - view->box.y;
 
 	double _sx, _sy;
 	struct wlr_surface *_surface = NULL;

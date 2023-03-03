@@ -723,7 +723,7 @@ phoc_output_view_for_each_surface (PhocOutput          *self,
     .width = view->box.width,
     .height = view->box.height,
     .rotation = 0,
-    .scale = view->scale
+    .scale = phoc_view_get_scale (view)
   };
 
   view_for_each_surface (view, phoc_output_for_each_surface_iterator, &data);

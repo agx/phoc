@@ -30,6 +30,7 @@ typedef struct _PhocViewPrivate {
   GSettings  *settings;
 
   float       alpha;
+  float       scale;
 
   gulong      notify_scale_to_fit_id;
   gboolean    scale_to_fit;
@@ -68,29 +69,39 @@ gboolean view_is_fullscreen(const PhocView *view)
 	return view->fullscreen_output != NULL;
 }
 
-void view_get_box(const PhocView *view, struct wlr_box *box) {
+void view_get_box(PhocView *view, struct wlr_box *box) {
+        PhocViewPrivate *priv;
+
+        g_assert (PHOC_IS_VIEW (view));
+        priv = phoc_view_get_instance_private (view);
+
 	box->x = view->box.x;
 	box->y = view->box.y;
-	box->width = view->box.width * view->scale;
-	box->height = view->box.height * view->scale;
+	box->width = view->box.width * priv->scale;
+	box->height = view->box.height * priv->scale;
 }
 
 
 void
 view_get_geometry (PhocView *view, struct wlr_box *geom)
 {
+   PhocViewPrivate *priv;
+
+   g_assert (PHOC_IS_VIEW (view));
+   priv = phoc_view_get_instance_private (view);
+
   if (PHOC_VIEW_GET_CLASS (view)->get_geometry) {
     PHOC_VIEW_GET_CLASS (view)->get_geometry (view, geom);
   } else {
     geom->x = 0;
     geom->y = 0;
-    geom->width = view->box.width * view->scale;
-    geom->height = view->box.height * view->scale;
+    geom->width = view->box.width * priv->scale;
+    geom->height = view->box.height * priv->scale;
   }
 }
 
 
-void view_get_deco_box(const PhocView *view, struct wlr_box *box) {
+void view_get_deco_box(PhocView *view, struct wlr_box *box) {
 	view_get_box(view, box);
 	if (!view->decorated) {
 		return;
@@ -188,14 +199,16 @@ static void view_update_output(PhocView *view,
 static void
 view_save(PhocView *view)
 {
+  PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+
   if (!view_is_floating (view))
     return;
 
   /* backup window state */
   struct wlr_box geom;
   view_get_geometry(view, &geom);
-  view->saved.x = view->box.x + geom.x * view->scale;
-  view->saved.y = view->box.y + geom.y * view->scale;
+  view->saved.x = view->box.x + geom.x * priv->scale;
+  view->saved.y = view->box.y + geom.y * priv->scale;
   view->saved.width = view->box.width;
   view->saved.height = view->box.height;
 }
@@ -312,6 +325,11 @@ static struct wlr_output *view_get_output(PhocView *view) {
 }
 
 void view_arrange_maximized(PhocView *view, struct wlr_output *output) {
+        PhocViewPrivate *priv;
+
+        g_assert (PHOC_IS_VIEW (view));
+        priv = phoc_view_get_instance_private (view);
+
 	if (view_is_fullscreen (view))
 		return;
 
@@ -330,13 +348,18 @@ void view_arrange_maximized(PhocView *view, struct wlr_output *output) {
 
 	struct wlr_box geom;
 	view_get_geometry (view, &geom);
-	view_move_resize (view, (usable_area.x - geom.x) / view->scale, (usable_area.y - geom.y) / view->scale,
-	                  usable_area.width / view->scale, usable_area.height / view->scale);
+	view_move_resize (view, (usable_area.x - geom.x) / priv->scale, (usable_area.y - geom.y) / priv->scale,
+	                  usable_area.width / priv->scale, usable_area.height / priv->scale);
 }
 
 void
 view_arrange_tiled (PhocView *view, struct wlr_output *output)
 {
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+
   if (view_is_fullscreen (view))
     return;
 
@@ -367,8 +390,8 @@ view_arrange_tiled (PhocView *view, struct wlr_output *output)
 
   struct wlr_box geom;
   view_get_geometry (view, &geom);
-  view_move_resize (view, (x - geom.x) / view->scale, (usable_area.y - geom.y) / view->scale,
-                    usable_area.width / 2 / view->scale, usable_area.height / view->scale);
+  view_move_resize (view, (x - geom.x) / priv->scale, (usable_area.y - geom.y) / priv->scale,
+                    usable_area.width / 2 / priv->scale, usable_area.height / priv->scale);
 }
 
 /*
@@ -425,6 +448,11 @@ view_auto_maximize(PhocView *view)
 void
 view_restore(PhocView *view)
 {
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+
   if (!view_is_maximized (view) && !view_is_tiled (view))
     return;
 
@@ -436,7 +464,8 @@ view_restore(PhocView *view)
 
   view->state = PHOC_VIEW_STATE_FLOATING;
   if (!wlr_box_empty(&view->saved)) {
-    view_move_resize (view, view->saved.x - geom.x * view->scale, view->saved.y - geom.y * view->scale,
+    view_move_resize (view, view->saved.x - geom.x * priv->scale,
+                      view->saved.y - geom.y * priv->scale,
                       view->saved.width, view->saved.height);
   } else {
     view_resize (view, 0, 0);
@@ -464,6 +493,11 @@ view_restore(PhocView *view)
  * the @view if @fullscreens is `false`.
  */
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output) {
+        PhocViewPrivate *priv;
+
+        g_assert (PHOC_IS_VIEW (view));
+        priv = phoc_view_get_instance_private (view);
+
 	bool was_fullscreen = view_is_fullscreen (view);
 
 	if (was_fullscreen != fullscreen) {
@@ -525,7 +559,7 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 		} else if (view->state == PHOC_VIEW_STATE_TILED) {
 			view_arrange_tiled (view, phoc_output->wlr_output);
 		} else if (!wlr_box_empty(&view->saved)) {
-			view_move_resize(view, view->saved.x - view_geom.x * view->scale, view->saved.y - view_geom.y * view->scale,
+			view_move_resize(view, view->saved.x - view_geom.x * priv->scale, view->saved.y - view_geom.y * priv->scale,
 			                 view->saved.width, view->saved.height);
 		} else {
 			view_resize (view, 0, 0);
@@ -613,8 +647,12 @@ view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *ou
 }
 
 bool view_center(PhocView *view, struct wlr_output *wlr_output) {
-        PhocServer *server = phoc_server_get_default ();
+	PhocServer *server = phoc_server_get_default ();
 	struct wlr_box box, geom;
+	PhocViewPrivate *priv;
+
+	g_assert (PHOC_IS_VIEW (view));
+	priv = phoc_view_get_instance_private (view);
 	view_get_box(view, &box);
 	view_get_geometry (view, &geom);
 
@@ -647,12 +685,12 @@ bool view_center(PhocView *view, struct wlr_output *wlr_output) {
 	struct wlr_box usable_area = phoc_output->usable_area;
 
 	double view_x = (double)(usable_area.width - box.width) / 2 +
-	  usable_area.x + l_output->x - geom.x * view->scale;
+	  usable_area.x + l_output->x - geom.x * priv->scale;
 	double view_y = (double)(usable_area.height - box.height) / 2 +
-	  usable_area.y + l_output->y - geom.y * view->scale;
+	  usable_area.y + l_output->y - geom.y * priv->scale;
 
 	g_debug ("moving view to %f %f", view_x, view_y);
-	view_move(view, view_x / view->scale, view_y / view->scale);
+	view_move(view, view_x / priv->scale, view_y / priv->scale);
 
 	if (!desktop->maximize) {
 		// TODO: fitting floating oversized windows requires more work (!228)
@@ -888,26 +926,26 @@ view_update_scale (PhocView *view)
     return;
 
   PhocOutput *phoc_output = output->data;
-  float scalex = 1.0f, scaley = 1.0f, oldscale = view->scale;
+  float scalex = 1.0f, scaley = 1.0f, oldscale = priv->scale;
 
   if (priv->scale_to_fit || phoc_desktop_get_scale_to_fit (server->desktop)) {
     scalex = phoc_output->usable_area.width / (float)view->box.width;
     scaley = phoc_output->usable_area.height / (float)view->box.height;
     if (scaley < scalex)
-      view->scale = scaley;
+      priv->scale = scaley;
     else
-      view->scale = scalex;
+      priv->scale = scalex;
 
-    if (view->scale < 0.5f)
-      view->scale = 0.5f;
+    if (priv->scale < 0.5f)
+      priv->scale = 0.5f;
 
-    if (view->scale > 1.0f || view_is_fullscreen (view))
-      view->scale = 1.0f;
+    if (priv->scale > 1.0f || view_is_fullscreen (view))
+      priv->scale = 1.0f;
   } else {
-    view->scale = 1.0;
+    priv->scale = 1.0;
   }
 
-  if (view->scale != oldscale) {
+  if (priv->scale != oldscale) {
     if (view_is_maximized(view)) {
       view_arrange_maximized (view, NULL);
     } else if (view_is_tiled (view)) {
@@ -1442,7 +1480,7 @@ phoc_view_init (PhocView *self)
 
   priv = phoc_view_get_instance_private (self);
   priv->alpha = 1.0f;
-  self->scale = 1.0f;
+  priv->scale = 1.0f;
   self->state = PHOC_VIEW_STATE_FLOATING;
   wl_signal_init(&self->events.unmap);
   wl_signal_init(&self->events.destroy);
@@ -1671,4 +1709,23 @@ phoc_view_get_alpha (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->alpha;
+}
+
+/**
+ * phoc_view_get_scale
+ * @self: The view
+ *
+ * Get the surface's scale
+ *
+ * Returns: The surface scale
+ */
+float
+phoc_view_get_scale (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->scale;
 }

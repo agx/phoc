@@ -1750,8 +1750,8 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
     view->saved.y = cursor->view_y;
     view_restore (view);
   } else {
-    cursor->view_x = view->box.x + geom.x * view->scale;
-    cursor->view_y = view->box.y + geom.y * view->scale;
+    cursor->view_x = view->box.x + geom.x * phoc_view_get_scale (view);
+    cursor->view_y = view->box.y + geom.y * phoc_view_get_scale (view);
   }
   wlr_seat_pointer_clear_focus (seat->seat);
 
@@ -1777,15 +1777,15 @@ phoc_seat_begin_resize (PhocSeat *seat, PhocView *view,
 
   view_get_geometry (view, &geom);
   if (view_is_maximized (view) || view_is_tiled (view)) {
-    view->saved.x = view->box.x + geom.x * view->scale;
-    view->saved.y = view->box.y + geom.y * view->scale;
+    view->saved.x = view->box.x + geom.x * phoc_view_get_scale (view);
+    view->saved.y = view->box.y + geom.y * phoc_view_get_scale (view);
     view->saved.width = view->box.width;
     view->saved.height = view->box.height;
     view_restore (view);
   }
 
-  cursor->view_x = view->box.x + geom.x * view->scale;
-  cursor->view_y = view->box.y + geom.y * view->scale;
+  cursor->view_x = view->box.x + geom.x * phoc_view_get_scale (view);
+  cursor->view_y = view->box.y + geom.y * phoc_view_get_scale (view);
   struct wlr_box box;
 
   view_get_box (view, &box);
