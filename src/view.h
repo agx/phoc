@@ -16,13 +16,6 @@ typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
 
 typedef enum {
-	PHOC_XDG_SHELL_VIEW,
-#ifdef PHOC_XWAYLAND
-	PHOC_XWAYLAND_VIEW,
-#endif
-} PhocViewType;
-
-typedef enum {
   PHOC_VIEW_TILE_NONE  = 0,
   PHOC_VIEW_TILE_LEFT  = 1 << 0,
   PHOC_VIEW_TILE_RIGHT = 1 << 1,
@@ -45,14 +38,12 @@ typedef enum _PhocViewDecoPart {
 
 /**
  * PhocView:
- * @type: The type of the toplevel
  *
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
 struct _PhocView {
 	GObject parent_instance;
 
-	PhocViewType type;
 	PhocDesktop *desktop;
 	struct wl_list link; // PhocDesktop::views
 	struct wl_list parent_link; // PhocView::stack

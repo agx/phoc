@@ -382,7 +382,7 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 	}
 
 #if WLR_HAS_XWAYLAND
-	if (view->type == PHOC_XWAYLAND_VIEW) {
+	if (PHOC_IS_XWAYLAND_SURFACE (view)) {
 		PhocXWaylandSurface *xwayland_surface =
 			phoc_xwayland_surface_from_view(view);
 		if (!wl_list_empty(&xwayland_surface->xwayland_surface->children)) {
@@ -744,7 +744,7 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 		// because all windows are rendered. Here we only want to render
 		// the fullscreen window's children so we have to traverse the tree.
 #ifdef PHOC_XWAYLAND
-		if (view->type == PHOC_XWAYLAND_VIEW) {
+		if (PHOC_IS_XWAYLAND_SURFACE (view)) {
 			PhocXWaylandSurface *xwayland_surface =
 				phoc_xwayland_surface_from_view(view);
 			phoc_output_xwayland_children_for_each_surface(output,

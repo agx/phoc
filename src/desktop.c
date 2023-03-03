@@ -48,6 +48,7 @@
 
 
 #include "xdg-surface.h"
+#include "xwayland-surface.h"
 
 /**
  * PhocDesktop:
@@ -122,22 +123,20 @@ static bool view_at(PhocView *view, double lx, double ly,
 
 	double _sx, _sy;
 	struct wlr_surface *_surface = NULL;
-	switch (view->type) {
-	case PHOC_XDG_SHELL_VIEW:
-                _surface = phoc_xdg_surface_get_wlr_surface_at (PHOC_XDG_SURFACE (view),
-                                                                view_sx,
-                                                                view_sy,
-                                                                &_sx,
-                                                                &_sy);
-		break;
+	if (PHOC_IS_XDG_SURFACE (view)) {
+		_surface = phoc_xdg_surface_get_wlr_surface_at (PHOC_XDG_SURFACE (view),
+								view_sx,
+								view_sy,
+								&_sx,
+								&_sy);
+
 #ifdef PHOC_XWAYLAND
-	case PHOC_XWAYLAND_VIEW:
+	} else if (PHOC_IS_XWAYLAND_SURFACE (view)) {
 		_surface = wlr_surface_surface_at(view->wlr_surface,
 			view_sx, view_sy, &_sx, &_sy);
-		break;
 #endif
-	default:
-		g_error("Invalid view type %d", view->type);
+	} else {
+		g_error ("Invalid view type");
 	}
 	if (_surface != NULL) {
 		if (sx)
@@ -332,7 +331,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
   // XWayland parent relations can be complicated and aren't described by PhocView
   // relationships very well at the moment, so just make all XWayland windows visible
   // when some XWayland window is active for now
-  if (view->type == PHOC_XWAYLAND_VIEW && top_view->type == PHOC_XWAYLAND_VIEW) {
+  if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view)) {
     return true;
   }
 #endif
