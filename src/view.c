@@ -1621,7 +1621,7 @@ phoc_view_set_scale_to_fit (PhocView *self, gboolean enable)
 {
   PhocViewPrivate *priv;
 
-  g_return_if_fail (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
   if (priv->scale_to_fit == enable)
@@ -1644,6 +1644,7 @@ phoc_view_get_scale_to_fit (PhocView *self)
 {
   PhocViewPrivate *priv;
 
+  g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
   return priv->scale_to_fit;
@@ -1663,7 +1664,7 @@ phoc_view_set_activation_token (PhocView *self, const char* token)
 {
   PhocViewPrivate *priv;
 
-  g_return_if_fail (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
   if (g_strcmp0 (priv->activation_token, token) == 0)
@@ -1687,6 +1688,7 @@ phoc_view_get_activation_token (PhocView *self)
 {
   PhocViewPrivate *priv;
 
+  g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
   return priv->activation_token;
