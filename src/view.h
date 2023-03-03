@@ -49,7 +49,6 @@ struct _PhocView {
 	struct wl_list parent_link; // PhocView::stack
 
 	struct wlr_box box;
-	float alpha;
 	float scale;
 
 	bool decorated;
@@ -221,6 +220,7 @@ void                 phoc_view_set_scale_to_fit (PhocView *self, gboolean enable
 gboolean             phoc_view_get_scale_to_fit (PhocView *self);
 void                 phoc_view_set_activation_token (PhocView *self, const char* token);
 const char          *phoc_view_get_activation_token (PhocView *self);
+float                phoc_view_get_alpha (PhocView *self);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,

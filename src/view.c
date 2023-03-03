@@ -29,6 +29,8 @@ typedef struct _PhocViewPrivate {
   char       *app_id;
   GSettings  *settings;
 
+  float       alpha;
+
   gulong      notify_scale_to_fit_id;
   gboolean    scale_to_fit;
   char       *activation_token;
@@ -1436,7 +1438,10 @@ phoc_view_class_init (PhocViewClass *klass)
 static void
 phoc_view_init (PhocView *self)
 {
-  self->alpha = 1.0f;
+  PhocViewPrivate *priv;
+
+  priv = phoc_view_get_instance_private (self);
+  priv->alpha = 1.0f;
   self->scale = 1.0f;
   self->state = PHOC_VIEW_STATE_FLOATING;
   wl_signal_init(&self->events.unmap);
@@ -1647,4 +1652,23 @@ phoc_view_get_activation_token (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->activation_token;
+}
+
+/**
+ * phoc_view_get_alpha
+ * @self: The view
+ *
+ * Get the surface's transparency
+ *
+ * Returns: The surface alpha
+ */
+float
+phoc_view_get_alpha (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->alpha;
 }

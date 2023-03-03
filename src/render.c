@@ -288,7 +288,7 @@ static void render_decorations(PhocOutput *output,
 	float matrix[9];
 	wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL,
 		0, output->wlr_output->transform_matrix);
-	float color[] = { 0.2, 0.2, 0.2, view->alpha };
+	float color[] = { 0.2, 0.2, 0.2, phoc_view_get_alpha (view) };
 
 	int nrects;
 	pixman_box32_t *rects =
@@ -310,7 +310,7 @@ render_view (PhocOutput *output, PhocView *view, struct render_data *data)
   if (view_is_fullscreen (view) && view->fullscreen_output != output)
     return;
 
-  data->alpha = view->alpha;
+  data->alpha = phoc_view_get_alpha (view);
   if (!view_is_fullscreen (view))
     render_decorations(output, view, data);
 
