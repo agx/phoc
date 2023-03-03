@@ -50,7 +50,6 @@ struct _PhocView {
 
 	struct wlr_box box;
 
-	PhocViewState state;
 	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;
 	struct wlr_box saved;
@@ -170,9 +169,9 @@ void view_appear_activated(PhocView *view, bool activated);
 void phoc_view_activate (PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
 void phoc_view_damage_whole (PhocView *view);
-gboolean view_is_floating(const PhocView *view);
-gboolean view_is_maximized(const PhocView *view);
-gboolean view_is_tiled(const PhocView *view);
+gboolean view_is_floating(PhocView *view);
+gboolean view_is_maximized(PhocView *view);
+gboolean view_is_tiled(PhocView *view);
 gboolean view_is_fullscreen(const PhocView *view);
 void view_update_position(PhocView *view, int x, int y);
 void view_update_size(PhocView *view, int width, int height);

@@ -25,19 +25,20 @@ enum {
 static GParamSpec *props[PROP_LAST_PROP];
 
 typedef struct _PhocViewPrivate {
-  char       *title;
-  char       *app_id;
-  GSettings  *settings;
+  char          *title;
+  char          *app_id;
+  GSettings     *settings;
 
-  float       alpha;
-  float       scale;
-  gboolean    decorated;
-  int         titlebar_height;
-  int         border_width;
+  float          alpha;
+  float          scale;
+  gboolean       decorated;
+  int            titlebar_height;
+  int            border_width;
+  PhocViewState  state;
 
-  gulong      notify_scale_to_fit_id;
-  gboolean    scale_to_fit;
-  char       *activation_token;
+  gulong         notify_scale_to_fit_id;
+  gboolean       scale_to_fit;
+  char          *activation_token;
 } PhocViewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
@@ -53,21 +54,36 @@ typedef struct _PhocSubsurface {
 
 
 gboolean
-view_is_floating (const PhocView *view)
+view_is_floating (PhocView *view)
 {
-  return view->state == PHOC_VIEW_STATE_FLOATING && !view_is_fullscreen (view);
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+
+  return priv->state == PHOC_VIEW_STATE_FLOATING && !view_is_fullscreen (view);
 }
 
 gboolean
-view_is_maximized (const PhocView *view)
+view_is_maximized (PhocView *view)
 {
-  return view->state == PHOC_VIEW_STATE_MAXIMIZED && !view_is_fullscreen (view);
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+
+  return priv->state == PHOC_VIEW_STATE_MAXIMIZED && !view_is_fullscreen (view);
 }
 
 gboolean
-view_is_tiled (const PhocView *view)
+view_is_tiled (PhocView *view)
 {
-  return view->state == PHOC_VIEW_STATE_TILED && !view_is_fullscreen (view);
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+
+  return priv->state == PHOC_VIEW_STATE_TILED && !view_is_fullscreen (view);
 }
 
 gboolean
@@ -426,6 +442,11 @@ want_auto_maximize(PhocView *view) {
 }
 
 void view_maximize(PhocView *view, struct wlr_output *output) {
+        PhocViewPrivate *priv;
+
+        g_assert (PHOC_IS_VIEW (view));
+        priv = phoc_view_get_instance_private (view);
+
 	if (view_is_maximized (view) && view_get_output(view) == output) {
 		return;
 	}
@@ -448,7 +469,7 @@ void view_maximize(PhocView *view, struct wlr_output *output) {
 
 	view_save (view);
 
-	view->state = PHOC_VIEW_STATE_MAXIMIZED;
+	priv->state = PHOC_VIEW_STATE_MAXIMIZED;
 	view_arrange_maximized(view, output);
 }
 
@@ -479,7 +500,7 @@ view_restore(PhocView *view)
   struct wlr_box geom;
   view_get_geometry(view, &geom);
 
-  view->state = PHOC_VIEW_STATE_FLOATING;
+  priv->state = PHOC_VIEW_STATE_FLOATING;
   if (!wlr_box_empty(&view->saved)) {
     view_move_resize (view, view->saved.x - geom.x * priv->scale,
                       view->saved.y - geom.y * priv->scale,
@@ -571,9 +592,9 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 
 		phoc_output_damage_whole(phoc_output);
 
-		if (view->state == PHOC_VIEW_STATE_MAXIMIZED) {
+		if (priv->state == PHOC_VIEW_STATE_MAXIMIZED) {
 			view_arrange_maximized (view, phoc_output->wlr_output);
-		} else if (view->state == PHOC_VIEW_STATE_TILED) {
+		} else if (priv->state == PHOC_VIEW_STATE_TILED) {
 			view_arrange_tiled (view, phoc_output->wlr_output);
 		} else if (!wlr_box_empty(&view->saved)) {
 			view_move_resize(view, view->saved.x - view_geom.x * priv->scale, view->saved.y - view_geom.y * priv->scale,
@@ -644,12 +665,17 @@ view_move_to_next_output (PhocView *view, enum wlr_direction direction)
 void
 view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *output)
 {
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+
   if (view_is_fullscreen (view))
     return;
 
   view_save (view);
 
-  view->state = PHOC_VIEW_STATE_TILED;
+  priv->state = PHOC_VIEW_STATE_TILED;
   view->tile_direction = direction;
 
   if (PHOC_VIEW_GET_CLASS (view)->set_tiled) {
@@ -1501,7 +1527,7 @@ phoc_view_init (PhocView *self)
   priv = phoc_view_get_instance_private (self);
   priv->alpha = 1.0f;
   priv->scale = 1.0f;
-  self->state = PHOC_VIEW_STATE_FLOATING;
+  priv->state = PHOC_VIEW_STATE_FLOATING;
   wl_signal_init(&self->events.unmap);
   wl_signal_init(&self->events.destroy);
   wl_list_init(&self->child_surfaces);
