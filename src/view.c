@@ -52,24 +52,28 @@ typedef struct _PhocSubsurface {
 } PhocSubsurface;
 
 
-gboolean view_is_floating(const PhocView *view)
+gboolean
+view_is_floating (const PhocView *view)
 {
-	return view->state == PHOC_VIEW_STATE_FLOATING && !view_is_fullscreen (view);
+  return view->state == PHOC_VIEW_STATE_FLOATING && !view_is_fullscreen (view);
 }
 
-gboolean view_is_maximized(const PhocView *view)
+gboolean
+view_is_maximized (const PhocView *view)
 {
-	return view->state == PHOC_VIEW_STATE_MAXIMIZED && !view_is_fullscreen (view);
+  return view->state == PHOC_VIEW_STATE_MAXIMIZED && !view_is_fullscreen (view);
 }
 
-gboolean view_is_tiled(const PhocView *view)
+gboolean
+view_is_tiled (const PhocView *view)
 {
-	return view->state == PHOC_VIEW_STATE_TILED && !view_is_fullscreen (view);
+  return view->state == PHOC_VIEW_STATE_TILED && !view_is_fullscreen (view);
 }
 
-gboolean view_is_fullscreen(const PhocView *view)
+gboolean
+view_is_fullscreen (const PhocView *view)
 {
-	return view->fullscreen_output != NULL;
+  return view->fullscreen_output != NULL;
 }
 
 void view_get_box(PhocView *view, struct wlr_box *box) {
