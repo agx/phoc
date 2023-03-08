@@ -663,7 +663,7 @@ phoc_cursor_update_position (PhocCursor *self,
     view = phoc_seat_get_focus (seat);
     if (view != NULL) {
       struct wlr_box geom;
-      view_get_geometry (view, &geom);
+      phoc_view_get_geometry (view, &geom);
       double dx = self->cursor->x - self->offs_x;
       double dy = self->cursor->y - self->offs_y;
 
@@ -691,7 +691,7 @@ phoc_cursor_update_position (PhocCursor *self,
     view = phoc_seat_get_focus (seat);
     if (view != NULL) {
       struct wlr_box geom;
-      view_get_geometry (view, &geom);
+      phoc_view_get_geometry (view, &geom);
       double dx = self->cursor->x - self->offs_x;
       double dy = self->cursor->y - self->offs_y;
       double x = view->box.x;
