@@ -53,22 +53,22 @@ typedef struct _PhocXWaylandSurface {
 
 G_DEFINE_TYPE (PhocXWaylandSurface, phoc_xwayland_surface, PHOC_TYPE_VIEW)
 
-static
-bool is_moveable(PhocView *view)
+static bool
+is_moveable (PhocView *view)
 {
-	PhocServer *server = phoc_server_get_default ();
-	struct wlr_xwayland_surface *xwayland_surface =
-		phoc_xwayland_surface_from_view (view)->xwayland_surface;
+  PhocServer *server = phoc_server_get_default ();
+  struct wlr_xwayland_surface *xwayland_surface =
+    phoc_xwayland_surface_from_view (view)->xwayland_surface;
 
-	if (xwayland_surface->window_type == NULL)
-		return true;
+  if (xwayland_surface->window_type == NULL)
+    return true;
 
-	for (guint i = 0; i < xwayland_surface->window_type_len; i++)
-		if (xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_NORMAL] &&
-		    xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_DIALOG])
-			return false;
+  for (guint i = 0; i < xwayland_surface->window_type_len; i++)
+    if (xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_NORMAL] &&
+        xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_DIALOG])
+      return false;
 
-	return true;
+  return true;
 }
 
 static void set_active(PhocView *view, bool active) {
