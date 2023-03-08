@@ -189,16 +189,24 @@ static bool want_auto_maximize(PhocView *view) {
 	return is_moveable(view);
 }
 
-static void set_maximized(PhocView *view, bool maximized) {
-	struct wlr_xwayland_surface *xwayland_surface =
-		phoc_xwayland_surface_from_view(view)->xwayland_surface;
-	wlr_xwayland_surface_set_maximized(xwayland_surface, maximized);
+static void
+set_maximized (PhocView *view, bool maximized) {
+  struct wlr_xwayland_surface *xwayland_surface;
+
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
+  wlr_xwayland_surface_set_maximized(xwayland_surface, maximized);
 }
 
-static void set_fullscreen(PhocView *view, bool fullscreen) {
-	struct wlr_xwayland_surface *xwayland_surface =
-		phoc_xwayland_surface_from_view(view)->xwayland_surface;
-	wlr_xwayland_surface_set_fullscreen(xwayland_surface, fullscreen);
+static void
+set_fullscreen(PhocView *view, bool fullscreen)
+{
+  struct wlr_xwayland_surface *xwayland_surface;
+
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
+  wlr_xwayland_surface_set_fullscreen (xwayland_surface, fullscreen);
 }
 
 static void
