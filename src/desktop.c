@@ -536,6 +536,22 @@ void handle_xwayland_remove_startup_id(struct wl_listener *listener, void *data)
                                         ev->id,
                                         PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
 }
+
+
+static void
+handle_xwayland_surface (struct wl_listener *listener, void *data)
+{
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xwayland_surface);
+
+  struct wlr_xwayland_surface *surface = data;
+  g_debug ("new xwayland surface: title=%s, class=%s, instance=%s",
+           surface->title, surface->class, surface->instance);
+  wlr_xwayland_surface_ping(surface);
+
+  /* Ref is dropped on surface destroy */
+  phoc_xwayland_surface_new (surface);
+}
+
 #endif /* PHOC_XWAYLAND */
 
 static void
