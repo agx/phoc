@@ -185,7 +185,7 @@ void view_get_box(PhocView *view, struct wlr_box *box);
 void view_get_geometry(PhocView *view, struct wlr_box *box);
 void view_move(PhocView *view, double x, double y);
 bool view_move_to_next_output (PhocView *view, enum wlr_direction direction);
-void view_resize(PhocView *view, uint32_t width, uint32_t height);
+void view_resize(PhocView *self, uint32_t width, uint32_t height);
 void view_move_resize(PhocView *view, double x, double y,
 	uint32_t width, uint32_t height);
 void view_auto_maximize(PhocView *view);

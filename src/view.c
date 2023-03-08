@@ -309,11 +309,11 @@ phoc_view_activate (PhocView *self, bool activate)
 }
 
 void
-view_resize (PhocView *view, uint32_t width, uint32_t height)
+view_resize (PhocView *self, uint32_t width, uint32_t height)
 {
-  g_assert (PHOC_IS_VIEW (view));
+  g_assert (PHOC_IS_VIEW (self));
 
-  PHOC_VIEW_GET_CLASS (view)->resize(view, width, height);
+  PHOC_VIEW_GET_CLASS (self)->resize(self, width, height);
 }
 
 void view_move_resize(PhocView *view, double x, double y,
