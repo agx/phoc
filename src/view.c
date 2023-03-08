@@ -307,13 +307,15 @@ phoc_view_activate (PhocView *self, bool activate)
   }
 }
 
-void view_resize(PhocView *view, uint32_t width, uint32_t height) {
-	struct wlr_box before;
-	view_get_box(view, &before);
+void
+view_resize (PhocView *view, uint32_t width, uint32_t height)
+{
+  struct wlr_box before;
+  view_get_box (view, &before);
 
-	if (PHOC_VIEW_GET_CLASS (view)->resize) {
-		PHOC_VIEW_GET_CLASS (view)->resize(view, width, height);
-	}
+  if (PHOC_VIEW_GET_CLASS (view)->resize) {
+    PHOC_VIEW_GET_CLASS (view)->resize(view, width, height);
+  }
 }
 
 void view_move_resize(PhocView *view, double x, double y,
