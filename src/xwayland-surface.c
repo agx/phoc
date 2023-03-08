@@ -57,8 +57,10 @@ static bool
 is_moveable (PhocView *view)
 {
   PhocServer *server = phoc_server_get_default ();
-  struct wlr_xwayland_surface *xwayland_surface =
-    phoc_xwayland_surface_from_view (view)->xwayland_surface;
+  struct wlr_xwayland_surface *xwayland_surface;
+
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
 
   if (xwayland_surface->window_type == NULL)
     return true;
