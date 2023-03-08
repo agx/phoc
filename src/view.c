@@ -308,8 +308,8 @@ phoc_view_activate (PhocView *self, bool activate)
   }
 }
 
-void
-view_resize (PhocView *self, uint32_t width, uint32_t height)
+static void
+phoc_view_resize (PhocView *self, uint32_t width, uint32_t height)
 {
   g_assert (PHOC_IS_VIEW (self));
 
@@ -327,7 +327,7 @@ void view_move_resize(PhocView *view, double x, double y,
 	view->pending_move_resize.update_y = false;
 
 	if (!update_x && !update_y) {
-		view_resize(view, width, height);
+		phoc_view_resize (view, width, height);
 		return;
 	}
 
@@ -348,7 +348,7 @@ void view_move_resize(PhocView *view, double x, double y,
 	view->pending_move_resize.width = width;
 	view->pending_move_resize.height = height;
 
-	view_resize(view, width, height);
+	phoc_view_resize (view, width, height);
 }
 
 static struct wlr_output *view_get_output(PhocView *view) {
@@ -513,7 +513,7 @@ view_restore(PhocView *view)
                       view->saved.y - geom.y * priv->scale,
                       view->saved.width, view->saved.height);
   } else {
-    view_resize (view, 0, 0);
+    phoc_view_resize (view, 0, 0);
     view->pending_centering = true;
   }
 
@@ -607,7 +607,7 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 			view_move_resize(view, view->saved.x - view_geom.x * priv->scale, view->saved.y - view_geom.y * priv->scale,
 			                 view->saved.width, view->saved.height);
 		} else {
-			view_resize (view, 0, 0);
+			phoc_view_resize (view, 0, 0);
 			view->pending_centering = true;
 		}
 
@@ -748,7 +748,7 @@ bool view_center(PhocView *view, struct wlr_output *wlr_output) {
 	}
 
 	if (view->box.width > phoc_output->usable_area.width || view->box.height > phoc_output->usable_area.height) {
-		view_resize (view,
+		phoc_view_resize (view,
 		             (view->box.width > phoc_output->usable_area.width) ? phoc_output->usable_area.width : view->box.width,
 		             (view->box.height > phoc_output->usable_area.height) ? phoc_output->usable_area.height : view->box.height);
 	}
