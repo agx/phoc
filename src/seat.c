@@ -1502,9 +1502,9 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
 
 #ifdef PHOC_XWAYLAND
   if (view && PHOC_IS_XWAYLAND_SURFACE (view)) {
-    PhocXWaylandSurface *xwayland_surface =
-      phoc_xwayland_surface_from_view (view);
-    if (xwayland_surface->xwayland_surface->override_redirect) {
+    struct wlr_xwayland_surface *xsurface =
+      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
+    if (xsurface->override_redirect) {
       unfullscreen = false;
     }
   }
@@ -1535,10 +1535,9 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
 
 #ifdef PHOC_XWAYLAND
   if (view && PHOC_IS_XWAYLAND_SURFACE (view)) {
-    PhocXWaylandSurface *xwayland_surface =
-      phoc_xwayland_surface_from_view (view);
-    if (!wlr_xwayland_or_surface_wants_focus (
-          xwayland_surface->xwayland_surface)) {
+    struct wlr_xwayland_surface *xsurface =
+      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
+    if (!wlr_xwayland_or_surface_wants_focus (xsurface)) {
       return;
     }
   }

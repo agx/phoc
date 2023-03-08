@@ -534,3 +534,23 @@ phoc_xwayland_surface_from_view (PhocView *view)
   g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
   return PHOC_XWAYLAND_SURFACE (view);
 }
+
+
+/**
+ * phoc_xwayland_surface_get_wlr_surface:
+ * @self: The PhocXWaylandSurface
+ *
+ * Returns the `wlr_xwayland_surface` associated with this
+ * [type@Phoc.XWaylandSurface].
+ *
+ * TODO: This is a temporary measure to not expose the full [type@PhocXWaylandSurface].
+ *   We'll replace this with more specific functions later on.
+ *
+ * Returns: (transfer none): Returns the `wlr_xwayland_surface`.
+ */
+struct wlr_xwayland_surface *
+phoc_xwayland_surface_get_wlr_surface (PhocXWaylandSurface *self)
+{
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (self));
+  return self->xwayland_surface;
+}
