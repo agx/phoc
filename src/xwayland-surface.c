@@ -147,8 +147,10 @@ resize (PhocView *view, uint32_t width, uint32_t height)
 static void
 move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height)
 {
-  struct wlr_xwayland_surface *xwayland_surface =
-    phoc_xwayland_surface_from_view(view)->xwayland_surface;
+  struct wlr_xwayland_surface *xwayland_surface;
+
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
 
   if (!is_moveable (view)) {
     x = view->box.x;
