@@ -220,14 +220,18 @@ static void view_update_output(PhocView *view,
 		bool intersects = wlr_output_layout_intersects(desktop->layout,
 			output->wlr_output, &box);
 		if (intersected && !intersects) {
-			view_for_each_surface(view, surface_send_leave_iterator, output->wlr_output);
+			phoc_view_for_each_surface (view,
+						    surface_send_leave_iterator,
+						    output->wlr_output);
 			if (view->toplevel_handle) {
 				wlr_foreign_toplevel_handle_v1_output_leave(
 					view->toplevel_handle, output->wlr_output);
 			}
 		}
 		if (!intersected && intersects) {
-			view_for_each_surface(view, surface_send_enter_iterator, output->wlr_output);
+			phoc_view_for_each_surface (view,
+						    surface_send_enter_iterator,
+						    output->wlr_output);
 			if (view->toplevel_handle) {
 				wlr_foreign_toplevel_handle_v1_output_enter(
 					view->toplevel_handle, output->wlr_output);
@@ -1201,14 +1205,6 @@ phoc_view_damage_whole (PhocView *view)
     phoc_output_damage_from_view (output, view, true);
 }
 
-void view_for_each_surface(PhocView *view,
-		wlr_surface_iterator_func_t iterator, void *user_data) {
-	if (PHOC_VIEW_GET_CLASS (view)->for_each_surface) {
-		PHOC_VIEW_GET_CLASS (view)->for_each_surface(view, iterator, user_data);
-	} else if (view->wlr_surface) {
-		wlr_surface_for_each_surface(view->wlr_surface, iterator, user_data);
-	}
-}
 
 void view_update_position(PhocView *view, int x, int y) {
 	if (view->box.x == x && view->box.y == y) {
@@ -1498,13 +1494,28 @@ phoc_view_finalize (GObject *object)
 
 
 static void
+phoc_view_for_each_surface_default (PhocView                    *self,
+                                    wlr_surface_iterator_func_t  iterator,
+                                    gpointer                     user_data)
+{
+  if (self->wlr_surface == NULL)
+    return;
+
+  wlr_surface_for_each_surface (self->wlr_surface, iterator, user_data);
+}
+
+
+static void
 phoc_view_class_init (PhocViewClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
+  PhocViewClass *view_class = PHOC_VIEW_CLASS (klass);
 
   object_class->finalize = phoc_view_finalize;
   object_class->get_property = phoc_view_get_property;
   object_class->set_property = phoc_view_set_property;
+
+  view_class->for_each_surface = phoc_view_for_each_surface_default;
 
   /**
    * PhocView:scale-to-fit:
@@ -1851,4 +1862,15 @@ phoc_view_is_decorated (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->decorated;
+}
+
+
+void
+phoc_view_for_each_surface (PhocView                    *self,
+                            wlr_surface_iterator_func_t  iterator,
+                            void                        *user_data)
+{
+  g_assert (PHOC_IS_VIEW (self));
+
+  PHOC_VIEW_GET_CLASS (self)->for_each_surface (self, iterator, user_data);
 }
