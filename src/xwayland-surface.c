@@ -194,16 +194,22 @@ static bool want_scaling(PhocView *view) {
 	return false;
 }
 
-static bool want_auto_maximize(PhocView *view) {
-	struct wlr_xwayland_surface *surface =
-		phoc_xwayland_surface_from_view(view)->xwayland_surface;
+static bool
+want_auto_maximize (PhocView *view)
+{
+  struct wlr_xwayland_surface *xwayland_surface;
 
-	if (surface->size_hints &&
-	    (surface->size_hints->min_width > 0 && surface->size_hints->min_width == surface->size_hints->max_width) &&
-	    (surface->size_hints->min_height > 0 && surface->size_hints->min_height == surface->size_hints->max_height))
-		return false;
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
 
-	return is_moveable(view);
+  if (xwayland_surface->size_hints &&
+      (xwayland_surface->size_hints->min_width > 0 &&
+       xwayland_surface->size_hints->min_width == xwayland_surface->size_hints->max_width) &&
+      (xwayland_surface->size_hints->min_height > 0 &&
+       xwayland_surface->size_hints->min_height == xwayland_surface->size_hints->max_height))
+    return false;
+
+  return is_moveable (view);
 }
 
 static void
