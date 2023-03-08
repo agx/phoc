@@ -310,9 +310,6 @@ phoc_view_activate (PhocView *self, bool activate)
 void
 view_resize (PhocView *view, uint32_t width, uint32_t height)
 {
-  struct wlr_box before;
-  view_get_box (view, &before);
-
   if (PHOC_VIEW_GET_CLASS (view)->resize) {
     PHOC_VIEW_GET_CLASS (view)->resize(view, width, height);
   }
