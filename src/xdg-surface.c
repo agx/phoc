@@ -267,7 +267,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
    */
   props[PROP_WLR_XDG_SURFACE] =
     g_param_spec_pointer ("wlr-xdg-surface", "", "",
-			  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 
