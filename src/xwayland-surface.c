@@ -144,39 +144,39 @@ resize (PhocView *view, uint32_t width, uint32_t height)
                                  xwayland_surface->y, constrained_width, constrained_height);
 }
 
-static void move_resize(PhocView *view, double x, double y,
-		uint32_t width, uint32_t height) {
-	struct wlr_xwayland_surface *xwayland_surface =
-		phoc_xwayland_surface_from_view(view)->xwayland_surface;
+static void
+move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height)
+{
+  struct wlr_xwayland_surface *xwayland_surface =
+    phoc_xwayland_surface_from_view(view)->xwayland_surface;
 
-	if (!is_moveable (view)) {
-		x = view->box.x;
-		y = view->box.y;
-	}
+  if (!is_moveable (view)) {
+    x = view->box.x;
+    y = view->box.y;
+  }
 
-	bool update_x = x != view->box.x;
-	bool update_y = y != view->box.y;
+  bool update_x = x != view->box.x;
+  bool update_y = y != view->box.y;
 
-	uint32_t constrained_width, constrained_height;
-	apply_size_constraints(view, xwayland_surface, width, height, &constrained_width,
-		&constrained_height);
+  uint32_t constrained_width, constrained_height;
+  apply_size_constraints(view, xwayland_surface, width, height, &constrained_width,
+                         &constrained_height);
 
-	if (update_x) {
-		x = x + width - constrained_width;
-	}
-	if (update_y) {
-		y = y + height - constrained_height;
-	}
+  if (update_x) {
+    x = x + width - constrained_width;
+  }
+  if (update_y) {
+    y = y + height - constrained_height;
+  }
 
-	view->pending_move_resize.update_x = update_x;
-	view->pending_move_resize.update_y = update_y;
-	view->pending_move_resize.x = x;
-	view->pending_move_resize.y = y;
-	view->pending_move_resize.width = constrained_width;
-	view->pending_move_resize.height = constrained_height;
+  view->pending_move_resize.update_x = update_x;
+  view->pending_move_resize.update_y = update_y;
+  view->pending_move_resize.x = x;
+  view->pending_move_resize.y = y;
+  view->pending_move_resize.width = constrained_width;
+  view->pending_move_resize.height = constrained_height;
 
-	wlr_xwayland_surface_configure(xwayland_surface, x, y, constrained_width,
-		constrained_height);
+  wlr_xwayland_surface_configure(xwayland_surface, x, y, constrained_width, constrained_height);
 }
 
 static void
