@@ -85,16 +85,20 @@ set_active (PhocView *view, bool active)
   wlr_xwayland_surface_restack (xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
 }
 
-static void move(PhocView *view, double x, double y) {
-	struct wlr_xwayland_surface *xwayland_surface =
-		phoc_xwayland_surface_from_view(view)->xwayland_surface;
+static void
+move (PhocView *view, double x, double y)
+{
+  struct wlr_xwayland_surface *xwayland_surface;
 
-	if (!is_moveable (view))
-		return;
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
 
-	view_update_position(view, x, y);
-	wlr_xwayland_surface_configure(xwayland_surface, x, y,
-		xwayland_surface->width, xwayland_surface->height);
+  if (!is_moveable (view))
+    return;
+
+  view_update_position(view, x, y);
+  wlr_xwayland_surface_configure(xwayland_surface, x, y,
+                                 xwayland_surface->width, xwayland_surface->height);
 }
 
 static void apply_size_constraints(PhocView *view,
