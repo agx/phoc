@@ -164,12 +164,14 @@ static void move_resize(PhocView *view, double x, double y,
 		constrained_height);
 }
 
-static void _close(PhocView *view) {
-	struct wlr_xwayland_surface *xwayland_surface =
-		phoc_xwayland_surface_from_view(view)->xwayland_surface;
-	wlr_xwayland_surface_close(xwayland_surface);
-}
+static void
+_close(PhocView *view) {
+  struct wlr_xwayland_surface *xwayland_surface;
 
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
+  wlr_xwayland_surface_close (xwayland_surface);
+}
 
 static bool want_scaling(PhocView *view) {
 	return false;
