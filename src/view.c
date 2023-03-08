@@ -317,7 +317,7 @@ phoc_view_resize (PhocView *self, uint32_t width, uint32_t height)
 }
 
 void
-view_move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height)
+phoc_view_move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height)
 {
   bool update_x = x != view->box.x;
   bool update_y = y != view->box.y;
@@ -377,8 +377,11 @@ void view_arrange_maximized(PhocView *view, struct wlr_output *output) {
 
 	struct wlr_box geom;
 	view_get_geometry (view, &geom);
-	view_move_resize (view, (usable_area.x - geom.x) / priv->scale, (usable_area.y - geom.y) / priv->scale,
-	                  usable_area.width / priv->scale, usable_area.height / priv->scale);
+	phoc_view_move_resize (view,
+			       (usable_area.x - geom.x) / priv->scale,
+			       (usable_area.y - geom.y) / priv->scale,
+			       usable_area.width / priv->scale,
+			       usable_area.height / priv->scale);
 }
 
 void
@@ -419,8 +422,11 @@ view_arrange_tiled (PhocView *view, struct wlr_output *output)
 
   struct wlr_box geom;
   view_get_geometry (view, &geom);
-  view_move_resize (view, (x - geom.x) / priv->scale, (usable_area.y - geom.y) / priv->scale,
-                    usable_area.width / 2 / priv->scale, usable_area.height / priv->scale);
+  phoc_view_move_resize (view,
+                         (x - geom.x) / priv->scale,
+                         (usable_area.y - geom.y) / priv->scale,
+                         usable_area.width / 2 / priv->scale,
+                         usable_area.height / priv->scale);
 }
 
 /*
@@ -498,9 +504,9 @@ view_restore(PhocView *view)
 
   priv->state = PHOC_VIEW_STATE_FLOATING;
   if (!wlr_box_empty(&view->saved)) {
-    view_move_resize (view, view->saved.x - geom.x * priv->scale,
-                      view->saved.y - geom.y * priv->scale,
-                      view->saved.width, view->saved.height);
+    phoc_view_move_resize (view, view->saved.x - geom.x * priv->scale,
+                           view->saved.y - geom.y * priv->scale,
+                           view->saved.width, view->saved.height);
   } else {
     phoc_view_resize (view, 0, 0);
     view->pending_centering = true;
@@ -572,8 +578,10 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 
 		struct wlr_box *output_box =
 			wlr_output_layout_get_box(view->desktop->layout, output);
-		view_move_resize(view, output_box->x, output_box->y, output_box->width,
-			output_box->height);
+		phoc_view_move_resize (view, output_box->x,
+				       output_box->y,
+				       output_box->width,
+				       output_box->height);
 
 		phoc_output->fullscreen_view = view;
 		phoc_output_force_shell_reveal (phoc_output, false);
@@ -593,8 +601,11 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 		} else if (priv->state == PHOC_VIEW_STATE_TILED) {
 			view_arrange_tiled (view, phoc_output->wlr_output);
 		} else if (!wlr_box_empty(&view->saved)) {
-			view_move_resize(view, view->saved.x - view_geom.x * priv->scale, view->saved.y - view_geom.y * priv->scale,
-			                 view->saved.width, view->saved.height);
+			phoc_view_move_resize (view,
+					       view->saved.x - view_geom.x * priv->scale,
+					       view->saved.y - view_geom.y * priv->scale,
+					       view->saved.width,
+					       view->saved.height);
 		} else {
 			phoc_view_resize (view, 0, 0);
 			view->pending_centering = true;

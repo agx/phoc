@@ -1815,7 +1815,10 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
       view_move (view, cursor->view_x, cursor->view_y);
     break;
   case PHOC_CURSOR_RESIZE:
-    view_move_resize (view, cursor->view_x, cursor->view_y, cursor->view_width, cursor->view_height);
+    phoc_view_move_resize (view, cursor->view_x,
+                           cursor->view_y,
+                           cursor->view_width,
+                           cursor->view_height);
     break;
   case PHOC_CURSOR_PASSTHROUGH:
     break;
