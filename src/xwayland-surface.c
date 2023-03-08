@@ -101,31 +101,33 @@ move (PhocView *view, double x, double y)
                                  xwayland_surface->width, xwayland_surface->height);
 }
 
-static void apply_size_constraints(PhocView *view,
-		struct wlr_xwayland_surface *xwayland_surface, uint32_t width,
-		uint32_t height, uint32_t *dest_width, uint32_t *dest_height) {
-	*dest_width = width;
-	*dest_height = height;
+static void
+apply_size_constraints (PhocView                    *view,
+                        struct wlr_xwayland_surface *xwayland_surface,
+                        uint32_t                     width,
+                        uint32_t                     height,
+                        uint32_t                    *dest_width,
+                        uint32_t                    *dest_height)
+{
+  *dest_width = width;
+  *dest_height = height;
 
-	if (view_is_maximized(view))
-		return;
+  if (view_is_maximized (view))
+    return;
 
-	struct wlr_xwayland_surface_size_hints *size_hints =
-		xwayland_surface->size_hints;
-	if (size_hints != NULL) {
-		if (width < (uint32_t)size_hints->min_width) {
-			*dest_width = size_hints->min_width;
-		} else if (size_hints->max_width > 0 &&
-				width > (uint32_t)size_hints->max_width) {
-			*dest_width = size_hints->max_width;
-		}
-		if (height < (uint32_t)size_hints->min_height) {
-			*dest_height = size_hints->min_height;
-		} else if (size_hints->max_height > 0 &&
-				height > (uint32_t)size_hints->max_height) {
-			*dest_height = size_hints->max_height;
-		}
-	}
+  struct wlr_xwayland_surface_size_hints *size_hints = xwayland_surface->size_hints;
+  if (size_hints != NULL) {
+    if (width < (uint32_t)size_hints->min_width) {
+      *dest_width = size_hints->min_width;
+    } else if (size_hints->max_width > 0 && width > (uint32_t)size_hints->max_width) {
+      *dest_width = size_hints->max_width;
+    }
+    if (height < (uint32_t)size_hints->min_height) {
+      *dest_height = size_hints->min_height;
+    } else if (size_hints->max_height > 0 && height > (uint32_t)size_hints->max_height) {
+      *dest_height = size_hints->max_height;
+    }
+  }
 }
 
 static void
@@ -190,8 +192,9 @@ _close(PhocView *view) {
   wlr_xwayland_surface_close (xwayland_surface);
 }
 
-static bool want_scaling(PhocView *view) {
-	return false;
+static bool
+want_scaling (PhocView *view) {
+  return false;
 }
 
 static bool
@@ -559,7 +562,7 @@ phoc_xwayland_surface_class_init (PhocXWaylandSurfaceClass *klass)
    */
   props[PROP_WLR_XWAYLAND_SURFACE] =
     g_param_spec_pointer ("wlr-xwayland-surface", "", "",
-			  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS);
+                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 

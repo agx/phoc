@@ -14,7 +14,6 @@ TO_CLEANUP="
     src/view.c
     src/view.h
     src/xdg_shell.c
-    src/xwayland-surface.c
 "
 
 export LC_ALL=C
