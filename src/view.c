@@ -43,6 +43,8 @@ typedef struct _PhocViewPrivate {
   int            border_width;
   PhocViewState  state;
 
+  PhocViewTileDirection tile_direction;
+
   gulong         notify_scale_to_fit_id;
   gboolean       scale_to_fit;
   char          *activation_token;
@@ -384,7 +386,7 @@ view_arrange_tiled (PhocView *view, struct wlr_output *output)
   usable_area.x += output_box->x;
   usable_area.y += output_box->y;
 
-  switch (view->tile_direction) {
+  switch (priv->tile_direction) {
   case PHOC_VIEW_TILE_LEFT:
     x = usable_area.x;
     break;
@@ -392,7 +394,7 @@ view_arrange_tiled (PhocView *view, struct wlr_output *output)
     x = usable_area.x + (0.5 * usable_area.width);
     break;
   default:
-    g_error ("Invalid tiling direction %d", view->tile_direction);
+    g_error ("Invalid tiling direction %d", priv->tile_direction);
   }
 
   struct wlr_box geom;
@@ -655,7 +657,7 @@ view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *ou
   view_save (view);
 
   priv->state = PHOC_VIEW_STATE_TILED;
-  view->tile_direction = direction;
+  priv->tile_direction = direction;
 
   if (PHOC_VIEW_GET_CLASS (view)->set_tiled) {
     PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
@@ -1611,9 +1613,12 @@ phoc_view_is_mapped (PhocView *view)
 PhocViewTileDirection
 phoc_view_get_tile_direction (PhocView *self)
 {
-  g_return_val_if_fail (PHOC_IS_VIEW (self), PHOC_VIEW_TILE_NONE);
+  PhocViewPrivate *priv;
 
-  return self->tile_direction;
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->tile_direction;
 }
 
 

@@ -50,7 +50,6 @@ struct _PhocView {
 
 	struct wlr_box box;
 
-	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;
 	struct wlr_box saved;
 
