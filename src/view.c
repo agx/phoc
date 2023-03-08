@@ -316,27 +316,28 @@ phoc_view_resize (PhocView *self, uint32_t width, uint32_t height)
   PHOC_VIEW_GET_CLASS (self)->resize(self, width, height);
 }
 
-void view_move_resize(PhocView *view, double x, double y,
-		uint32_t width, uint32_t height) {
-	bool update_x = x != view->box.x;
-	bool update_y = y != view->box.y;
-	bool update_width = width != view->box.width;
-	bool update_height = height != view->box.height;
+void
+view_move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height)
+{
+  bool update_x = x != view->box.x;
+  bool update_y = y != view->box.y;
+  bool update_width = width != view->box.width;
+  bool update_height = height != view->box.height;
 
-	view->pending_move_resize.update_x = false;
-	view->pending_move_resize.update_y = false;
+  view->pending_move_resize.update_x = false;
+  view->pending_move_resize.update_y = false;
 
-	if (!update_x && !update_y) {
-		phoc_view_resize (view, width, height);
-		return;
-	}
+  if (!update_x && !update_y) {
+    phoc_view_resize (view, width, height);
+    return;
+  }
 
-	if (!update_width && !update_height) {
-		view_move (view, x, y);
-		return;
-	}
+  if (!update_width && !update_height) {
+    view_move (view, x, y);
+    return;
+  }
 
-        PHOC_VIEW_GET_CLASS (view)->move_resize(view, x, y, width, height);
+  PHOC_VIEW_GET_CLASS (view)->move_resize(view, x, y, width, height);
 }
 
 static struct wlr_output *view_get_output(PhocView *view) {
