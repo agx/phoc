@@ -88,6 +88,7 @@ struct _PhocView {
  *   to work correctly. This allows a PhocViewClass pointer to be cast to
  *   a GObjectClass pointer.
  * @move: This is called by `PhocView` to move a view to a new position.
+ *     The implementation is optional.
  * @resize: This is called by `PhocView` to move resize a view.
  * @move_resize: This is called by `PhocView` to move and resize a view a the same time.
  * @want_auto_maximize: This is called by `PhocView` to determine if a view should
@@ -96,9 +97,12 @@ struct _PhocView {
  * @set_fullscreen: This is called by `PhocView` to fullscreen a view
  * @set_maximized: This is called by `PhocView` to maximize a view
  * @set_tiled: This is called by `PhocView` to tile a view.
+ *     The implementation is optional.
  * @close: This is called by `PhocView` to close a view.
  * @for_each_surface: This is used by `PhocView` to iterate over a surface and it's children.
+ *     The implementation is optional.
  * @get_geometry: This is called by `PhocView` to get a views geometry.
+ *     The implementation is optional.
  */
 typedef struct _PhocViewClass
 {
