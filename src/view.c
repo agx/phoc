@@ -461,9 +461,7 @@ void view_maximize(PhocView *view, struct wlr_output *output) {
 		PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
 	}
 
-	if (PHOC_VIEW_GET_CLASS (view)->set_maximized) {
-		PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
-	}
+	PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
 
 	if (view->toplevel_handle) {
 		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle, true);
@@ -515,8 +513,7 @@ view_restore(PhocView *view)
   if (view->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
 
-  if (PHOC_VIEW_GET_CLASS (view)->set_maximized)
-    PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
+  PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
 
   if (PHOC_VIEW_GET_CLASS (view)->set_tiled)
     PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
@@ -688,7 +685,7 @@ view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *ou
   if (PHOC_VIEW_GET_CLASS (view)->set_tiled) {
     PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
     PHOC_VIEW_GET_CLASS (view)->set_tiled (view, true);
-  } else if (PHOC_VIEW_GET_CLASS (view)->set_maximized) {
+  } else {
     /* fallback to the maximized flag on the toplevel so it can remove its drop shadows */
     PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
   }
