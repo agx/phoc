@@ -128,16 +128,20 @@ static void apply_size_constraints(PhocView *view,
 	}
 }
 
-static void resize(PhocView *view, uint32_t width, uint32_t height) {
-	struct wlr_xwayland_surface *xwayland_surface =
-		phoc_xwayland_surface_from_view(view)->xwayland_surface;
+static void
+resize (PhocView *view, uint32_t width, uint32_t height)
+{
+  struct wlr_xwayland_surface *xwayland_surface;
 
-	uint32_t constrained_width, constrained_height;
-	apply_size_constraints(view, xwayland_surface, width, height, &constrained_width,
-		&constrained_height);
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
+  xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
 
-	wlr_xwayland_surface_configure(xwayland_surface, xwayland_surface->x,
-			xwayland_surface->y, constrained_width, constrained_height);
+  uint32_t constrained_width, constrained_height;
+  apply_size_constraints(view, xwayland_surface, width, height, &constrained_width,
+                         &constrained_height);
+
+  wlr_xwayland_surface_configure(xwayland_surface, xwayland_surface->x,
+                                 xwayland_surface->y, constrained_width, constrained_height);
 }
 
 static void move_resize(PhocView *view, double x, double y,
