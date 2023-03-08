@@ -579,24 +579,6 @@ phoc_xwayland_surface_new (struct wlr_xwayland_surface *surface)
 }
 
 /**
- * phoc_xwayland_surface_from_view:
- * @view: A view
- *
- * Returns the [class@XWaylandSurface] associated with this
- * [type@Phoc.View]. It is a programming error if the [class@View]
- * isn't a [type@XWaylandSurface].
- *
- * Returns: (transfer none): Returns the [type@XWaylandSurface]
- */
-PhocXWaylandSurface *
-phoc_xwayland_surface_from_view (PhocView *view)
-{
-  g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
-  return PHOC_XWAYLAND_SURFACE (view);
-}
-
-
-/**
  * phoc_xwayland_surface_get_wlr_surface:
  * @self: The PhocXWaylandSurface
  *
