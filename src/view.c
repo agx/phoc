@@ -336,19 +336,7 @@ void view_move_resize(PhocView *view, double x, double y,
 		return;
 	}
 
-	if (PHOC_VIEW_GET_CLASS (view)->move_resize) {
-		PHOC_VIEW_GET_CLASS (view)->move_resize(view, x, y, width, height);
-		return;
-	}
-
-	view->pending_move_resize.update_x = update_x;
-	view->pending_move_resize.update_y = update_y;
-	view->pending_move_resize.x = x;
-	view->pending_move_resize.y = y;
-	view->pending_move_resize.width = width;
-	view->pending_move_resize.height = height;
-
-	phoc_view_resize (view, width, height);
+        PHOC_VIEW_GET_CLASS (view)->move_resize(view, x, y, width, height);
 }
 
 static struct wlr_output *view_get_output(PhocView *view) {
