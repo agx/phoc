@@ -119,9 +119,9 @@ phoc_cursor_get_touch_point (PhocCursor *self, int touch_id)
 
 static void
 phoc_cursor_set_property (GObject      *object,
-			  guint         property_id,
-			  const GValue *value,
-			  GParamSpec   *pspec)
+                          guint         property_id,
+                          const GValue *value,
+                          GParamSpec   *pspec)
 {
   PhocCursor *self = PHOC_CURSOR (object);
 
@@ -138,9 +138,9 @@ phoc_cursor_set_property (GObject      *object,
 
 static void
 phoc_cursor_get_property (GObject    *object,
-			  guint       property_id,
-			  GValue     *value,
-			  GParamSpec *pspec)
+                          guint       property_id,
+                          GValue     *value,
+                          GParamSpec *pspec)
 {
   PhocCursor *self = PHOC_CURSOR (object);
 
@@ -499,9 +499,9 @@ phoc_cursor_class_init (PhocCursorClass *klass)
 
   props[PROP_SEAT] =
     g_param_spec_pointer ("seat",
-			  "",
-			  "",
-			  G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+                          "",
+                          "",
+                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
@@ -1272,8 +1272,8 @@ phoc_cursor_handle_constraint_commit (PhocCursor *self)
   double sx, sy;
   struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
                                                          self->cursor->x,
-							 self->cursor->y,
-							 &sx, &sy, NULL);
+                                                         self->cursor->y,
+                                                         &sx, &sy, NULL);
 
   // This should never happen but views move around right when they're
   // created from (0, 0) to their actual coordinates.
@@ -1296,7 +1296,7 @@ handle_constraint_commit (struct wl_listener *listener,
 void
 phoc_cursor_constrain (PhocCursor *self,
                        struct wlr_pointer_constraint_v1 *constraint,
-		       double sx, double sy)
+                       double sx, double sy)
 {
   if (self->active_constraint == constraint)
     return;
@@ -1354,8 +1354,8 @@ PhocCursor *
 phoc_cursor_new (PhocSeat *seat)
 {
   return PHOC_CURSOR (g_object_new (PHOC_TYPE_CURSOR,
-				    "seat", seat,
-				    NULL));
+                                    "seat", seat,
+                                    NULL));
 }
 
 

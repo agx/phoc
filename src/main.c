@@ -94,8 +94,8 @@ parse_debug_env (void)
     return flags;
 
   return g_parse_debug_string(debugenv,
-			      debug_keys,
-			      G_N_ELEMENTS (debug_keys));
+                              debug_keys,
+                              G_N_ELEMENTS (debug_keys));
 }
 
 
