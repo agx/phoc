@@ -222,7 +222,6 @@ void handle_xwayland_surface(struct wl_listener *listener, void *data) {
 
 	PhocXWaylandSurface *phoc_surface = phoc_xwayland_surface_new (surface);
 
-	phoc_surface->view.desktop = desktop;
 	phoc_surface->view.box.x = surface->x;
 	phoc_surface->view.box.y = surface->y;
 	phoc_surface->view.box.width = surface->width;
