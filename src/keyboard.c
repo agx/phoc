@@ -253,13 +253,12 @@ keyboard_execute_subscribed_binding (PhocKeyboard              *self,
                                      enum wl_keyboard_key_state state)
 {
   bool handled = false;
+  bool pressed;
 
-  if (state != WL_KEYBOARD_KEY_STATE_PRESSED)
-    return false;
-
+  pressed = !!(state == WL_KEYBOARD_KEY_STATE_PRESSED);
   for (size_t i = 0; i < keysyms_len; ++i) {
     PhocKeyCombo combo = { modifiers, keysyms[i] };
-    handled |= phoc_phosh_private_forward_keysym (&combo, time);
+    handled |= phoc_phosh_private_forward_keysym (&combo, time, pressed);
   }
   return handled;
 }

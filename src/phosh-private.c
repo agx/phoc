@@ -87,7 +87,7 @@ static PhocPhoshPrivateKeyboardEventData *phoc_phosh_private_keyboard_event_from
 static PhocPhoshPrivateScreencopyFrame *phoc_phosh_private_screencopy_frame_from_resource(struct wl_resource *resource);
 static PhocPhoshPrivateStartupTracker *phoc_phosh_private_startup_tracker_from_resource(struct wl_resource *resource);
 
-#define PHOSH_PRIVATE_VERSION 6
+#define PHOSH_PRIVATE_VERSION 7
 
 
 static void
@@ -796,26 +796,35 @@ phoc_phosh_private_new (void)
 
 bool
 phoc_phosh_private_forward_keysym (PhocKeyCombo *combo,
-                                   uint32_t timestamp)
+                                   uint32_t      timestamp,
+                                   bool          pressed)
 {
   GList *l;
-  PhocPhoshPrivateKeyboardEventData *kbevent;
   PhocServer *server = phoc_server_get_default ();
-
   PhocPhoshPrivate *phosh = server->desktop->phosh;
   bool forwarded = false;
 
   for (l = phosh->keyboard_events; l != NULL; l = l->next) {
-    kbevent = l->data;
+    PhocPhoshPrivateKeyboardEventData *kbevent = l->data;
+    uint32_t version = wl_resource_get_version (kbevent->resource);
+
     g_debug("addr of kbevent and res kbev %p res %p", kbevent, kbevent->resource);
     /*  forward the keysym if it is has been subscribed to */
     if (phoc_phosh_private_keyboard_event_accelerator_is_registered (combo, kbevent)) {
         gint64 key = ((gint64)combo->modifiers << 32) | combo->keysym;
         guint action_id = GPOINTER_TO_UINT (g_hash_table_lookup (kbevent->subscribed_accelerators, &key));
-        phosh_private_keyboard_event_send_accelerator_activated_event (kbevent->resource,
-                                                                       action_id,
-                                                                       timestamp);
-        forwarded = true;
+
+        if (pressed) {
+          phosh_private_keyboard_event_send_accelerator_activated_event (kbevent->resource,
+                                                                         action_id,
+                                                                         timestamp);
+          forwarded = true;
+        } else if (version >= PHOSH_PRIVATE_KEYBOARD_EVENT_ACCELERATOR_RELEASED_EVENT_SINCE_VERSION) {
+          phosh_private_keyboard_event_send_accelerator_released_event (kbevent->resource,
+                                                                        action_id,
+                                                                        timestamp);
+          forwarded = true;
+        }
       }
   }
 
