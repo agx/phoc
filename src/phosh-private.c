@@ -660,7 +660,7 @@ static const struct phosh_private_interface phosh_private_impl = {
   handle_get_thumbnail,        /* request */
   handle_get_keyboard_event,   /* interface */
   handle_get_startup_tracker,  /* interface */
-  handle_set_shell_state,
+  handle_set_shell_state,      /* request */
 };
 
 
