@@ -51,7 +51,7 @@
     </request>
 
     <request name="get_startup_tracker" since="6">
-      <description summary="request a keyboard event handler">
+      <description summary="Request an application startup tracker">
 	Allows to track application startup.
       </description>
       <arg name="id" type="new_id" interface="phosh_private_startup_tracker"/>
