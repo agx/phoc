@@ -42,7 +42,7 @@ typedef struct _PhocDraggableLayerSurfaceParams {
   int32_t  folded, unfolded;
   /* Height of exclusive area */
   uint32_t exclusive;
-  /* When is the sufaced pulled out [0.0, 1.0] */
+  /* When is the surface pulled out [0.0, 1.0] */
   double   threshold;
 
   enum zphoc_draggable_layer_surface_v1_drag_mode drag_mode;
@@ -107,7 +107,7 @@ struct _PhocLayerShellEffects {
   struct wl_global   *global;
   GSList             *resources;
   GSList             *drag_surfaces;
-  GHashTable         *drag_surfaces_by_layer_sufrace;
+  GHashTable         *drag_surfaces_by_layer_surface;
 
   GSList             *alpha_surfaces;
   GHashTable         *alpha_surfaces_by_layer_surface;
@@ -346,7 +346,7 @@ phoc_draggable_layer_surface_destroy (PhocDraggableLayerSurface *drag_surface)
   }
 
   if (drag_surface->layer_surface) {
-    g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_sufrace,
+    g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_surface,
                          drag_surface->layer_surface);
     /* wlr signals */
     wl_list_remove (&drag_surface->surface_handle_commit.link);
@@ -442,7 +442,7 @@ draggable_layer_surface_handle_destroy (struct wl_listener *listener, void *data
 
   /* Drop the gone layer-surface from the layer-surface -> drag-surface mapping */
   layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (drag_surface->layer_shell_effects);
-  g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_sufrace,
+  g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_surface,
                        drag_surface->layer_surface);
 
   /* The layer-surface is unusable for us now */
@@ -570,7 +570,7 @@ handle_get_draggable_layer_surface (struct wl_client   *client,
   drag_surface->layer_surface_handle_destroy.notify = draggable_layer_surface_handle_destroy;
   wl_signal_add (&wlr_layer_surface->events.destroy, &drag_surface->layer_surface_handle_destroy);
 
-  g_hash_table_insert (self->drag_surfaces_by_layer_sufrace,
+  g_hash_table_insert (self->drag_surfaces_by_layer_surface,
                        drag_surface->layer_surface, drag_surface);
   self->drag_surfaces = g_slist_prepend (self->drag_surfaces, g_steal_pointer (&drag_surface));
 }
@@ -688,7 +688,7 @@ phoc_layer_shell_effects_finalize (GObject *object)
 {
   PhocLayerShellEffects *self = PHOC_LAYER_SHELL_EFFECTS (object);
 
-  g_clear_pointer (&self->drag_surfaces_by_layer_sufrace, g_hash_table_destroy);
+  g_clear_pointer (&self->drag_surfaces_by_layer_surface, g_hash_table_destroy);
   g_clear_pointer (&self->alpha_surfaces_by_layer_surface, g_hash_table_destroy);
 
   wl_global_destroy (self->global);
@@ -711,7 +711,7 @@ phoc_layer_shell_effects_init (PhocLayerShellEffects *self)
 {
   struct wl_display *display = phoc_server_get_default ()->wl_display;
 
-  self->drag_surfaces_by_layer_sufrace = g_hash_table_new (g_direct_hash, g_direct_equal);
+  self->drag_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
   self->alpha_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   self->global = wl_global_create (display, &zphoc_layer_shell_effects_v1_interface,
@@ -1273,7 +1273,7 @@ phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
   g_return_val_if_fail (PHOC_IS_LAYER_SHELL_EFFECTS (self), NULL);
   g_return_val_if_fail (PHOC_IS_LAYER_SURFACE (layer_surface), NULL);
 
-  return g_hash_table_lookup (self->drag_surfaces_by_layer_sufrace, layer_surface);
+  return g_hash_table_lookup (self->drag_surfaces_by_layer_surface, layer_surface);
 }
 
 
