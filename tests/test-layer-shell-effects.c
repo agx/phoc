@@ -110,8 +110,8 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/layer-shell-effects/drag-surface/simple",
-                  test_layer_shell_effects_drag_surface_simple);
+  PHOC_TEST_ADD ("/phoc/layer-shell-effects/drag-surface/simple",
+                 test_layer_shell_effects_drag_surface_simple);
 
   return g_test_run();
 }

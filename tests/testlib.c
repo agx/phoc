@@ -396,7 +396,7 @@ on_wl_client_finish (GObject *source, GAsyncResult *res, gpointer data)
   g_assert_true (g_task_is_valid (res, source));
   success = g_task_propagate_boolean (G_TASK (res), &err);
 
-  /* Client ran succesfully */
+  /* Client ran successfully */
   g_assert_true (success);
   g_main_loop_quit (loop);
 }
@@ -898,4 +898,90 @@ phoc_test_xdg_update_buffer (PhocTestClientGlobals      *globals,
 
   phoc_test_buffer_free (&xs->buffer);
   xs->buffer = buffer;
+}
+
+/**
+ * phoc_test_setup:
+ * @fixture: Test fixture
+ * @data: Data for test setup
+ *
+ * Sets up a test environment for the with compositor and access to DBus.
+ * function is meant to be used with g_test_add().
+ */
+void
+phoc_test_setup (PhocTestFixture *fixture, gconstpointer data)
+{
+  const char *display;
+  g_autoptr (GError) err = NULL;
+
+  fixture->bus = g_test_dbus_new (G_TEST_DBUS_NONE);
+
+  /* Preserve x11 display for xvfb-run */
+  display = g_getenv ("DISPLAY");
+
+  g_test_dbus_up (fixture->bus);
+
+  g_setenv ("NO_AT_BRIDGE", "1", TRUE);
+
+  fixture->tmpdir = g_dir_make_tmp ("phoc-test-comp.XXXXXX", &err);
+  g_assert_no_error (err);
+
+  g_setenv ("XDG_RUNTIME_DIR", fixture->tmpdir, TRUE);
+  g_setenv ("DISPLAY", display, TRUE);
+  g_setenv ("WLR_BACKENDS", "x11", TRUE);
+}
+
+static void
+phoc_test_remove_tree (GFile *file)
+{
+  g_autoptr (GError) err = NULL;
+  g_autoptr (GFileEnumerator) enumerator = NULL;
+
+  enumerator = g_file_enumerate_children (file, G_FILE_ATTRIBUTE_STANDARD_NAME,
+                                          G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
+                                          NULL, NULL);
+
+  while (enumerator != NULL) {
+    GFile *child;
+    gboolean ret;
+
+    ret = g_file_enumerator_iterate (enumerator, NULL, &child, NULL, &err);
+    g_assert_no_error (err);
+    g_assert_true (ret);
+
+    if (child == NULL)
+      break;
+
+    phoc_test_remove_tree (child);
+  }
+
+  g_assert_true (g_file_delete (file, NULL, &err));
+  g_assert_no_error (err);
+}
+
+/**
+ * phoc_test_teardown:
+ * @fixture: Test fixture
+ * @unused: Data for test setup
+ *
+ * Tears down the test environment that was setup with
+ * phoc_test_full_shell_setup(). This function is meant to be used
+ * with g_test_add().
+ */
+void
+phoc_test_teardown (PhocTestFixture *fixture, gconstpointer unused)
+{
+  const char *display;
+
+  g_autoptr (GFile) file = g_file_new_for_path (fixture->tmpdir);
+
+  /* Preserve x11 display for xvfb-run */
+  display = g_getenv ("DISPLAY");
+
+  g_test_dbus_down (fixture->bus);
+  g_clear_object (&fixture->bus);
+
+  g_setenv ("DISPLAY", display, TRUE);
+  phoc_test_remove_tree (file);
+  g_free (fixture->tmpdir);
 }

@@ -87,6 +87,12 @@ typedef struct _PhocTestXdgToplevelSurface
   gboolean toplevel_configured;
 } PhocTestXdgToplevelSurface;
 
+typedef struct _PhocTestFixture {
+  GTestDBus   *bus;
+  char        *tmpdir;
+} PhocTestFixture;
+
+
 /* Test client */
 void phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data);
 int  phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
@@ -158,5 +164,14 @@ void phoc_test_buffer_free (PhocTestBuffer *buffer);
                          "Buffer " #b1 " != " #b2);                     \
     } \
   } G_STMT_END
+
+
+/* Test setup and fixtures */
+void phoc_test_setup (PhocTestFixture *fixture, gconstpointer data);
+void phoc_test_teardown (PhocTestFixture *fixture, gconstpointer unused);
+#define PHOC_TEST_ADD(name, func) g_test_add ((name), PhocTestFixture, NULL, \
+                                              (gpointer)phoc_test_setup,     \
+                                              (gpointer)(func),              \
+                                              (gpointer)phoc_test_teardown)
 
 G_END_DECLS

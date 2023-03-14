@@ -121,8 +121,9 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/xdg-shell/simple", test_xdg_shell_normal);
-  g_test_add_func("/phoc/xdg-shell/auto-maximize", test_xdg_shell_auto_maximized);
-  g_test_add_func("/phoc/xdg-shell/toplevel-maximize", test_xdg_shell_toplevel_maximized);
+  PHOC_TEST_ADD ("/phoc/xdg-shell/simple", test_xdg_shell_normal);
+  PHOC_TEST_ADD ("/phoc/xdg-shell/auto-maximize", test_xdg_shell_auto_maximized);
+  PHOC_TEST_ADD ("/phoc/xdg-shell/toplevel-maximize", test_xdg_shell_toplevel_maximized);
+
   return g_test_run();
 }
