@@ -73,11 +73,6 @@ struct _PhocView {
 	struct wl_listener toplevel_handle_request_close;
 
 	struct wl_listener surface_new_subsurface;
-
-	struct {
-		struct wl_signal unmap;
-		struct wl_signal destroy;
-	} events;
 };
 
 /**

@@ -1027,8 +1027,6 @@ void view_unmap(PhocView *view) {
 
 	bool was_visible = phoc_desktop_view_is_visible(view->desktop, view);
 
-	wl_signal_emit(&view->events.unmap, view);
-
 	phoc_view_damage_whole (view);
 
 	wl_list_remove(&view->surface_new_subsurface.link);
@@ -1426,8 +1424,6 @@ phoc_view_finalize (GObject *object)
     }
   }
 
-  wl_signal_emit(&self->events.destroy, self);
-
   if (self->wlr_surface != NULL) {
     view_unmap(self);
   }
@@ -1612,8 +1608,7 @@ phoc_view_init (PhocView *self)
   priv->alpha = 1.0f;
   priv->scale = 1.0f;
   priv->state = PHOC_VIEW_STATE_FLOATING;
-  wl_signal_init(&self->events.unmap);
-  wl_signal_init(&self->events.destroy);
+
   wl_list_init(&self->child_surfaces);
   wl_list_init(&self->stack);
 
