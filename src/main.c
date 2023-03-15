@@ -19,7 +19,7 @@
 #include "settings.h"
 #include "server.h"
 
-static void
+G_NORETURN static void
 print_version (void)
 {
   printf ("Phoc %s - Phone compositor\n", PHOC_VERSION);
