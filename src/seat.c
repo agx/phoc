@@ -1360,6 +1360,9 @@ seat_view_destroy (PhocSeatView *seat_view)
   PhocSeat *seat = seat_view->seat;
   PhocView *view = seat_view->view;
 
+  g_assert (PHOC_IS_SEAT (seat));
+  g_assert (PHOC_IS_VIEW (view));
+
   if (view == phoc_seat_get_focus (seat)) {
     seat->has_focus = false;
     seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
@@ -1369,8 +1372,7 @@ seat_view_destroy (PhocSeatView *seat_view)
     seat->cursor->pointer_view = NULL;
   }
 
-  wl_list_remove (&seat_view->view_unmap.link);
-  wl_list_remove (&seat_view->view_destroy.link);
+  g_signal_handlers_disconnect_by_data (view, seat_view);
   wl_list_remove (&seat_view->link);
   free (seat_view);
 
@@ -1385,19 +1387,18 @@ seat_view_destroy (PhocSeatView *seat_view)
 }
 
 static void
-seat_view_handle_unmap (struct wl_listener *listener, void *data)
+on_view_is_mapped_changed (PhocView *view, GParamSpec *psepc, PhocSeatView *seat_view)
 {
-  PhocSeatView *seat_view =
-    wl_container_of (listener, seat_view, view_unmap);
+  g_assert (PHOC_IS_VIEW (view));
 
-  seat_view_destroy (seat_view);
+  if (phoc_view_is_mapped (view) == FALSE)
+    seat_view_destroy (seat_view);
 }
 
 static void
-seat_view_handle_destroy (struct wl_listener *listener, void *data)
+on_view_surface_destroy (PhocView *view, PhocSeatView *seat_view)
 {
-  PhocSeatView *seat_view =
-    wl_container_of (listener, seat_view, view_destroy);
+  g_assert (PHOC_IS_VIEW (view));
 
   seat_view_destroy (seat_view);
 }
@@ -1412,10 +1413,8 @@ seat_add_view (PhocSeat *seat, PhocView *view)
 
   wl_list_insert (seat->views.prev, &seat_view->link);
 
-  seat_view->view_unmap.notify = seat_view_handle_unmap;
-  wl_signal_add (&view->events.unmap, &seat_view->view_unmap);
-  seat_view->view_destroy.notify = seat_view_handle_destroy;
-  wl_signal_add (&view->events.destroy, &seat_view->view_destroy);
+  g_signal_connect (view, "notify::is-mapped", G_CALLBACK (on_view_is_mapped_changed), seat_view);
+  g_signal_connect (view, "surface-destroy", G_CALLBACK (on_view_surface_destroy), seat_view);
 
   return seat_view;
 }
