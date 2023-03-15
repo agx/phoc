@@ -15,8 +15,6 @@ void
 phoc_handle_virtual_keyboard (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop =
-    wl_container_of (listener, desktop, virtual_keyboard_new);
   struct wlr_virtual_keyboard_v1 *keyboard = data;
 
   PhocSeat*seat = phoc_input_seat_from_wlr_seat (server->input,
