@@ -20,6 +20,7 @@ enum {
   PROP_0,
   PROP_SCALE_TO_FIT,
   PROP_ACTIVATION_TOKEN,
+  PROP_IS_MAPPED,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -1055,6 +1056,8 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   /* Process pending activation */
   if (priv->activation_token)
     phoc_view_activate (view, TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (view), props[PROP_IS_MAPPED]);
 }
 
 void view_unmap(PhocView *view) {
@@ -1102,6 +1105,8 @@ void view_unmap(PhocView *view) {
 	}
 
 	g_clear_signal_handler (&priv->notify_scale_to_fit_id, view->desktop);
+
+	g_object_notify_by_pspec (G_OBJECT (view), props[PROP_IS_MAPPED]);
 }
 
 void view_initial_focus(PhocView *view) {
@@ -1425,9 +1430,9 @@ phoc_view_set_property (GObject      *object,
 
 static void
 phoc_view_get_property (GObject    *object,
-			  guint       property_id,
-			  GValue     *value,
-			  GParamSpec *pspec)
+                        guint       property_id,
+                        GValue     *value,
+                        GParamSpec *pspec)
 {
   PhocView *self = PHOC_VIEW (object);
   PhocViewPrivate *priv = phoc_view_get_instance_private (self);
@@ -1438,6 +1443,9 @@ phoc_view_get_property (GObject    *object,
     break;
   case PROP_ACTIVATION_TOKEN:
     g_value_set_string (value, phoc_view_get_activation_token (self));
+    break;
+  case PROP_IS_MAPPED:
+    g_value_set_boolean (value, phoc_view_is_mapped (self));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1514,6 +1522,15 @@ phoc_view_class_init (PhocViewClass *klass)
     g_param_spec_string ("activation-token", "", "",
                          NULL,
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+  /**
+   * PhocView:is-mapped:
+   *
+   * Whether the view is currently mapped
+   */
+  props[PROP_IS_MAPPED] =
+    g_param_spec_boolean ("is-mapped", "", "",
+                          FALSE,
+                          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
