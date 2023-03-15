@@ -835,11 +835,11 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
 
   phoc_input_method_relay_destroy (&seat->im_relay);
 
-  PhocSeatView *view, *nview;
+  PhocSeatView *seat_view, *nview;
 
-  wl_list_for_each_safe (view, nview, &seat->views, link)
+  wl_list_for_each_safe (seat_view, nview, &seat->views, link)
   {
-    seat_view_destroy (view);
+    seat_view_destroy (seat_view);
   }
 }
 
