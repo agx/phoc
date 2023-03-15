@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 #include <wlr/config.h>
-#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_surface.h>
 
@@ -65,14 +64,6 @@ struct _PhocView {
 
 	struct wlr_surface *wlr_surface; // set only when the surface is mapped
 	struct wl_list child_surfaces; // PhocViewChild::link
-
-	struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
-	struct wl_listener toplevel_handle_request_maximize;
-	struct wl_listener toplevel_handle_request_activate;
-	struct wl_listener toplevel_handle_request_fullscreen;
-	struct wl_listener toplevel_handle_request_close;
-
-	struct wl_listener surface_new_subsurface;
 };
 
 /**

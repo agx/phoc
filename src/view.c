@@ -13,6 +13,7 @@
 #include "input.h"
 #include "seat.h"
 #include "server.h"
+#include "utils.h"
 #include "view.h"
 
 
@@ -48,9 +49,21 @@ typedef struct _PhocViewPrivate {
   gulong         notify_scale_to_fit_id;
   gboolean       scale_to_fit;
   char          *activation_token;
+
+  /* wlr-toplevel-management handling */
+  struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
+  struct wl_listener toplevel_handle_request_maximize;
+  struct wl_listener toplevel_handle_request_activate;
+  struct wl_listener toplevel_handle_request_fullscreen;
+  struct wl_listener toplevel_handle_request_close;
+
+  /* Subsurface and popups */
+  struct wl_listener surface_new_subsurface;
 } PhocViewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
+
+#define PHOC_VIEW_SELF(p) PHOC_PRIV_CONTAINER(PHOC_VIEW, PhocView, (p))
 
 typedef struct _PhocSubsurface {
   PhocViewChild child;
@@ -60,6 +73,15 @@ typedef struct _PhocSubsurface {
   struct wl_listener map;
   struct wl_listener unmap;
 } PhocSubsurface;
+
+
+static struct wlr_foreign_toplevel_handle_v1 *
+phoc_view_get_toplevel_handle (PhocView *self)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
+
+  return priv->toplevel_handle;
+}
 
 
 gboolean
@@ -188,6 +210,7 @@ static void surface_send_leave_iterator(struct wlr_surface *surface,
 static void view_update_output(PhocView *view,
 		const struct wlr_box *before) {
 	PhocDesktop *desktop = view->desktop;
+	PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
 	if (!phoc_view_is_mapped (view)) {
 		return;
@@ -206,18 +229,18 @@ static void view_update_output(PhocView *view,
 			phoc_view_for_each_surface (view,
 						    surface_send_leave_iterator,
 						    output->wlr_output);
-			if (view->toplevel_handle) {
-				wlr_foreign_toplevel_handle_v1_output_leave(
-					view->toplevel_handle, output->wlr_output);
+			if (priv->toplevel_handle) {
+				wlr_foreign_toplevel_handle_v1_output_leave (
+					priv->toplevel_handle, output->wlr_output);
 			}
 		}
 		if (!intersected && intersects) {
 			phoc_view_for_each_surface (view,
 						    surface_send_enter_iterator,
 						    output->wlr_output);
-			if (view->toplevel_handle) {
-				wlr_foreign_toplevel_handle_v1_output_enter(
-					view->toplevel_handle, output->wlr_output);
+			if (priv->toplevel_handle) {
+				wlr_foreign_toplevel_handle_v1_output_enter (
+					priv->toplevel_handle, output->wlr_output);
 			}
 		}
 	}
@@ -268,10 +291,8 @@ phoc_view_activate (PhocView *self, bool activate)
     phoc_view_appear_activated (self, activate);
   }
 
-  if (self->toplevel_handle) {
-    wlr_foreign_toplevel_handle_v1_set_activated(self->toplevel_handle,
-                                                 activate);
-  }
+  if (priv->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_activated (priv->toplevel_handle, activate);
 
   if (activate && view_is_fullscreen (self)) {
     phoc_output_force_shell_reveal (self->fullscreen_output, false);
@@ -434,8 +455,8 @@ void view_maximize(PhocView *view, struct wlr_output *output) {
 	PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
 	PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
 
-	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle, true);
+	if (priv->toplevel_handle) {
+		wlr_foreign_toplevel_handle_v1_set_maximized(priv->toplevel_handle, true);
 	}
 
 	view_save (view);
@@ -481,8 +502,8 @@ view_restore(PhocView *view)
     view->pending_centering = true;
   }
 
-  if (view->toplevel_handle)
-    wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
+  if (priv->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle, false);
 
   PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
   PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
@@ -513,8 +534,8 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 
 		PHOC_VIEW_GET_CLASS (view)->set_fullscreen (view, fullscreen);
 
-		if (view->toplevel_handle) {
-			wlr_foreign_toplevel_handle_v1_set_fullscreen(view->toplevel_handle,
+		if (priv->toplevel_handle) {
+			wlr_foreign_toplevel_handle_v1_set_fullscreen(priv->toplevel_handle,
 					fullscreen);
 		}
 	}
@@ -889,10 +910,11 @@ phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *
 static void
 phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *data)
 {
-  PhocView *view = wl_container_of (listener, view, surface_new_subsurface);
+  PhocViewPrivate *priv = wl_container_of (listener, priv, surface_new_subsurface);
+  PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_subsurface *wlr_subsurface = data;
 
-  phoc_view_subsurface_create (view, wlr_subsurface);
+  phoc_view_subsurface_create (self, wlr_subsurface);
 }
 
 static gchar *
@@ -986,8 +1008,8 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   }
 
   phoc_view_init_subsurfaces (view, surface);
-  view->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
-  wl_signal_add(&view->wlr_surface->events.new_subsurface, &view->surface_new_subsurface);
+  priv->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
+  wl_signal_add (&view->wlr_surface->events.new_subsurface, &priv->surface_new_subsurface);
 
   if (view->desktop->maximize) {
     phoc_view_appear_activated (view, true);
@@ -1029,7 +1051,7 @@ void view_unmap(PhocView *view) {
 
 	phoc_view_damage_whole (view);
 
-	wl_list_remove(&view->surface_new_subsurface.link);
+	wl_list_remove (&priv->surface_new_subsurface.link);
 
 	PhocViewChild *child, *tmp;
 	wl_list_for_each_safe(child, tmp, &view->child_surfaces, link) {
@@ -1056,10 +1078,10 @@ void view_unmap(PhocView *view) {
 	view->wlr_surface = NULL;
 	view->box.width = view->box.height = 0;
 
-	if (view->toplevel_handle) {
-		view->toplevel_handle->data = NULL;
-		wlr_foreign_toplevel_handle_v1_destroy(view->toplevel_handle);
-		view->toplevel_handle = NULL;
+	if (priv->toplevel_handle) {
+		priv->toplevel_handle->data = NULL;
+		wlr_foreign_toplevel_handle_v1_destroy(priv->toplevel_handle);
+		priv->toplevel_handle = NULL;
 	}
 
 	g_clear_signal_handler (&priv->notify_scale_to_fit_id, view->desktop);
@@ -1104,6 +1126,7 @@ static void view_create_foreign_toplevel_handle (PhocView *view);
 
 void view_setup(PhocView *view) {
         PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+        struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
 
 	view_create_foreign_toplevel_handle(view);
 	view_initial_focus(view);
@@ -1113,16 +1136,18 @@ void view_setup(PhocView *view) {
 
 	view_update_output(view, NULL);
 
-	wlr_foreign_toplevel_handle_v1_set_fullscreen(view->toplevel_handle,
+	wlr_foreign_toplevel_handle_v1_set_fullscreen(priv->toplevel_handle,
 	                                              view_is_fullscreen (view));
-	wlr_foreign_toplevel_handle_v1_set_maximized(view->toplevel_handle,
+	wlr_foreign_toplevel_handle_v1_set_maximized(priv->toplevel_handle,
 	                                             view_is_maximized(view));
-	wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle,
+	wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle,
 	                                         priv->title ?: "");
-	wlr_foreign_toplevel_handle_v1_set_app_id(view->toplevel_handle,
+	wlr_foreign_toplevel_handle_v1_set_app_id(priv->toplevel_handle,
 	                                          priv->app_id ?: "");
-	wlr_foreign_toplevel_handle_v1_set_parent(view->toplevel_handle,
-	                                          view->parent ? view->parent->toplevel_handle : NULL);
+	if (view->parent)
+		toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
+
+	wlr_foreign_toplevel_handle_v1_set_parent(priv->toplevel_handle, toplevel_handle);
 }
 
 /**
@@ -1219,14 +1244,17 @@ void view_set_title(PhocView *view, const char *title) {
 	free(priv->title);
 	priv->title = g_strdup (title);
 
-	if (view->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_title(view->toplevel_handle, title ?: "");
+	if (priv->toplevel_handle) {
+		wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle, title ?: "");
 	}
 }
 
 void view_set_parent(PhocView *view, PhocView *parent) {
 	// setting a new parent may cause a cycle
 	PhocView *node = parent;
+	PhocViewPrivate *priv;
+	struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
+
 	while (node) {
 		g_return_if_fail(node != view);
 		node = node->parent;
@@ -1242,9 +1270,11 @@ void view_set_parent(PhocView *view, PhocView *parent) {
 		wl_list_insert(&parent->stack, &view->parent_link);
 	}
 
-	if (view->toplevel_handle)
-		wlr_foreign_toplevel_handle_v1_set_parent(view->toplevel_handle,
-		                                          view->parent ? view->parent->toplevel_handle : NULL);
+	priv = phoc_view_get_instance_private (view);
+	if (view->parent)
+		toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
+	if (priv->toplevel_handle)
+		wlr_foreign_toplevel_handle_v1_set_parent(priv->toplevel_handle, toplevel_handle);
 }
 
 
@@ -1284,27 +1314,29 @@ phoc_view_set_app_id (PhocView *view, const char *app_id)
     bind_scale_to_fit_setting (view);
   }
 
-  if (view->toplevel_handle)
-    wlr_foreign_toplevel_handle_v1_set_app_id (view->toplevel_handle, app_id ?: "");
+  if (priv->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle, app_id ?: "");
 }
 
 static void
 handle_toplevel_handle_request_maximize (struct wl_listener *listener,void *data)
 {
-  PhocView *view = wl_container_of(listener, view, toplevel_handle_request_maximize);
+  PhocViewPrivate *priv = wl_container_of (listener, priv, toplevel_handle_request_maximize);
+  PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_foreign_toplevel_handle_v1_maximized_event *event = data;
 
   if (event->maximized)
-    view_maximize(view, NULL);
+    view_maximize (self, NULL);
   else
-    view_restore(view);
+    view_restore (self);
 }
 
 static void
 handle_toplevel_handle_request_activate (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocView *view = wl_container_of(listener, view, toplevel_handle_request_activate);
+  PhocViewPrivate *priv = wl_container_of(listener, priv, toplevel_handle_request_activate);
+  PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_foreign_toplevel_handle_v1_activated_event *event = data;
 
   for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
@@ -1312,50 +1344,57 @@ handle_toplevel_handle_request_activate (struct wl_listener *listener, void *dat
 
     g_assert (PHOC_IS_SEAT (seat));
     if (event->seat == seat->seat)
-      phoc_seat_set_focus(seat, view);
+      phoc_seat_set_focus (seat, self);
   }
 }
 
 static void
 handle_toplevel_handle_request_fullscreen (struct wl_listener *listener, void *data)
 {
-  PhocView *view = wl_container_of(listener, view, toplevel_handle_request_fullscreen);
-
+  PhocViewPrivate *priv = wl_container_of(listener, priv, toplevel_handle_request_fullscreen);
+  PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_foreign_toplevel_handle_v1_fullscreen_event *event = data;
-  phoc_view_set_fullscreen(view, event->fullscreen, event->output);
+
+  phoc_view_set_fullscreen (self, event->fullscreen, event->output);
 }
 
 static void
 handle_toplevel_handle_request_close (struct wl_listener *listener, void *data)
 {
-  PhocView *view = wl_container_of(listener, view, toplevel_handle_request_close);
-  phoc_view_close (view);
+  PhocViewPrivate *priv = wl_container_of(listener, priv, toplevel_handle_request_close);
+  PhocView *self = PHOC_VIEW_SELF (priv);
+
+  phoc_view_close (self);
 }
 
 static void
 view_create_foreign_toplevel_handle (PhocView *view)
 {
+  PhocViewPrivate *priv;
+
   g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
 
-  view->toplevel_handle =
+  priv->toplevel_handle =
     wlr_foreign_toplevel_handle_v1_create(view->desktop->foreign_toplevel_manager_v1);
+  g_assert (priv->toplevel_handle);
 
-  view->toplevel_handle_request_maximize.notify = handle_toplevel_handle_request_maximize;
-  wl_signal_add(&view->toplevel_handle->events.request_maximize,
-                &view->toplevel_handle_request_maximize);
+  priv->toplevel_handle_request_maximize.notify = handle_toplevel_handle_request_maximize;
+  wl_signal_add(&priv->toplevel_handle->events.request_maximize,
+                &priv->toplevel_handle_request_maximize);
 
-  view->toplevel_handle_request_activate.notify = handle_toplevel_handle_request_activate;
-  wl_signal_add(&view->toplevel_handle->events.request_activate,
-                &view->toplevel_handle_request_activate);
+  priv->toplevel_handle_request_activate.notify = handle_toplevel_handle_request_activate;
+  wl_signal_add(&priv->toplevel_handle->events.request_activate,
+                &priv->toplevel_handle_request_activate);
 
-  view->toplevel_handle_request_fullscreen.notify = handle_toplevel_handle_request_fullscreen;
-  wl_signal_add(&view->toplevel_handle->events.request_fullscreen,
-                &view->toplevel_handle_request_fullscreen);
+  priv->toplevel_handle_request_fullscreen.notify = handle_toplevel_handle_request_fullscreen;
+  wl_signal_add(&priv->toplevel_handle->events.request_fullscreen,
+                &priv->toplevel_handle_request_fullscreen);
 
-  view->toplevel_handle_request_close.notify = handle_toplevel_handle_request_close;
-  wl_signal_add(&view->toplevel_handle->events.request_close, &view->toplevel_handle_request_close);
+  priv->toplevel_handle_request_close.notify = handle_toplevel_handle_request_close;
+  wl_signal_add(&priv->toplevel_handle->events.request_close, &priv->toplevel_handle_request_close);
 
-  view->toplevel_handle->data = view;
+  priv->toplevel_handle->data = view;
 }
 
 
