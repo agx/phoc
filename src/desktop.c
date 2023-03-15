@@ -399,8 +399,6 @@ static void input_inhibit_activate(struct wl_listener *listener, void *data) {
 }
 
 static void input_inhibit_deactivate(struct wl_listener *listener, void *data) {
-	PhocDesktop *desktop = wl_container_of(
-			listener, desktop, input_inhibit_deactivate);
 	PhocServer *server = phoc_server_get_default ();
 
 	for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
