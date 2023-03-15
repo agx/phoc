@@ -21,6 +21,7 @@
 static void handle_destroy(struct wl_listener *listener, void *data) {
 	PhocXWaylandSurface *phoc_surface =
 		wl_container_of(listener, phoc_surface, destroy);
+	g_signal_emit_by_name (phoc_surface, "surface-destroy");
 	g_object_unref (phoc_surface);
 }
 

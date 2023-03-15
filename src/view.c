@@ -25,6 +25,12 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+enum {
+  SURFACE_DESTROY,
+  N_SIGNALS
+};
+static guint signals[N_SIGNALS] = { 0 };
+
 typedef struct _PhocViewPrivate {
   char          *title;
   char          *app_id;
@@ -1533,6 +1539,21 @@ phoc_view_class_init (PhocViewClass *klass)
                           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+
+  /**
+   * PhocView:surface-destroy:
+   *
+   * Derived classes emit this signal just before dropping their ref so reference holders
+   * can react.
+   */
+  signals[SURFACE_DESTROY] =
+    g_signal_new ("surface-destroy",
+                  G_TYPE_FROM_CLASS (object_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE,
+                  0);
 }
 
 
