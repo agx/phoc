@@ -1100,6 +1100,8 @@ view_send_frame_done_if_not_visible (PhocView *view)
   }
 }
 
+static void view_create_foreign_toplevel_handle (PhocView *view);
+
 void view_setup(PhocView *view) {
         PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
@@ -1330,9 +1332,11 @@ handle_toplevel_handle_request_close (struct wl_listener *listener, void *data)
   phoc_view_close (view);
 }
 
-void
+static void
 view_create_foreign_toplevel_handle (PhocView *view)
 {
+  g_assert (PHOC_IS_VIEW (view));
+
   view->toplevel_handle =
     wlr_foreign_toplevel_handle_v1_create(view->desktop->foreign_toplevel_manager_v1);
 

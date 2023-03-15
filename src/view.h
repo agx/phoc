@@ -199,7 +199,6 @@ void view_setup(PhocView *view);
 void view_set_title(PhocView *view, const char *title);
 void view_set_parent(PhocView *view, PhocView *parent);
 void phoc_view_set_app_id(PhocView *view, const char *app_id);
-void view_create_foreign_toplevel_handle(PhocView *view);
 void view_get_deco_box(PhocView *view, struct wlr_box *box);
 void phoc_view_for_each_surface (PhocView                    *self,
                                  wlr_surface_iterator_func_t  iterator,
