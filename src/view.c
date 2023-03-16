@@ -59,6 +59,7 @@ typedef struct _PhocViewPrivate {
 
   /* Subsurface and popups */
   struct wl_listener surface_new_subsurface;
+  struct wl_list child_surfaces; // PhocViewChild::link
 } PhocViewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
@@ -793,6 +794,8 @@ phoc_view_child_init (PhocViewChild *child,
                       PhocView *view,
                       struct wlr_surface *wlr_surface)
 {
+  PhocViewPrivate *priv;
+
   g_assert (impl->destroy);
   child->impl = impl;
   child->view = view;
@@ -804,7 +807,8 @@ phoc_view_child_init (PhocViewChild *child,
   child->new_subsurface.notify = phoc_view_child_handle_new_subsurface;
   wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
 
-  wl_list_insert(&view->child_surfaces, &child->link);
+  priv = phoc_view_get_instance_private (view);
+  wl_list_insert (&priv->child_surfaces, &child->link);
 
   phoc_view_child_init_subsurfaces (child, wlr_surface);
 }
@@ -1054,7 +1058,7 @@ void view_unmap(PhocView *view) {
 	wl_list_remove (&priv->surface_new_subsurface.link);
 
 	PhocViewChild *child, *tmp;
-	wl_list_for_each_safe(child, tmp, &view->child_surfaces, link) {
+	wl_list_for_each_safe(child, tmp, &priv->child_surfaces, link) {
 		phoc_view_child_destroy(child);
 	}
 
@@ -1651,7 +1655,7 @@ phoc_view_init (PhocView *self)
   priv->scale = 1.0f;
   priv->state = PHOC_VIEW_STATE_FLOATING;
 
-  wl_list_init(&self->child_surfaces);
+  wl_list_init (&priv->child_surfaces);
   wl_list_init(&self->stack);
 
   self->desktop = phoc_server_get_default ()->desktop;

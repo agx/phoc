@@ -63,7 +63,6 @@ struct _PhocView {
 	struct wl_list stack; // PhocView::link
 
 	struct wlr_surface *wlr_surface; // set only when the surface is mapped
-	struct wl_list child_surfaces; // PhocViewChild::link
 };
 
 /**
