@@ -1823,7 +1823,7 @@ phoc_view_get_scale (PhocView *self)
  * @titlebar_height: The height of the titlebar
  * @border_width: The border width
  *
- * Sets whether the window is decorated. If so also specifies the
+ * Sets whether the window is decorated. If %TRUE also specifies the
  * decoration.
  */
 void
