@@ -268,7 +268,7 @@ static void render_surface_iterator(PhocOutput *output,
 
 static void render_decorations(PhocOutput *output,
 		PhocView *view, struct render_data *data) {
-	if (!view->decorated || !phoc_view_is_mapped (view)) {
+	if (!phoc_view_is_decorated (view) || !phoc_view_is_mapped (view)) {
 		return;
 	}
 
@@ -288,7 +288,7 @@ static void render_decorations(PhocOutput *output,
 	float matrix[9];
 	wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL,
 		0, output->wlr_output->transform_matrix);
-	float color[] = { 0.2, 0.2, 0.2, view->alpha };
+	float color[] = { 0.2, 0.2, 0.2, phoc_view_get_alpha (view) };
 
 	int nrects;
 	pixman_box32_t *rects =
@@ -310,7 +310,7 @@ render_view (PhocOutput *output, PhocView *view, struct render_data *data)
   if (view_is_fullscreen (view) && view->fullscreen_output != output)
     return;
 
-  data->alpha = view->alpha;
+  data->alpha = phoc_view_get_alpha (view);
   if (!view_is_fullscreen (view))
     render_decorations(output, view, data);
 
@@ -382,7 +382,7 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 	}
 
 #if WLR_HAS_XWAYLAND
-	if (view->type == PHOC_XWAYLAND_VIEW) {
+	if (PHOC_IS_XWAYLAND_SURFACE (view)) {
 		PhocXWaylandSurface *xwayland_surface =
 			phoc_xwayland_surface_from_view(view);
 		if (!wl_list_empty(&xwayland_surface->xwayland_surface->children)) {
@@ -744,7 +744,7 @@ void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
 		// because all windows are rendered. Here we only want to render
 		// the fullscreen window's children so we have to traverse the tree.
 #ifdef PHOC_XWAYLAND
-		if (view->type == PHOC_XWAYLAND_VIEW) {
+		if (PHOC_IS_XWAYLAND_SURFACE (view)) {
 			PhocXWaylandSurface *xwayland_surface =
 				phoc_xwayland_surface_from_view(view);
 			phoc_output_xwayland_children_for_each_surface(output,

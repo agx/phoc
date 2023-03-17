@@ -683,8 +683,8 @@ phoc_cursor_update_position (PhocCursor *self,
         view_tile (view, PHOC_VIEW_TILE_RIGHT, wlr_output);
       } else {
         view_restore (view);
-        view_move (view, self->view_x + dx - geom.x * view->scale,
-                   self->view_y + dy - geom.y * view->scale);
+        view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
+                   self->view_y + dy - geom.y * phoc_view_get_scale (view));
       }
     }
     break;
@@ -700,7 +700,7 @@ phoc_cursor_update_position (PhocCursor *self,
       int width = self->view_width;
       int height = self->view_height;
       if (self->resize_edges & WLR_EDGE_TOP) {
-        y = self->view_y + dy - geom.y * view->scale;
+        y = self->view_y + dy - geom.y * phoc_view_get_scale (view);
         height -= dy;
         if (height < 1) {
           y += height;
@@ -709,7 +709,7 @@ phoc_cursor_update_position (PhocCursor *self,
         height += dy;
       }
       if (self->resize_edges & WLR_EDGE_LEFT) {
-        x = self->view_x + dx - geom.x * view->scale;
+        x = self->view_x + dx - geom.x * phoc_view_get_scale (view);
         width -= dx;
         if (width < 1) {
           x += width;
@@ -1125,7 +1125,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
     } else {
       PhocView *view = phoc_view_from_wlr_surface (root);
       if (view) {
-        scale = view->scale;
+        scale = phoc_view_get_scale (view);
         sx = lx / scale - view->box.x;
         sy = ly / scale - view->box.y;
         found = true;
