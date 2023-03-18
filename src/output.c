@@ -442,7 +442,7 @@ phoc_output_initable_init (GInitable    *initable,
                                phoc_renderer_get_wlr_renderer (renderer))) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
-		 "Could not create renderer");
+                 "Could not create renderer");
     return FALSE;
   }
 
