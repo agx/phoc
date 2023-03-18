@@ -682,8 +682,8 @@ phoc_cursor_update_position (PhocCursor *self,
         view_tile (view, PHOC_VIEW_TILE_RIGHT, wlr_output);
       } else {
         view_restore (view);
-        view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
-                   self->view_y + dy - geom.y * phoc_view_get_scale (view));
+        phoc_view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
+                        self->view_y + dy - geom.y * phoc_view_get_scale (view));
       }
     }
     break;

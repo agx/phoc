@@ -238,20 +238,11 @@ view_save(PhocView *view)
   view->saved.height = view->box.height;
 }
 
-void view_move(PhocView *view, double x, double y) {
-	if (view->box.x == x && view->box.y == y) {
-		return;
-	}
 
-	view->pending_move_resize.update_x = false;
-	view->pending_move_resize.update_y = false;
-	view->pending_centering = false;
-
-	if (PHOC_VIEW_GET_CLASS (view)->move) {
-		PHOC_VIEW_GET_CLASS (view)->move(view, x, y);
-	} else {
-		view_update_position(view, x, y);
-	}
+static void
+phoc_view_move_default (PhocView *view, double x, double y)
+{
+  view_update_position (view, x, y);
 }
 
 void
@@ -261,6 +252,7 @@ phoc_view_appear_activated (PhocView *view, bool activated)
 
   PHOC_VIEW_GET_CLASS (view)->set_active (view, activated);
 }
+
 
 void
 phoc_view_activate (PhocView *self, bool activate)
@@ -316,7 +308,7 @@ phoc_view_move_resize (PhocView *view, double x, double y, uint32_t width, uint3
   }
 
   if (!update_width && !update_height) {
-    view_move (view, x, y);
+    phoc_view_move (view, x, y);
     return;
   }
 
@@ -720,7 +712,7 @@ bool view_center(PhocView *view, struct wlr_output *wlr_output) {
 	  usable_area.y + l_output->y - geom.y * priv->scale;
 
 	g_debug ("moving view to %f %f", view_x, view_y);
-	view_move(view, view_x / priv->scale, view_y / priv->scale);
+	phoc_view_move (view, view_x / priv->scale, view_y / priv->scale);
 
 	if (!desktop->maximize) {
 		// TODO: fitting floating oversized windows requires more work (!228)
@@ -1510,6 +1502,7 @@ phoc_view_class_init (PhocViewClass *klass)
 
   view_class->for_each_surface = phoc_view_for_each_surface_default;
   view_class->get_geometry = phoc_view_get_geometry_default;
+  view_class->move = phoc_view_move_default;
 
   /**
    * PhocView:scale-to-fit:
@@ -1876,4 +1869,20 @@ phoc_view_get_geometry (PhocView *self, struct wlr_box *geom)
   g_assert (PHOC_IS_VIEW (self));
 
   PHOC_VIEW_GET_CLASS (self)->get_geometry (self, geom);
+}
+
+
+void
+phoc_view_move (PhocView *self, double x, double y)
+{
+  g_assert (PHOC_IS_VIEW (self));
+
+  if (self->box.x == x && self->box.y == y)
+    return;
+
+  self->pending_move_resize.update_x = false;
+  self->pending_move_resize.update_y = false;
+  self->pending_centering = false;
+
+  PHOC_VIEW_GET_CLASS (self)->move(self, x, y);
 }

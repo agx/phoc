@@ -187,7 +187,7 @@ void view_arrange_maximized(PhocView *view, struct wlr_output *output);
 void view_arrange_tiled(PhocView *view, struct wlr_output *output);
 void view_get_box(PhocView *view, struct wlr_box *box);
 void phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
-void view_move (PhocView *view, double x, double y);
+void phoc_view_move (PhocView *self, double x, double y);
 bool view_move_to_next_output (PhocView *view, enum wlr_direction direction);
 void phoc_view_move_resize (PhocView *view, double x, double y,
                             uint32_t width, uint32_t height);

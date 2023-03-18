@@ -381,7 +381,7 @@ handle_layout_change (struct wl_listener *listener, void *data)
 
     if (wlr_output_layout_intersects (self->layout, NULL, &box))
       continue;
-    view_move (view, center_x - box.width / 2, center_y - box.height / 2);
+    phoc_view_move (view, center_x - box.width / 2, center_y - box.height / 2);
   }
 
   /* Damage all outputs since the move above damaged old layout space */

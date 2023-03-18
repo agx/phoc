@@ -1812,7 +1812,7 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
   switch (cursor->mode) {
   case PHOC_CURSOR_MOVE:
     if (!view_is_fullscreen (view))
-      view_move (view, cursor->view_x, cursor->view_y);
+      phoc_view_move (view, cursor->view_x, cursor->view_y);
     break;
   case PHOC_CURSOR_RESIZE:
     phoc_view_move_resize (view, cursor->view_x,
