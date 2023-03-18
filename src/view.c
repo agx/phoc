@@ -584,11 +584,6 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 	}
 }
 
-void view_close(PhocView *view) {
-	if (PHOC_VIEW_GET_CLASS (view)->close) {
-		PHOC_VIEW_GET_CLASS (view)->close(view);
-	}
-}
 
 bool
 view_move_to_next_output (PhocView *view, enum wlr_direction direction)
@@ -1344,7 +1339,7 @@ static void handle_toplevel_handle_request_close(struct wl_listener *listener,
 		void *data) {
 	PhocView *view =
 		wl_container_of(listener, view, toplevel_handle_request_close);
-	view_close(view);
+	phoc_view_close (view);
 }
 
 void view_create_foreign_toplevel_handle(PhocView *view) {
@@ -1885,4 +1880,11 @@ phoc_view_move (PhocView *self, double x, double y)
   self->pending_centering = false;
 
   PHOC_VIEW_GET_CLASS (self)->move(self, x, y);
+}
+
+
+void
+phoc_view_close (PhocView *self)
+{
+  PHOC_VIEW_GET_CLASS (self)->close(self);
 }

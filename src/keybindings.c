@@ -123,7 +123,7 @@ static void handle_close (PhocSeat *seat)
   PhocView *focus = phoc_seat_get_focus(seat);
 
   if (focus)
-    view_close(focus);
+    phoc_view_close (focus);
 }
 
 static void

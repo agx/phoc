@@ -197,7 +197,7 @@ PhocViewTileDirection
 void view_maximize(PhocView *view, struct wlr_output *output);
 void view_restore(PhocView *view);
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output);
-void view_close(PhocView *view);
+void phoc_view_close (PhocView *self);
 bool view_center(PhocView *view, struct wlr_output *output);
 void view_send_frame_done_if_not_visible (PhocView *view);
 void view_setup(PhocView *view);
