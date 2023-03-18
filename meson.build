@@ -152,6 +152,7 @@ meson.add_install_script(
 subdir('protocols')
 subdir('src')
 subdir('tests')
+subdir('helpers')
 subdir('data')
 subdir('doc')
 subdir('examples')
