@@ -247,8 +247,6 @@ void view_move(PhocView *view, double x, double y) {
 	view->pending_move_resize.update_y = false;
 	view->pending_centering = false;
 
-	struct wlr_box before;
-	view_get_box(view, &before);
 	if (PHOC_VIEW_GET_CLASS (view)->move) {
 		PHOC_VIEW_GET_CLASS (view)->move(view, x, y);
 	} else {
