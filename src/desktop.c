@@ -68,10 +68,10 @@ G_DEFINE_TYPE(PhocDesktop, phoc_desktop, G_TYPE_OBJECT);
 
 
 static void
-phoc_desktop_set_property (GObject     *object,
-                          guint         property_id,
-                          const GValue *value,
-                          GParamSpec   *pspec)
+phoc_desktop_set_property (GObject      *object,
+                           guint         property_id,
+                           const GValue *value,
+                           GParamSpec   *pspec)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
 
@@ -92,9 +92,9 @@ phoc_desktop_set_property (GObject     *object,
 
 static void
 phoc_desktop_get_property (GObject    *object,
-			   guint       property_id,
-			   GValue     *value,
-			   GParamSpec *pspec)
+                           guint       property_id,
+                           GValue     *value,
+                           GParamSpec *pspec)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
 
