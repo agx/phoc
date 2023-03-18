@@ -165,7 +165,7 @@ typedef struct _PhocViewChild {
   struct wl_listener new_subsurface;
 } PhocViewChild;
 
-void view_appear_activated(PhocView *view, bool activated);
+void phoc_view_appear_activated (PhocView *view, bool activated);
 void phoc_view_activate (PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
 void phoc_view_damage_whole (PhocView *view);

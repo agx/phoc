@@ -272,10 +272,11 @@ void view_move(PhocView *view, double x, double y) {
 }
 
 void
-view_appear_activated (PhocView *view, bool activated)
+phoc_view_appear_activated (PhocView *view, bool activated)
 {
-  if (PHOC_VIEW_GET_CLASS (view)->set_active)
-    PHOC_VIEW_GET_CLASS (view)->set_active (view, activated);
+  g_assert (PHOC_IS_VIEW (view));
+
+  PHOC_VIEW_GET_CLASS (view)->set_active (view, activated);
 }
 
 void
@@ -287,7 +288,7 @@ phoc_view_activate (PhocView *self, bool activate)
   priv = phoc_view_get_instance_private (self);
 
   if (!self->desktop->maximize) {
-    view_appear_activated(self, activate);
+    phoc_view_appear_activated (self, activate);
   }
 
   if (self->toplevel_handle) {
@@ -1035,7 +1036,7 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   wl_signal_add(&view->wlr_surface->events.new_subsurface, &view->surface_new_subsurface);
 
   if (view->desktop->maximize) {
-    view_appear_activated(view, true);
+    phoc_view_appear_activated (view, true);
 
     if (!wl_list_empty(&view->desktop->views)) {
       // mapping a new stack may make the old stack disappear, so damage its area
