@@ -414,10 +414,7 @@ want_auto_maximize(PhocView *view) {
   if (!view->desktop->maximize)
     return false;
 
-  if (PHOC_VIEW_GET_CLASS (view)->want_auto_maximize)
-    return PHOC_VIEW_GET_CLASS (view)->want_auto_maximize(view);
-
-  return false;
+  return PHOC_VIEW_GET_CLASS (view)->want_auto_maximize(view);
 }
 
 void view_maximize(PhocView *view, struct wlr_output *output) {
