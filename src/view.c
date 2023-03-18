@@ -519,9 +519,7 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 		if (fullscreen && phoc_view_is_mapped (view))
 			g_return_if_fail (phoc_input_view_has_focus (phoc_server_get_default()->input, view));
 
-		if (PHOC_VIEW_GET_CLASS (view)->set_fullscreen) {
-			PHOC_VIEW_GET_CLASS (view)->set_fullscreen(view, fullscreen);
-		}
+		PHOC_VIEW_GET_CLASS (view)->set_fullscreen (view, fullscreen);
 
 		if (view->toplevel_handle) {
 			wlr_foreign_toplevel_handle_v1_set_fullscreen(view->toplevel_handle,
