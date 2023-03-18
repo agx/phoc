@@ -30,7 +30,7 @@ typedef struct _PhocTestKeyboardEvent
 
 static PhocTestScreencopyFrame *
 phoc_test_get_thumbnail (PhocTestClientGlobals *globals,
-			   guint32 max_width, guint32 max_height, PhocTestForeignToplevel *toplevel)
+                           guint32 max_width, guint32 max_height, PhocTestForeignToplevel *toplevel)
 {
   PhocTestScreencopyFrame *thumbnail = g_malloc0 (sizeof(PhocTestScreencopyFrame));
 
@@ -146,10 +146,10 @@ test_client_phosh_private_kbevent_simple (PhocTestClientGlobals *globals, gpoint
   test2 = phoc_test_keyboard_event_new (globals, "test-invalid-grabbing");
 
   phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent,
-							 "XF86AudioLowerVolume");
+                                                         "XF86AudioLowerVolume");
   /* Not allowed to bind this one: */
   phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent,
-							 "F9");
+                                                         "F9");
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
 
@@ -160,10 +160,10 @@ test_client_phosh_private_kbevent_simple (PhocTestClientGlobals *globals, gpoint
   test2->grab_status = GRAB_STATUS_UNKNOWN;
 
   phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent,
-							 RAISE_VOL_KEY);
+                                                         RAISE_VOL_KEY);
   /* Can't bind same key twice: */
   phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent,
-							 RAISE_VOL_KEY);
+                                                         RAISE_VOL_KEY);
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
 
@@ -175,7 +175,7 @@ test_client_phosh_private_kbevent_simple (PhocTestClientGlobals *globals, gpoint
 
   /* Allowing to bind a already bound key with an additional accelerator is o.k. */
   phosh_private_keyboard_event_grab_accelerator_request (test1->kbevent,
-							 "<SHIFT>" RAISE_VOL_KEY);
+                                                         "<SHIFT>" RAISE_VOL_KEY);
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
 
@@ -187,7 +187,7 @@ test_client_phosh_private_kbevent_simple (PhocTestClientGlobals *globals, gpoint
 
   /* Binding non existing key must fail */
   phosh_private_keyboard_event_grab_accelerator_request (test2->kbevent,
-							 "does-not-exist");
+                                                         "does-not-exist");
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
 

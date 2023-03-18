@@ -64,7 +64,7 @@ test_client_layer_shell_effects_drag_surface_simple (PhocTestClientGlobals *glob
   DragTestSimple drag_test = { 0 };
 
   ls_green = phoc_test_layer_surface_new (globals, 0, HEIGHT, 0xFF00FF00,
-					  ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
                                           ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
                                           ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
                                           HEIGHT);

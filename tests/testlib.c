@@ -21,7 +21,7 @@ static bool
 abgr_to_argb (PhocTestBuffer *buffer)
 {
   g_assert_true (buffer->format == WL_SHM_FORMAT_ABGR8888 ||
-		 buffer->format == WL_SHM_FORMAT_XBGR8888);
+                 buffer->format == WL_SHM_FORMAT_XBGR8888);
   guint8 *data = buffer->shm_data;
 
   for (int i = 0; i < buffer->height * buffer->stride; i += 4) {
@@ -66,20 +66,20 @@ buffer_to_argb(PhocTestBuffer *buffer)
 
 static void
 screencopy_frame_handle_buffer (void *data,
-				struct zwlr_screencopy_frame_v1 *handle,
-				uint32_t format,
-				uint32_t width,
-				uint32_t height,
-				uint32_t stride)
+                                struct zwlr_screencopy_frame_v1 *handle,
+                                uint32_t format,
+                                uint32_t width,
+                                uint32_t height,
+                                uint32_t stride)
 {
   PhocTestScreencopyFrame *frame = data;
   gboolean success;
 
   success = phoc_test_client_create_shm_buffer (frame->globals,
-						&frame->buffer,
-						width,
-						height,
-						format);
+                                                &frame->buffer,
+                                                width,
+                                                height,
+                                                format);
   g_assert_true (success);
   zwlr_screencopy_frame_v1_copy(handle, frame->buffer.wl_buffer);
 }
@@ -94,8 +94,8 @@ screencopy_frame_handle_flags(void *data, struct zwlr_screencopy_frame_v1 *handl
 
 static void
 screencopy_frame_handle_ready (void *data, struct zwlr_screencopy_frame_v1 *handle,
-			       uint32_t tv_sec_hi, uint32_t tv_sec_lo,
-			       uint32_t tv_nsec)
+                               uint32_t tv_sec_hi, uint32_t tv_sec_lo,
+                               uint32_t tv_nsec)
 {
   PhocTestScreencopyFrame *frame = data;
 
@@ -139,15 +139,15 @@ static const struct wl_buffer_listener buffer_listener = {
 
 static void
 output_handle_geometry (void *data, struct wl_output *wl_output,
-			int32_t x, int32_t y, int32_t physical_width, int32_t physical_height,
-			int32_t subpixel, const char *make, const char *model,
-			int32_t transform) {
+                        int32_t x, int32_t y, int32_t physical_width, int32_t physical_height,
+                        int32_t subpixel, const char *make, const char *model,
+                        int32_t transform) {
   /* TBD */
 }
 
 static void
 output_handle_mode (void *data, struct wl_output *wl_output,
-		    uint32_t flags, int32_t width, int32_t height, int32_t refresh)
+                    uint32_t flags, int32_t width, int32_t height, int32_t refresh)
 {
   PhocTestOutput *output = data;
 
@@ -168,7 +168,7 @@ output_handle_done (void *data, struct wl_output *wl_output)
 
 static void
 output_handle_scale (void *data, struct wl_output *wl_output,
-		     int32_t scale)
+                     int32_t scale)
 {
   g_assert_cmpint (scale, ==, 1);
 }
@@ -193,8 +193,8 @@ static const struct xdg_wm_base_listener wm_base_listener = {
 
 static void
 foreign_toplevel_handle_title (void *data,
-			       struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
-			       const char* title)
+                               struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+                               const char* title)
 {
   PhocTestForeignToplevel *toplevel = data;
   toplevel->title = g_strdup (title);
@@ -203,42 +203,42 @@ foreign_toplevel_handle_title (void *data,
 
 static void
 foreign_toplevel_handle_app_id (void *data,
-				struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
-				const char* app_id)
+                                struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+                                const char* app_id)
 {
 }
 
 static void
 foreign_toplevel_handle_output_enter (void *data,
-				      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
-				      struct wl_output *output)
+                                      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+                                      struct wl_output *output)
 {
 }
 
 static void
 foreign_toplevel_handle_output_leave (void *data,
-				      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
-				      struct wl_output *output)
+                                      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+                                      struct wl_output *output)
 {
 }
 
 static void
 foreign_toplevel_handle_state (void *data,
-			       struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
-			       struct wl_array *state)
+                               struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1,
+                               struct wl_array *state)
 {
 }
 
 static void
 foreign_toplevel_handle_done (void *data,
-			      struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1)
+                              struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1)
 {
 }
 
 
 static void
 foreign_toplevel_handle_closed (void *data,
-				struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1)
+                                struct zwlr_foreign_toplevel_handle_v1 *zwlr_foreign_toplevel_handle_v1)
 {
   PhocTestForeignToplevel *toplevel = data;
   PhocTestClientGlobals *globals = toplevel->globals;
@@ -261,8 +261,8 @@ static const struct zwlr_foreign_toplevel_handle_v1_listener foreign_toplevel_ha
 
 static void
 foreign_toplevel_manager_handle_toplevel (void *data,
-					  struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1,
-					  struct zwlr_foreign_toplevel_handle_v1 *handle)
+                                          struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1,
+                                          struct zwlr_foreign_toplevel_handle_v1 *handle)
 {
   PhocTestClientGlobals *globals = data;
 
@@ -276,7 +276,7 @@ foreign_toplevel_manager_handle_toplevel (void *data,
 
 static void
 foreign_toplevel_manager_handle_finished (void *data,
-					  struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1)
+                                          struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1)
 {
   g_debug ("wlr_foreign_toplevel_manager_finished");
 }
@@ -288,7 +288,7 @@ static const struct zwlr_foreign_toplevel_manager_v1_listener foreign_toplevel_m
 };
 
 static void registry_handle_global(void *data, struct wl_registry *registry,
-				   uint32_t name, const char *interface, uint32_t version)
+                                   uint32_t name, const char *interface, uint32_t version)
 {
   PhocTestClientGlobals *globals = data;
 
@@ -301,23 +301,23 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
     /* TODO: only one output atm */
     g_assert_null (globals->output.output);
     globals->output.output = wl_registry_bind (registry, name,
-					       &wl_output_interface, 3);
+                                               &wl_output_interface, 3);
     wl_output_add_listener(globals->output.output, &output_listener, &globals->output);
   } else if (!g_strcmp0 (interface, xdg_wm_base_interface.name)) {
     globals->xdg_shell = wl_registry_bind (registry, name,
-					   &xdg_wm_base_interface, 1);
+                                           &xdg_wm_base_interface, 1);
     xdg_wm_base_add_listener(globals->xdg_shell, &wm_base_listener, NULL);
   } else if (!g_strcmp0 (interface, zwlr_layer_shell_v1_interface.name)) {
     globals->layer_shell = wl_registry_bind (registry, name,
-					     &zwlr_layer_shell_v1_interface, 2);
+                                             &zwlr_layer_shell_v1_interface, 2);
   } else if (!g_strcmp0 (interface, zwlr_screencopy_manager_v1_interface.name)) {
     globals->screencopy_manager = wl_registry_bind (registry, name,
-						    &zwlr_screencopy_manager_v1_interface, 1);
+                                                    &zwlr_screencopy_manager_v1_interface, 1);
   } else if (!g_strcmp0 (interface, zwlr_foreign_toplevel_manager_v1_interface.name)) {
     globals->foreign_toplevel_manager = wl_registry_bind (registry, name,
-							  &zwlr_foreign_toplevel_manager_v1_interface, 2);
+                                                          &zwlr_foreign_toplevel_manager_v1_interface, 2);
     zwlr_foreign_toplevel_manager_v1_add_listener (globals->foreign_toplevel_manager,
-						   &foreign_toplevel_manager_listener, globals);
+                                                   &foreign_toplevel_manager_listener, globals);
   } else if (!g_strcmp0 (interface, phosh_private_interface.name)) {
     globals->phosh = wl_registry_bind (registry, name, &phosh_private_interface, 6);
   } else if (!g_strcmp0 (interface, gtk_shell1_interface.name)) {
@@ -329,7 +329,7 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
 }
 
 static void registry_handle_global_remove (void *data,
-		struct wl_registry *registry, uint32_t name) {
+                struct wl_registry *registry, uint32_t name) {
   // This space is intentionally left blank
 }
 
@@ -340,7 +340,7 @@ static const struct wl_registry_listener registry_listener = {
 
 static void
 wl_client_run (GTask *task, gpointer source,
-	       gpointer data, GCancellable *cancel)
+               gpointer data, GCancellable *cancel)
 {
   struct wl_registry *registry;
   gboolean success = FALSE;
@@ -410,15 +410,15 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
   g_autoptr(PhocServer) server = phoc_server_get_default ();
   g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
   g_autoptr(GTask) wl_client_task = g_task_new (NULL, NULL,
-						on_wl_client_finish,
-						loop);
+                                                on_wl_client_finish,
+                                                loop);
   if (iface)
     td.func = iface->client_run;
 
   g_assert_true (PHOC_IS_SERVER (server));
   g_assert_true (phoc_server_setup(server, TEST_PHOC_INI, NULL, loop,
                                    PHOC_SERVER_FLAG_NONE,
-				   PHOC_SERVER_DEBUG_FLAG_NONE));
+                                   PHOC_SERVER_DEBUG_FLAG_NONE));
   if (iface && iface->server_prepare)
     g_assert_true (iface->server_prepare(server, data));
 
@@ -454,8 +454,8 @@ create_anon_file (off_t size)
  */
 gboolean
 phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
-				    PhocTestBuffer *buffer,
-				    int width, int height, guint32 format)
+                                    PhocTestBuffer *buffer,
+                                    int width, int height, guint32 format)
 {
   struct wl_shm_pool *pool;
   int fd, size;
@@ -476,8 +476,8 @@ phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
 
   pool = wl_shm_create_pool(globals->shm, fd, size);
   buffer->wl_buffer = wl_shm_pool_create_buffer(pool, 0,
-						width, height,
-						buffer->stride, format);
+                                                width, height,
+                                                buffer->stride, format);
   wl_buffer_add_listener (buffer->wl_buffer, &buffer_listener, buffer);
   wl_shm_pool_destroy (pool);
   close (fd);
@@ -525,7 +525,7 @@ phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
  */
 PhocTestBuffer *
 phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
-				PhocTestScreencopyFrame *frame, struct zwlr_screencopy_frame_v1 *handle)
+                                PhocTestScreencopyFrame *frame, struct zwlr_screencopy_frame_v1 *handle)
 {
   frame->globals = globals;
   frame->handle = handle;
@@ -569,7 +569,7 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
  */
 PhocTestBuffer *
 phoc_test_client_capture_output (PhocTestClientGlobals *globals,
-				 PhocTestOutput *output)
+                                 PhocTestOutput *output)
 {
   struct zwlr_screencopy_frame_v1 *handle = zwlr_screencopy_manager_v1_capture_output (globals->screencopy_manager, FALSE, output->output);
   phoc_test_client_capture_frame (globals, &output->screenshot, handle);
@@ -647,13 +647,13 @@ phoc_test_buffer_save (PhocTestBuffer *buffer, const gchar *filename)
   g_assert_nonnull (filename);
 
   g_assert_true (buffer->format == WL_SHM_FORMAT_XRGB8888
-		 || buffer->format == WL_SHM_FORMAT_ARGB8888);
+                 || buffer->format == WL_SHM_FORMAT_ARGB8888);
 
   surface = cairo_image_surface_create_for_data ((guchar*)buffer->shm_data,
-						 CAIRO_FORMAT_ARGB32,
-						 buffer->width,
-						 buffer->height,
-						 buffer->stride);
+                                                 CAIRO_FORMAT_ARGB32,
+                                                 buffer->width,
+                                                 buffer->height,
+                                                 buffer->stride);
   status = cairo_surface_write_to_png (surface, filename);
   g_assert_cmpint (status, ==, CAIRO_STATUS_SUCCESS);
   g_debug ("Saved buffer png %s", filename);
@@ -673,7 +673,7 @@ phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filena
   int ret;
 
   g_assert_true (buffer->format == WL_SHM_FORMAT_XRGB8888
-		 || buffer->format == WL_SHM_FORMAT_ARGB8888);
+                 || buffer->format == WL_SHM_FORMAT_ARGB8888);
 
   switch (cairo_surface_status (surface)) {
     case CAIRO_STATUS_NO_MEMORY:
