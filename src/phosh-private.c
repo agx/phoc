@@ -111,9 +111,9 @@ phoc_phosh_private_get_property (GObject    *object,
 
 static void
 handle_rotate_display (struct wl_client   *client,
-		       struct wl_resource *resource,
-		       struct wl_resource *surface_resource,
-		       uint32_t            degrees)
+                       struct wl_resource *resource,
+                       struct wl_resource *surface_resource,
+                       uint32_t            degrees)
 {
   wl_resource_post_error (resource, WL_DISPLAY_ERROR_INVALID_OBJECT,
                           "Use wlr-output-management protocol instead");
@@ -233,8 +233,8 @@ phoc_phosh_private_keyboard_event_grab_accelerator_request (struct wl_client   *
     g_debug ("Accelerator %s already subscribed to!", accelerator);
 
     phosh_private_keyboard_event_send_grab_failed_event (resource,
-							 accelerator,
-							 PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_ALREADY_SUBSCRIBED);
+                                                         accelerator,
+                                                         PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_ALREADY_SUBSCRIBED);
     return;
   }
 
@@ -278,8 +278,8 @@ phoc_phosh_private_keyboard_event_grab_accelerator_request (struct wl_client   *
 
 static void
 phoc_phosh_private_keyboard_event_ungrab_accelerator_request (struct wl_client *client,
-							      struct wl_resource *resource,
-							      uint32_t action_id)
+                                                              struct wl_resource *resource,
+                                                              uint32_t action_id)
 {
   GHashTableIter iter;
   gpointer key, value, found = NULL;
@@ -297,19 +297,19 @@ phoc_phosh_private_keyboard_event_ungrab_accelerator_request (struct wl_client *
   if (found) {
     g_hash_table_remove (kbevent->subscribed_accelerators, key);
     phosh_private_keyboard_event_send_ungrab_success_event (resource,
-							    action_id);
+                                                            action_id);
 
   } else {
     phosh_private_keyboard_event_send_ungrab_failed_event (resource,
-							   action_id,
-							   PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_INVALID_ARGUMENT);
+                                                           action_id,
+                                                           PHOSH_PRIVATE_KEYBOARD_EVENT_ERROR_INVALID_ARGUMENT);
   }
 }
 
 
 static void
 phoc_phosh_private_keyboard_event_handle_destroy (struct wl_client   *client,
-						  struct wl_resource *resource)
+                                                  struct wl_resource *resource)
 {
   wl_resource_destroy (resource);
 }
@@ -480,9 +480,9 @@ static void
 handle_get_thumbnail (struct wl_client *client,
                       struct wl_resource *phosh_private_resource,
                       uint32_t id,
-		      struct wl_resource *toplevel,
-		      uint32_t max_width,
-		      uint32_t max_height)
+                      struct wl_resource *toplevel,
+                      uint32_t max_width,
+                      uint32_t max_height)
 {
   PhocPhoshPrivateScreencopyFrame *frame = g_new0 (PhocPhoshPrivateScreencopyFrame, 1);
 
@@ -502,8 +502,8 @@ handle_get_thumbnail (struct wl_client *client,
   g_debug ("new phosh_private_screencopy_frame %p (res %p)", frame, frame->resource);
   wl_resource_set_implementation (frame->resource,
                                   &phoc_phosh_private_screencopy_frame_impl,
-				  frame,
-				  phosh_private_screencopy_frame_handle_resource_destroy);
+                                  frame,
+                                  phosh_private_screencopy_frame_handle_resource_destroy);
 
   struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = wl_resource_get_user_data (toplevel);
   if (!toplevel_handle) {
@@ -796,7 +796,7 @@ phoc_phosh_private_new (void)
 
 bool
 phoc_phosh_private_forward_keysym (PhocKeyCombo *combo,
-				   uint32_t timestamp)
+                                   uint32_t timestamp)
 {
   GList *l;
   PhocPhoshPrivateKeyboardEventData *kbevent;
