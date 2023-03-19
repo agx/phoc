@@ -6,6 +6,8 @@
 
 #include "testlib.h"
 
+#include "xdg-shell-client-protocol.h"
+
 static gboolean
 test_client_xdg_shell_normal (PhocTestClientGlobals *globals, gpointer data)
 {
@@ -35,6 +37,37 @@ test_client_xdg_shell_auto_maximized (PhocTestClientGlobals *globals, gpointer d
 
   return TRUE;
 }
+
+
+static gboolean
+test_client_xdg_shell_toplevel_maximized (PhocTestClientGlobals *globals, gpointer data)
+{
+  PhocTestXdgToplevelSurface *xs;
+  guint32 color = 0xFF00FF00;
+
+  xs = phoc_test_xdg_toplevel_new (globals, 0, 0, "to-max", color);
+  g_assert_nonnull (xs);
+
+  /* Maximize */
+  zwlr_foreign_toplevel_handle_v1_set_maximized (xs->foreign_toplevel->handle);
+  wl_surface_commit (xs->wl_surface);
+  wl_display_dispatch (globals->display);
+  /* We got the maximized size, update the buffer */
+  phoc_test_xdg_update_buffer (globals, xs, color);
+  phoc_assert_screenshot (globals, "test-xdg-shell-maximized-1.png");
+
+  /* Back to normal state */
+  zwlr_foreign_toplevel_handle_v1_unset_maximized (xs->foreign_toplevel->handle);
+  wl_display_dispatch (globals->display);
+  phoc_test_xdg_update_buffer (globals, xs, color);
+  phoc_assert_screenshot (globals, "test-xdg-shell-normal-1.png");
+
+  phoc_test_xdg_toplevel_free (xs);
+  phoc_assert_screenshot (globals, "empty.png");
+
+  return TRUE;
+}
+
 
 static gboolean
 test_client_xdg_shell_server_prepare (PhocServer *server, gpointer data)
@@ -69,6 +102,19 @@ test_xdg_shell_auto_maximized (void)
   phoc_test_client_run (3, &iface, GINT_TO_POINTER (TRUE));
 }
 
+
+static void
+test_xdg_shell_toplevel_maximized (void)
+{
+  PhocTestClientIface iface = {
+   .server_prepare = test_client_xdg_shell_server_prepare,
+   .client_run     = test_client_xdg_shell_toplevel_maximized,
+  };
+
+  phoc_test_client_run (3, &iface, GINT_TO_POINTER (FALSE));
+}
+
+
 gint
 main (gint argc, gchar *argv[])
 {
@@ -76,5 +122,6 @@ main (gint argc, gchar *argv[])
 
   g_test_add_func("/phoc/xdg-shell/simple", test_xdg_shell_normal);
   g_test_add_func("/phoc/xdg-shell/auto-maximize", test_xdg_shell_auto_maximized);
+  g_test_add_func("/phoc/xdg-shell/toplevel-maximize", test_xdg_shell_toplevel_maximized);
   return g_test_run();
 }
