@@ -22,7 +22,7 @@ test_client_xdg_shell_normal (PhocTestClientGlobals *globals, gpointer data)
 }
 
 static gboolean
-test_client_xdg_shell_maximized (PhocTestClientGlobals *globals, gpointer data)
+test_client_xdg_shell_auto_maximized (PhocTestClientGlobals *globals, gpointer data)
 {
   PhocTestXdgToplevelSurface *ls_green;
 
@@ -59,11 +59,11 @@ test_xdg_shell_normal (void)
 }
 
 static void
-test_xdg_shell_maximized (void)
+test_xdg_shell_auto_maximized (void)
 {
   PhocTestClientIface iface = {
    .server_prepare = test_client_xdg_shell_server_prepare,
-   .client_run     = test_client_xdg_shell_maximized,
+   .client_run     = test_client_xdg_shell_auto_maximized,
   };
 
   phoc_test_client_run (3, &iface, GINT_TO_POINTER (TRUE));
@@ -75,6 +75,6 @@ main (gint argc, gchar *argv[])
   g_test_init (&argc, &argv, NULL);
 
   g_test_add_func("/phoc/xdg-shell/simple", test_xdg_shell_normal);
-  g_test_add_func("/phoc/xdg-shell/maximize", test_xdg_shell_maximized);
+  g_test_add_func("/phoc/xdg-shell/auto-maximize", test_xdg_shell_auto_maximized);
   return g_test_run();
 }
