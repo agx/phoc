@@ -109,6 +109,9 @@ PhocTestXdgToplevelSurface *
                                              const char                *title,
                                              guint32                    color);
 void            phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs);
+void            phoc_test_xdg_update_buffer (PhocTestClientGlobals      *globals,
+                                             PhocTestXdgToplevelSurface *xs,
+                                             guint32                     color);
 
 /* Buffers */
 gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2);

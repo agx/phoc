@@ -857,3 +857,26 @@ phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs)
   g_free (xs->title);
   g_free (xs);
 }
+
+void
+phoc_test_xdg_update_buffer (PhocTestClientGlobals      *globals,
+                             PhocTestXdgToplevelSurface *xs,
+                             guint32                     color)
+{
+  PhocTestBuffer buffer;
+
+  phoc_test_client_create_shm_buffer (globals, &buffer, xs->width, xs->height,
+                                      WL_SHM_FORMAT_XRGB8888);
+
+  for (int i = 0; i < xs->width * xs->height * 4; i+=4)
+    *(guint32*)(buffer.shm_data + i) = color;
+
+  wl_surface_attach (xs->wl_surface, buffer.wl_buffer, 0, 0);
+  wl_surface_damage (xs->wl_surface, 0, 0, xs->width, xs->height);
+  wl_surface_commit (xs->wl_surface);
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+
+  phoc_test_buffer_free (&xs->buffer);
+  xs->buffer = buffer;
+}
