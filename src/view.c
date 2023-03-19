@@ -431,10 +431,7 @@ void view_maximize(PhocView *view, struct wlr_output *output) {
 		return;
 	}
 
-	if (PHOC_VIEW_GET_CLASS (view)->set_tiled) {
-		PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
-	}
-
+	PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
 	PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
 
 	if (view->toplevel_handle) {
@@ -488,9 +485,7 @@ view_restore(PhocView *view)
     wlr_foreign_toplevel_handle_v1_set_maximized (view->toplevel_handle, false);
 
   PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
-
-  if (PHOC_VIEW_GET_CLASS (view)->set_tiled)
-    PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
+  PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
 }
 
 /**
@@ -649,13 +644,8 @@ view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *ou
   priv->state = PHOC_VIEW_STATE_TILED;
   priv->tile_direction = direction;
 
-  if (PHOC_VIEW_GET_CLASS (view)->set_tiled) {
-    PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
-    PHOC_VIEW_GET_CLASS (view)->set_tiled (view, true);
-  } else {
-    /* fallback to the maximized flag on the toplevel so it can remove its drop shadows */
-    PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
-  }
+  PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
+  PHOC_VIEW_GET_CLASS (view)->set_tiled (view, true);
 
   view_arrange_tiled (view, output);
 }
@@ -1483,6 +1473,16 @@ phoc_view_get_geometry_default (PhocView *self, struct wlr_box *geom)
 
 
 static void
+phoc_view_set_tiled_default (PhocView *self, bool tiled)
+{
+  if (tiled) {
+    /* fallback to the maximized flag on the toplevel so it can remove its drop shadows */
+    PHOC_VIEW_GET_CLASS (self)->set_maximized (self, true);
+  }
+}
+
+
+static void
 phoc_view_class_init (PhocViewClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
@@ -1495,6 +1495,7 @@ phoc_view_class_init (PhocViewClass *klass)
   view_class->for_each_surface = phoc_view_for_each_surface_default;
   view_class->get_geometry = phoc_view_get_geometry_default;
   view_class->move = phoc_view_move_default;
+  view_class->set_tiled = phoc_view_set_tiled_default;
 
   /**
    * PhocView:scale-to-fit:
