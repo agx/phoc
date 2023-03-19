@@ -1483,6 +1483,55 @@ phoc_view_set_tiled_default (PhocView *self, bool tiled)
 
 
 static void
+phoc_view_resize_default (PhocView *self, uint32_t width, uint32_t height)
+{
+  g_assert_not_reached ();
+}
+
+
+static void
+phoc_view_move_resize_default (PhocView *self, double x, double y, uint32_t width, uint32_t height)
+{
+  g_assert_not_reached ();
+}
+
+
+static bool
+phoc_view_want_automaximize_default (PhocView *self)
+{
+  g_assert_not_reached ();
+}
+
+
+static void
+phoc_view_set_active_default (PhocView *self, bool active)
+{
+  g_assert_not_reached ();
+}
+
+
+static void
+phoc_view_set_fullscreen_default (PhocView *self, bool fullscreen)
+{
+  g_assert_not_reached ();
+}
+
+
+static void
+phoc_view_set_maximized_default (PhocView *self, bool maximized)
+{
+  g_assert_not_reached ();
+}
+
+
+static void
+phoc_view_set_close_default (PhocView *self)
+{
+  g_assert_not_reached ();
+}
+
+
+static void
 phoc_view_class_init (PhocViewClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *)klass;
@@ -1492,10 +1541,19 @@ phoc_view_class_init (PhocViewClass *klass)
   object_class->get_property = phoc_view_get_property;
   object_class->set_property = phoc_view_set_property;
 
+  /* Optional */
   view_class->for_each_surface = phoc_view_for_each_surface_default;
   view_class->get_geometry = phoc_view_get_geometry_default;
   view_class->move = phoc_view_move_default;
   view_class->set_tiled = phoc_view_set_tiled_default;
+  /* Mandatory */
+  view_class->resize = phoc_view_resize_default;
+  view_class->move_resize = phoc_view_move_resize_default;
+  view_class->want_auto_maximize = phoc_view_want_automaximize_default;
+  view_class->set_active = phoc_view_set_active_default;
+  view_class->set_fullscreen = phoc_view_set_fullscreen_default;
+  view_class->set_maximized = phoc_view_set_maximized_default;
+  view_class->close = phoc_view_set_close_default;
 
   /**
    * PhocView:scale-to-fit:
