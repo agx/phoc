@@ -494,6 +494,7 @@ phoc_layer_shell_effects_finalize (GObject *object)
 {
   PhocLayerShellEffects *self = PHOC_LAYER_SHELL_EFFECTS (object);
 
+  g_clear_pointer (&self->drag_surfaces_by_layer_sufrace, g_hash_table_destroy);
   wl_global_destroy (self->global);
 
   G_OBJECT_CLASS (phoc_layer_shell_effects_parent_class)->finalize (object);
