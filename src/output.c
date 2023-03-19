@@ -550,7 +550,7 @@ phoc_output_finalize (GObject *object)
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);
   g_clear_list (&self->debug_touch_points, g_free);
-  /* Remove all frame callbacks, this will also free associzted user data */
+  /* Remove all frame callbacks, this will also free associated user data */
   g_clear_slist (&priv->frame_callbacks,
                  (GDestroyNotify)phoc_output_frame_callback_info_free);
 
