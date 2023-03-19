@@ -20,9 +20,9 @@ variables:
   script:
     - export LC_ALL=C.UTF-8
     - git submodule update --init
-    - meson . _build $BUILD_ARGS
-    - ninja -C _build
-    - ninja -C _build install
+    - meson setup _build $BUILD_ARGS
+    - meson compile -C _build
+    - meson install -C _build
 
 .before_script_debian: &before_script_debian
   - rm -f ../* || true
