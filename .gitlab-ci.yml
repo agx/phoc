@@ -13,6 +13,7 @@ variables:
   ALPINE_EDGE_DEPS: |
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
+        xwayland-dev
   XVFB_RUN: xvfb-run -s -noreset
   DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.20230219
 
