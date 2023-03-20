@@ -20,7 +20,13 @@ test_phoc_client_noop (void)
 static gboolean
 create_surface (PhocTestClientGlobals *globals, gpointer data)
 {
-  g_assert_nonnull(wl_compositor_create_surface (globals->compositor));
+  struct wl_surface *surface;
+
+  surface = wl_compositor_create_surface (globals->compositor);
+
+  g_assert_nonnull(surface);
+
+  wl_surface_destroy(surface);
   return TRUE;
 }
 
