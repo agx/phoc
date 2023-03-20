@@ -366,6 +366,8 @@ wl_client_run (GTask *task, gpointer source,
   else
     success = TRUE;
 
+  g_clear_pointer (&globals.display, wl_display_disconnect);
+
   g_task_return_boolean (task, success);
 }
 
