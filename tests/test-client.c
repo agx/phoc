@@ -14,7 +14,7 @@
 static void
 test_phoc_client_noop (void)
 {
-  phoc_test_client_run (3, NULL, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, NULL, NULL);
 }
 
 static gboolean
@@ -35,7 +35,7 @@ test_phoc_client_surface (void)
 {
   PhocTestClientIface iface = { .client_run = create_surface };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 gint

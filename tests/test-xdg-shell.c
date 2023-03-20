@@ -8,6 +8,7 @@
 
 #include "xdg-shell-client-protocol.h"
 
+
 static gboolean
 test_client_xdg_shell_normal (PhocTestClientGlobals *globals, gpointer data)
 {
@@ -88,7 +89,7 @@ test_xdg_shell_normal (void)
    .client_run     = test_client_xdg_shell_normal,
   };
 
-  phoc_test_client_run (3, &iface, GINT_TO_POINTER (FALSE));
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (FALSE));
 }
 
 static void
@@ -99,7 +100,7 @@ test_xdg_shell_auto_maximized (void)
    .client_run     = test_client_xdg_shell_auto_maximized,
   };
 
-  phoc_test_client_run (3, &iface, GINT_TO_POINTER (TRUE));
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (TRUE));
 }
 
 
@@ -111,7 +112,7 @@ test_xdg_shell_toplevel_maximized (void)
    .client_run     = test_client_xdg_shell_toplevel_maximized,
   };
 
-  phoc_test_client_run (3, &iface, GINT_TO_POINTER (FALSE));
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (FALSE));
 }
 
 

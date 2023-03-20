@@ -134,7 +134,7 @@ test_layer_shell_anchor (void)
 {
   PhocTestClientIface iface = { .client_run =  test_client_layer_shell_anchor };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 static gboolean
@@ -167,7 +167,7 @@ test_layer_shell_exclusive_zone (void)
 {
   PhocTestClientIface iface = { .client_run = test_client_layer_shell_exclusive_zone };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 
@@ -209,7 +209,7 @@ test_layer_shell_set_layer (void)
 {
   PhocTestClientIface iface = { .client_run = test_client_layer_shell_set_layer };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 

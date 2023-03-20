@@ -81,7 +81,7 @@ test_phosh_private_thumbnail_simple (void)
     return;
   }
 
-  phoc_test_client_run (3, &iface, GINT_TO_POINTER (FALSE));
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (FALSE));
 }
 
 static void
@@ -218,7 +218,7 @@ test_phosh_private_kbevents_simple (void)
    .client_run = test_client_phosh_private_kbevent_simple,
   };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 static void
@@ -292,7 +292,7 @@ test_phosh_private_startup_tracker_simple (void)
    .client_run = test_client_phosh_private_startup_tracker_simple,
   };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 gint

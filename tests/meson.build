@@ -21,6 +21,7 @@ test_env.set('ASAN_OPTIONS', 'fast_unwind_on_malloc=0')
 
 test_cflags = [
   '-DTEST_PHOC_INI="@0@/phoc.ini"'.format(meson.current_source_dir()),
+  '-DTEST_PHOC_CLIENT_TIMEOUT=10',
 ]
 
 test_link_args = [
