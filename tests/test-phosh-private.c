@@ -37,6 +37,7 @@ phoc_test_get_thumbnail (PhocTestClientGlobals *globals,
   struct zwlr_screencopy_frame_v1 *handle = phosh_private_get_thumbnail (globals->phosh, toplevel->handle, max_width, max_height);
   phoc_test_client_capture_frame (globals, thumbnail, handle);
 
+  zwlr_screencopy_frame_v1_destroy (handle);
   return thumbnail;
 }
 
@@ -44,7 +45,6 @@ static void
 phoc_test_thumbnail_free (PhocTestScreencopyFrame *frame)
 {
   phoc_test_buffer_free (&frame->buffer);
-  zwlr_screencopy_frame_v1_destroy (frame->handle);
   g_free (frame);
 }
 

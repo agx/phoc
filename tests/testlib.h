@@ -29,7 +29,6 @@ typedef struct _PhocTestBuffer {
 } PhocTestBuffer;
 
 typedef struct _PhocTestScreencopyFrame {
-  struct zwlr_screencopy_frame_v1 *handle;
   PhocTestBuffer buffer;
   gboolean done;
   uint32_t flags;

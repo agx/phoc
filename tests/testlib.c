@@ -545,7 +545,6 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
                                 PhocTestScreencopyFrame *frame, struct zwlr_screencopy_frame_v1 *handle)
 {
   frame->globals = globals;
-  frame->handle = handle;
   g_assert_false (frame->done);
 
   zwlr_screencopy_frame_v1_add_listener(handle,
@@ -594,6 +593,7 @@ phoc_test_client_capture_output (PhocTestClientGlobals *globals,
   g_assert_cmpint (output->screenshot.buffer.width, ==, output->width);
   g_assert_cmpint (output->screenshot.buffer.height, ==, output->height);
 
+  zwlr_screencopy_frame_v1_destroy (handle);
   return &output->screenshot.buffer;
 }
 
