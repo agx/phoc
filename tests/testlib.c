@@ -366,6 +366,19 @@ wl_client_run (GTask *task, gpointer source,
   else
     success = TRUE;
 
+  wl_proxy_destroy ((struct wl_proxy *)globals.gtk_shell1);
+  wl_proxy_destroy ((struct wl_proxy *)globals.phosh);
+  g_clear_pointer (&globals.foreign_toplevel_manager, zwlr_foreign_toplevel_manager_v1_destroy);
+  g_clear_pointer (&globals.screencopy_manager, zwlr_screencopy_manager_v1_destroy);
+  g_clear_pointer (&globals.layer_shell_effects, zphoc_layer_shell_effects_v1_destroy);
+  g_clear_pointer (&globals.layer_shell, zwlr_layer_shell_v1_destroy);
+  wl_proxy_destroy ((struct wl_proxy *)globals.xdg_shell);
+  g_clear_pointer (&globals.shm, wl_shm_destroy);
+  g_clear_pointer (&globals.compositor, wl_compositor_destroy);
+  g_clear_pointer (&globals.output.output, wl_output_destroy);
+
+  wl_registry_destroy (registry);
+
   g_clear_pointer (&globals.display, wl_display_disconnect);
 
   g_task_return_boolean (task, success);
