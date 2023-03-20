@@ -188,9 +188,8 @@ handle_gestures_for_event_at (PhocCursor   *self,
                               gpointer      wlr_event,
                               gsize         size)
 {
-  PhocEvent *event;
+  g_autoptr (PhocEvent) event = phoc_event_new (type, wlr_event, size);
 
-  event = phoc_event_new (type, wlr_event, size);
   cursor_gestures_handle_event (self, event, lx, ly);
 }
 
