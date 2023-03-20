@@ -243,6 +243,8 @@ foreign_toplevel_handle_closed (void *data,
   PhocTestForeignToplevel *toplevel = data;
   PhocTestClientGlobals *globals = toplevel->globals;
   globals->foreign_toplevels = g_slist_remove (globals->foreign_toplevels, toplevel);
+
+  g_clear_pointer (&toplevel->handle, zwlr_foreign_toplevel_handle_v1_destroy);
   g_free (toplevel->title);
   g_free (toplevel);
 }
