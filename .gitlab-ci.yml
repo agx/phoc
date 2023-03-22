@@ -86,7 +86,7 @@ unit-test-with-xwayland-debian-bookworm:
   script:
     - WLR_RENDERER=pixman ${XVFB_RUN} meson test --print-errorlogs -C _build
     - ninja -C _build coverage
-  coverage: '/^\s+lines\.+:\s+([\d.]+\%)\s+/'
+  coverage: '/^lines:\s+([\d.]+\%)\s+/'
   artifacts:
     when: always
     reports:
