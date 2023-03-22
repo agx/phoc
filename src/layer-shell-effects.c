@@ -79,9 +79,6 @@ struct _PhocDraggableLayerSurface {
 
   struct wl_listener surface_handle_commit;
   struct wl_listener layer_surface_handle_destroy;
-  struct {
-    struct wl_signal destroy;
-  } events;
 };
 
 /**
