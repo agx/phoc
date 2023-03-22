@@ -353,13 +353,9 @@ parse_accelerator (const gchar *accelerator)
         len -= 5;
         mods |= WLR_MODIFIER_ALT;
       } else if (len >= 6 && is_meta (accelerator)) {
-        accelerator += 6;
-        len -= 6;
         g_warning ("Unhandled modifier meta");
         return FALSE;
       } else if (len >= 7 && is_hyper (accelerator)) {
-        accelerator += 7;
-        len -= 7;
         g_warning ("Unhandled modifier hyper");
         return FALSE;
       } else if (len >= 7 && is_super (accelerator)) {

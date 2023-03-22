@@ -409,6 +409,7 @@ handle_get_draggable_layer_surface (struct wl_client   *client,
                                                version,
                                                id);
   if (drag_surface->resource == NULL) {
+    g_free (drag_surface);
     wl_client_post_no_memory(client);
     return;
   }
