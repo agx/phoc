@@ -18,10 +18,10 @@ typedef struct _PhocTestLayerSurface
 } PhocTestLayerSurface;
 
 static void layer_surface_configure (void                         *data,
-				     struct zwlr_layer_surface_v1 *surface,
-				     uint32_t                      serial,
-				     uint32_t                      width,
-				     uint32_t                      height)
+                                     struct zwlr_layer_surface_v1 *surface,
+                                     uint32_t                      serial,
+                                     uint32_t                      width,
+                                     uint32_t                      height)
 {
   PhocTestLayerSurface *ls = data;
 
@@ -54,8 +54,8 @@ static struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 
 static PhocTestLayerSurface *
 phoc_test_layer_surface_new (PhocTestClientGlobals *globals,
-			     guint32 width, guint32 height, guint32 color,
-			     guint32 anchor, guint32 exclusive_zone)
+                             guint32 width, guint32 height, guint32 color,
+                             guint32 anchor, guint32 exclusive_zone)
 {
   PhocTestLayerSurface *ls = g_malloc0 (sizeof(PhocTestLayerSurface));
 
@@ -63,16 +63,16 @@ phoc_test_layer_surface_new (PhocTestClientGlobals *globals,
   g_assert_nonnull (ls->wl_surface);
 
   ls->layer_surface = zwlr_layer_shell_v1_get_layer_surface (globals->layer_shell,
-							     ls->wl_surface,
-							     NULL,
-							     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
-							     "phoc-test");
+                                                             ls->wl_surface,
+                                                             NULL,
+                                                             ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+                                                             "phoc-test");
   g_assert_nonnull (ls->wl_surface);
   zwlr_layer_surface_v1_set_size (ls->layer_surface, width, height);
   zwlr_layer_surface_v1_set_exclusive_zone (ls->layer_surface, exclusive_zone);
   zwlr_layer_surface_v1_add_listener (ls->layer_surface,
-				      &layer_surface_listener,
-				      ls);
+                                      &layer_surface_listener,
+                                      ls);
   zwlr_layer_surface_v1_set_anchor (ls->layer_surface, anchor);
   wl_surface_commit (ls->wl_surface);
   wl_display_dispatch (globals->display);
@@ -80,7 +80,7 @@ phoc_test_layer_surface_new (PhocTestClientGlobals *globals,
   g_assert_true (ls->configured);
 
   phoc_test_client_create_shm_buffer (globals, &ls->buffer, ls->width, ls->height,
-				      WL_SHM_FORMAT_XRGB8888);
+                                      WL_SHM_FORMAT_XRGB8888);
 
   for (int i = 0; i < ls->width * ls->height * 4; i+=4)
     *(guint32*)(ls->buffer.shm_data + i) = color;
@@ -112,7 +112,7 @@ test_client_layer_shell_anchor (PhocTestClientGlobals *globals, gpointer data)
   PhocTestLayerSurface *ls_green, *ls_red;
 
   ls_green = phoc_test_layer_surface_new (globals, WIDTH, HEIGHT, 0xFF00FF00,
-					  ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP, 0);
+                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP, 0);
   g_assert_nonnull (ls_green);
   phoc_assert_screenshot (globals, "test-layer-shell-anchor-1.png");
 
@@ -143,10 +143,10 @@ test_client_layer_shell_exclusive_zone (PhocTestClientGlobals *globals, gpointer
   PhocTestLayerSurface *ls_green, *ls_red;
 
   ls_green = phoc_test_layer_surface_new (globals, 0, HEIGHT, 0xFF00FF00,
-					  ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
-					  | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
-					  | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
-					  HEIGHT);
+                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+                                          | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+                                          | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
+                                          HEIGHT);
   g_assert_nonnull (ls_green);
   phoc_assert_screenshot (globals, "test-layer-shell-exclusive-zone-1.png");
 
@@ -177,10 +177,10 @@ test_client_layer_shell_set_layer (PhocTestClientGlobals *globals, gpointer data
   PhocTestLayerSurface *ls_green, *ls_red;
 
   ls_green = phoc_test_layer_surface_new (globals, 0, HEIGHT, 0xFF00FF00,
-					  ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
-					  | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
-					  | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
-					  0);
+                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+                                          | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+                                          | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
+                                          0);
   g_assert_nonnull (ls_green);
 
   ls_red = phoc_test_layer_surface_new (globals, WIDTH * 2, HEIGHT * 2, 0xFFFF0000,
