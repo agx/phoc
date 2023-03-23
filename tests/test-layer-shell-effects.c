@@ -101,7 +101,7 @@ test_layer_shell_effects_drag_surface_simple (void)
 {
   PhocTestClientIface iface = { .client_run =  test_client_layer_shell_effects_drag_surface_simple };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 

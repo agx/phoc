@@ -243,6 +243,8 @@ foreign_toplevel_handle_closed (void *data,
   PhocTestForeignToplevel *toplevel = data;
   PhocTestClientGlobals *globals = toplevel->globals;
   globals->foreign_toplevels = g_slist_remove (globals->foreign_toplevels, toplevel);
+
+  g_clear_pointer (&toplevel->handle, zwlr_foreign_toplevel_handle_v1_destroy);
   g_free (toplevel->title);
   g_free (toplevel);
 }
@@ -365,6 +367,21 @@ wl_client_run (GTask *task, gpointer source,
     success = (td->func)(&globals, td->data);
   else
     success = TRUE;
+
+  wl_proxy_destroy ((struct wl_proxy *)globals.gtk_shell1);
+  wl_proxy_destroy ((struct wl_proxy *)globals.phosh);
+  g_clear_pointer (&globals.foreign_toplevel_manager, zwlr_foreign_toplevel_manager_v1_destroy);
+  g_clear_pointer (&globals.screencopy_manager, zwlr_screencopy_manager_v1_destroy);
+  g_clear_pointer (&globals.layer_shell_effects, zphoc_layer_shell_effects_v1_destroy);
+  g_clear_pointer (&globals.layer_shell, zwlr_layer_shell_v1_destroy);
+  wl_proxy_destroy ((struct wl_proxy *)globals.xdg_shell);
+  g_clear_pointer (&globals.shm, wl_shm_destroy);
+  g_clear_pointer (&globals.compositor, wl_compositor_destroy);
+  g_clear_pointer (&globals.output.output, wl_output_destroy);
+
+  wl_registry_destroy (registry);
+
+  g_clear_pointer (&globals.display, wl_display_disconnect);
 
   g_task_return_boolean (task, success);
 }
@@ -528,7 +545,6 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
                                 PhocTestScreencopyFrame *frame, struct zwlr_screencopy_frame_v1 *handle)
 {
   frame->globals = globals;
-  frame->handle = handle;
   g_assert_false (frame->done);
 
   zwlr_screencopy_frame_v1_add_listener(handle,
@@ -577,6 +593,7 @@ phoc_test_client_capture_output (PhocTestClientGlobals *globals,
   g_assert_cmpint (output->screenshot.buffer.width, ==, output->width);
   g_assert_cmpint (output->screenshot.buffer.height, ==, output->height);
 
+  zwlr_screencopy_frame_v1_destroy (handle);
   return &output->screenshot.buffer;
 }
 
@@ -662,11 +679,13 @@ phoc_test_buffer_save (PhocTestBuffer *buffer, const gchar *filename)
   return TRUE;
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (cairo_surface_t, cairo_surface_destroy)
+
 gboolean
 phoc_test_buffer_matches_screenshot (PhocTestBuffer *buffer, const gchar *filename)
 {
   const char *msg;
-  cairo_surface_t *surface = cairo_image_surface_create_from_png (filename);
+  g_autoptr (cairo_surface_t) surface = cairo_image_surface_create_from_png (filename);
   cairo_format_t format;
   guint32 *l, *r;
   guint32 mask = 0xFFFFFFFF;
@@ -856,4 +875,27 @@ phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs)
   phoc_test_buffer_free (&xs->buffer);
   g_free (xs->title);
   g_free (xs);
+}
+
+void
+phoc_test_xdg_update_buffer (PhocTestClientGlobals      *globals,
+                             PhocTestXdgToplevelSurface *xs,
+                             guint32                     color)
+{
+  PhocTestBuffer buffer;
+
+  phoc_test_client_create_shm_buffer (globals, &buffer, xs->width, xs->height,
+                                      WL_SHM_FORMAT_XRGB8888);
+
+  for (int i = 0; i < xs->width * xs->height * 4; i+=4)
+    *(guint32*)(buffer.shm_data + i) = color;
+
+  wl_surface_attach (xs->wl_surface, buffer.wl_buffer, 0, 0);
+  wl_surface_damage (xs->wl_surface, 0, 0, xs->width, xs->height);
+  wl_surface_commit (xs->wl_surface);
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+
+  phoc_test_buffer_free (&xs->buffer);
+  xs->buffer = buffer;
 }

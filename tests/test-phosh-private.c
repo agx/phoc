@@ -37,6 +37,7 @@ phoc_test_get_thumbnail (PhocTestClientGlobals *globals,
   struct zwlr_screencopy_frame_v1 *handle = phosh_private_get_thumbnail (globals->phosh, toplevel->handle, max_width, max_height);
   phoc_test_client_capture_frame (globals, thumbnail, handle);
 
+  zwlr_screencopy_frame_v1_destroy (handle);
   return thumbnail;
 }
 
@@ -44,7 +45,6 @@ static void
 phoc_test_thumbnail_free (PhocTestScreencopyFrame *frame)
 {
   phoc_test_buffer_free (&frame->buffer);
-  zwlr_screencopy_frame_v1_destroy (frame->handle);
   g_free (frame);
 }
 
@@ -81,7 +81,7 @@ test_phosh_private_thumbnail_simple (void)
     return;
   }
 
-  phoc_test_client_run (3, &iface, GINT_TO_POINTER (FALSE));
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (FALSE));
 }
 
 static void
@@ -122,7 +122,7 @@ static PhocTestKeyboardEvent *
 phoc_test_keyboard_event_new (PhocTestClientGlobals *globals,
                               char* title)
 {
-  PhocTestKeyboardEvent *kbe = g_malloc0 (sizeof (PhocTestKeyboardEvent));
+  PhocTestKeyboardEvent *kbe = g_new0 (PhocTestKeyboardEvent, 1);
 
   g_assert (phosh_private_get_version (globals->phosh) >= 5);
 
@@ -134,7 +134,18 @@ phoc_test_keyboard_event_new (PhocTestClientGlobals *globals,
   return kbe;
 }
 
+
+static void
+phoc_test_keyboard_event_free (PhocTestKeyboardEvent *event)
+{
+  phosh_private_keyboard_event_destroy (event->kbevent);
+  g_free (event);
+}
+
 #define RAISE_VOL_KEY "XF86AudioRaiseVolume"
+
+
+
 
 static gboolean
 test_client_phosh_private_kbevent_simple (PhocTestClientGlobals *globals, gpointer unused)
@@ -194,8 +205,9 @@ test_client_phosh_private_kbevent_simple (PhocTestClientGlobals *globals, gpoint
   g_assert_cmpint (test1->grab_status, ==, GRAB_STATUS_UNKNOWN);
   g_assert_cmpint (test2->grab_status, ==, GRAB_STATUS_FAILED);
 
-  phosh_private_keyboard_event_destroy (test1->kbevent);
-  phosh_private_keyboard_event_destroy (test2->kbevent);
+  phoc_test_keyboard_event_free (test1);
+  phoc_test_keyboard_event_free (test2);
+
   return TRUE;
 }
 
@@ -206,7 +218,7 @@ test_phosh_private_kbevents_simple (void)
    .client_run = test_client_phosh_private_kbevent_simple,
   };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 static void
@@ -280,7 +292,7 @@ test_phosh_private_startup_tracker_simple (void)
    .client_run = test_client_phosh_private_startup_tracker_simple,
   };
 
-  phoc_test_client_run (3, &iface, NULL);
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 gint

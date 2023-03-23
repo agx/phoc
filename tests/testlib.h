@@ -29,7 +29,6 @@ typedef struct _PhocTestBuffer {
 } PhocTestBuffer;
 
 typedef struct _PhocTestScreencopyFrame {
-  struct zwlr_screencopy_frame_v1 *handle;
   PhocTestBuffer buffer;
   gboolean done;
   uint32_t flags;
@@ -109,6 +108,9 @@ PhocTestXdgToplevelSurface *
                                              const char                *title,
                                              guint32                    color);
 void            phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs);
+void            phoc_test_xdg_update_buffer (PhocTestClientGlobals      *globals,
+                                             PhocTestXdgToplevelSurface *xs,
+                                             guint32                     color);
 
 /* Buffers */
 gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2);
@@ -125,7 +127,7 @@ void phoc_test_buffer_free (PhocTestBuffer *buffer);
  */
 #define phoc_assert_screenshot(g, f) G_STMT_START {                      \
     PhocTestClientGlobals *__g = (g);                                    \
-    const gchar *__f = g_test_build_filename (G_TEST_DIST, "screenshots", f, NULL); \
+    gchar *__f = g_test_build_filename (G_TEST_DIST, "screenshots", f, NULL); \
     PhocTestBuffer *__s = phoc_test_client_capture_output (__g, &__g->output); \
     if (phoc_test_buffer_matches_screenshot (__s, __f)) ; else {         \
       g_autofree gchar *__name = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 0); \
@@ -134,6 +136,7 @@ void phoc_test_buffer_free (PhocTestBuffer *buffer);
                            "Output content does not match " #f);         \
     }                                                                    \
     phoc_test_buffer_free (__s);                                         \
+    g_free (__f);                                                        \
   } G_STMT_END
 
 /**

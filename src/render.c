@@ -849,9 +849,11 @@ static void
 phoc_renderer_finalize (GObject *object)
 {
   PhocRenderer *self = PHOC_RENDERER (object);
-  if (self->wlr_allocator)
-    wlr_allocator_destroy (self->wlr_allocator);
-  /* TODO: destroy wlr_renderer */
+
+  g_clear_pointer (&self->wlr_allocator, wlr_allocator_destroy);
+  g_clear_pointer (&self->wlr_renderer, wlr_renderer_destroy);
+
+  G_OBJECT_CLASS (phoc_renderer_parent_class)->finalize (object);
 }
 
 
