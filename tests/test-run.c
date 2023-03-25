@@ -4,6 +4,7 @@
  * Author: Guido Günther <agx@sigxcpu.org>
  */
 
+#include "testlib.h"
 #include "server.h"
 
 static gboolean
@@ -51,8 +52,8 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/run/session_success", test_phoc_run_session_success);
-  g_test_add_func("/phoc/run/session_failure", test_phoc_run_session_failure);
+  PHOC_TEST_ADD ("/phoc/run/session_success", test_phoc_run_session_success);
+  PHOC_TEST_ADD ("/phoc/run/session_failure", test_phoc_run_session_failure);
 
   return g_test_run();
 }

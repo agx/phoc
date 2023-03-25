@@ -218,9 +218,9 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/layer-shell/anchor", test_layer_shell_anchor);
-  g_test_add_func("/phoc/layer-shell/exclusive_zone", test_layer_shell_exclusive_zone);
-  g_test_add_func("/phoc/layer-shell/set_layer", test_layer_shell_set_layer);
+  PHOC_TEST_ADD ("/phoc/layer-shell/anchor", test_layer_shell_anchor);
+  PHOC_TEST_ADD ("/phoc/layer-shell/exclusive_zone", test_layer_shell_exclusive_zone);
+  PHOC_TEST_ADD ("/phoc/layer-shell/set_layer", test_layer_shell_set_layer);
 
   return g_test_run();
 }

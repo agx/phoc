@@ -43,8 +43,8 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/client/noop", test_phoc_client_noop);
-  g_test_add_func("/phoc/client/surface", test_phoc_client_surface);
+  PHOC_TEST_ADD ("/phoc/client/noop", test_phoc_client_noop);
+  PHOC_TEST_ADD ("/phoc/client/surface", test_phoc_client_surface);
 
   return g_test_run();
 }

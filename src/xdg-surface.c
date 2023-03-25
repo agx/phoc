@@ -349,6 +349,8 @@ static void
 handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocXdgSurface *self = wl_container_of (listener, self, destroy);
+
+  g_signal_emit_by_name (self, "surface-destroy");
   g_object_unref (self);
 }
 

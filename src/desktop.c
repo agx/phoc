@@ -13,13 +13,13 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_pointer_constraints_v1.h>
+#include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_tablet_v2.h>
 #include <wlr/types/wlr_viewporter.h>
@@ -33,6 +33,7 @@
 #include <wlr/util/box.h>
 #include <wlr/version.h>
 #include "cursor.h"
+#include "idle-inhibit.h"
 #include "layers.h"
 #include "output.h"
 #include "seat.h"
@@ -45,7 +46,6 @@
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 #include "gesture-swipe.h"
 #include "layer-shell-effects.h"
-
 
 #include "xdg-surface.h"
 #include "xwayland-surface.h"
@@ -64,7 +64,12 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
-G_DEFINE_TYPE(PhocDesktop, phoc_desktop, G_TYPE_OBJECT);
+
+typedef struct _PhocDesktopPrivate {
+  PhocIdleInhibit *idle_inhibit;
+} PhocDesktopPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (PhocDesktop, phoc_desktop, G_TYPE_OBJECT);
 
 
 static void
@@ -628,6 +633,7 @@ static void
 phoc_desktop_constructed (GObject *object)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
+  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
   PhocServer *server = phoc_server_get_default ();
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
@@ -687,6 +693,7 @@ phoc_desktop_constructed (GObject *object)
 
   self->text_input = wlr_text_input_manager_v3_create(server->wl_display);
 
+  priv->idle_inhibit = phoc_idle_inhibit_create (self->idle);
   self->gtk_shell = phoc_gtk_shell_create(self, server->wl_display);
   self->phosh = phoc_phosh_private_new ();
 
@@ -766,6 +773,7 @@ static void
 phoc_desktop_finalize (GObject *object)
 {
   PhocDesktop *self = PHOC_DESKTOP (object);
+  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
 
   /* TODO: currently destroys the backend before the desktop */
   //wl_list_remove (&self->new_output.link);
@@ -797,6 +805,7 @@ phoc_desktop_finalize (GObject *object)
   g_clear_pointer (&self->xwayland, wlr_xwayland_destroy);
 #endif
 
+  g_clear_pointer (&priv->idle_inhibit, phoc_idle_inhibit_destroy);
   g_clear_object (&self->phosh);
   g_clear_pointer (&self->gtk_shell, phoc_gtk_shell_destroy);
   g_clear_object (&self->layer_shell_effects);
