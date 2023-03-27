@@ -606,7 +606,7 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
   self->xcursor_manager = wlr_xcursor_manager_create(NULL, PHOC_XCURSOR_SIZE);
   g_return_if_fail (self->xcursor_manager);
 
-  if (config->xwayland) {
+  if (config->xwayland || (server->flags & PHOC_SERVER_FLAG_XWAYLAND)) {
     self->xwayland = wlr_xwayland_create(server->wl_display,
 					 server->compositor, config->xwayland_lazy);
     if (!self->xwayland) {
