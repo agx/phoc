@@ -72,6 +72,7 @@ typedef struct PhocTestClientIface {
   /* Prepare function runs in server context */
   PhocTestServerFunc server_prepare;
   PhocTestClientFunc client_run;
+  PhocServerFlags    server_flags;
 } PhocTestClientIface;
 
 typedef struct _PhocTestXdgToplevelSurface
