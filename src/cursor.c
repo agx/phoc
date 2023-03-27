@@ -663,7 +663,7 @@ phoc_cursor_update_position (PhocCursor *self,
     view = phoc_seat_get_focus (seat);
     if (view != NULL) {
       struct wlr_box geom;
-      view_get_geometry (view, &geom);
+      phoc_view_get_geometry (view, &geom);
       double dx = self->cursor->x - self->offs_x;
       double dy = self->cursor->y - self->offs_y;
 
@@ -682,8 +682,8 @@ phoc_cursor_update_position (PhocCursor *self,
         view_tile (view, PHOC_VIEW_TILE_RIGHT, wlr_output);
       } else {
         view_restore (view);
-        view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
-                   self->view_y + dy - geom.y * phoc_view_get_scale (view));
+        phoc_view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
+                        self->view_y + dy - geom.y * phoc_view_get_scale (view));
       }
     }
     break;
@@ -691,7 +691,7 @@ phoc_cursor_update_position (PhocCursor *self,
     view = phoc_seat_get_focus (seat);
     if (view != NULL) {
       struct wlr_box geom;
-      view_get_geometry (view, &geom);
+      phoc_view_get_geometry (view, &geom);
       double dx = self->cursor->x - self->offs_x;
       double dy = self->cursor->y - self->offs_y;
       double x = view->box.x;
@@ -716,9 +716,9 @@ phoc_cursor_update_position (PhocCursor *self,
       } else if (self->resize_edges & WLR_EDGE_RIGHT) {
         width += dx;
       }
-      view_move_resize (view, x, y,
-                        width < 1 ? 1 : width,
-                        height < 1 ? 1 : height);
+      phoc_view_move_resize (view, x, y,
+                             width < 1 ? 1 : width,
+                             height < 1 ? 1 : height);
     }
     break;
   default:

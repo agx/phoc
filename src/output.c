@@ -726,7 +726,7 @@ phoc_output_view_for_each_surface (PhocOutput          *self,
     .scale = phoc_view_get_scale (view)
   };
 
-  view_for_each_surface (view, phoc_output_for_each_surface_iterator, &data);
+  phoc_view_for_each_surface (view, phoc_output_for_each_surface_iterator, &data);
 }
 
 #ifdef PHOC_XWAYLAND

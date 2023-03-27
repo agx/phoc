@@ -66,7 +66,7 @@ handle_tile_right (PhocSeat *seat)
   if (!view)
     return;
 
-  if (view_is_tiled (view) && view->tile_direction == PHOC_VIEW_TILE_RIGHT)
+  if (view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_RIGHT)
     view_restore (view);
   else
     view_tile (view, PHOC_VIEW_TILE_RIGHT, NULL);
@@ -81,7 +81,7 @@ handle_tile_left (PhocSeat *seat)
   if (!view)
     return;
 
-  if (view_is_tiled (view) && view->tile_direction == PHOC_VIEW_TILE_LEFT)
+  if (view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_LEFT)
     view_restore (view);
   else
     view_tile (view, PHOC_VIEW_TILE_LEFT, NULL);
@@ -123,7 +123,7 @@ static void handle_close (PhocSeat *seat)
   PhocView *focus = phoc_seat_get_focus(seat);
 
   if (focus)
-    view_close(focus);
+    phoc_view_close (focus);
 }
 
 static void

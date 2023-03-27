@@ -50,7 +50,6 @@ struct _PhocView {
 
 	struct wlr_box box;
 
-	PhocViewTileDirection tile_direction;
 	PhocOutput *fullscreen_output;
 	struct wlr_box saved;
 
@@ -88,6 +87,7 @@ struct _PhocView {
  *   to work correctly. This allows a PhocViewClass pointer to be cast to
  *   a GObjectClass pointer.
  * @move: This is called by `PhocView` to move a view to a new position.
+ *     The implementation is optional.
  * @resize: This is called by `PhocView` to move resize a view.
  * @move_resize: This is called by `PhocView` to move and resize a view a the same time.
  * @want_auto_maximize: This is called by `PhocView` to determine if a view should
@@ -96,9 +96,12 @@ struct _PhocView {
  * @set_fullscreen: This is called by `PhocView` to fullscreen a view
  * @set_maximized: This is called by `PhocView` to maximize a view
  * @set_tiled: This is called by `PhocView` to tile a view.
+ *     The implementation is optional.
  * @close: This is called by `PhocView` to close a view.
  * @for_each_surface: This is used by `PhocView` to iterate over a surface and it's children.
+ *     The implementation is optional.
  * @get_geometry: This is called by `PhocView` to get a views geometry.
+ *     The implementation is optional.
  */
 typedef struct _PhocViewClass
 {
@@ -165,7 +168,7 @@ typedef struct _PhocViewChild {
   struct wl_listener new_subsurface;
 } PhocViewChild;
 
-void view_appear_activated(PhocView *view, bool activated);
+void phoc_view_appear_activated (PhocView *view, bool activated);
 void phoc_view_activate (PhocView *view, bool activate);
 void phoc_view_apply_damage (PhocView *view);
 void phoc_view_damage_whole (PhocView *view);
@@ -182,12 +185,11 @@ void view_unmap(PhocView *view);
 void view_arrange_maximized(PhocView *view, struct wlr_output *output);
 void view_arrange_tiled(PhocView *view, struct wlr_output *output);
 void view_get_box(PhocView *view, struct wlr_box *box);
-void view_get_geometry(PhocView *view, struct wlr_box *box);
-void view_move(PhocView *view, double x, double y);
+void phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
+void phoc_view_move (PhocView *self, double x, double y);
 bool view_move_to_next_output (PhocView *view, enum wlr_direction direction);
-void view_resize(PhocView *view, uint32_t width, uint32_t height);
-void view_move_resize(PhocView *view, double x, double y,
-	uint32_t width, uint32_t height);
+void phoc_view_move_resize (PhocView *view, double x, double y,
+                            uint32_t width, uint32_t height);
 void view_auto_maximize(PhocView *view);
 void view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *output);
 PhocViewTileDirection
@@ -195,7 +197,7 @@ PhocViewTileDirection
 void view_maximize(PhocView *view, struct wlr_output *output);
 void view_restore(PhocView *view);
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output);
-void view_close(PhocView *view);
+void phoc_view_close (PhocView *self);
 bool view_center(PhocView *view, struct wlr_output *output);
 void view_send_frame_done_if_not_visible (PhocView *view);
 void view_setup(PhocView *view);
@@ -204,8 +206,9 @@ void view_set_parent(PhocView *view, PhocView *parent);
 void phoc_view_set_app_id(PhocView *view, const char *app_id);
 void view_create_foreign_toplevel_handle(PhocView *view);
 void view_get_deco_box(PhocView *view, struct wlr_box *box);
-void view_for_each_surface(PhocView *view,
-	wlr_surface_iterator_func_t iterator, void *user_data);
+void phoc_view_for_each_surface (PhocView                    *self,
+                                 wlr_surface_iterator_func_t  iterator,
+                                 gpointer                     user_data);
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
 
 bool                 phoc_view_is_mapped (PhocView *view);

@@ -536,7 +536,7 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
   PhocView *view = data->view;
 
   struct wlr_box geo;
-  view_get_geometry (view, &geo);
+  phoc_view_get_geometry (view, &geo);
 
   float scale = fmin (data->width / (float)geo.width,
                       data->height / (float)geo.height);

@@ -227,7 +227,7 @@ set_tiled (PhocView *view, bool tiled)
     return;
   }
 
-  switch (view->tile_direction) {
+  switch (phoc_view_get_tile_direction (view)) {
     case PHOC_VIEW_TILE_LEFT:
       wlr_xdg_toplevel_set_tiled (xdg_surface, WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT);
       break;
