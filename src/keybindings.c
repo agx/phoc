@@ -599,6 +599,8 @@ phoc_keybindings_new (void)
  * phoc_keybindings_handle_pressed:
  *
  * Check if a keybinding is known and run the associated action
+ *
+ * Returns: Whether the keybinding was handled.
  */
 gboolean
 phoc_keybindings_handle_pressed (PhocKeybindings *self,
