@@ -216,28 +216,30 @@ static void decoration_handle_surface_commit(struct wl_listener *listener,
 	view_update_decorated (PHOC_VIEW (decoration->surface), decorated);
 }
 
-void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data) {
-	struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
 
-	g_debug ("new xdg toplevel decoration");
+void
+handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
+{
+  struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
+  PhocXdgSurface *xdg_surface = wlr_decoration->surface->data;
+  assert (xdg_surface != NULL);
+  struct wlr_xdg_surface *wlr_xdg_surface = phoc_xdg_surface_get_wlr_xdg_surface (xdg_surface);
+  PhocXdgToplevelDecoration *decoration = g_new0 (PhocXdgToplevelDecoration, 1);
 
-	PhocXdgSurface *xdg_surface = wlr_decoration->surface->data;
-	assert(xdg_surface != NULL);
-	struct wlr_xdg_surface *wlr_xdg_surface = phoc_xdg_surface_get_wlr_xdg_surface (xdg_surface);
+  g_debug ("New xdg toplevel decoration %p", decoration);
 
-	PhocXdgToplevelDecoration *decoration = g_new0 (PhocXdgToplevelDecoration, 1);
-	decoration->wlr_decoration = wlr_decoration;
-	decoration->surface = xdg_surface;
-	phoc_xdg_surface_set_decoration (xdg_surface, decoration);
+  decoration->wlr_decoration = wlr_decoration;
+  decoration->surface = xdg_surface;
+  phoc_xdg_surface_set_decoration (xdg_surface, decoration);
 
-	decoration->destroy.notify = decoration_handle_destroy;
-	wl_signal_add(&wlr_decoration->events.destroy, &decoration->destroy);
-	decoration->request_mode.notify = decoration_handle_request_mode;
-	wl_signal_add(&wlr_decoration->events.request_mode,
-		&decoration->request_mode);
-	decoration->surface_commit.notify = decoration_handle_surface_commit;
-	wl_signal_add(&wlr_xdg_surface->surface->events.commit,
-		&decoration->surface_commit);
+  decoration->destroy.notify = decoration_handle_destroy;
+  wl_signal_add (&wlr_decoration->events.destroy, &decoration->destroy);
 
-	decoration_handle_request_mode(&decoration->request_mode, wlr_decoration);
+  decoration->request_mode.notify = decoration_handle_request_mode;
+  wl_signal_add (&wlr_decoration->events.request_mode, &decoration->request_mode);
+
+  decoration->surface_commit.notify = decoration_handle_surface_commit;
+  wl_signal_add (&wlr_xdg_surface->surface->events.commit, &decoration->surface_commit);
+
+  decoration_handle_request_mode (&decoration->request_mode, wlr_decoration);
 }
