@@ -752,8 +752,11 @@ phoc_test_buffer_free (PhocTestBuffer *buffer)
 {
   g_assert_nonnull (buffer);
 
-  munmap(buffer->shm_data, buffer->stride * buffer->height);
-  wl_buffer_destroy(buffer->wl_buffer);
+  if (buffer->wl_buffer == NULL)
+    return;
+
+  munmap (buffer->shm_data, buffer->stride * buffer->height);
+  g_clear_pointer (&buffer->wl_buffer, wl_buffer_destroy);
   buffer->valid = FALSE;
 }
 
