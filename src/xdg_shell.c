@@ -4,7 +4,6 @@
 #include "xdg-surface.h"
 #include "xdg-surface-private.h"
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <wayland-server-core.h>
@@ -38,7 +37,7 @@ typedef struct phoc_xdg_popup {
 static const struct phoc_view_child_interface popup_impl;
 
 static void popup_destroy(PhocViewChild *child) {
-	assert(child->impl == &popup_impl);
+	g_assert (child->impl == &popup_impl);
 	struct phoc_xdg_popup *popup = (struct phoc_xdg_popup *)child;
 	wl_list_remove(&popup->destroy.link);
 	wl_list_remove(&popup->new_popup.link);
@@ -153,7 +152,7 @@ void handle_xdg_shell_surface (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_surface *surface = data;
 
-  assert(surface->role != WLR_XDG_SURFACE_ROLE_NONE);
+  g_assert (surface->role != WLR_XDG_SURFACE_ROLE_NONE);
   if (surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
     g_debug ("new xdg popup");
     return;
@@ -222,7 +221,7 @@ handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
   PhocXdgSurface *xdg_surface = wlr_decoration->surface->data;
-  assert (xdg_surface != NULL);
+  g_assert (xdg_surface != NULL);
   struct wlr_xdg_surface *wlr_xdg_surface = phoc_xdg_surface_get_wlr_xdg_surface (xdg_surface);
   PhocXdgToplevelDecoration *decoration = g_new0 (PhocXdgToplevelDecoration, 1);
 
