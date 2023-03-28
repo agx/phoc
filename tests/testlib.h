@@ -109,11 +109,16 @@ PhocTestForeignToplevel *phoc_test_client_get_foreign_toplevel_handle (PhocTestC
 
 /* Test surfaces */
 PhocTestXdgToplevelSurface *
-                phoc_test_xdg_toplevel_new  (PhocTestClientGlobals     *globals,
-                                             guint32                    width,
-                                             guint32                    height,
-                                             const char                *title,
-                                             guint32                    color);
+                phoc_test_xdg_toplevel_new  (PhocTestClientGlobals *globals,
+                                             guint32                width,
+                                             guint32                height,
+                                             const char            *title);
+PhocTestXdgToplevelSurface *
+                phoc_test_xdg_toplevel_new_with_buffer  (PhocTestClientGlobals     *globals,
+                                                         guint32                    width,
+                                                         guint32                    height,
+                                                         const char                *title,
+                                                         guint32                    color);
 void            phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs);
 void            phoc_test_xdg_update_buffer (PhocTestClientGlobals      *globals,
                                              PhocTestXdgToplevelSurface *xs,

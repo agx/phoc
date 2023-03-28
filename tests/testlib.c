@@ -801,13 +801,13 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
   xdg_toplevel_handle_close,
 };
 
+
 /**
  * phoc_test_xdg_toplevel_new:
  * @globals: The wayland globals
  * @width: The desired surface width
  * @height: The desired surface height
  * @title: The desired title
- * @color: Tehe color to fill the surface with
  *
  * Creates a xdg toplevel with the given property for use in tests.
  * If width and/or height are 0, defaults will be used. Free with
@@ -817,8 +817,7 @@ PhocTestXdgToplevelSurface *
 phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
                             guint32                width,
                             guint32                height,
-                            const char            *title,
-                            guint32                color)
+                            const char            *title)
 {
   PhocTestXdgToplevelSurface *xs = g_malloc0 (sizeof(PhocTestXdgToplevelSurface));
 
@@ -846,6 +845,35 @@ phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
   g_assert_true (xs->configured);
   g_assert_true (xs->toplevel_configured);
 
+  return xs;
+}
+
+
+/**
+ * phoc_test_xdg_toplevel_new:
+ * @globals: The wayland globals
+ * @width: The desired surface width
+ * @height: The desired surface height
+ * @title: The desired title
+ * @color: Tehe color to fill the surface with
+ *
+ * Creates a xdg toplevel with the given property for use in tests.
+ * If width and/or height are 0, defaults will be used. Free with
+ * `phoc_test_xdg_toplevel_free`.
+ *
+ * This functions also attaches a buffer with the given color.
+ */
+PhocTestXdgToplevelSurface *
+phoc_test_xdg_toplevel_new_with_buffer (PhocTestClientGlobals *globals,
+                                        guint32                width,
+                                        guint32                height,
+                                        const char            *title,
+                                        guint32                color)
+{
+  PhocTestXdgToplevelSurface *xs;
+
+  xs = phoc_test_xdg_toplevel_new (globals, width, height, title);
+
   phoc_test_client_create_shm_buffer (globals, &xs->buffer, xs->width, xs->height,
                                       WL_SHM_FORMAT_XRGB8888);
 
@@ -865,6 +893,7 @@ phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
 
   return xs;
 }
+
 
 void
 phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs)
