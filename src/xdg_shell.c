@@ -182,9 +182,11 @@ decoration_handle_destroy (struct wl_listener *listener, void *data)
 
   g_debug ("Destroy xdg toplevel decoration %p", decoration);
 
-  phoc_xdg_surface_set_decoration (decoration->surface, NULL);
-  view_update_decorated (PHOC_VIEW (decoration->surface), false);
-
+  if (decoration->surface) {
+    phoc_xdg_surface_set_decoration (decoration->surface, NULL);
+    view_update_decorated (PHOC_VIEW (decoration->surface), false);
+    g_signal_handlers_disconnect_by_data (decoration->surface, decoration);
+  }
   wl_list_remove (&decoration->destroy.link);
   wl_list_remove (&decoration->request_mode.link);
   wl_list_remove (&decoration->surface_commit.link);
@@ -216,6 +218,15 @@ static void decoration_handle_surface_commit(struct wl_listener *listener,
 }
 
 
+static void
+on_xdg_surface_destroy (PhocXdgSurface *surface, PhocXdgToplevelDecoration *decoration)
+{
+  g_assert (PHOC_IS_XDG_SURFACE (surface));
+
+  decoration->surface = NULL;
+}
+
+
 void
 handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
 {
@@ -239,6 +250,8 @@ handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
 
   decoration->surface_commit.notify = decoration_handle_surface_commit;
   wl_signal_add (&wlr_xdg_surface->surface->events.commit, &decoration->surface_commit);
+
+  g_signal_connect (xdg_surface, "surface-destroy", G_CALLBACK (on_xdg_surface_destroy), decoration);
 
   decoration_handle_request_mode (&decoration->request_mode, wlr_decoration);
 }
