@@ -8,6 +8,7 @@
 #include <glib.h>
 #include "gtk-shell-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
+#include "xdg-decoration-unstable-v1-client-protocol.h"
 #include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "wlr-screencopy-unstable-v1-client-protocol.h"
@@ -50,6 +51,7 @@ typedef struct _PhocTestWlGlobals {
   struct zphoc_layer_shell_effects_v1 *layer_shell_effects;
   struct zwlr_screencopy_manager_v1 *screencopy_manager;
   struct zwlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager;
+  struct zxdg_decoration_manager_v1 *decoration_manager;
   GSList *foreign_toplevels;
   struct phosh_private *phosh;
   struct gtk_shell1 *gtk_shell1;
