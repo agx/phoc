@@ -176,17 +176,21 @@ void handle_xdg_shell_surface (struct wl_listener *listener, void *data)
 }
 
 
-static void decoration_handle_destroy(struct wl_listener *listener,
-		void *data) {
-	struct phoc_xdg_toplevel_decoration *decoration =
-		wl_container_of(listener, decoration, destroy);
+static void
+decoration_handle_destroy (struct wl_listener *listener, void *data)
+{
+  struct phoc_xdg_toplevel_decoration *decoration = wl_container_of (listener, decoration, destroy);
 
-	phoc_xdg_surface_set_decoration (decoration->surface, NULL);
-	view_update_decorated (PHOC_VIEW (decoration->surface), false);
-	wl_list_remove(&decoration->destroy.link);
-	wl_list_remove(&decoration->request_mode.link);
-	wl_list_remove(&decoration->surface_commit.link);
-	free(decoration);
+  g_debug ("Destroy xdg toplevel decoration %p", decoration);
+
+  phoc_xdg_surface_set_decoration (decoration->surface, NULL);
+  view_update_decorated (PHOC_VIEW (decoration->surface), false);
+
+  wl_list_remove (&decoration->destroy.link);
+  wl_list_remove (&decoration->request_mode.link);
+  wl_list_remove (&decoration->surface_commit.link);
+
+  free (decoration);
 }
 
 static void decoration_handle_request_mode(struct wl_listener *listener,
