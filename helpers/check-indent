@@ -13,7 +13,6 @@ TO_CLEANUP="
     src/text_input.h
     src/view.c
     src/view.h
-    src/xdg_shell.c
 "
 
 export LC_ALL=C

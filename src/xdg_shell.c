@@ -36,51 +36,65 @@ typedef struct phoc_xdg_popup {
 
 static const struct phoc_view_child_interface popup_impl;
 
-static void popup_destroy(PhocViewChild *child) {
-	g_assert (child->impl == &popup_impl);
-	struct phoc_xdg_popup *popup = (struct phoc_xdg_popup *)child;
-	wl_list_remove(&popup->destroy.link);
-	wl_list_remove(&popup->new_popup.link);
-	wl_list_remove(&popup->map.link);
-	wl_list_remove(&popup->unmap.link);
-	free(popup);
+static void
+popup_destroy (PhocViewChild *child)
+{
+  g_assert (child->impl == &popup_impl);
+  struct phoc_xdg_popup *popup = (struct phoc_xdg_popup *)child;
+
+  wl_list_remove (&popup->destroy.link);
+  wl_list_remove (&popup->new_popup.link);
+  wl_list_remove (&popup->map.link);
+  wl_list_remove (&popup->unmap.link);
+  free (popup);
 }
 
 static const struct phoc_view_child_interface popup_impl = {
-	.destroy = popup_destroy,
+  .destroy = popup_destroy,
 };
 
-static void popup_handle_destroy(struct wl_listener *listener, void *data) {
-	struct phoc_xdg_popup *popup =
-		wl_container_of(listener, popup, destroy);
-	phoc_view_child_destroy(&popup->child);
+static void
+popup_handle_destroy (struct wl_listener *listener, void *data)
+{
+  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, destroy);
+
+  phoc_view_child_destroy (&popup->child);
 }
 
-static void popup_handle_map(struct wl_listener *listener, void *data) {
-	PhocServer *server = phoc_server_get_default ();
-	struct phoc_xdg_popup *popup = wl_container_of(listener, popup, map);
-	phoc_view_child_damage_whole (&popup->child);
-	phoc_input_update_cursor_focus(server->input);
-	popup->child.mapped = true;
+static void
+popup_handle_map (struct wl_listener *listener, void *data)
+{
+  PhocServer *server = phoc_server_get_default ();
+  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, map);
+
+  phoc_view_child_damage_whole (&popup->child);
+  phoc_input_update_cursor_focus (server->input);
+  popup->child.mapped = true;
 }
 
-static void popup_handle_unmap(struct wl_listener *listener, void *data) {
-	PhocServer *server = phoc_server_get_default ();
-	struct phoc_xdg_popup *popup = wl_container_of(listener, popup, unmap);
-	phoc_view_child_damage_whole (&popup->child);
-	phoc_input_update_cursor_focus(server->input);
-	popup->child.mapped = false;
+static void
+popup_handle_unmap (struct wl_listener *listener, void *data)
+{
+  PhocServer *server = phoc_server_get_default ();
+  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, unmap);
+
+  phoc_view_child_damage_whole (&popup->child);
+  phoc_input_update_cursor_focus (server->input);
+  popup->child.mapped = false;
 }
 
 
-static void popup_handle_new_popup(struct wl_listener *listener, void *data) {
-	struct phoc_xdg_popup *popup =
-		wl_container_of(listener, popup, new_popup);
-	struct wlr_xdg_popup *wlr_popup = data;
-	phoc_xdg_popup_create (popup->child.view, wlr_popup);
+static void
+popup_handle_new_popup (struct wl_listener *listener, void *data)
+{
+  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, new_popup);
+  struct wlr_xdg_popup *wlr_popup = data;
+
+  phoc_xdg_popup_create (popup->child.view, wlr_popup);
 }
 
-static void popup_unconstrain (PhocXdgPopup* popup)
+static void
+popup_unconstrain (PhocXdgPopup* popup)
 {
   // get the output of the popup's positioner anchor point and convert it to
   // the toplevel parent's coordinate system and then pass it to
@@ -123,32 +137,34 @@ static void popup_unconstrain (PhocXdgPopup* popup)
   wlr_xdg_popup_unconstrain_from_box (popup->wlr_popup, &output_toplevel_sx_box);
 }
 
-PhocXdgPopup *phoc_xdg_popup_create (PhocView *view,
-		struct wlr_xdg_popup *wlr_popup) {
-	struct phoc_xdg_popup *popup =
-		calloc(1, sizeof(struct phoc_xdg_popup));
-	if (popup == NULL) {
-		return NULL;
-	}
-	popup->wlr_popup = wlr_popup;
-	phoc_view_child_init(&popup->child, &popup_impl,
-			     view, wlr_popup->base->surface);
-	popup->destroy.notify = popup_handle_destroy;
-	wl_signal_add(&wlr_popup->base->events.destroy, &popup->destroy);
-	popup->map.notify = popup_handle_map;
-	wl_signal_add(&wlr_popup->base->events.map, &popup->map);
-	popup->unmap.notify = popup_handle_unmap;
-	wl_signal_add(&wlr_popup->base->events.unmap, &popup->unmap);
-	popup->new_popup.notify = popup_handle_new_popup;
-	wl_signal_add(&wlr_popup->base->events.new_popup, &popup->new_popup);
+PhocXdgPopup *
+phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
+{
+  struct phoc_xdg_popup *popup = calloc (1, sizeof(struct phoc_xdg_popup));
 
-	popup_unconstrain(popup);
+  if (popup == NULL) {
+    return NULL;
+  }
+  popup->wlr_popup = wlr_popup;
+  phoc_view_child_init (&popup->child, &popup_impl,
+                        view, wlr_popup->base->surface);
+  popup->destroy.notify = popup_handle_destroy;
+  wl_signal_add (&wlr_popup->base->events.destroy, &popup->destroy);
+  popup->map.notify = popup_handle_map;
+  wl_signal_add (&wlr_popup->base->events.map, &popup->map);
+  popup->unmap.notify = popup_handle_unmap;
+  wl_signal_add (&wlr_popup->base->events.unmap, &popup->unmap);
+  popup->new_popup.notify = popup_handle_new_popup;
+  wl_signal_add (&wlr_popup->base->events.new_popup, &popup->new_popup);
 
-	return popup;
+  popup_unconstrain (popup);
+
+  return popup;
 }
 
 
-void handle_xdg_shell_surface (struct wl_listener *listener, void *data)
+void
+handle_xdg_shell_surface (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_surface *surface = data;
 
@@ -194,27 +210,29 @@ decoration_handle_destroy (struct wl_listener *listener, void *data)
   free (decoration);
 }
 
-static void decoration_handle_request_mode(struct wl_listener *listener,
-		void *data) {
-	struct phoc_xdg_toplevel_decoration *decoration =
-		wl_container_of(listener, decoration, request_mode);
+static void
+decoration_handle_request_mode (struct wl_listener *listener, void *data)
+{
+  struct phoc_xdg_toplevel_decoration *decoration =
+    wl_container_of (listener, decoration, request_mode);
 
-	enum wlr_xdg_toplevel_decoration_v1_mode mode =
-		decoration->wlr_decoration->requested_mode;
-	if (mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_NONE) {
-		mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
-	}
-	wlr_xdg_toplevel_decoration_v1_set_mode(decoration->wlr_decoration, mode);
+  enum wlr_xdg_toplevel_decoration_v1_mode mode = decoration->wlr_decoration->requested_mode;
+
+  if (mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_NONE) {
+    mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
+  }
+  wlr_xdg_toplevel_decoration_v1_set_mode (decoration->wlr_decoration, mode);
 }
 
-static void decoration_handle_surface_commit(struct wl_listener *listener,
-		void *data) {
-	struct phoc_xdg_toplevel_decoration *decoration =
-		wl_container_of(listener, decoration, surface_commit);
+static void
+decoration_handle_surface_commit (struct wl_listener *listener, void *data)
+{
+  struct phoc_xdg_toplevel_decoration *decoration =
+    wl_container_of (listener, decoration, surface_commit);
 
-	bool decorated = decoration->wlr_decoration->current.mode ==
-		WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
-	view_update_decorated (PHOC_VIEW (decoration->surface), decorated);
+  bool decorated = decoration->wlr_decoration->current.mode ==
+    WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
+  view_update_decorated (PHOC_VIEW (decoration->surface), decorated);
 }
 
 
