@@ -155,18 +155,12 @@ typedef struct _PhocViewChild {
 
 void phoc_view_appear_activated (PhocView *view, bool activated);
 void phoc_view_activate (PhocView *view, bool activate);
-void phoc_view_apply_damage (PhocView *view);
 void phoc_view_damage_whole (PhocView *view);
 gboolean view_is_floating(PhocView *view);
 gboolean view_is_maximized(PhocView *view);
 gboolean view_is_tiled(PhocView *view);
 gboolean view_is_fullscreen(const PhocView *view);
-void view_update_position(PhocView *view, int x, int y);
-void view_update_size(PhocView *view, int width, int height);
 void view_update_decorated(PhocView *view, bool decorated);
-void view_initial_focus(PhocView *view);
-void phoc_view_map (PhocView *view, struct wlr_surface *surface);
-void view_unmap(PhocView *view);
 void view_arrange_maximized(PhocView *view, struct wlr_output *output);
 void view_arrange_tiled(PhocView *view, struct wlr_output *output);
 void view_get_box(PhocView *view, struct wlr_box *box);
@@ -184,10 +178,6 @@ void view_restore(PhocView *view);
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output);
 void phoc_view_close (PhocView *self);
 bool view_center(PhocView *view, struct wlr_output *output);
-void view_send_frame_done_if_not_visible (PhocView *view);
-void view_setup(PhocView *view);
-void view_set_title(PhocView *view, const char *title);
-void view_set_parent(PhocView *view, PhocView *parent);
 void phoc_view_set_app_id(PhocView *view, const char *app_id);
 void view_get_deco_box(PhocView *view, struct wlr_box *box);
 void phoc_view_for_each_surface (PhocView                    *self,

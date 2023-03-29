@@ -14,7 +14,7 @@
 #include "seat.h"
 #include "server.h"
 #include "utils.h"
-#include "view.h"
+#include "view-private.h"
 
 
 enum {
