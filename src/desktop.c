@@ -862,8 +862,6 @@ phoc_desktop_class_init (PhocDesktopClass *klass)
 static void
 phoc_desktop_init (PhocDesktop *self)
 {
-  g_autoptr (PhocGesture) touchpad_swipe = NULL;
-
   self->input_output_map = g_hash_table_new_full (g_str_hash,
                                                   g_str_equal,
                                                   g_free,
