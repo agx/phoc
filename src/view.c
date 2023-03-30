@@ -14,8 +14,10 @@
 #include "seat.h"
 #include "server.h"
 #include "utils.h"
+#include "timed-animation.h"
 #include "view-private.h"
 
+#define PHOC_ANIM_DURATION_WINDOW_FADE 150
 
 enum {
   PROP_0,
@@ -1069,6 +1071,23 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   if (priv->activation_token)
     phoc_view_activate (view, TRUE);
 
+  if (phoc_desktop_get_enable_animations (view->desktop) && view->parent == NULL) {
+    g_autoptr (PhocTimedAnimation) fade_anim = NULL;
+    g_autoptr (PhocPropertyEaser) easer = NULL;
+    easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
+                          "target", view,
+                          "easing", PHOC_EASING_EASE_OUT_QUAD,
+                          NULL);
+    phoc_property_easer_set_props (easer, "alpha", 0.0, 1.0, NULL);
+    fade_anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
+                              "animatable", phoc_view_get_output (view),
+                              "duration", PHOC_ANIM_DURATION_WINDOW_FADE,
+                              "property-easer", easer,
+                              "dispose-on-done", TRUE,
+                              NULL);
+    phoc_timed_animation_play (fade_anim);
+  }
+
   g_object_notify_by_pspec (G_OBJECT (view), props[PROP_IS_MAPPED]);
 }
 
@@ -1445,6 +1464,7 @@ phoc_view_set_alpha (PhocView *self, float alpha)
     return;
 
   priv->alpha = alpha;
+  phoc_view_damage_whole (self);
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ALPHA]);
 }
 
