@@ -823,6 +823,8 @@ phoc_desktop_finalize (GObject *object)
   g_hash_table_remove_all (self->input_output_map);
   g_hash_table_unref (self->input_output_map);
 
+  g_clear_object (&self->settings);
+
   G_OBJECT_CLASS (phoc_desktop_parent_class)->finalize (object);
 }
 
