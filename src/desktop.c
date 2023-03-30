@@ -67,6 +67,8 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 typedef struct _PhocDesktopPrivate {
   PhocIdleInhibit *idle_inhibit;
+
+  GSettings       *settings;
 } PhocDesktopPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocDesktop, phoc_desktop, G_TYPE_OBJECT);
@@ -769,12 +771,12 @@ phoc_desktop_constructed (GObject *object)
 
   wlr_data_control_manager_v1_create(server->wl_display);
 
-  self->settings = g_settings_new ("sm.puri.phoc");
-  g_signal_connect_swapped(self->settings, "changed::auto-maximize",
+  priv->settings = g_settings_new ("sm.puri.phoc");
+  g_signal_connect_swapped(priv->settings, "changed::auto-maximize",
 			   G_CALLBACK (auto_maximize_changed_cb), self);
-  auto_maximize_changed_cb(self, "auto-maximize", self->settings);
+  auto_maximize_changed_cb(self, "auto-maximize", priv->settings);
 
-  g_settings_bind (self->settings, "scale-to-fit", self, "scale-to-fit", G_SETTINGS_BIND_DEFAULT);
+  g_settings_bind (priv->settings, "scale-to-fit", self, "scale-to-fit", G_SETTINGS_BIND_DEFAULT);
 }
 
 
@@ -823,7 +825,7 @@ phoc_desktop_finalize (GObject *object)
   g_hash_table_remove_all (self->input_output_map);
   g_hash_table_unref (self->input_output_map);
 
-  g_clear_object (&self->settings);
+  g_clear_object (&priv->settings);
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->finalize (object);
 }

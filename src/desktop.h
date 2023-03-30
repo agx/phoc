@@ -98,7 +98,6 @@ struct _PhocDesktop {
 	xcb_atom_t xwayland_atoms[XWAYLAND_ATOM_LAST];
 #endif
 
-	GSettings *settings;
 	gboolean maximize, scale_to_fit;
 	GHashTable *input_output_map;
 
