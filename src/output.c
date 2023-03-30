@@ -60,9 +60,13 @@ typedef struct _PhocOutputPrivate {
 
 static void phoc_output_initable_iface_init (GInitableIface *iface);
 
+static void phoc_output_animatable_interface_init (PhocAnimatableInterface *iface);
+
 G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
                          G_ADD_PRIVATE (PhocOutput)
-                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_output_initable_iface_init));
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_output_initable_iface_init)
+                         G_IMPLEMENT_INTERFACE (PHOC_TYPE_ANIMATABLE,
+                                                phoc_output_animatable_interface_init))
 
 typedef struct {
   PhocAnimatable    *animatable;
@@ -182,6 +186,42 @@ phoc_output_get_property (GObject    *object,
     break;
   }
 }
+
+/* {{{ Animatable Interface */
+
+static guint
+_phoc_output_add_frame_callback (PhocAnimatable    *iface,
+                                 PhocFrameCallback  callback,
+                                 gpointer           user_data,
+                                 GDestroyNotify     notify)
+{
+  PhocOutput *self = PHOC_OUTPUT (iface);
+
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  return phoc_output_add_frame_callback (self, iface, callback, user_data, notify);
+}
+
+
+static void
+_phoc_output_remove_frame_callback (PhocAnimatable *iface, guint id)
+{
+  PhocOutput *self = PHOC_OUTPUT (iface);
+
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  phoc_output_remove_frame_callback (self, id);
+}
+
+
+static void
+phoc_output_animatable_interface_init (PhocAnimatableInterface *iface)
+{
+  iface->add_frame_callback = _phoc_output_add_frame_callback;
+  iface->remove_frame_callback = _phoc_output_remove_frame_callback;
+}
+
+/* }}} */
 
 static void
 phoc_output_init (PhocOutput *self)
