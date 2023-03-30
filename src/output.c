@@ -292,7 +292,7 @@ phoc_output_damage_handle_frame (struct wl_listener *listener,
   }
   priv->last_frame_us = g_get_monotonic_time ();
 
-  if (priv->cutouts_texture) {
+  if (G_UNLIKELY (priv->cutouts_texture)) {
     struct wlr_box box = { 0, 0, priv->cutouts_texture->width, priv->cutouts_texture->height };
     wlr_output_damage_add_box (self->damage, &box);
   }
