@@ -1755,6 +1755,26 @@ phoc_view_get_tile_direction (PhocView *self)
 
 
 /**
+ * phoc_view_get_output:
+ * @view: The view to get the output for
+ *
+ * If a view spans multiple output it returns the output that the
+ * center of the view is on.
+ *
+ * Returns: (transfer none)(nullable): The output the view is on
+ */
+PhocOutput *
+phoc_view_get_output (PhocView *view)
+{
+  struct wlr_output *wlr_output = view_get_output (view);
+
+  if (wlr_output == NULL)
+    return NULL;
+
+  return PHOC_OUTPUT (wlr_output->data);
+}
+
+/**
  * phoc_view_child_destroy:
  * @child: The view child to destroy
  *

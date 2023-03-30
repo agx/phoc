@@ -192,6 +192,7 @@ struct wlr_surface *
                                     double   *sub_x,
                                     double   *sub_y);
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
+PhocOutput *phoc_view_get_output (PhocView *view);
 
 
 bool                 phoc_view_is_mapped (PhocView *view);
