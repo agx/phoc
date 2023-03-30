@@ -22,6 +22,7 @@ enum {
   PROP_SCALE_TO_FIT,
   PROP_ACTIVATION_TOKEN,
   PROP_IS_MAPPED,
+  PROP_ALPHA,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -1433,6 +1434,22 @@ view_create_foreign_toplevel_handle (PhocView *view)
 
 
 static void
+phoc_view_set_alpha (PhocView *self, float alpha)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (G_APPROX_VALUE (priv->alpha, alpha, FLT_EPSILON))
+    return;
+
+  priv->alpha = alpha;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ALPHA]);
+}
+
+
+static void
 phoc_view_set_property (GObject      *object,
 			  guint         property_id,
 			  const GValue *value,
@@ -1446,6 +1463,9 @@ phoc_view_set_property (GObject      *object,
     break;
   case PROP_ACTIVATION_TOKEN:
     phoc_view_set_activation_token (self, g_value_get_string (value));
+    break;
+  case PROP_ALPHA:
+    phoc_view_set_alpha (self, g_value_get_float (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1472,6 +1492,9 @@ phoc_view_get_property (GObject    *object,
     break;
   case PROP_IS_MAPPED:
     g_value_set_boolean (value, phoc_view_is_mapped (self));
+    break;
+  case PROP_ALPHA:
+    g_value_set_float (value, phoc_view_get_alpha (self));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1667,6 +1690,16 @@ phoc_view_class_init (PhocViewClass *klass)
     g_param_spec_boolean ("is-mapped", "", "",
                           FALSE,
                           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+  /**
+   * PhocView:alpha:
+   *
+   * The view's transparency
+   */
+  props[PROP_ALPHA] =
+    g_param_spec_float ("alpha", "", "",
+                        0.0, 1.0, 1.0,
+                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
