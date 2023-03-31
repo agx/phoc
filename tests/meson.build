@@ -40,6 +40,12 @@ tests = [
   'xdg-shell',
 ]
 
+if have_xwayland == true
+  tests += [
+  'xwayland',
+]
+endif
+
 phoctest_sources = [
   'testlib.c',
   'testlib-layer-shell.c',
@@ -65,4 +71,3 @@ foreach test : tests
 endforeach
 
 endif
-

@@ -113,7 +113,7 @@ main(int argc, char **argv)
   g_autofree gchar *exec = NULL;
   PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
-  gboolean version = FALSE, shell_mode = FALSE;
+  gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE;
 
   setup_signals();
 
@@ -124,6 +124,8 @@ main(int argc, char **argv)
      "Command (session) that will be ran at startup", NULL},
     {"shell", 'S', 0, G_OPTION_ARG_NONE, &shell_mode,
      "Whether to expect a shell to attach", NULL},
+    {"xwayland", 'X', 0, G_OPTION_ARG_NONE, &xwayland,
+     "Whether to start XWayland", NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &version,
      "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -151,6 +153,8 @@ main(int argc, char **argv)
 
   if (shell_mode)
     flags |= PHOC_SERVER_FLAG_SHELL_MODE;
+  if (xwayland)
+    flags |= PHOC_SERVER_FLAG_XWAYLAND;
 
   loop = g_main_loop_new (NULL, FALSE);
   if (!phoc_server_setup (server, config_path, exec, loop, flags, debug_flags))

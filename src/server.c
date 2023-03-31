@@ -340,6 +340,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
     return FALSE;
   }
 
+  self->flags = flags;
   self->debug_flags = debug_flags;
   self->mainloop = mainloop;
   self->exit_status = 1;
@@ -347,7 +348,6 @@ phoc_server_setup (PhocServer *self, const char *config_path,
   self->input = phoc_input_new ();
   self->session = g_strdup (session);
   self->mainloop = mainloop;
-  self->flags = flags;
 
   const char *socket = wl_display_add_socket_auto(self->wl_display);
   if (!socket) {

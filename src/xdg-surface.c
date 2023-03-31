@@ -19,6 +19,9 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 
+#include <wlr/xwayland.h>
+#include <xcb/xproto.h>
+
 enum {
   PROP_0,
   PROP_WLR_XDG_SURFACE,
