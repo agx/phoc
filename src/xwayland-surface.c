@@ -12,7 +12,7 @@
 #include "cursor.h"
 #include "seat.h"
 #include "server.h"
-#include "view.h"
+#include "view-private.h"
 #include "xwayland-surface.h"
 
 #include <wlr/xwayland.h>
