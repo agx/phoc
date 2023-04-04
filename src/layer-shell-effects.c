@@ -726,7 +726,7 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
 
 /**
  * phoc_draggable_layer_surface_get_layer_surface:
- * @drag_surface: The dragable layer suface
+ * @drag_surface: The draggable layer surface
  *
  * Returns: (transfer none): The underlying layer surface
  */
@@ -836,7 +836,7 @@ phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface
     break;
   }
 
-  /* The user "catched" the surface during an animation */
+  /* The user "caught" the surface during an animation */
   if (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING) {
     if (drag_surface->drag.anim_id) {
       phoc_animatable_remove_frame_callback (PHOC_ANIMATABLE (drag_surface->layer_surface),

@@ -123,7 +123,7 @@ on_child_setup (gpointer unused)
   sigset_t mask;
 
   /* phoc wants SIGUSR1 blocked due to wlroots/xwayland but we
-     don't want to inherit that to childs */
+     don't want to inherit that to children */
   sigemptyset(&mask);
   sigaddset(&mask, SIGUSR1);
   sigprocmask(SIG_UNBLOCK, &mask, NULL);
@@ -321,7 +321,7 @@ phoc_server_get_default (void)
 /**
  * phoc_server_setup:
  *
- * Perform wayland server intialization: parse command line and config,
+ * Perform wayland server initialization: parse command line and config,
  * create the wayland socket, setup env vars.
  *
  * Returns: %TRUE on success, %FALSE otherwise

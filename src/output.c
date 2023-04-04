@@ -531,7 +531,7 @@ phoc_output_initable_init (GInitable    *initable,
                                                    G_CALLBACK (render_cutouts),
                                                    self);
     } else {
-      g_warning ("Could't create cutout overlay");
+      g_warning ("Could not create cutout overlay");
     }
   }
 

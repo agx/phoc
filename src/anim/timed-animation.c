@@ -291,7 +291,7 @@ phoc_timed_animation_class_init (PhocTimedAnimationClass *klass)
   /**
    * PhocAnimation::tick:
    *
-   * This signal is emitted on every tick of the frame clock that drives tha animation.
+   * This signal is emitted on every tick of the frame clock that drives the animation.
    */
   signals[TICK] =
     g_signal_new ("tick",
