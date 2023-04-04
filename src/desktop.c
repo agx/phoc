@@ -165,17 +165,21 @@ view_at (PhocView *view, double lx, double ly, struct wlr_surface **surface, dou
   return false;
 }
 
+static PhocView *
+desktop_view_at (PhocDesktop         *desktop,
+                 double               lx,
+                 double               ly,
+                 struct wlr_surface **surface,
+                 double              *sx,
+                 double              *sy)
+{
+  PhocView *view;
 
-static PhocView *desktop_view_at(PhocDesktop *desktop,
-		double lx, double ly, struct wlr_surface **surface,
-		double *sx, double *sy) {
-	PhocView *view;
-	wl_list_for_each(view, &desktop->views, link) {
-		if (phoc_desktop_view_is_visible(desktop, view) && view_at(view, lx, ly, surface, sx, sy)) {
-			return view;
-		}
-	}
-	return NULL;
+  wl_list_for_each (view, &desktop->views, link) {
+    if (phoc_desktop_view_is_visible (desktop, view) && view_at (view, lx, ly, surface, sx, sy))
+      return view;
+  }
+  return NULL;
 }
 
 static struct wlr_surface *
