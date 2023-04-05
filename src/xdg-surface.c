@@ -281,6 +281,13 @@ get_size (PhocView *view, struct wlr_box *box)
 }
 
 
+static struct wlr_surface *
+get_wlr_surface_at (PhocView *self, double sx, double sy, double *sub_x, double *sub_y)
+{
+  return wlr_xdg_surface_surface_at (PHOC_XDG_SURFACE (self)->xdg_surface, sx, sy, sub_x, sub_y);
+}
+
+
 static void
 handle_surface_commit (struct wl_listener *listener, void *data)
 {
@@ -582,6 +589,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
   view_class->close = _close;
   view_class->for_each_surface = for_each_surface;
   view_class->get_geometry = get_geometry;
+  view_class->get_wlr_surface_at = get_wlr_surface_at;
 
   /**
    * PhocXdgSurface:wlr-xdg-surface:
@@ -614,20 +622,6 @@ phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom)
 {
   wlr_xdg_surface_get_geometry (self->xdg_surface, geom);
 }
-
-
-struct wlr_surface *
-phoc_xdg_surface_get_wlr_surface_at (PhocXdgSurface *self,
-                                     double           sx,
-                                     double           sy,
-                                     double          *sub_x,
-                                     double          *sub_y)
-{
-  g_assert (PHOC_IS_XDG_SURFACE (self));
-
-  return wlr_xdg_surface_surface_at (self->xdg_surface, sx, sy, sub_x, sub_y);
-}
-
 
 void
 phoc_xdg_surface_set_decoration (PhocXdgSurface            *self,

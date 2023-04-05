@@ -1554,6 +1554,17 @@ phoc_view_set_tiled_default (PhocView *self, bool tiled)
 }
 
 
+static struct wlr_surface *
+phoc_view_get_wlr_surface_at_default (PhocView *self,
+                                      double    sx,
+                                      double    sy,
+                                      double   *sub_x,
+                                      double   *sub_y)
+{
+  return wlr_surface_surface_at (self->wlr_surface, sx, sy, sub_x, sub_y);
+}
+
+
 static void
 phoc_view_resize_default (PhocView *self, uint32_t width, uint32_t height)
 {
@@ -1618,6 +1629,7 @@ phoc_view_class_init (PhocViewClass *klass)
   view_class->get_geometry = phoc_view_get_geometry_default;
   view_class->move = phoc_view_move_default;
   view_class->set_tiled = phoc_view_set_tiled_default;
+  view_class->get_wlr_surface_at = phoc_view_get_wlr_surface_at_default;
   /* Mandatory */
   view_class->resize = phoc_view_resize_default;
   view_class->move_resize = phoc_view_move_resize_default;
@@ -2017,4 +2029,12 @@ void
 phoc_view_close (PhocView *self)
 {
   PHOC_VIEW_GET_CLASS (self)->close(self);
+}
+
+struct wlr_surface *
+phoc_view_get_wlr_surface_at (PhocView *self, double sx, double sy, double *sub_x, double *sub_y)
+{
+  g_assert (PHOC_IS_VIEW (self));
+
+  return PHOC_VIEW_GET_CLASS (self)->get_wlr_surface_at (self, sx, sy, sub_x, sub_y);
 }

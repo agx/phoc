@@ -121,7 +121,7 @@ static bool
 view_at (PhocView *view, double lx, double ly, struct wlr_surface **surface, double *sx, double *sy)
 {
   double _sx, _sy;
-  struct wlr_surface *_surface = NULL;
+  struct wlr_surface *_surface;
 
   if (!phoc_view_is_mapped (view))
     return false;
@@ -129,21 +129,7 @@ view_at (PhocView *view, double lx, double ly, struct wlr_surface **surface, dou
   double view_sx = lx / phoc_view_get_scale (view) - view->box.x;
   double view_sy = ly / phoc_view_get_scale (view) - view->box.y;
 
-  if (PHOC_IS_XDG_SURFACE (view)) {
-    _surface = phoc_xdg_surface_get_wlr_surface_at (PHOC_XDG_SURFACE (view),
-                                                    view_sx,
-                                                    view_sy,
-                                                    &_sx,
-                                                    &_sy);
-
-#ifdef PHOC_XWAYLAND
-  } else if (PHOC_IS_XWAYLAND_SURFACE (view)) {
-    _surface = wlr_surface_surface_at (view->wlr_surface,
-                                       view_sx, view_sy, &_sx, &_sy);
-#endif
-  } else {
-    g_error ("Invalid view type");
-  }
+  _surface = phoc_view_get_wlr_surface_at (view, view_sx, view_sy, &_sx, &_sy);
   if (_surface != NULL) {
     if (sx)
       *sx = _sx;

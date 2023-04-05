@@ -85,6 +85,8 @@ struct _PhocView {
  *     The implementation is optional.
  * @get_geometry: This is called by `PhocView` to get a views geometry.
  *     The implementation is optional.
+ * @get_wlr_surface_at: Get the wlr_surface at the give coordinates.
+ *     The implementation is optional.
  */
 typedef struct _PhocViewClass
 {
@@ -92,8 +94,7 @@ typedef struct _PhocViewClass
 
   void (*move)               (PhocView *self, double x, double y);
   void (*resize)             (PhocView *self, uint32_t width, uint32_t height);
-  void (*move_resize)        (PhocView *self, double x, double y,
-                              uint32_t  width, uint32_t height);
+  void (*move_resize)        (PhocView *self, double x, double y, uint32_t  width, uint32_t height);
   bool (*want_scaling)       (PhocView *self);
   bool (*want_auto_maximize) (PhocView *self);
   void (*set_active)         (PhocView *self, bool active);
@@ -103,6 +104,8 @@ typedef struct _PhocViewClass
   void (*close)              (PhocView *self);
   void (*for_each_surface)   (PhocView *self, wlr_surface_iterator_func_t iterator, void *user_data);
   void (*get_geometry)       (PhocView *self, struct wlr_box *box);
+  struct wlr_surface *
+       (*get_wlr_surface_at) (PhocView *self, double sx, double sy, double *sub_x, double *sub_y);
 } PhocViewClass;
 
 
@@ -181,7 +184,14 @@ void view_get_deco_box(PhocView *view, struct wlr_box *box);
 void phoc_view_for_each_surface (PhocView                    *self,
                                  wlr_surface_iterator_func_t  iterator,
                                  gpointer                     user_data);
+struct wlr_surface *
+      phoc_view_get_wlr_surface_at (PhocView *self,
+                                    double    sx,
+                                    double    sy,
+                                    double   *sub_x,
+                                    double   *sub_y);
 PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
+
 
 bool                 phoc_view_is_mapped (PhocView *view);
 PhocViewDecoPart     view_get_deco_part(PhocView *view, double sx, double sy);
