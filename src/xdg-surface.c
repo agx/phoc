@@ -85,27 +85,11 @@ phoc_xdg_surface_set_property (GObject      *object,
   }
 }
 
-/**
- * phoc_xdg_surface_from_view:
- * @view: A view
- *
- * Returns the [class@XdgSurface] associated with this
- * [type@Phoc.View]. It is a programming error if the [class@View]
- * isn't a [type@XdgSurface].
- *
- * Returns: (transfer none): Returns the [type@XdgSurface]
- */
-static PhocXdgSurface *
-phoc_xdg_surface_from_view (PhocView *view) {
-  g_assert (PHOC_IS_XDG_SURFACE (view));
-  return PHOC_XDG_SURFACE (view);
-}
-
 
 static void
 set_active (PhocView *view, bool active)
 {
-  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL)
     wlr_xdg_toplevel_set_activated (xdg_surface, active);
@@ -137,7 +121,7 @@ apply_size_constraints (struct wlr_xdg_surface *wlr_xdg_surface,
 static void
 resize (PhocView *view, uint32_t width, uint32_t height)
 {
-  struct wlr_xdg_surface *wlr_xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *wlr_xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
     return;
@@ -202,7 +186,7 @@ want_scaling(PhocView *view)
 
 static bool
 want_auto_maximize(PhocView *view) {
-  struct wlr_xdg_surface *surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   return surface->toplevel && !surface->toplevel->parent;
 }
@@ -210,7 +194,7 @@ want_auto_maximize(PhocView *view) {
 static void
 set_maximized (PhocView *view, bool maximized)
 {
-  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
     return;
@@ -221,7 +205,7 @@ set_maximized (PhocView *view, bool maximized)
 static void
 set_tiled (PhocView *view, bool tiled)
 {
-  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
     return;
@@ -246,7 +230,7 @@ set_tiled (PhocView *view, bool tiled)
 static void
 set_fullscreen (PhocView *view, bool fullscreen)
 {
-  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
     return;
@@ -257,7 +241,7 @@ set_fullscreen (PhocView *view, bool fullscreen)
 static void
 _close(PhocView *view)
 {
-  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
   struct wlr_xdg_popup *popup, *tmp = NULL;
 
   wl_list_for_each_safe (popup, tmp, &xdg_surface->popups, link) {
@@ -273,7 +257,7 @@ for_each_surface (PhocView                    *view,
                   wlr_surface_iterator_func_t  iterator,
                   void                        *user_data)
 {
-  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   wlr_xdg_surface_for_each_surface (xdg_surface, iterator, user_data);
 }
@@ -281,7 +265,7 @@ for_each_surface (PhocView                    *view,
 static void
 get_geometry (PhocView *view, struct wlr_box *geom)
 {
-  phoc_xdg_surface_get_geometry (phoc_xdg_surface_from_view (view), geom);
+  phoc_xdg_surface_get_geometry (PHOC_XDG_SURFACE (view), geom);
 }
 
 
