@@ -1275,7 +1275,7 @@ phoc_output_has_fullscreen_view (PhocOutput *self)
 {
   g_assert (PHOC_IS_OUTPUT (self));
 
-  return self->fullscreen_view != NULL && self->fullscreen_view->wlr_surface != NULL;
+  return phoc_view_is_mapped (self->fullscreen_view);
 }
 
 
