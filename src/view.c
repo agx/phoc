@@ -1256,32 +1256,33 @@ view_set_title (PhocView *view, const char *title)
     wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle, title ?: "");
 }
 
-void view_set_parent(PhocView *view, PhocView *parent) {
-	// setting a new parent may cause a cycle
-	PhocView *node = parent;
-	PhocViewPrivate *priv;
-	struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
+void view_set_parent (PhocView *view, PhocView *parent)
+{
+  // setting a new parent may cause a cycle
+  PhocView *node = parent;
+  PhocViewPrivate *priv;
+  struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
 
-	while (node) {
-		g_return_if_fail(node != view);
-		node = node->parent;
-	}
+  while (node) {
+    g_return_if_fail (node != view);
+    node = node->parent;
+  }
 
-	if (view->parent) {
-		wl_list_remove(&view->parent_link);
-		wl_list_init(&view->parent_link);
-	}
+  if (view->parent) {
+    wl_list_remove (&view->parent_link);
+    wl_list_init (&view->parent_link);
+  }
 
-	view->parent = parent;
-	if (parent) {
-		wl_list_insert(&parent->stack, &view->parent_link);
-	}
+  view->parent = parent;
+  if (parent)
+    wl_list_insert (&parent->stack, &view->parent_link);
 
-	priv = phoc_view_get_instance_private (view);
-	if (view->parent)
-		toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
-	if (priv->toplevel_handle)
-		wlr_foreign_toplevel_handle_v1_set_parent(priv->toplevel_handle, toplevel_handle);
+  priv = phoc_view_get_instance_private (view);
+  if (view->parent)
+    toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
+
+  if (priv->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_parent(priv->toplevel_handle, toplevel_handle);
 }
 
 
