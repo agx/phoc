@@ -1202,24 +1202,26 @@ void view_update_position(PhocView *view, int x, int y) {
 	phoc_view_damage_whole (view);
 }
 
-void view_update_size(PhocView *view, int width, int height) {
+void
+view_update_size (PhocView *view, int width, int height)
+{
+  struct wlr_box before;
 
-	if (view->box.width == width && view->box.height == height) {
-		return;
-	}
+  if (view->box.width == width && view->box.height == height)
+    return;
 
-	struct wlr_box before;
-	view_get_box(view, &before);
-	phoc_view_damage_whole (view);
-	view->box.width = width;
-	view->box.height = height;
-	if (view->pending_centering || (view_is_floating (view) && phoc_desktop_get_auto_maximize (view->desktop))) {
-		view_center (view, NULL);
-		view->pending_centering = false;
-	}
-	view_update_scale(view);
-	view_update_output(view, &before);
-	phoc_view_damage_whole (view);
+  view_get_box(view, &before);
+  phoc_view_damage_whole (view);
+  view->box.width = width;
+  view->box.height = height;
+  if (view->pending_centering ||
+      (view_is_floating (view) && phoc_desktop_get_auto_maximize (view->desktop))) {
+    view_center (view, NULL);
+    view->pending_centering = false;
+  }
+  view_update_scale (view);
+  view_update_output (view, &before);
+  phoc_view_damage_whole (view);
 }
 
 void view_update_decorated(PhocView *view, bool decorated) {
