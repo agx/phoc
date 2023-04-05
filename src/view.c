@@ -1244,15 +1244,16 @@ view_update_decorated (PhocView *view, bool decorated)
   phoc_view_damage_whole (view);
 }
 
-void view_set_title(PhocView *view, const char *title) {
-	PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+void
+view_set_title (PhocView *view, const char *title)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
-	free(priv->title);
-	priv->title = g_strdup (title);
+  free (priv->title);
+  priv->title = g_strdup (title);
 
-	if (priv->toplevel_handle) {
-		wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle, title ?: "");
-	}
+  if (priv->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle, title ?: "");
 }
 
 void view_set_parent(PhocView *view, PhocView *parent) {
