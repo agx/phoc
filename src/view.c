@@ -819,7 +819,7 @@ static void subsurface_destroy(PhocViewChild *child) {
 	wl_list_remove(&subsurface->destroy.link);
 	wl_list_remove(&subsurface->map.link);
 	wl_list_remove(&subsurface->unmap.link);
-	free(subsurface);
+	g_free (subsurface);
 }
 
 static const struct phoc_view_child_interface subsurface_impl = {
