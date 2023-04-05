@@ -327,6 +327,9 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
   } else if (!g_strcmp0 (interface, zphoc_layer_shell_effects_v1_interface.name)) {
     globals->layer_shell_effects = wl_registry_bind (registry, name,
                                                      &zphoc_layer_shell_effects_v1_interface, 1);
+  } else if (!g_strcmp0 (interface, zxdg_decoration_manager_v1_interface.name)) {
+    globals->decoration_manager = wl_registry_bind (registry, name,
+                                                     &zxdg_decoration_manager_v1_interface, 1);
   }
 }
 
@@ -368,6 +371,7 @@ wl_client_run (GTask *task, gpointer source,
   else
     success = TRUE;
 
+  g_clear_pointer (&globals.decoration_manager, zxdg_decoration_manager_v1_destroy);
   wl_proxy_destroy ((struct wl_proxy *)globals.gtk_shell1);
   wl_proxy_destroy ((struct wl_proxy *)globals.phosh);
   g_clear_pointer (&globals.foreign_toplevel_manager, zwlr_foreign_toplevel_manager_v1_destroy);
@@ -752,8 +756,11 @@ phoc_test_buffer_free (PhocTestBuffer *buffer)
 {
   g_assert_nonnull (buffer);
 
-  munmap(buffer->shm_data, buffer->stride * buffer->height);
-  wl_buffer_destroy(buffer->wl_buffer);
+  if (buffer->wl_buffer == NULL)
+    return;
+
+  munmap (buffer->shm_data, buffer->stride * buffer->height);
+  g_clear_pointer (&buffer->wl_buffer, wl_buffer_destroy);
   buffer->valid = FALSE;
 }
 
@@ -801,13 +808,13 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
   xdg_toplevel_handle_close,
 };
 
+
 /**
  * phoc_test_xdg_toplevel_new:
  * @globals: The wayland globals
  * @width: The desired surface width
  * @height: The desired surface height
  * @title: The desired title
- * @color: Tehe color to fill the surface with
  *
  * Creates a xdg toplevel with the given property for use in tests.
  * If width and/or height are 0, defaults will be used. Free with
@@ -817,8 +824,7 @@ PhocTestXdgToplevelSurface *
 phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
                             guint32                width,
                             guint32                height,
-                            const char            *title,
-                            guint32                color)
+                            const char            *title)
 {
   PhocTestXdgToplevelSurface *xs = g_malloc0 (sizeof(PhocTestXdgToplevelSurface));
 
@@ -846,6 +852,35 @@ phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
   g_assert_true (xs->configured);
   g_assert_true (xs->toplevel_configured);
 
+  return xs;
+}
+
+
+/**
+ * phoc_test_xdg_toplevel_new:
+ * @globals: The wayland globals
+ * @width: The desired surface width
+ * @height: The desired surface height
+ * @title: The desired title
+ * @color: Tehe color to fill the surface with
+ *
+ * Creates a xdg toplevel with the given property for use in tests.
+ * If width and/or height are 0, defaults will be used. Free with
+ * `phoc_test_xdg_toplevel_free`.
+ *
+ * This functions also attaches a buffer with the given color.
+ */
+PhocTestXdgToplevelSurface *
+phoc_test_xdg_toplevel_new_with_buffer (PhocTestClientGlobals *globals,
+                                        guint32                width,
+                                        guint32                height,
+                                        const char            *title,
+                                        guint32                color)
+{
+  PhocTestXdgToplevelSurface *xs;
+
+  xs = phoc_test_xdg_toplevel_new (globals, width, height, title);
+
   phoc_test_client_create_shm_buffer (globals, &xs->buffer, xs->width, xs->height,
                                       WL_SHM_FORMAT_XRGB8888);
 
@@ -865,6 +900,7 @@ phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
 
   return xs;
 }
+
 
 void
 phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs)

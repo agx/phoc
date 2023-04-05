@@ -37,6 +37,7 @@ tests = [
   'run',
   'server',
   'utils',
+  'xdg-decoration',
   'xdg-shell',
 ]
 
