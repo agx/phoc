@@ -1224,24 +1224,24 @@ view_update_size (PhocView *view, int width, int height)
   phoc_view_damage_whole (view);
 }
 
-void view_update_decorated(PhocView *view, bool decorated) {
-	PhocViewPrivate *priv;
+void
+view_update_decorated (PhocView *view, bool decorated)
+{
+  PhocViewPrivate *priv;
 
-	g_assert (PHOC_IS_VIEW (view));
-	priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
 
+  if (priv->decorated == decorated)
+    return;
 
-	if (priv->decorated == decorated) {
-		return;
-	}
+  phoc_view_damage_whole (view);
+  if (decorated)
+    phoc_view_set_decoration (view, TRUE, 12, 4);
+  else
+    phoc_view_set_decoration (view, FALSE, 0, 0);
 
-	phoc_view_damage_whole (view);
-	if (decorated) {
-		phoc_view_set_decoration (view, TRUE, 12, 4);
-	} else {
-		phoc_view_set_decoration (view, FALSE, 0, 0);
-	}
-	phoc_view_damage_whole (view);
+  phoc_view_damage_whole (view);
 }
 
 void view_set_title(PhocView *view, const char *title) {
