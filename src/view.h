@@ -48,8 +48,6 @@ struct _PhocView {
 	struct wl_list parent_link; // PhocView::stack
 
 	struct wlr_box box;
-
-	PhocOutput *fullscreen_output;
 	struct wlr_box saved;
 
 	struct {
@@ -159,7 +157,7 @@ void phoc_view_damage_whole (PhocView *view);
 gboolean view_is_floating(PhocView *view);
 gboolean view_is_maximized(PhocView *view);
 gboolean view_is_tiled(PhocView *view);
-gboolean view_is_fullscreen(const PhocView *view);
+gboolean view_is_fullscreen (PhocView *self);
 void view_update_decorated(PhocView *view, bool decorated);
 void view_arrange_maximized(PhocView *view, struct wlr_output *output);
 void view_arrange_tiled(PhocView *view, struct wlr_output *output);
@@ -198,6 +196,7 @@ void                 phoc_view_set_decoration (PhocView *self,
                                                int       titlebar_height,
                                                int       border_width);
 gboolean             phoc_view_is_decorated (PhocView *self);
+PhocOutput          *phoc_view_get_fullscreen_output (PhocView *self);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,

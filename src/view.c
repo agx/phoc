@@ -44,6 +44,8 @@ typedef struct _PhocViewPrivate {
   int            border_width;
   PhocViewState  state;
 
+  PhocOutput    *fullscreen_output;
+
   PhocViewTileDirection tile_direction;
 
   gulong         notify_scale_to_fit_id;
@@ -119,9 +121,34 @@ view_is_tiled (PhocView *view)
 }
 
 gboolean
-view_is_fullscreen (const PhocView *view)
+view_is_fullscreen (PhocView *self)
 {
-  return view->fullscreen_output != NULL;
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->fullscreen_output != NULL;
+}
+
+/**
+ * phoc_view_get_fullscreen_output:
+ * @self: The view
+ *
+ * Gets the output a view is fullscreen on. Returns %NULL if
+ * the view isn't currently fullscreen.
+ *
+ * Returns:(nullable): The fullscreen output
+ */
+PhocOutput *
+phoc_view_get_fullscreen_output (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->fullscreen_output;
 }
 
 void view_get_box(PhocView *view, struct wlr_box *box) {
@@ -294,7 +321,7 @@ phoc_view_activate (PhocView *self, bool activate)
     wlr_foreign_toplevel_handle_v1_set_activated (priv->toplevel_handle, activate);
 
   if (activate && view_is_fullscreen (self)) {
-    phoc_output_force_shell_reveal (self->fullscreen_output, false);
+    phoc_output_force_shell_reveal (priv->fullscreen_output, false);
   }
 
   if (priv->activation_token) {
@@ -552,7 +579,7 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 		}
 
 		if (was_fullscreen) {
-			view->fullscreen_output->fullscreen_view = NULL;
+			priv->fullscreen_output->fullscreen_view = NULL;
 		}
 
 		struct wlr_box view_box;
@@ -569,14 +596,14 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 
 		phoc_output->fullscreen_view = view;
 		phoc_output_force_shell_reveal (phoc_output, false);
-		view->fullscreen_output = phoc_output;
+		priv->fullscreen_output = phoc_output;
 		phoc_output_damage_whole(phoc_output);
 	}
 
 	if (was_fullscreen && !fullscreen) {
-		PhocOutput *phoc_output = view->fullscreen_output;
-		view->fullscreen_output->fullscreen_view = NULL;
-		view->fullscreen_output = NULL;
+		PhocOutput *phoc_output = priv->fullscreen_output;
+		priv->fullscreen_output->fullscreen_view = NULL;
+		priv->fullscreen_output = NULL;
 
 		phoc_output_damage_whole(phoc_output);
 
@@ -1061,9 +1088,9 @@ void view_unmap(PhocView *view) {
 	}
 
 	if (view_is_fullscreen (view)) {
-		phoc_output_damage_whole(view->fullscreen_output);
-		view->fullscreen_output->fullscreen_view = NULL;
-		view->fullscreen_output = NULL;
+		phoc_output_damage_whole (priv->fullscreen_output);
+		priv->fullscreen_output->fullscreen_view = NULL;
+		priv->fullscreen_output = NULL;
 	}
 
 	wl_list_remove(&view->link);
@@ -1479,7 +1506,7 @@ phoc_view_finalize (GObject *object)
 
   // Can happen if fullscreened while unmapped, and hasn't been mapped
   if (view_is_fullscreen (self)) {
-    self->fullscreen_output->fullscreen_view = NULL;
+    priv->fullscreen_output->fullscreen_view = NULL;
   }
 
   g_clear_pointer (&priv->title, g_free);
