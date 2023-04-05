@@ -157,8 +157,8 @@ resize (PhocView *view, uint32_t width, uint32_t height)
 static void
 move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height)
 {
-  PhocXdgSurface *xdg_surface = phoc_xdg_surface_from_view (view);
-  struct wlr_xdg_surface *wlr_xdg_surface = xdg_surface->xdg_surface;
+  PhocXdgSurface *self = PHOC_XDG_SURFACE (view);
+  struct wlr_xdg_surface *wlr_xdg_surface = self->xdg_surface;
 
   if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
     return;
@@ -187,7 +187,7 @@ move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height
       wlr_xdg_surface->toplevel->scheduled.height == constrained_height) {
     view_update_position (view, x, y);
   } else {
-    xdg_surface->pending_move_resize_configure_serial =
+    self->pending_move_resize_configure_serial =
       wlr_xdg_toplevel_set_size (wlr_xdg_surface, constrained_width, constrained_height);
   }
 
