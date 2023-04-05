@@ -137,19 +137,19 @@ apply_size_constraints (struct wlr_xdg_surface *wlr_xdg_surface,
 static void
 resize (PhocView *view, uint32_t width, uint32_t height)
 {
-  struct wlr_xdg_surface *xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
+  struct wlr_xdg_surface *wlr_xdg_surface = phoc_xdg_surface_from_view (view)->xdg_surface;
 
-  if (xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+  if (wlr_xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
     return;
 
   uint32_t constrained_width, constrained_height;
-  apply_size_constraints (xdg_surface, width, height, &constrained_width, &constrained_height);
+  apply_size_constraints (wlr_xdg_surface, width, height, &constrained_width, &constrained_height);
 
-  if (xdg_surface->toplevel->scheduled.width == constrained_width &&
-      xdg_surface->toplevel->scheduled.height == constrained_height)
+  if (wlr_xdg_surface->toplevel->scheduled.width == constrained_width &&
+      wlr_xdg_surface->toplevel->scheduled.height == constrained_height)
     return;
 
-  wlr_xdg_toplevel_set_size (xdg_surface, constrained_width, constrained_height);
+  wlr_xdg_toplevel_set_size (wlr_xdg_surface, constrained_width, constrained_height);
 
   view_send_frame_done_if_not_visible (view);
 }
