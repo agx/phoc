@@ -117,52 +117,54 @@ phoc_desktop_get_property (GObject    *object,
 }
 
 
-static bool view_at(PhocView *view, double lx, double ly,
-		struct wlr_surface **surface, double *sx, double *sy) {
-	if (!phoc_view_is_mapped (view)) {
-		return false;
-	}
+static bool
+view_at (PhocView *view, double lx, double ly, struct wlr_surface **surface, double *sx, double *sy)
+{
+  double _sx, _sy;
+  struct wlr_surface *_surface = NULL;
 
-	double view_sx = lx / phoc_view_get_scale (view) - view->box.x;
-	double view_sy = ly / phoc_view_get_scale (view) - view->box.y;
+  if (!phoc_view_is_mapped (view))
+    return false;
 
-	double _sx, _sy;
-	struct wlr_surface *_surface = NULL;
-	if (PHOC_IS_XDG_SURFACE (view)) {
-		_surface = phoc_xdg_surface_get_wlr_surface_at (PHOC_XDG_SURFACE (view),
-								view_sx,
-								view_sy,
-								&_sx,
-								&_sy);
+  double view_sx = lx / phoc_view_get_scale (view) - view->box.x;
+  double view_sy = ly / phoc_view_get_scale (view) - view->box.y;
+
+  if (PHOC_IS_XDG_SURFACE (view)) {
+    _surface = phoc_xdg_surface_get_wlr_surface_at (PHOC_XDG_SURFACE (view),
+                                                    view_sx,
+                                                    view_sy,
+                                                    &_sx,
+                                                    &_sy);
 
 #ifdef PHOC_XWAYLAND
-	} else if (PHOC_IS_XWAYLAND_SURFACE (view)) {
-		_surface = wlr_surface_surface_at(view->wlr_surface,
-			view_sx, view_sy, &_sx, &_sy);
+  } else if (PHOC_IS_XWAYLAND_SURFACE (view)) {
+    _surface = wlr_surface_surface_at (view->wlr_surface,
+                                       view_sx, view_sy, &_sx, &_sy);
 #endif
-	} else {
-		g_error ("Invalid view type");
-	}
-	if (_surface != NULL) {
-		if (sx)
-			*sx = _sx;
-		if (sy)
-			*sy = _sy;
-		*surface = _surface;
-		return true;
-	}
+  } else {
+    g_error ("Invalid view type");
+  }
+  if (_surface != NULL) {
+    if (sx)
+      *sx = _sx;
+    if (sy)
+      *sy = _sy;
+    *surface = _surface;
+    return true;
+  }
 
-	if (view_get_deco_part(view, view_sx, view_sy)) {
-		if (sx)
-			*sx = view_sx;
-		if (sy)
-			*sy = view_sy;
-		*surface = NULL;
-		return true;
-	}
+  if (view_get_deco_part (view, view_sx, view_sy)) {
+    if (sx)
+      *sx = view_sx;
+    if (sy)
+      *sy = view_sy;
+    *surface = NULL;
+    return true;
+  }
 
-	return false;
+  return false;
 }
+
 
 static PhocView *desktop_view_at(PhocDesktop *desktop,
 		double lx, double ly, struct wlr_surface **surface,
