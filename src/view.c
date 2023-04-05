@@ -1188,18 +1188,19 @@ phoc_view_damage_whole (PhocView *view)
 }
 
 
-void view_update_position(PhocView *view, int x, int y) {
-	if (view->box.x == x && view->box.y == y) {
-		return;
-	}
+void
+view_update_position (PhocView *view, int x, int y)
+{
+  if (view->box.x == x && view->box.y == y)
+    return;
 
-	struct wlr_box before;
-	view_get_box(view, &before);
-	phoc_view_damage_whole (view);
-	view->box.x = x;
-	view->box.y = y;
-	view_update_output(view, &before);
-	phoc_view_damage_whole (view);
+  struct wlr_box before;
+  view_get_box(view, &before);
+  phoc_view_damage_whole (view);
+  view->box.x = x;
+  view->box.y = y;
+  view_update_output(view, &before);
+  phoc_view_damage_whole (view);
 }
 
 void
