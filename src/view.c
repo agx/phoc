@@ -1248,7 +1248,7 @@ view_set_title (PhocView *view, const char *title)
 {
   PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
-  free (priv->title);
+  g_free (priv->title);
   priv->title = g_strdup (title);
 
   if (priv->toplevel_handle)
