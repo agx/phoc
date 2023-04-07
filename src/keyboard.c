@@ -387,7 +387,7 @@ phoc_keyboard_get_grab (PhocKeyboard *self)
 }
 
 static void
-phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_event_keyboard_key *event)
+phoc_keyboard_handle_key(PhocKeyboard *self, struct wlr_keyboard_key_event *event)
 {
   xkb_keycode_t keycode = event->keycode + 8;
   bool handled = false;
@@ -627,7 +627,7 @@ static void
 handle_keyboard_key (struct wl_listener *listener, void *data)
 {
   PhocKeyboard *self = wl_container_of (listener, self, keyboard_key);
-  struct wlr_event_keyboard_key *event = data;
+  struct wlr_keyboard_key_event *event = data;
 
   g_assert (PHOC_IS_KEYBOARD (self));
 

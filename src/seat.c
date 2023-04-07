@@ -98,7 +98,7 @@ handle_swipe_begin (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_begin);
   struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
-  struct wlr_event_pointer_swipe_begin *event = data;
+  struct wlr_pointer_swipe_begin_event *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_begin (gestures, cursor->seat->seat,
                                             event->time_msec, event->fingers);
@@ -110,7 +110,7 @@ handle_swipe_update (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_update);
   struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
-  struct wlr_event_pointer_swipe_update *event = data;
+  struct wlr_pointer_swipe_update_event *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_update (gestures, cursor->seat->seat,
                                              event->time_msec, event->dx, event->dy);
@@ -122,7 +122,7 @@ handle_swipe_end (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_end);
   struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
-  struct wlr_event_pointer_swipe_end *event = data;
+  struct wlr_pointer_swipe_end_event *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_end (gestures, cursor->seat->seat,
                                           event->time_msec, event->cancelled);
@@ -134,7 +134,7 @@ handle_pinch_begin (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_begin);
   struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
-  struct wlr_event_pointer_pinch_begin *event = data;
+  struct wlr_pointer_pinch_begin_event *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_begin (gestures, cursor->seat->seat,
                                             event->time_msec, event->fingers);
@@ -146,7 +146,7 @@ handle_pinch_update (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_update);
   struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
-  struct wlr_event_pointer_pinch_update *event = data;
+  struct wlr_pointer_pinch_update_event *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_update (gestures, cursor->seat->seat,
                                              event->time_msec, event->dx, event->dy,
@@ -160,7 +160,7 @@ handle_pinch_end (struct wl_listener *listener, void *data)
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_end);
   struct wlr_pointer_gestures_v1 *gestures =
     server->desktop->pointer_gestures;
-  struct wlr_event_pointer_pinch_end *event = data;
+  struct wlr_pointer_pinch_end_event *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_end (gestures, cursor->seat->seat,
                                           event->time_msec, event->cancelled);
@@ -175,7 +175,7 @@ handle_switch_toggle (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = server->desktop;
 
   wlr_idle_notify_activity (desktop->idle, switch_device->seat->seat);
-  struct wlr_event_switch_toggle *event = data;
+  struct wlr_switch_toggle_event *event = data;
 
   phoc_switch_handle_toggle (switch_device, event);
 }
@@ -185,7 +185,7 @@ handle_touch_down (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_down);
-  struct wlr_event_touch_down *event = data;
+  struct wlr_touch_down_event *event = data;
   PhocDesktop *desktop = server->desktop;
   PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
                                             event->device->name);
@@ -204,7 +204,7 @@ handle_touch_up (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_up);
-  struct wlr_event_touch_up *event = data;
+  struct wlr_touch_up_event *event = data;
   PhocDesktop *desktop = server->desktop;
 
   if (!phoc_cursor_is_active_touch_id (cursor, event->touch_id)) {
@@ -219,7 +219,7 @@ handle_touch_motion (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_motion);
-  struct wlr_event_touch_motion *event = data;
+  struct wlr_touch_motion_event *event = data;
   PhocDesktop *desktop = server->desktop;
 
   if (!phoc_cursor_is_active_touch_id (cursor, event->touch_id)) {
@@ -285,7 +285,7 @@ handle_tool_axis (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = server->desktop;
 
   wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_tablet_tool_axis *event = data;
+  struct wlr_tablet_tool_axis_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
   if (!phoc_tool) {       // Should this be an assert?
@@ -350,7 +350,7 @@ handle_tool_tip (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = server->desktop;
 
   wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_tablet_tool_tip *event = data;
+  struct wlr_tablet_tool_tip_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
   if (event->state == WLR_TABLET_TOOL_TIP_DOWN) {
@@ -384,7 +384,7 @@ handle_tool_button (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = server->desktop;
 
   wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_tablet_tool_button *event = data;
+  struct wlr_tablet_tool_button_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
   wlr_tablet_v2_tablet_tool_notify_button (phoc_tool->tablet_v2_tool,
@@ -421,7 +421,7 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = server->desktop;
 
   wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
-  struct wlr_event_tablet_tool_proximity *event = data;
+  struct wlr_tablet_tool_proximity_event *event = data;
 
   struct wlr_tablet_tool *tool = event->tool;
 
@@ -1113,7 +1113,7 @@ handle_tablet_pad_ring (struct wl_listener *listener, void *data)
 {
   PhocTabletPad *pad =
     wl_container_of (listener, pad, ring);
-  struct wlr_event_tablet_pad_ring *event = data;
+  struct wlr_tablet_pad_ring_event *event = data;
 
   wlr_tablet_v2_tablet_pad_notify_ring (pad->tablet_v2_pad,
                                         event->ring, event->position,
@@ -1126,7 +1126,7 @@ handle_tablet_pad_strip (struct wl_listener *listener, void *data)
 {
   PhocTabletPad *pad =
     wl_container_of (listener, pad, strip);
-  struct wlr_event_tablet_pad_strip *event = data;
+  struct wlr_tablet_pad_strip_event *event = data;
 
   wlr_tablet_v2_tablet_pad_notify_strip (pad->tablet_v2_pad,
                                          event->strip, event->position,
@@ -1139,7 +1139,7 @@ handle_tablet_pad_button (struct wl_listener *listener, void *data)
 {
   PhocTabletPad *pad =
     wl_container_of (listener, pad, button);
-  struct wlr_event_tablet_pad_button *event = data;
+  struct wlr_tablet_pad_button_event *event = data;
 
   wlr_tablet_v2_tablet_pad_notify_mode (pad->tablet_v2_pad,
                                         event->group, event->mode, event->time_msec);

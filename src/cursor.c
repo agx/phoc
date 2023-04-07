@@ -55,7 +55,7 @@ static void handle_touch_frame (struct wl_listener *listener, void *data);
 
 
 static PhocTouchPoint *
-phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_event_touch_down *event)
+phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_touch_down_event *event)
 {
   PhocTouchPoint *touch_point = g_new0 (PhocTouchPoint, 1);
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
@@ -78,7 +78,7 @@ phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_event_touch_down *even
 
 
 static PhocTouchPoint *
-phoc_cursor_update_touch_point (PhocCursor *self, struct wlr_event_touch_motion *event)
+phoc_cursor_update_touch_point (PhocCursor *self, struct wlr_touch_motion_event *event)
 {
   PhocTouchPoint *touch_point;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
@@ -805,7 +805,7 @@ static void
 handle_pointer_motion (struct wl_listener *listener, void *data)
 {
   PhocCursor *self = wl_container_of (listener, self, motion);
-  struct wlr_event_pointer_motion *event = data;
+  struct wlr_pointer_motion_event *event = data;
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   double dx = event->delta_x;
@@ -855,7 +855,7 @@ static void
 handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 {
   PhocCursor *self = wl_container_of (listener, self, motion_absolute);
-  struct wlr_event_pointer_motion_absolute *event = data;
+  struct wlr_pointer_motion_absolute_event *event = data;
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   double lx, ly;
@@ -891,7 +891,7 @@ static void
 handle_pointer_button (struct wl_listener *listener, void *data)
 {
   PhocCursor *self = wl_container_of (listener, self, button);
-  struct wlr_event_pointer_button *event = data;
+  struct wlr_pointer_button_event *event = data;
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   PhocEventType type;
@@ -932,7 +932,7 @@ static void
 handle_pointer_axis (struct wl_listener *listener, void *data)
 {
   PhocCursor *self = wl_container_of (listener, self, axis);
-  struct wlr_event_pointer_axis *event = data;
+  struct wlr_pointer_axis_event *event = data;
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
 
@@ -954,7 +954,7 @@ handle_pointer_frame (struct wl_listener *listener, void *data)
 
 void
 phoc_cursor_handle_touch_down (PhocCursor                  *self,
-                               struct wlr_event_touch_down *event)
+                               struct wlr_touch_down_event *event)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
@@ -1020,7 +1020,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
 
 void
 phoc_cursor_handle_touch_up (PhocCursor                *self,
-                             struct wlr_event_touch_up *event)
+                             struct wlr_touch_up_event *event)
 {
   struct wlr_touch_point *point =
     wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
@@ -1054,7 +1054,7 @@ phoc_cursor_handle_touch_up (PhocCursor                *self,
 
 void
 phoc_cursor_handle_touch_motion (PhocCursor                    *self,
-                                 struct wlr_event_touch_motion *event)
+                                 struct wlr_touch_motion_event *event)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
@@ -1174,7 +1174,7 @@ handle_touch_frame (struct wl_listener *listener, void *data)
 
 void
 phoc_cursor_handle_tool_axis (PhocCursor                        *self,
-                              struct wlr_event_tablet_tool_axis *event)
+                              struct wlr_tablet_tool_axis_event *event)
 {
   double x = NAN, y = NAN;
 
@@ -1210,7 +1210,7 @@ phoc_cursor_handle_tool_axis (PhocCursor                        *self,
 
 void
 phoc_cursor_handle_tool_tip (PhocCursor                       *self,
-                             struct wlr_event_tablet_tool_tip *event)
+                             struct wlr_tablet_tool_tip_event *event)
 {
   phoc_cursor_press_button (self, event->device,
                             event->time_msec, BTN_LEFT, event->state, self->cursor->x,

@@ -7,7 +7,7 @@
 
 void
 phoc_switch_handle_toggle (struct phoc_switch *switch_device,
-                           struct wlr_event_switch_toggle *event)
+                           struct wlr_switch_toggle_event *event)
 {
   g_debug ("Switch %s, type: %d, state: %d",
            event->device->name,
