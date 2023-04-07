@@ -396,11 +396,11 @@ void view_arrange_maximized(PhocView *view, struct wlr_output *output) {
 		return;
 
 	PhocOutput *phoc_output = output->data;
-	struct wlr_box *output_box =
-		wlr_output_layout_get_box(view->desktop->layout, output);
+	struct wlr_box output_box;
+	wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
 	struct wlr_box usable_area = phoc_output->usable_area;
-	usable_area.x += output_box->x;
-	usable_area.y += output_box->y;
+	usable_area.x += output_box.x;
+	usable_area.y += output_box.y;
 
 	struct wlr_box geom;
 	phoc_view_get_geometry (view, &geom);
@@ -429,12 +429,13 @@ view_arrange_tiled (PhocView *view, struct wlr_output *output)
     return;
 
   PhocOutput *phoc_output = output->data;
-  struct wlr_box *output_box = wlr_output_layout_get_box (view->desktop->layout, output);
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
   struct wlr_box usable_area = phoc_output->usable_area;
   int x;
 
-  usable_area.x += output_box->x;
-  usable_area.y += output_box->y;
+  usable_area.x += output_box.x;
+  usable_area.y += output_box.y;
 
   switch (priv->tile_direction) {
   case PHOC_VIEW_TILE_LEFT:
@@ -580,12 +581,13 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 
 		view_save (view);
 
-		struct wlr_box *output_box =
-			wlr_output_layout_get_box(view->desktop->layout, output);
-		phoc_view_move_resize (view, output_box->x,
-				       output_box->y,
-				       output_box->width,
-				       output_box->height);
+		struct wlr_box output_box;
+		wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
+		phoc_view_move_resize (view,
+				       output_box.x,
+				       output_box.y,
+				       output_box.width,
+				       output_box.height);
 
 		phoc_output->fullscreen_view = view;
 		phoc_output_force_shell_reveal (phoc_output, false);
