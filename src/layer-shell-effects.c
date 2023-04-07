@@ -1016,9 +1016,10 @@ phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface
 {
   PhocServer *server = phoc_server_get_default ();
   struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
-  struct wlr_box *output_box = wlr_output_layout_get_box (server->desktop->layout, wlr_layer_surface->output);
-  double sx = lx - drag_surface->geo.x - output_box->x;
-  double sy = ly - drag_surface->geo.y - output_box->y;
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (server->desktop->layout, wlr_layer_surface->output, &output_box);
+  double sx = lx - drag_surface->geo.x - output_box.x;
+  double sy = ly - drag_surface->geo.y - output_box.y;
   bool is_handle = false;
   int32_t start_margin;
 
