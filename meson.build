@@ -54,7 +54,7 @@ if not embed_wlroots.disabled()
    # Try first to find wlroots as a subproject, then as a system dependency
    wlroots_proj = subproject(
         'wlroots',
-        default_options: ['examples=false'],
+        default_options: ['examples=false', 'renderers=gles2'],
         required: false,
    )
 
@@ -69,7 +69,7 @@ if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
         have_wlr_seat_touch_notify_cancel = true
 else
-        wlroots = dependency('wlroots', version: '== 0.15.1')
+        wlroots = dependency('wlroots', version: '>= 0.16.0')
         wlroots_has_xwayland = cc.get_define('WLR_HAS_XWAYLAND', prefix: '#include <wlr/config.h>', dependencies: wlroots) == '1'
         have_wlr_seat_touch_notify_cancel = false
         if cc.has_function('wlr_seat_touch_notify_cancel',
