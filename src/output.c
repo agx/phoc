@@ -256,11 +256,11 @@ update_output_manager_config (PhocDesktop *desktop)
   wl_list_for_each (output, &desktop->outputs, link) {
     struct wlr_output_configuration_head_v1 *config_head =
       wlr_output_configuration_head_v1_create (config, output->wlr_output);
-    struct wlr_box *output_box = wlr_output_layout_get_box (
-      output->desktop->layout, output->wlr_output);
-    if (output_box) {
-      config_head->state.x = output_box->x;
-      config_head->state.y = output_box->y;
+    struct wlr_box output_box;
+    wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
+    if (!wlr_box_empty (&output_box)) {
+      config_head->state.x = output_box.x;
+      config_head->state.y = output_box.y;
     }
   }
 
@@ -754,10 +754,11 @@ phoc_output_view_for_each_surface (PhocOutput          *self,
                                    PhocSurfaceIterator  iterator,
                                    void                *user_data)
 {
-  struct wlr_box *output_box =
-    wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
 
-  if (!output_box) {
+
+  if (wlr_box_empty (&output_box)) {
     return;
   }
 
@@ -765,8 +766,8 @@ phoc_output_view_for_each_surface (PhocOutput          *self,
     .user_iterator = iterator,
     .user_data = user_data,
     .output = self,
-    .ox = view->box.x - output_box->x,
-    .oy = view->box.y - output_box->y,
+    .ox = view->box.x - output_box.x,
+    .oy = view->box.y - output_box.y,
     .width = view->box.width,
     .height = view->box.height,
     .rotation = 0,
@@ -792,10 +793,10 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
                                                 PhocSurfaceIterator          iterator,
                                                 void                        *user_data)
 {
-  struct wlr_box *output_box =
-    wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
 
-  if (!output_box) {
+  if (wlr_box_empty (&output_box)) {
     return;
   }
 
@@ -803,8 +804,8 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
 
   wl_list_for_each (child, &surface->children, parent_link) {
     if (child->mapped) {
-      double ox = child->x - output_box->x;
-      double oy = child->y - output_box->y;
+      double ox = child->x - output_box.x;
+      double oy = child->y - output_box.y;
       phoc_output_surface_for_each_surface (self, child->surface, ox, oy, iterator,
                                             user_data);
     }
@@ -939,10 +940,10 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
                                          PhocSurfaceIterator  iterator,
                                          void                *user_data)
 {
-  struct wlr_box *output_box =
-    wlr_output_layout_get_box (self->desktop->layout, self->wlr_output);
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
 
-  if (!output_box) {
+  if (wlr_box_empty (&output_box)) {
     return;
   }
 
@@ -955,8 +956,8 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
       continue;
     }
 
-    double ox = drag_icon->x - output_box->x;
-    double oy = drag_icon->y - output_box->y;
+    double ox = drag_icon->x - output_box.x;
+    double oy = drag_icon->y - output_box.y;
     phoc_output_surface_for_each_surface (self, drag_icon->wlr_drag_icon->surface,
                                           ox, oy, iterator, user_data);
   }
