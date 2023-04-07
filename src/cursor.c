@@ -298,8 +298,8 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
 
   PhocOutput *output = wlr_output->data;
 
-  struct wlr_box *output_box =
-    wlr_output_layout_get_box (desktop->layout, wlr_output);
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (desktop->layout, wlr_output, &output_box);
 
   PhocLayerSurface *layer_surface;
   bool left = false, right = false, top = false, bottom = false;
@@ -329,10 +329,10 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
     }
   }
 
-  if ((top    && ly <= output_box->y + threshold) ||
-      (bottom && ly >= output_box->y + output_box->height - 1 - threshold) ||
-      (left   && lx <= output_box->x + threshold) ||
-      (right  && lx >= output_box->x + output_box->width - 1 - threshold)) {
+  if ((top    && ly <= output_box.y + threshold) ||
+      (bottom && ly >= output_box.y + output_box.height - 1 - threshold) ||
+      (left   && lx <= output_box.x + threshold) ||
+      (right  && lx >= output_box.x + output_box.width - 1 - threshold)) {
     if (output->fullscreen_view) {
       phoc_output_force_shell_reveal (output, true);
     }
@@ -668,17 +668,18 @@ phoc_cursor_update_position (PhocCursor *self,
       double dy = self->cursor->y - self->offs_y;
 
       struct wlr_output *wlr_output = wlr_output_layout_output_at (desktop->layout, self->cursor->x, self->cursor->y);
-      struct wlr_box *output_box = wlr_output_layout_get_box (desktop->layout, wlr_output);
+      struct wlr_box output_box;
+      wlr_output_layout_get_box (desktop->layout, wlr_output, &output_box);
 
-      bool output_is_landscape = output_box->width > output_box->height;
+      bool output_is_landscape = output_box.width > output_box.height;
 
       if (view_is_fullscreen (view)) {
         phoc_view_set_fullscreen (view, true, wlr_output);
-      } else if (self->cursor->y < output_box->y + PHOC_EDGE_SNAP_THRESHOLD) {
+      } else if (self->cursor->y < output_box.y + PHOC_EDGE_SNAP_THRESHOLD) {
         view_maximize (view, wlr_output);
-      } else if (output_is_landscape && self->cursor->x < output_box->x + PHOC_EDGE_SNAP_THRESHOLD) {
+      } else if (output_is_landscape && self->cursor->x < output_box.x + PHOC_EDGE_SNAP_THRESHOLD) {
         view_tile (view, PHOC_VIEW_TILE_LEFT, wlr_output);
-      } else if (output_is_landscape && self->cursor->x > output_box->x + output_box->width - PHOC_EDGE_SNAP_THRESHOLD) {
+      } else if (output_is_landscape && self->cursor->x > output_box.x + output_box.width - PHOC_EDGE_SNAP_THRESHOLD) {
         view_tile (view, PHOC_VIEW_TILE_RIGHT, wlr_output);
       } else {
         view_restore (view);
@@ -1093,7 +1094,8 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
     struct wlr_surface *root = wlr_surface_get_root_surface (surface);
     if (wlr_surface_is_layer_surface (root)) {
       struct wlr_layer_surface_v1 *wlr_layer_surface = wlr_layer_surface_v1_from_wlr_surface (root);
-      struct wlr_box *output_box = wlr_output_layout_get_box (desktop->layout, wlr_output);
+      struct wlr_box output_box;
+      wlr_output_layout_get_box (desktop->layout, wlr_output, &output_box);
 
       PhocLayerSurface *layer_surface;
       wl_list_for_each_reverse (layer_surface, &phoc_output->layer_surfaces, link)
@@ -1102,8 +1104,8 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
           continue;
 
         if (layer_surface->layer_surface->surface == root) {
-          sx = lx - layer_surface->geo.x - output_box->x;
-          sy = ly - layer_surface->geo.y - output_box->y;
+          sx = lx - layer_surface->geo.x - output_box.x;
+          sy = ly - layer_surface->geo.y - output_box.y;
           found = true;
           break;
         }
@@ -1115,8 +1117,8 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
           continue;
 
         if (layer_surface->layer_surface->surface == root) {
-          sx = lx - layer_surface->geo.x - output_box->x;
-          sy = ly - layer_surface->geo.y - output_box->y;
+          sx = lx - layer_surface->geo.x - output_box.x;
+          sy = ly - layer_surface->geo.y - output_box.y;
           found = true;
           break;
         }
