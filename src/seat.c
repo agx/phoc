@@ -188,7 +188,7 @@ handle_touch_down (struct wl_listener *listener, void *data)
   struct wlr_touch_down_event *event = data;
   PhocDesktop *desktop = server->desktop;
   PhocOutput *output = g_hash_table_lookup (desktop->input_output_map,
-                                            event->device->name);
+                                            event->touch->base.name);
 
   if (output && !output->wlr_output->enabled) {
     g_debug ("Touch event ignored since output '%s' is disabled.",
@@ -297,7 +297,7 @@ handle_tool_axis (struct wl_listener *listener, void *data)
    * We need to handle them ourselves, not pass it into the cursor
    * without any consideration
    */
-  handle_tablet_tool_position (cursor, event->device->data, event->tool,
+  handle_tablet_tool_position (cursor, event->tablet->base.data, event->tool,
                                event->updated_axes & WLR_TABLET_TOOL_AXIS_X,
                                event->updated_axes & WLR_TABLET_TOOL_AXIS_Y,
                                event->x, event->y, event->dx, event->dy);
@@ -455,7 +455,7 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
     return;
   }
 
-  handle_tablet_tool_position (cursor, event->device->data, event->tool,
+  handle_tablet_tool_position (cursor, event->tablet->base.data, event->tool,
                                true, true, event->x, event->y, 0, 0);
 }
 

@@ -61,7 +61,7 @@ phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_touch_down_event *even
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   double lx, ly;
 
-  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device,
+  wlr_cursor_absolute_to_layout_coords (self->cursor, &event->touch->base,
                                         event->x, event->y, &lx, &ly);
   touch_point->touch_id = event->touch_id;
   touch_point->lx = lx;
@@ -89,7 +89,7 @@ phoc_cursor_update_touch_point (PhocCursor *self, struct wlr_touch_motion_event 
     g_critical ("Touch point %d does not exist", event->touch_id);
     return NULL;
   }
-  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device,
+  wlr_cursor_absolute_to_layout_coords (self->cursor, &event->touch->base,
                                         event->x, event->y, &lx, &ly);
   touch_point->lx = lx;
   touch_point->ly = ly;
@@ -847,7 +847,7 @@ handle_pointer_motion (struct wl_listener *listener, void *data)
     dy = sy2_confined - sy1;
   }
 
-  wlr_cursor_move (self->cursor, event->device, dx, dy);
+  wlr_cursor_move (self->cursor, &event->pointer->base, dx, dy);
   phoc_cursor_update_position (self, event->time_msec);
 }
 
@@ -861,7 +861,7 @@ handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
   double lx, ly;
 
   wlr_idle_notify_activity (desktop->idle, self->seat->seat);
-  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device, event->x,
+  wlr_cursor_absolute_to_layout_coords (self->cursor, &event->pointer->base, event->x,
                                         event->y, &lx, &ly);
 
   double dx = lx - self->cursor->x;
@@ -883,7 +883,7 @@ handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
     }
   }
 
-  wlr_cursor_warp_closest (self->cursor, event->device, lx, ly);
+  wlr_cursor_warp_closest (self->cursor, &event->pointer->base, lx, ly);
   phoc_cursor_update_position (self, event->time_msec);
 }
 
@@ -895,7 +895,7 @@ handle_pointer_button (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   PhocEventType type;
-  bool is_touch = event->device->type == WLR_INPUT_DEVICE_TOUCH;
+  bool is_touch = event->pointer->base.type == WLR_INPUT_DEVICE_TOUCH;
 
   wlr_idle_notify_activity (desktop->idle, self->seat->seat);
   g_debug ("%s %d is_touch: %d", __func__, __LINE__, is_touch);
@@ -904,7 +904,7 @@ handle_pointer_button (struct wl_listener *listener, void *data)
     handle_gestures_for_event_at (self, self->cursor->x, self->cursor->y, type, event, sizeof (*event));
   }
 
-  phoc_cursor_press_button (self, event->device, event->time_msec,
+  phoc_cursor_press_button (self, &event->pointer->base, event->time_msec,
                             event->button, event->state, self->cursor->x, self->cursor->y);
 }
 
@@ -1190,7 +1190,7 @@ phoc_cursor_handle_tool_axis (PhocCursor                        *self,
 
   double lx, ly;
 
-  wlr_cursor_absolute_to_layout_coords (self->cursor, event->device,
+  wlr_cursor_absolute_to_layout_coords (self->cursor, &event->tablet->base,
                                         x, y, &lx, &ly);
 
 
@@ -1204,7 +1204,7 @@ phoc_cursor_handle_tool_axis (PhocCursor                        *self,
     }
   }
 
-  wlr_cursor_warp_closest (self->cursor, event->device, lx, ly);
+  wlr_cursor_warp_closest (self->cursor, &event->tablet->base, lx, ly);
   phoc_cursor_update_position (self, event->time_msec);
 }
 
@@ -1212,7 +1212,7 @@ void
 phoc_cursor_handle_tool_tip (PhocCursor                       *self,
                              struct wlr_tablet_tool_tip_event *event)
 {
-  phoc_cursor_press_button (self, event->device,
+  phoc_cursor_press_button (self, &event->tablet->base,
                             event->time_msec, BTN_LEFT, event->state, self->cursor->x,
                             self->cursor->y);
 }

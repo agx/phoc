@@ -175,7 +175,7 @@ phoc_event_get_device (const PhocEvent *event)
   case PHOC_EVENT_TOUCHPAD_PINCH_BEGIN:
   case PHOC_EVENT_TOUCHPAD_PINCH_UPDATE:
   case PHOC_EVENT_TOUCHPAD_PINCH_END:
-    wlr_device = event->touch_down.device;
+    wlr_device = &event->touch_down.touch->base;
     break;
   default:
     g_return_val_if_reached (NULL);
