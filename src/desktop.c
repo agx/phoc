@@ -680,7 +680,7 @@ phoc_desktop_constructed (GObject *object)
   self->layout_change.notify = handle_layout_change;
   wl_signal_add(&self->layout->events.change, &self->layout_change);
 
-  self->xdg_shell = wlr_xdg_shell_create(server->wl_display);
+  self->xdg_shell = wlr_xdg_shell_create(server->wl_display, 2);
   wl_signal_add(&self->xdg_shell->events.new_surface,
 		&self->xdg_shell_surface);
   self->xdg_shell_surface.notify = handle_xdg_shell_surface;
