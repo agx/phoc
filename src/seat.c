@@ -1852,7 +1852,7 @@ phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
  * phoc_seat_get_cursor:
  * @self: a PhocSeat
  *
- * Get the curent cursor
+ * Get the current cursor
  *
  * Returns: (transfer none): The current cursor
  */

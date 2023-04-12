@@ -500,7 +500,7 @@ phoc_xdg_surface_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_xdg_surface_parent_class)->constructed (object);
 
-  // catch up with state accumulated before commiting
+  // catch up with state accumulated before committing
   if (self->xdg_surface->toplevel->parent) {
     PhocXdgSurface *parent = self->xdg_surface->toplevel->parent->data;
     view_set_parent (PHOC_VIEW (self), PHOC_VIEW (parent));
