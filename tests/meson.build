@@ -35,6 +35,7 @@ tests = [
   'phosh-private',
   'property-easer',
   'run',
+  'settings',
   'server',
   'utils',
   'xdg-decoration',
