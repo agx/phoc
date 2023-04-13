@@ -956,7 +956,7 @@ accept_drag (PhocDraggableLayerSurface *drag_surface,
   struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
   struct wlr_output *wlr_output = wlr_layer_surface->output;
   PhocOutput *output;
-  uint32_t *target;
+  int32_t *target;
   int32_t margin = 0;
 
   output = PHOC_OUTPUT (wlr_output->data);
