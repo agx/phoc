@@ -950,7 +950,7 @@ seat_add_keyboard (PhocSeat                *seat,
                             G_CALLBACK (on_keyboard_activity),
                             seat);
 
-  wlr_seat_set_keyboard (seat->seat, device);
+  wlr_seat_set_keyboard (seat->seat, wlr_keyboard_from_input_device (device));
 }
 
 static void
@@ -1002,6 +1002,7 @@ seat_add_switch (PhocSeat                *seat,
 {
   assert (device->type == WLR_INPUT_DEVICE_SWITCH);
   struct phoc_switch *switch_device = g_new0 (struct phoc_switch, 1);
+  struct wlr_switch *wlr_switch = wlr_switch_from_input_device (device);
 
   device->data = switch_device;
   switch_device->device = device;
@@ -1155,6 +1156,7 @@ seat_add_tablet_pad (PhocSeat                *seat,
 {
   PhocServer *server = phoc_server_get_default ();
   PhocTabletPad *tablet_pad = g_new0 (PhocTabletPad, 1);
+  struct wlr_tablet_pad *wlr_tablet_pad = wlr_tablet_pad_from_input_device (device);
 
   device->data = tablet_pad;
   tablet_pad->device = device;
@@ -1326,7 +1328,7 @@ phoc_seat_has_meta_pressed (PhocSeat *seat)
     struct wlr_input_device *device = phoc_input_device_get_device (input_device);
 
     uint32_t modifiers =
-      wlr_keyboard_get_modifiers (device->keyboard);
+      wlr_keyboard_get_modifiers (wlr_keyboard_from_input_device(device));
     if ((modifiers ^ phoc_keyboard_get_meta_key (keyboard)) == 0) {
       return true;
     }
