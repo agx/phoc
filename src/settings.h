@@ -47,4 +47,6 @@ PhocConfig       *phoc_config_new_from_data (const char *data);
 void              phoc_config_destroy       (PhocConfig *config);
 PhocOutputConfig *phoc_config_get_output    (PhocConfig *config, PhocOutput *output);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocConfig, phoc_config_destroy)
+
 G_END_DECLS
