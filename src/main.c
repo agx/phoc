@@ -154,12 +154,12 @@ main(int argc, char **argv)
 
   if (shell_mode)
     flags |= PHOC_SERVER_FLAG_SHELL_MODE;
-  if (xwayland)
-    flags |= PHOC_SERVER_FLAG_XWAYLAND;
 
   config = phoc_config_new_from_file (config_path);
   if (config == NULL)
     return EXIT_FAILURE;
+  if (xwayland)
+    config->xwayland = TRUE;
 
   loop = g_main_loop_new (NULL, FALSE);
   if (!phoc_server_setup (server, config, exec, loop, flags, debug_flags))
