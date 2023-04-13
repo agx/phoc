@@ -23,7 +23,7 @@ typedef struct _PhocOutputConfig {
   enum wl_output_transform transform;
   int                      x, y;
   float                    scale;
-  struct wl_list           link;
+
   struct Mode {
     int   width, height;
     float refresh_rate;
@@ -37,7 +37,7 @@ typedef struct _PhocConfig {
 
   PhocKeybindings *keybindings;
 
-  struct wl_list   outputs;
+  GSList          *outputs;
 
   char            *config_path;
 } PhocConfig;

@@ -64,6 +64,35 @@ parse_modeline (const char *s, drmModeModeInfo *mode)
 
 static const char *output_prefix = "output:";
 
+static PhocOutputConfig *
+phoc_output_config_new (const char *name)
+{
+  PhocOutputConfig *oc;
+
+  oc = g_new0 (PhocOutputConfig, 1);
+  oc->name = g_strdup (name);
+  oc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
+  oc->scale = 0;
+  oc->enable = true;
+  wl_list_init (&oc->modes);
+
+  return oc;
+}
+
+
+static void
+phoc_output_config_destroy (PhocOutputConfig *oc)
+{
+  PhocOutputModeConfig *omc, *omctmp = NULL;
+
+  wl_list_for_each_safe (omc, omctmp, &oc->modes, link)
+    g_free (omc);
+
+  g_free (oc->name);
+  g_free (oc);
+}
+
+
 static int
 config_ini_handler (PhocConfig *config, const char *section, const char *name, const char *value)
 {
@@ -84,24 +113,20 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
     }
   } else if (strncmp (output_prefix, section, strlen (output_prefix)) == 0) {
     const char *output_name = section + strlen (output_prefix);
-    PhocOutputConfig *oc;
-    bool found = false;
+    PhocOutputConfig *oc = NULL;
 
-    wl_list_for_each (oc, &config->outputs, link) {
-      if (strcmp (oc->name, output_name) == 0) {
-        found = true;
+    for (GSList *l = config->outputs; l; l = l->next) {
+      PhocOutputConfig *tmp = l->data;
+
+      if (g_str_equal (tmp->name, output_name)) {
+        oc = tmp;
         break;
       }
     }
 
-    if (!found) {
-      oc = g_new0 (PhocOutputConfig, 1);
-      oc->name = strdup (output_name);
-      oc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
-      oc->scale = 0;
-      oc->enable = true;
-      wl_list_init (&oc->modes);
-      wl_list_insert (&config->outputs, &oc->link);
+    if (oc == NULL) {
+      oc = phoc_output_config_new (output_name);
+      config->outputs = g_slist_prepend (config->outputs, oc);
     }
 
     if (strcmp (name, "enable") == 0) {
@@ -194,7 +219,6 @@ phoc_config_create (const char *config_path)
 
   config->xwayland = true;
   config->xwayland_lazy = true;
-  wl_list_init (&config->outputs);
 
   config->config_path = g_strdup (config_path);
 
@@ -268,20 +292,7 @@ out:
 void
 phoc_config_destroy (PhocConfig *config)
 {
-  PhocOutputConfig *oc, *otmp = NULL;
-
-  wl_list_for_each_safe (oc, otmp, &config->outputs, link)
-  {
-    PhocOutputModeConfig *omc, *omctmp = NULL;
-
-    wl_list_for_each_safe (omc, omctmp, &oc->modes, link)
-    {
-      g_free (omc);
-    }
-    g_free (oc->name);
-    g_free (oc);
-  }
-
+  g_slist_free_full (config->outputs, (GDestroyNotify)phoc_output_config_destroy);
   g_object_unref (config->keybindings);
 
   g_free (config->config_path);
@@ -315,11 +326,11 @@ output_is_match (PhocOutputConfig *oc, PhocOutput *output)
 PhocOutputConfig *
 phoc_config_get_output (PhocConfig *config, PhocOutput *output)
 {
-  PhocOutputConfig *oc;
-
   g_assert (PHOC_IS_OUTPUT (output));
 
-  wl_list_for_each (oc, &config->outputs, link) {
+  for (GSList *l = config->outputs; l; l = l->next) {
+    PhocOutputConfig *oc = l->data;
+
     if (output_is_match (oc, output))
       return oc;
   }
