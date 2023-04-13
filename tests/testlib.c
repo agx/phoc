@@ -522,7 +522,7 @@ foreign_toplevel_compare (gconstpointer data, gconstpointer title)
  * Get the PhocTestForeignToplevel for a toplevel with the given title
  * using the wlr_foreign_toplevel_management protocol.
  *
- * Returns: (transfer-none): The toplevel's handle, or NULL if it doesn't exist.
+ * Returns: (transfer none): The toplevel's handle, or NULL if it doesn't exist.
  */
 PhocTestForeignToplevel *
 phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
@@ -542,7 +542,7 @@ phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
  *
  * Capture the given wlr_screencopy_frame and return its screenshot buffer
  *
- * Returns: (transfer-none): The screenshot buffer.
+ * Returns: (transfer none): The screenshot buffer.
  */
 PhocTestBuffer *
 phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
@@ -585,7 +585,7 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
  *
  * Capture the given output and return its screenshot buffer
  *
- * Returns: (transfer-none): The screenshot buffer.
+ * Returns: (transfer none): The screenshot buffer.
  */
 PhocTestBuffer *
 phoc_test_client_capture_output (PhocTestClientGlobals *globals,
