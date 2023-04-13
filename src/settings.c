@@ -75,7 +75,6 @@ phoc_output_config_new (const char *name)
   oc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
   oc->scale = 0;
   oc->enable = true;
-  wl_list_init (&oc->modes);
 
   return oc;
 }
@@ -84,11 +83,7 @@ phoc_output_config_new (const char *name)
 static void
 phoc_output_config_destroy (PhocOutputConfig *oc)
 {
-  PhocOutputModeConfig *omc, *omctmp = NULL;
-
-  wl_list_for_each_safe (omc, omctmp, &oc->modes, link)
-    g_free (omc);
-
+  g_slist_free_full (oc->modes, g_free);
   g_free (oc->name);
   g_free (oc);
 }
@@ -187,14 +182,12 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
                oc->name, oc->mode.width, oc->mode.height,
                oc->mode.refresh_rate);
     } else if (strcmp (name, "modeline") == 0) {
-      PhocOutputModeConfig *mode = g_new0 (PhocOutputModeConfig, 1);
+      g_autofree PhocOutputModeConfig *mode = g_new0 (PhocOutputModeConfig, 1);
 
-      if (parse_modeline (value, &mode->info)) {
-        wl_list_insert (&oc->modes, &mode->link);
-      } else {
-        g_free (mode);
+      if (parse_modeline (value, &mode->info))
+        oc->modes = g_slist_prepend (oc->modes, g_steal_pointer (&mode));
+      else
         g_critical ("Invalid modeline: %s", value);
-      }
     }
   } else {
     g_critical ("Found unknown config section: %s", section);

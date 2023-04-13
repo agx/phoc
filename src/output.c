@@ -470,11 +470,12 @@ phoc_output_initable_init (GInitable    *initable,
   if (output_config) {
     if (output_config->enable) {
       if (wlr_output_is_drm (self->wlr_output)) {
-        PhocOutputModeConfig *mode_config;
-        wl_list_for_each (mode_config, &output_config->modes, link) {
+
+        for (GSList *l = output_config->modes; l; l = l->next) {
+          PhocOutputModeConfig *mode_config = l->data;
           wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
         }
-      } else if (!wl_list_empty (&output_config->modes)) {
+      } else if (output_config->modes != NULL) {
         g_warning ("Can only add modes for DRM backend");
       }
 

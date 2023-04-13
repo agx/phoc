@@ -14,7 +14,6 @@ G_BEGIN_DECLS
 
 typedef struct _PhocOutputModeConfig {
   drmModeModeInfo info;
-  struct wl_list  link;
 } PhocOutputModeConfig;
 
 typedef struct _PhocOutputConfig {
@@ -28,7 +27,7 @@ typedef struct _PhocOutputConfig {
     int   width, height;
     float refresh_rate;
   } mode;
-  struct wl_list           modes;
+  GSList                  *modes;
 } PhocOutputConfig;
 
 typedef struct _PhocConfig {
