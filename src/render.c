@@ -307,7 +307,7 @@ static void
 render_view (PhocOutput *output, PhocView *view, struct render_data *data)
 {
   // Do not render views fullscreened on other outputs
-  if (view_is_fullscreen (view) && view->fullscreen_output != output)
+  if (view_is_fullscreen (view) && phoc_view_get_fullscreen_output (view) != output)
     return;
 
   data->alpha = phoc_view_get_alpha (view);
