@@ -845,9 +845,9 @@ phoc_output_layer_surface_for_each_surface (PhocOutput          *self,
 
     double popup_sx, popup_sy;
     popup_sx = layer_surface->geo.x;
-    popup_sx += popup->popup->geometry.x - popup->current.geometry.x;
+    popup_sx += popup->popup->current.geometry.x - popup->current.geometry.x;
     popup_sy = layer_surface->geo.y;
-    popup_sy += popup->popup->geometry.y - popup->current.geometry.y;
+    popup_sy += popup->popup->current.geometry.y - popup->current.geometry.y;
 
     phoc_output_xdg_surface_for_each_surface (self, popup,
                                               popup_sx, popup_sy, iterator, user_data);
