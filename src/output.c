@@ -1533,3 +1533,13 @@ phoc_output_get_scale (PhocOutput *self)
 
   return self->wlr_output->scale;
 }
+
+
+const char *
+phoc_output_get_name (PhocOutput *self)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+  g_assert (self->wlr_output);
+
+  return self->wlr_output->name;
+}
