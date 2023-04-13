@@ -288,6 +288,32 @@ phoc_config_new_from_file (const char *config_path)
   return config;
 }
 
+
+/**
+ * phoc_config_new_from_data:
+ * @config_data: (nullable): The config data
+ *
+ * Parse the given config data
+ *
+ * Returns: The parsed configuration
+ */
+PhocConfig *
+phoc_config_new_from_data (const char *data)
+{
+  PhocConfig *config;
+  g_autoptr (GError) err = NULL;
+  g_autoptr (GKeyFile) keyfile = g_key_file_new ();
+
+  if (!g_key_file_load_from_data (keyfile, data, -1, G_KEY_FILE_NONE, &err)) {
+    g_critical ("Failed to parse config data from memory: %s", err->message);
+    return NULL;
+  }
+
+  config = phoc_config_new_from_keyfile (keyfile);
+  return config;
+}
+
+
 /**
  * phoc_config_destroy:
  * config: The #PhocConfig.

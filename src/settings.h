@@ -43,6 +43,7 @@ typedef struct _PhocConfig {
 } PhocConfig;
 
 PhocConfig       *phoc_config_new_from_file (const char *config_path);
+PhocConfig       *phoc_config_new_from_data (const char *data);
 void              phoc_config_destroy       (PhocConfig *config);
 PhocOutputConfig *phoc_config_get_output    (PhocConfig *config, PhocOutput *output);
 
