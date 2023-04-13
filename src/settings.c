@@ -62,6 +62,7 @@ parse_modeline (const char *s, drmModeModeInfo *mode)
   return true;
 }
 
+
 static const char *output_prefix = "output:";
 
 static PhocOutputConfig *
@@ -202,56 +203,18 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
   return 1;
 }
 
-
-/**
- * phoc_config_new_from_file:
- * @config_path: (nullable): The config file location
- *
- * Parse the file at the given location into a configuration.
- *
- * Returns: The parsed configuration
- */
-PhocConfig *
-phoc_config_new_from_file (const char *config_path)
+static PhocConfig *
+phoc_config_new_from_keyfile (GKeyFile *keyfile)
 {
-  PhocConfig *config = g_new0 (PhocConfig, 1);
-  g_autoptr (GKeyFile) keyfile = g_key_file_new ();
   g_autoptr (GError) err = NULL;
   g_auto (GStrv) sections = NULL;
+  PhocConfig *config = g_new0 (PhocConfig, 1);
 
   config->xwayland = true;
   config->xwayland_lazy = true;
-
-  config->config_path = g_strdup (config_path);
-
-  if (!config->config_path) {
-    // get the config path from the current directory
-    char cwd[MAXPATHLEN];
-    if (getcwd (cwd, sizeof(cwd)) != NULL) {
-      char buf[MAXPATHLEN];
-      if (snprintf (buf, MAXPATHLEN, "%s/%s", cwd, "phoc.ini") >= MAXPATHLEN) {
-        g_critical ("config path too long");
-        return NULL;
-      }
-      config->config_path = g_strdup (buf);
-    } else {
-      g_critical ("could not get cwd");
-      return NULL;
-    }
-  }
-
-  if (!g_key_file_load_from_file (keyfile, config->config_path, G_KEY_FILE_NONE, &err)) {
-    if (g_error_matches (err, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-      g_debug ("No config file found. Using sensible defaults.");
-      goto out;
-    }
-
-    g_critical ("Failed to parse config %s: %s", config->config_path, err->message);
-    return NULL;
-  }
+  config->keybindings = phoc_keybindings_new ();
 
   sections = g_key_file_get_groups (keyfile, NULL);
-
   for (int i = 0; i < g_strv_length (sections); i++) {
     const char *section = sections[i];
     g_auto (GStrv) keys = g_key_file_get_keys (keyfile, section, NULL, &err);
@@ -278,12 +241,52 @@ phoc_config_new_from_file (const char *config_path)
     }
   }
 
-out:
-  config->keybindings = phoc_keybindings_new ();
-
   return config;
 }
 
+/**
+ * phoc_config_new_from_file:
+ * @config_path: (nullable): The config file location
+ *
+ * Parse the file at the given location into a configuration.
+ *
+ * Returns: The parsed configuration
+ */
+PhocConfig *
+phoc_config_new_from_file (const char *config_path)
+{
+  PhocConfig *config;
+  g_autoptr (GError) err = NULL;
+  g_autoptr (GKeyFile) keyfile = g_key_file_new ();
+  g_autofree char *path = g_strdup (config_path);
+
+  if (path == NULL) {
+    // get the config path from the current directory
+    char cwd[MAXPATHLEN];
+    if (getcwd (cwd, sizeof(cwd)) != NULL) {
+      path = g_build_path ("/", cwd, "phoc.ini", NULL);
+    } else {
+      g_critical ("could not get cwd");
+      return NULL;
+    }
+  }
+
+  if (!g_key_file_load_from_file (keyfile, path, G_KEY_FILE_NONE, &err)) {
+    if (g_error_matches (err, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+      g_debug ("No config file found. Using sensible defaults.");
+      goto out;
+    }
+
+    g_critical ("Failed to parse config %s: %s", path, err->message);
+    return NULL;
+  }
+
+ out:
+  config = phoc_config_new_from_keyfile (keyfile);
+  config->config_path = g_steal_pointer (&path);
+
+  return config;
+}
 
 /**
  * phoc_config_destroy:
