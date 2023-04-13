@@ -1,6 +1,7 @@
 #pragma once
 
 #include "keybindings.h"
+#include "output.h"
 
 #include <xf86drmMode.h>
 #include <wlr/types/wlr_input_device.h>
@@ -43,7 +44,6 @@ typedef struct _PhocConfig {
 
 PhocConfig       *phoc_config_create     (const char *config_path);
 void              phoc_config_destroy    (PhocConfig *config);
-PhocOutputConfig *phoc_config_get_output (PhocConfig        *config,
-                                          struct wlr_output *output);
+PhocOutputConfig *phoc_config_get_output (PhocConfig *config, PhocOutput *output);
 
 G_END_DECLS

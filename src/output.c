@@ -462,7 +462,7 @@ phoc_output_initable_init (GInitable    *initable,
   self->damage_destroy.notify = phoc_output_damage_handle_destroy;
   wl_signal_add (&self->damage->events.destroy, &self->damage_destroy);
 
-  PhocOutputConfig *output_config = phoc_config_get_output (config, self->wlr_output);
+  PhocOutputConfig *output_config = phoc_config_get_output (config, self);
 
   struct wlr_output_mode *preferred_mode =
     wlr_output_preferred_mode (self->wlr_output);

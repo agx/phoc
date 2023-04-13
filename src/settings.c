@@ -297,16 +297,20 @@ phoc_config_destroy (PhocConfig *config)
  * NULL.
  */
 PhocOutputConfig *
-phoc_config_get_output (PhocConfig *config, struct wlr_output *output)
+phoc_config_get_output (PhocConfig *config, PhocOutput *output)
 {
   char name[88];
   PhocOutputConfig *oc;
+  struct wlr_output *wlr_output;
 
-  snprintf (name, sizeof(name), "%s %s %s", output->make, output->model,
-            output->serial);
+  g_assert (PHOC_IS_OUTPUT (output));
+  wlr_output = output->wlr_output;
+
+  snprintf (name, sizeof(name), "%s %s %s", wlr_output->make, wlr_output->model,
+            wlr_output->serial);
 
   wl_list_for_each (oc, &config->outputs, link) {
-    if (strcmp (oc->name, output->name) == 0 ||
+    if (strcmp (oc->name, wlr_output->name) == 0 ||
         strcmp (oc->name, name) == 0) {
       return oc;
     }
