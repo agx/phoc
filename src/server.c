@@ -334,7 +334,7 @@ phoc_server_setup (PhocServer *self, const char *config_path,
 {
   g_assert (!self->inited);
 
-  self->config = phoc_config_create (config_path);
+  self->config = phoc_config_new_from_file (config_path);
   if (!self->config) {
     /* phoc_config_create printed an error */
     return FALSE;

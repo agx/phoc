@@ -42,8 +42,8 @@ typedef struct _PhocConfig {
   char            *config_path;
 } PhocConfig;
 
-PhocConfig       *phoc_config_create     (const char *config_path);
-void              phoc_config_destroy    (PhocConfig *config);
-PhocOutputConfig *phoc_config_get_output (PhocConfig *config, PhocOutput *output);
+PhocConfig       *phoc_config_new_from_file (const char *config_path);
+void              phoc_config_destroy       (PhocConfig *config);
+PhocOutputConfig *phoc_config_get_output    (PhocConfig *config, PhocOutput *output);
 
 G_END_DECLS

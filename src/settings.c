@@ -204,13 +204,15 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
 
 
 /**
- * phoc_config_create:
+ * phoc_config_new_from_file:
  * @config_path: (nullable): The config file location
  *
  * Parse the file at the given location into a configuration.
+ *
+ * Returns: The parsed configuration
  */
 PhocConfig *
-phoc_config_create (const char *config_path)
+phoc_config_new_from_file (const char *config_path)
 {
   PhocConfig *config = g_new0 (PhocConfig, 1);
   g_autoptr (GKeyFile) keyfile = g_key_file_new ();
