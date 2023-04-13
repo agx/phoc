@@ -288,6 +288,22 @@ phoc_config_destroy (PhocConfig *config)
   g_free (config);
 }
 
+static gboolean
+output_is_match (PhocOutputConfig *oc, PhocOutput *output)
+{
+  g_auto (GStrv) vmm = NULL;
+
+  if (g_strcmp0 (oc->name, phoc_output_get_name (output)) == 0)
+    return TRUE;
+
+  /* "vendor make model" match */
+  vmm = g_strsplit (oc->name, " ", 4);
+  if (g_strv_length (vmm) != 3)
+    return FALSE;
+
+  return phoc_output_is_match (output, vmm[0], vmm[1], vmm[2]);
+}
+
 /**
  * phoc_config_get_output:
  * config: The #PhocConfig
@@ -299,21 +315,13 @@ phoc_config_destroy (PhocConfig *config)
 PhocOutputConfig *
 phoc_config_get_output (PhocConfig *config, PhocOutput *output)
 {
-  char name[88];
   PhocOutputConfig *oc;
-  struct wlr_output *wlr_output;
 
   g_assert (PHOC_IS_OUTPUT (output));
-  wlr_output = output->wlr_output;
-
-  snprintf (name, sizeof(name), "%s %s %s", wlr_output->make, wlr_output->model,
-            wlr_output->serial);
 
   wl_list_for_each (oc, &config->outputs, link) {
-    if (strcmp (oc->name, wlr_output->name) == 0 ||
-        strcmp (oc->name, name) == 0) {
+    if (output_is_match (oc, output))
       return oc;
-    }
   }
 
   return NULL;
