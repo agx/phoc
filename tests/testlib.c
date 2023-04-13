@@ -427,6 +427,7 @@ on_timer_expired (gpointer unused)
 void
 phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
 {
+  PhocConfig *config = phoc_config_new_from_file (TEST_PHOC_INI);
   struct task_data td = { .data = data };
   g_autoptr(PhocServer) server = phoc_server_get_default ();
   g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
@@ -437,7 +438,8 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
     td.func = iface->client_run;
 
   g_assert_true (PHOC_IS_SERVER (server));
-  g_assert_true (phoc_server_setup(server, TEST_PHOC_INI, NULL, loop,
+  g_assert_true (config);
+  g_assert_true (phoc_server_setup(server, config, NULL, loop,
                                    iface ? iface->server_flags : 0,
                                    PHOC_SERVER_DEBUG_FLAG_NONE));
   if (iface && iface->server_prepare)
