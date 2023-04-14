@@ -309,7 +309,16 @@ phoc_view_appear_activated (PhocView *view, bool activated)
   PHOC_VIEW_GET_CLASS (view)->set_active (view, activated);
 }
 
-
+/**
+ * phoc_view_activate:
+ * @self : The view
+ * @activate: Whether to activate or deactivate a view
+ *
+ * Performs the necessary steps to make the view itself appear activated
+ * and send out the corresponding view related protocol events.
+ * Note that this is not enough to actually focus the view for the user
+ * See [method@phoc_seat_set_focus].
+ */
 void
 phoc_view_activate (PhocView *self, bool activate)
 {
