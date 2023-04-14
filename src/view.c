@@ -1143,7 +1143,7 @@ void view_initial_focus(PhocView *view) {
 		PhocSeat *seat = PHOC_SEAT (elem->data);
 
 		g_assert (PHOC_IS_SEAT (seat));
-		phoc_seat_set_focus(seat, view);
+		phoc_seat_set_focus_view (seat, view);
 	}
 }
 
@@ -1395,7 +1395,7 @@ handle_toplevel_handle_request_activate (struct wl_listener *listener, void *dat
 
     g_assert (PHOC_IS_SEAT (seat));
     if (event->seat == seat->seat)
-      phoc_seat_set_focus (seat, self);
+      phoc_seat_set_focus_view (seat, self);
   }
 }
 

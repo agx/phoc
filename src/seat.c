@@ -1339,7 +1339,7 @@ phoc_seat_has_meta_pressed (PhocSeat *seat)
  * Returns: (nullable)(transfer none): The currently focused view
  */
 PhocView *
-phoc_seat_get_focus (PhocSeat *seat)
+phoc_seat_get_focus_view (PhocSeat *seat)
 {
   if (!seat->has_focus || wl_list_empty (&seat->views)) {
     return NULL;
@@ -1359,7 +1359,7 @@ seat_view_destroy (PhocSeatView *seat_view)
   g_assert (PHOC_IS_SEAT (seat));
   g_assert (PHOC_IS_VIEW (view));
 
-  if (view == phoc_seat_get_focus (seat)) {
+  if (view == phoc_seat_get_focus_view (seat)) {
     seat->has_focus = false;
     seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
   }
@@ -1373,12 +1373,12 @@ seat_view_destroy (PhocSeatView *seat_view)
   free (seat_view);
 
   if (view && view->parent) {
-    phoc_seat_set_focus (seat, view->parent);
+    phoc_seat_set_focus_view (seat, view->parent);
   } else if (!wl_list_empty (&seat->views)) {
     // Focus first view
     PhocSeatView *first_seat_view = wl_container_of (
       seat->views.next, first_seat_view, link);
-    phoc_seat_set_focus (seat, first_seat_view->view);
+    phoc_seat_set_focus_view (seat, first_seat_view->view);
   }
 }
 
@@ -1473,8 +1473,17 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
   }
 }
 
+/**
+ * phoc_set_set_focus_view:
+ * @self: The seat
+ * @view:(nullable): The view to focus
+ *
+ * If possible it will unfocus the currently focused view and focus
+ * the given %view, raise it if necessary and make it appear
+ * activated. If %NULL is passed only the current view is unfocsed.
+ */
 void
-phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
+phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
 {
   if (view && !phoc_seat_allow_input (seat, view->wlr_surface->resource)) {
     return;
@@ -1522,8 +1531,7 @@ phoc_seat_set_focus (PhocSeat *seat, PhocView *view)
     }
   }
 
-  PhocView *prev_focus = phoc_seat_get_focus (seat);
-
+  PhocView *prev_focus = phoc_seat_get_focus_view (seat);
   if (view && view == prev_focus) {
     return;
   }
@@ -1610,9 +1618,9 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
         // Focus first view
         PhocSeatView *first_seat_view = wl_container_of (
           seat->views.next, first_seat_view, link);
-        phoc_seat_set_focus (seat, first_seat_view->view);
+        phoc_seat_set_focus_view (seat, first_seat_view->view);
       } else {
-        phoc_seat_set_focus (seat, NULL);
+        phoc_seat_set_focus_view (seat, NULL);
       }
       phoc_layer_shell_arrange (output);
       phoc_output_update_shell_reveal (output);
@@ -1629,7 +1637,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
     return;
   }
   if (seat->has_focus) {
-    PhocView *prev_focus = phoc_seat_get_focus (seat);
+    PhocView *prev_focus = phoc_seat_get_focus_view (seat);
     wlr_seat_keyboard_clear_focus (seat->seat);
     phoc_view_activate (prev_focus, false);
   }
@@ -1667,9 +1675,9 @@ phoc_seat_set_exclusive_client (PhocSeat         *seat,
     }
   }
   if (seat->has_focus) {
-    PhocView *focus = phoc_seat_get_focus (seat);
+    PhocView *focus = phoc_seat_get_focus_view (seat);
     if (wl_resource_get_client (focus->wlr_surface->resource) != client) {
-      phoc_seat_set_focus (seat, NULL);
+      phoc_seat_set_focus_view (seat, NULL);
     }
   }
   if (seat->seat->pointer_state.focused_client) {
@@ -1710,7 +1718,7 @@ phoc_seat_cycle_focus (PhocSeat *seat, gboolean forward)
   first_seat_view = wl_container_of (seat->views.next, first_seat_view, link);
 
   if (!seat->has_focus) {
-    phoc_seat_set_focus (seat, first_seat_view->view);
+    phoc_seat_set_focus_view (seat, first_seat_view->view);
     return;
   }
 
@@ -1726,7 +1734,7 @@ phoc_seat_cycle_focus (PhocSeat *seat, gboolean forward)
   }
 
   g_assert (PHOC_IS_VIEW (seat_view->view));
-  phoc_seat_set_focus (seat, seat_view->view);
+  phoc_seat_set_focus_view (seat, seat_view->view);
 
   if (forward) {
     /* Move the first view to the end */
@@ -1820,7 +1828,7 @@ void
 phoc_seat_end_compositor_grab (PhocSeat *seat)
 {
   PhocCursor *cursor = seat->cursor;
-  PhocView *view = phoc_seat_get_focus (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
   if (view == NULL) {
     return;

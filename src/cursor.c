@@ -848,7 +848,7 @@ phoc_cursor_update_position (PhocCursor *self,
     phoc_passthrough_cursor (self, time);
     break;
   case PHOC_CURSOR_MOVE:
-    view = phoc_seat_get_focus (seat);
+    view = phoc_seat_get_focus_view (seat);
     if (view != NULL) {
       struct wlr_box geom;
       phoc_view_get_geometry (view, &geom);
@@ -877,7 +877,7 @@ phoc_cursor_update_position (PhocCursor *self,
     }
     break;
   case PHOC_CURSOR_RESIZE:
-    view = phoc_seat_get_focus (seat);
+    view = phoc_seat_get_focus_view (seat);
     if (view != NULL) {
       struct wlr_box geom;
       phoc_view_get_geometry (view, &geom);
@@ -933,7 +933,7 @@ phoc_cursor_press_button (PhocCursor *self,
 
   if (state == WLR_BUTTON_PRESSED && view &&
       phoc_seat_has_meta_pressed (seat)) {
-    phoc_seat_set_focus (seat, view);
+    phoc_seat_set_focus_view (seat, view);
 
     uint32_t edges;
     switch (button) {
@@ -972,7 +972,7 @@ phoc_cursor_press_button (PhocCursor *self,
 
     if (state == WLR_BUTTON_PRESSED) {
       if (view) {
-        phoc_seat_set_focus (seat, view);
+        phoc_seat_set_focus_view (seat, view);
       }
       if (surface && wlr_surface_is_layer_surface (surface)) {
         struct wlr_layer_surface_v1 *layer =
@@ -1179,7 +1179,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
     send_touch_down (seat, surface, event, sx, sy);
 
     if (view)
-      phoc_seat_set_focus (seat, view);
+      phoc_seat_set_focus_view (seat, view);
 
     if (wlr_surface_is_layer_surface (root)) {
       struct wlr_layer_surface_v1 *wlr_layer = wlr_layer_surface_v1_from_wlr_surface (root);

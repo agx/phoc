@@ -112,7 +112,7 @@ handle_request_focus(struct wl_client *client,
 
   view = phoc_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
-    phoc_seat_set_focus(seat, view);
+    phoc_seat_set_focus_view (seat, view);
 }
 
 static const struct gtk_surface1_interface gtk_surface1_impl = {
