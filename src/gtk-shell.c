@@ -101,9 +101,7 @@ handle_request_focus(struct wl_client *client,
                      const char *startup_id)
 {
   PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
-  PhocServer *server = phoc_server_get_default ();
-  PhocInput *input = server->input;
-  PhocSeat *seat = phoc_input_get_last_active_seat (input);
+  PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
   PhocView *view;
 
   g_debug ("Requesting focus for surface %p (res %p)", gtk_surface->wlr_surface, resource);

@@ -426,6 +426,21 @@ phoc_server_get_desktop (PhocServer *self)
   return self->desktop;
 }
 
+/**
+ * phoc_server_get_last_active_seat:
+ *
+ * Get's the last active seat.
+ *
+ * Returns: (transfer none): The last active seat.
+ */
+PhocSeat *
+phoc_server_get_last_active_seat (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return phoc_input_get_last_active_seat (self->input);
+}
+
 
 const char * const *
 phoc_server_get_compatibles (PhocServer *self)

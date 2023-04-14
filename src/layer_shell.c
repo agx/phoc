@@ -780,7 +780,6 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 }
 
 void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
-	PhocServer *server = phoc_server_get_default ();
 	struct wlr_layer_surface_v1 *wlr_layer_surface = data;
 	PhocDesktop *desktop = wl_container_of(listener, desktop, layer_shell_surface);
 
@@ -796,8 +795,7 @@ void handle_layer_shell_surface(struct wl_listener *listener, void *data) {
 		wlr_layer_surface->pending.margin.left);
 
 	if (!wlr_layer_surface->output) {
-		PhocInput *input = server->input;
-		PhocSeat *seat = phoc_input_get_last_active_seat(input);
+		PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
 		g_assert (PHOC_IS_SEAT (seat)); // Technically speaking we should handle this case
 		PhocCursor *cursor = phoc_seat_get_cursor(seat);
 		struct wlr_output *output =
