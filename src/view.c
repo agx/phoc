@@ -1144,16 +1144,18 @@ void view_unmap(PhocView *view) {
 	g_object_notify_by_pspec (G_OBJECT (view), props[PROP_IS_MAPPED]);
 }
 
-void view_initial_focus(PhocView *view) {
-	PhocServer *server = phoc_server_get_default ();
-	PhocInput *input = server->input;
-	// TODO what seat gets focus? the one with the last input event?
-	for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
-		PhocSeat *seat = PHOC_SEAT (elem->data);
+void
+phoc_view_set_initial_focus (PhocView *view)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = server->input;
+  // TODO what seat gets focus? the one with the last input event?
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
 
-		g_assert (PHOC_IS_SEAT (seat));
-		phoc_seat_set_focus_view (seat, view);
-	}
+    g_assert (PHOC_IS_SEAT (seat));
+    phoc_seat_set_focus_view (seat, view);
+  }
 }
 
 /**
@@ -1184,7 +1186,7 @@ void view_setup(PhocView *view) {
         struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
 
 	view_create_foreign_toplevel_handle(view);
-	view_initial_focus(view);
+	phoc_view_set_initial_focus(view);
 
 	view_center(view, NULL);
 	view_update_scale(view);

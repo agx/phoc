@@ -17,7 +17,7 @@ void             view_setup                          (PhocView *view);
 void             view_send_frame_done_if_not_visible (PhocView *view);
 void             view_update_position                (PhocView *view, int x, int y);
 void             view_update_size                    (PhocView *view, int width, int height);
-void             view_initial_focus                  (PhocView *view);
+void             phoc_view_set_initial_focus         (PhocView *view);
 void             phoc_view_map                       (PhocView *view, struct wlr_surface *surface);
 void             view_unmap                          (PhocView *view);
 void             phoc_view_apply_damage              (PhocView *view);

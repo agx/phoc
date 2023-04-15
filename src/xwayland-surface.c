@@ -454,7 +454,7 @@ handle_map (struct wl_listener *listener, void *data)
       phoc_view_set_decoration (view, TRUE, 12, 4);
     view_setup (view);
   } else {
-    view_initial_focus (view);
+    phoc_view_set_initial_focus (view);
   }
 }
 
