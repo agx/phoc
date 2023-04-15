@@ -1061,7 +1061,9 @@ phoc_view_map (PhocView *view, struct wlr_surface *surface)
   if (priv->activation_token)
     phoc_view_activate (view, TRUE);
 
-  if (phoc_desktop_get_enable_animations (view->desktop) && view->parent == NULL) {
+  if (phoc_desktop_get_enable_animations (view->desktop)
+      && view->parent == NULL
+      && !phoc_view_want_auto_maximize (view)) {
     g_autoptr (PhocTimedAnimation) fade_anim = NULL;
     g_autoptr (PhocPropertyEaser) easer = NULL;
     easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
