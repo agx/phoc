@@ -456,16 +456,6 @@ view_arrange_tiled (PhocView *view, struct wlr_output *output)
                          usable_area.height / priv->scale);
 }
 
-/*
- * Check if a view needs to be maximized
- */
-static bool
-want_auto_maximize(PhocView *view) {
-  if (!view->desktop->maximize)
-    return false;
-
-  return PHOC_VIEW_GET_CLASS (view)->want_auto_maximize(view);
-}
 
 void view_maximize(PhocView *view, struct wlr_output *output) {
         PhocViewPrivate *priv;
@@ -500,7 +490,7 @@ void view_maximize(PhocView *view, struct wlr_output *output) {
 void
 view_auto_maximize(PhocView *view)
 {
-  if (want_auto_maximize (view))
+  if (phoc_view_want_auto_maximize (view))
     view_maximize (view, NULL);
 }
 
@@ -515,7 +505,7 @@ view_restore(PhocView *view)
   if (!view_is_maximized (view) && !view_is_tiled (view))
     return;
 
-  if (want_auto_maximize (view))
+  if (phoc_view_want_auto_maximize (view))
     return;
 
   struct wlr_box geom;
@@ -2111,6 +2101,24 @@ phoc_view_get_wlr_surface_at (PhocView *self, double sx, double sy, double *sub_
 
   return PHOC_VIEW_GET_CLASS (self)->get_wlr_surface_at (self, sx, sy, sub_x, sub_y);
 }
+
+/*
+ * phoc_view_want_automaximize:
+ *
+ * Check if a view needs to be auto-maximized. In phoc's auto-maximize
+ * mode only toplevels should be maximized.
+ */
+bool
+phoc_view_want_auto_maximize (PhocView *view)
+{
+  g_assert (PHOC_IS_VIEW (view));
+
+  if (!view->desktop->maximize)
+    return false;
+
+  return PHOC_VIEW_GET_CLASS (view)->want_auto_maximize(view);
+}
+
 
 const char *
 phoc_view_get_app_id (PhocView *self)
