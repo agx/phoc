@@ -13,7 +13,7 @@ G_BEGIN_DECLS
 /* Functions to be used by derived classes only */
 void             view_set_title                      (PhocView *view, const char *title);
 void             view_set_parent                     (PhocView *view, PhocView *parent);
-void             view_setup                          (PhocView *view);
+void             phoc_view_setup                     (PhocView *view);
 void             view_send_frame_done_if_not_visible (PhocView *view);
 void             view_update_position                (PhocView *view, int x, int y);
 void             view_update_size                    (PhocView *view, int width, int height);

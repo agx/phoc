@@ -1181,30 +1181,39 @@ view_send_frame_done_if_not_visible (PhocView *view)
 
 static void view_create_foreign_toplevel_handle (PhocView *view);
 
-void view_setup(PhocView *view) {
-        PhocViewPrivate *priv = phoc_view_get_instance_private (view);
-        struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
+/**
+ * phoc_view_setup:
+ * @view: The view to setup
+ *
+ * Setup view parameters on map. This should be invoked by derived
+ * classes past [method@phoc_view_map].
+ */
+void
+phoc_view_setup (PhocView *view)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+  struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
 
-	view_create_foreign_toplevel_handle(view);
-	phoc_view_set_initial_focus(view);
+  view_create_foreign_toplevel_handle (view);
+  phoc_view_set_initial_focus (view);
 
-	view_center(view, NULL);
-	view_update_scale(view);
+  view_center (view, NULL);
+  view_update_scale (view);
 
-	view_update_output(view, NULL);
+  view_update_output(view, NULL);
 
-	wlr_foreign_toplevel_handle_v1_set_fullscreen(priv->toplevel_handle,
-	                                              view_is_fullscreen (view));
-	wlr_foreign_toplevel_handle_v1_set_maximized(priv->toplevel_handle,
-	                                             view_is_maximized(view));
-	wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle,
-	                                         priv->title ?: "");
-	wlr_foreign_toplevel_handle_v1_set_app_id(priv->toplevel_handle,
-	                                          priv->app_id ?: "");
-	if (view->parent)
-		toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
+  wlr_foreign_toplevel_handle_v1_set_fullscreen (priv->toplevel_handle,
+                                                 view_is_fullscreen (view));
+  wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle,
+                                                view_is_maximized(view));
+  wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle,
+                                            priv->title ?: "");
+  wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle,
+                                             priv->app_id ?: "");
+  if (view->parent)
+    toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
 
-	wlr_foreign_toplevel_handle_v1_set_parent(priv->toplevel_handle, toplevel_handle);
+  wlr_foreign_toplevel_handle_v1_set_parent (priv->toplevel_handle, toplevel_handle);
 }
 
 /**

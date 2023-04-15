@@ -452,7 +452,7 @@ handle_map (struct wl_listener *listener, void *data)
   if (!surface->override_redirect) {
     if (surface->decorations == WLR_XWAYLAND_SURFACE_DECORATIONS_ALL)
       phoc_view_set_decoration (view, TRUE, 12, 4);
-    view_setup (view);
+    phoc_view_setup (view);
   } else {
     phoc_view_set_initial_focus (view);
   }
