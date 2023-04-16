@@ -20,6 +20,7 @@ protocol_inc = include_directories('protocols')
 
 prefix = get_option('prefix')
 datadir = join_paths(prefix, get_option('datadir'))
+localedir = join_paths(prefix, get_option('localedir'))
 
 cc = meson.get_compiler('c')
 
@@ -131,9 +132,11 @@ add_project_arguments(
 )
 
 gnome = import('gnome')
-
+i18n  = import('i18n')
 
 config_h = configuration_data()
+config_h.set_quoted('GETTEXT_PACKAGE', meson.project_name())
+config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOC_APP_ID', 'sm.puri.Phoc')
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland,
@@ -152,6 +155,7 @@ meson.add_install_script(
   join_paths(get_option('prefix'), get_option('datadir'))
 )
 
+subdir('po')
 subdir('protocols')
 subdir('src')
 subdir('tests')
