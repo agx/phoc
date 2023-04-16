@@ -2038,3 +2038,14 @@ phoc_view_get_wlr_surface_at (PhocView *self, double sx, double sy, double *sub_
 
   return PHOC_VIEW_GET_CLASS (self)->get_wlr_surface_at (self, sx, sy, sub_x, sub_y);
 }
+
+const char *
+phoc_view_get_app_id (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->app_id;
+}
