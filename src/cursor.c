@@ -552,7 +552,6 @@ on_drag_update (PhocGesture *gesture, double off_x, double off_y, PhocCursor *se
   switch (state) {
   case PHOC_DRAGGABLE_SURFACE_STATE_DRAGGING:
     if (phoc_seat_has_touch (self->seat)) {
-#ifdef PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL
       PhocLayerSurface *layer_surface =
         phoc_draggable_layer_surface_get_layer_surface (priv->drag_surface);
       GList *seqs = phoc_gesture_get_sequences (gesture);
@@ -566,9 +565,6 @@ on_drag_update (PhocGesture *gesture, double off_x, double off_y, PhocCursor *se
                phoc_layer_surface_get_namespace (layer_surface));
       wlr_seat_touch_notify_cancel (self->seat->seat,
                                     layer_surface->layer_surface->surface);
-#else
-      g_warning_once ("wlroots lacks wlr_seat_touch_send_wl_cancel support, can't cancel gesture");
-#endif /* PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL */
     }
     break;
   case PHOC_DRAGGABLE_SURFACE_STATE_REJECTED:
