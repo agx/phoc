@@ -135,11 +135,13 @@ gnome = import('gnome')
 
 config_h = configuration_data()
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
-config_h.set('PHOC_XWAYLAND', have_xwayland)
-config_h.set('PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL', have_wlr_seat_touch_notify_cancel)
+config_h.set('PHOC_XWAYLAND', have_xwayland,
+	     description: 'Whether xwayland is enabled')
+config_h.set('PHOC_HAVE_WLR_SEAT_TOUCH_NOTIFY_CANCEL', have_wlr_seat_touch_notify_cancel,
+	     description: '''Whether we have needed functions for toch gesture cancel
+   Can be dropped with wlroots 0.16.0''')
 
 phoc_config_h = configure_file(
-  input: 'phoc-config.h.in',
   output: 'phoc-config.h',
   configuration: config_h,
 )
