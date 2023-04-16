@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <gio/gio.h>
+#include <glib/gi18n.h>
 
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
@@ -143,6 +144,11 @@ main(int argc, char **argv)
   if (version) {
     print_version ();
   }
+
+  setlocale (LC_MESSAGES, "");
+  textdomain (GETTEXT_PACKAGE);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 
   debug_flags = parse_debug_env ();
   wlr_log_init(WLR_DEBUG, log_glib);
