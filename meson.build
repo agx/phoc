@@ -19,8 +19,10 @@ src_inc = include_directories('src')
 protocol_inc = include_directories('protocols')
 
 prefix = get_option('prefix')
+bindir = join_paths(prefix, get_option('bindir'))
 datadir = join_paths(prefix, get_option('datadir'))
 localedir = join_paths(prefix, get_option('localedir'))
+desktopdir = join_paths(datadir, 'applications')
 
 cc = meson.get_compiler('c')
 

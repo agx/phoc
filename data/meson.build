@@ -10,6 +10,22 @@ install_data(
   install_dir: 'share/glib-2.0/schemas'
 )
 
+desktopconf = configuration_data()
+desktopconf.set('bindir', bindir)
+desktop_file = 'sm.puri.Phoc.desktop'
+i18n.merge_file(
+  input: configure_file(
+    input: desktop_file + '.in.in',
+    output: desktop_file + '.in',
+    configuration: desktopconf
+  ),
+  output: desktop_file,
+  po_dir: '../po',
+  install: true,
+  install_dir: desktopdir,
+  type: 'desktop'
+)
+
 devconf = configuration_data()
 devconf.set('compositor', meson.project_build_root() / 'src' / 'phoc')
 devconf.set('devscript', meson.current_build_dir() / 'phoc-dev')
