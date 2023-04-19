@@ -1,3 +1,5 @@
+subdir('icons')
+
 schemas = ['sm.puri.phoc.gschema.xml']
 compiled = gnome.compile_schemas(
   build_by_default: true
