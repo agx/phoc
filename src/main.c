@@ -114,6 +114,7 @@ main(int argc, char **argv)
   PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
   gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE;
+  PhocConfig *config;
 
   setup_signals();
 
@@ -153,12 +154,16 @@ main(int argc, char **argv)
 
   if (shell_mode)
     flags |= PHOC_SERVER_FLAG_SHELL_MODE;
+
+  config = phoc_config_new_from_file (config_path);
+  if (config == NULL)
+    return EXIT_FAILURE;
   if (xwayland)
-    flags |= PHOC_SERVER_FLAG_XWAYLAND;
+    config->xwayland = TRUE;
 
   loop = g_main_loop_new (NULL, FALSE);
-  if (!phoc_server_setup (server, config_path, exec, loop, flags, debug_flags))
-    return 1;
+  if (!phoc_server_setup (server, config, exec, loop, flags, debug_flags))
+    return EXIT_FAILURE;
 
   g_main_loop_run (loop);
 

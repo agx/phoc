@@ -27,7 +27,6 @@ G_DECLARE_FINAL_TYPE (PhocServer, phoc_server, PHOC, SERVER, GObject);
 typedef enum _PhocServerFlags {
   PHOC_SERVER_FLAG_NONE       = 0,
   PHOC_SERVER_FLAG_SHELL_MODE = 1 << 0,
-  PHOC_SERVER_FLAG_XWAYLAND   = 1 << 1,
 } PhocServerFlags;
 
 typedef enum _PhocServerDebugFlags {
@@ -79,7 +78,7 @@ struct _PhocServer {
 };
 
 PhocServer        *phoc_server_get_default (void);
-gboolean           phoc_server_setup (PhocServer *server, const char *config_path,
+gboolean           phoc_server_setup (PhocServer *server, PhocConfig *config,
                                       const char *exec, GMainLoop *mainloop,
                                       PhocServerFlags flags,
                                       PhocServerDebugFlags debug_flags);

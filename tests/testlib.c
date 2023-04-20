@@ -427,6 +427,7 @@ on_timer_expired (gpointer unused)
 void
 phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
 {
+  PhocConfig *config;
   struct task_data td = { .data = data };
   g_autoptr(PhocServer) server = phoc_server_get_default ();
   g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
@@ -436,9 +437,11 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
   if (iface)
     td.func = iface->client_run;
 
+  config = (iface && iface->config) ? iface->config : phoc_config_new_from_file (TEST_PHOC_INI);
   g_assert_true (PHOC_IS_SERVER (server));
-  g_assert_true (phoc_server_setup(server, TEST_PHOC_INI, NULL, loop,
-                                   iface ? iface->server_flags : 0,
+  g_assert_true (config);
+  g_assert_true (phoc_server_setup(server, config, NULL, loop,
+                                   PHOC_SERVER_FLAG_NONE,
                                    PHOC_SERVER_DEBUG_FLAG_NONE));
   if (iface && iface->server_prepare)
     g_assert_true (iface->server_prepare(server, data));
@@ -522,7 +525,7 @@ foreign_toplevel_compare (gconstpointer data, gconstpointer title)
  * Get the PhocTestForeignToplevel for a toplevel with the given title
  * using the wlr_foreign_toplevel_management protocol.
  *
- * Returns: (transfer-none): The toplevel's handle, or NULL if it doesn't exist.
+ * Returns: (transfer none): The toplevel's handle, or NULL if it doesn't exist.
  */
 PhocTestForeignToplevel *
 phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
@@ -542,7 +545,7 @@ phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
  *
  * Capture the given wlr_screencopy_frame and return its screenshot buffer
  *
- * Returns: (transfer-none): The screenshot buffer.
+ * Returns: (transfer none): The screenshot buffer.
  */
 PhocTestBuffer *
 phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
@@ -585,7 +588,7 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
  *
  * Capture the given output and return its screenshot buffer
  *
- * Returns: (transfer-none): The screenshot buffer.
+ * Returns: (transfer none): The screenshot buffer.
  */
 PhocTestBuffer *
 phoc_test_client_capture_output (PhocTestClientGlobals *globals,

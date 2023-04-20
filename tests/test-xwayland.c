@@ -132,8 +132,14 @@ test_client_xwayland_server_prepare (PhocServer *server, gpointer data)
 static void
 test_xwayland_normal (void)
 {
+  PhocConfig *config = phoc_config_new_from_data (
+    "[core]\n"
+    "xwayland=true\n"
+    "[output:HEADLESS-1]\n"
+    "mode=1024x768\n"
+    );
   PhocTestClientIface iface = {
-    .server_flags   = PHOC_SERVER_FLAG_XWAYLAND,
+    .config         = config,
     .server_prepare = test_client_xwayland_server_prepare,
     .client_run     = test_client_xwayland_normal,
   };
