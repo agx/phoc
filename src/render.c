@@ -340,7 +340,7 @@ static void count_surface_iterator (PhocOutput         *output,
                                     void               *data)
 {
   size_t *n = data;
-  n++;
+  (*n)++;
 }
 
 
