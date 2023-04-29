@@ -523,6 +523,7 @@ phoc_xwayland_surface_finalize (GObject *object)
   wl_list_remove(&self->request_move.link);
   wl_list_remove(&self->request_resize.link);
   wl_list_remove(&self->request_maximize.link);
+  wl_list_remove(&self->request_fullscreen.link);
   wl_list_remove(&self->map.link);
   wl_list_remove(&self->unmap.link);
   wl_list_remove(&self->set_title.link);
