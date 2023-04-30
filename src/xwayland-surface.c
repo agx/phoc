@@ -117,12 +117,12 @@ apply_size_constraints (PhocView                    *view,
 
   struct wlr_xwayland_surface_size_hints *size_hints = xwayland_surface->size_hints;
   if (size_hints != NULL) {
-    if (width < (uint32_t)size_hints->min_width) {
+    if (size_hints->min_width > 0 && width < (uint32_t)size_hints->min_width) {
       *dest_width = size_hints->min_width;
     } else if (size_hints->max_width > 0 && width > (uint32_t)size_hints->max_width) {
       *dest_width = size_hints->max_width;
     }
-    if (height < (uint32_t)size_hints->min_height) {
+    if (size_hints->min_height > 0 && height < (uint32_t)size_hints->min_height) {
       *dest_height = size_hints->min_height;
     } else if (size_hints->max_height > 0 && height > (uint32_t)size_hints->max_height) {
       *dest_height = size_hints->max_height;
@@ -484,12 +484,6 @@ phoc_xwayland_surface_constructed (GObject *object)
   self->request_configure.notify = handle_request_configure;
   wl_signal_add(&surface->events.request_configure, &self->request_configure);
 
-  self->map.notify = handle_map;
-  wl_signal_add(&surface->events.map, &self->map);
-
-  self->unmap.notify = handle_unmap;
-  wl_signal_add(&surface->events.unmap, &self->unmap);
-
   self->request_move.notify = handle_request_move;
   wl_signal_add(&surface->events.request_move, &self->request_move);
 
@@ -501,6 +495,12 @@ phoc_xwayland_surface_constructed (GObject *object)
 
   self->request_fullscreen.notify = handle_request_fullscreen;
   wl_signal_add(&surface->events.request_fullscreen, &self->request_fullscreen);
+
+  self->map.notify = handle_map;
+  wl_signal_add(&surface->events.map, &self->map);
+
+  self->unmap.notify = handle_unmap;
+  wl_signal_add(&surface->events.unmap, &self->unmap);
 
   self->set_title.notify = handle_set_title;
   wl_signal_add(&surface->events.set_title, &self->set_title);
@@ -523,11 +523,12 @@ phoc_xwayland_surface_finalize (GObject *object)
   wl_list_remove(&self->request_move.link);
   wl_list_remove(&self->request_resize.link);
   wl_list_remove(&self->request_maximize.link);
+  wl_list_remove(&self->request_fullscreen.link);
+  wl_list_remove(&self->map.link);
+  wl_list_remove(&self->unmap.link);
   wl_list_remove(&self->set_title.link);
   wl_list_remove(&self->set_class.link);
   wl_list_remove(&self->set_startup_id.link);
-  wl_list_remove(&self->map.link);
-  wl_list_remove(&self->unmap.link);
 
   self->xwayland_surface->data = NULL;
 
