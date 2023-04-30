@@ -22,7 +22,6 @@ G_DECLARE_FINAL_TYPE (PhocServer, phoc_server, PHOC, SERVER, GObject);
  * PhocServerFlags:
  *
  * PHOC_SHELL_FLAG_SHELL_MODE: Expect a shell to attach
- * PHOC_SHELL_FLAG_XWAYLAND: Start XWayland
  */
 typedef enum _PhocServerFlags {
   PHOC_SERVER_FLAG_NONE       = 0,
