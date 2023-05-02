@@ -1441,11 +1441,19 @@ should_reveal_shell (PhocOutput *self)
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
 
-  /* is our layer-surface focused on some seat? */
   for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
+    /* is our layer-surface focused on some seat? */
     if (seat->focused_layer && seat->focused_layer->output == self->wlr_output) {
       return true;
+    }
+
+    /* is OSK displayed because of our fullscreen view? */
+    if (phoc_view_is_mapped (self->fullscreen_view) &&
+        phoc_input_method_relay_is_enabled (&seat->im_relay, self->fullscreen_view->wlr_surface)) {
+      PhocLayerSurface *osk = phoc_layer_shell_find_osk (self);
+      if (osk && osk->mapped)
+        return true;
     }
   }
 

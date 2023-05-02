@@ -218,8 +218,8 @@ static void arrange_layer(PhocOutput *output,
 	}
 }
 
-static PhocLayerSurface *
-find_osk (PhocOutput *output)
+PhocLayerSurface *
+phoc_layer_shell_find_osk (PhocOutput *output)
 {
   PhocLayerSurface *layer_surface;
 
@@ -257,7 +257,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   wlr_output_effective_resolution (output->wlr_output, &usable_area.width, &usable_area.height);
 
-  PhocLayerSurface *osk = find_osk (output);
+  PhocLayerSurface *osk = phoc_layer_shell_find_osk (output);
   if (osk) {
     bool osk_force_overlay = false;
 
@@ -293,6 +293,8 @@ phoc_layer_shell_arrange (PhocOutput *output)
   // Arrange non-exlusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
     arrange_layer (output, seats, layers[i], &usable_area, false);
+
+  phoc_output_update_shell_reveal (output);
 
   if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL)) {
     PhocLayerSurface *layer_surface;
