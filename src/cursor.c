@@ -1270,13 +1270,12 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
   if (!wlr_output)
     return;
 
-  PhocOutput *phoc_output = wlr_output->data;
+  PhocOutput *phoc_output = PHOC_OUTPUT (wlr_output->data);
 
   double sx, sy;
   struct wlr_surface *surface = point->surface;
 
   // TODO: test with input regions
-
   if (surface) {
     bool found = false;
     float scale = 1.0;
