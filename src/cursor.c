@@ -1265,8 +1265,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
   if (!point)
     return;
 
-  struct wlr_output *wlr_output =
-    wlr_output_layout_output_at (desktop->layout, lx, ly);
+  struct wlr_output *wlr_output = wlr_output_layout_output_at (desktop->layout, lx, ly);
 
   if (!wlr_output)
     return;
