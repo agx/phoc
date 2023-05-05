@@ -53,6 +53,9 @@
 #include "xdg-surface.h"
 #include "xwayland-surface.h"
 
+/* Maximum version of layer-shell we support */
+#define PHOC_LAYER_SHELL_VERSION 2
+
 /**
  * PhocDesktop:
  *
@@ -713,8 +716,8 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->xdg_shell->events.new_surface, &self->xdg_shell_surface);
   self->xdg_shell_surface.notify = handle_xdg_shell_surface;
 
-  self->layer_shell = wlr_layer_shell_v1_create (server->wl_display);
-  wl_signal_add (&self->layer_shell->events.new_surface, &self->layer_shell_surface);
+  self->layer_shell = wlr_layer_shell_v1_create (server->wl_display, PHOC_LAYER_SHELL_VERSION);
+  wl_signal_add(&self->layer_shell->events.new_surface, &self->layer_shell_surface);
   self->layer_shell_surface.notify = handle_layer_shell_surface;
   priv->layer_shell_effects = phoc_layer_shell_effects_new ();
 
