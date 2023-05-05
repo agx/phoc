@@ -32,6 +32,7 @@ Build-Depends:
  libseat-dev <pkg.phoc.embedwlroots>,
  libsystemd-dev <pkg.phoc.embedwlroots>,
  libxcb-composite0-dev <pkg.phoc.embedwlroots>,
+ libxcb-ewmh-dev <pkg.phoc.embedwlroots>,
  libxcb-icccm4-dev <pkg.phoc.embedwlroots>,
  libxcb-image0-dev <pkg.phoc.embedwlroots>,
  libxcb-render0-dev <pkg.phoc.embedwlroots>,
