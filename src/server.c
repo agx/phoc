@@ -19,6 +19,8 @@
 
 #include <errno.h>
 
+#define PHOC_WL_DISPLAY_VERSION 5
+
 typedef struct _PhocServerPrivate {
   GStrv dt_compatibles;
 } PhocServerPrivate;
@@ -219,8 +221,7 @@ phoc_server_initable_init (GInitable    *initable,
   self->data_device_manager = wlr_data_device_manager_create(self->wl_display);
   wlr_renderer_init_wl_display(wlr_renderer, self->wl_display);
 
-  self->compositor = wlr_compositor_create(self->wl_display,
-                                           wlr_renderer);
+  self->compositor = wlr_compositor_create (self->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
   self->subcompositor = wlr_subcompositor_create (self->wl_display);
 
   return TRUE;
