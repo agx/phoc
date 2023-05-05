@@ -125,8 +125,8 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
   int sw = surface->current.width;
   int sh = surface->current.height;
 
-  double _sx = sx + surface->sx;
-  double _sy = sy + surface->sy;
+  double _sx = sx;
+  double _sy = sy;
 
   phoc_utils_rotate_child_position (&_sx, &_sy, sw, sh, data->width,
                                     data->height, data->rotation);
