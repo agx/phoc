@@ -1074,12 +1074,11 @@ PhocLayerSurface
   if (!wlr_surface)
     return NULL;
 
-  if (!wlr_surface_is_layer_surface (wlr_surface))
+  wlr_layer_surface = wlr_layer_surface_v1_try_from_wlr_surface (wlr_surface);
+  if (wlr_layer_surface == NULL)
     return NULL;
 
-  wlr_layer_surface = wlr_layer_surface_v1_from_wlr_surface (wlr_surface);
-  layer_surface = wlr_layer_surface->data;
-
+  layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
   if (sx)
     *sx = sx_;
 
