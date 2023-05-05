@@ -299,14 +299,6 @@ phoc_output_handle_destroy (struct wl_listener *listener, void *data)
   g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
-static void
-phoc_output_handle_enable (struct wl_listener *listener, void *data)
-{
-  PhocOutput *self = wl_container_of (listener, self, enable);
-
-  update_output_manager_config (self->desktop);
-}
-
 
 static void
 render_cutouts (PhocRenderer *renderer, PhocOutput *self)
@@ -398,10 +390,17 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
   PhocOutput *self = wl_container_of (listener, self, commit);
   struct wlr_output_event_commit *event = data;
 
-  if (event->committed & (WLR_OUTPUT_STATE_TRANSFORM | WLR_OUTPUT_STATE_SCALE |
+  if (event->committed & (WLR_OUTPUT_STATE_TRANSFORM |
+                          WLR_OUTPUT_STATE_SCALE |
                           WLR_OUTPUT_STATE_MODE)) {
     int width, height;
     phoc_layer_shell_arrange (self);
+  }
+
+  if (event->committed & (WLR_OUTPUT_STATE_ENABLED |
+                          WLR_OUTPUT_STATE_TRANSFORM |
+                          WLR_OUTPUT_STATE_SCALE |
+                          WLR_OUTPUT_STATE_MODE)) {
     update_output_manager_config (self->desktop);
 
     wlr_output_transformed_resolution (self->wlr_output, &width, &height);
@@ -537,8 +536,7 @@ phoc_output_initable_init (GInitable    *initable,
 
   self->output_destroy.notify = phoc_output_handle_destroy;
   wl_signal_add (&self->wlr_output->events.destroy, &self->output_destroy);
-  self->enable.notify = phoc_output_handle_enable;
-  wl_signal_add (&self->wlr_output->events.enable, &self->enable);
+
   self->commit.notify = phoc_output_handle_commit;
   wl_signal_add (&self->wlr_output->events.commit, &self->commit);
 
@@ -657,7 +655,6 @@ phoc_output_finalize (GObject *object)
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
 
   wl_list_remove (&self->link);
-  wl_list_remove (&self->enable.link);
 
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);
