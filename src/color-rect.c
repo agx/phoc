@@ -70,7 +70,8 @@ phoc_color_rect_damage_box (PhocColorRect *self)
     damage_box.y -= output->ly;
     phoc_utils_scale_box (&damage_box, output->wlr_output->scale);
 
-    phoc_output_damage_add_box (output, &damage_box);
+    if (wlr_damage_ring_add_box (&output->damage_ring, &damage_box))
+      wlr_output_schedule_frame (output->wlr_output);
   }
 }
 

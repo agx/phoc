@@ -588,16 +588,15 @@ static void
 damage_touch_point_cb (gpointer data, gpointer user_data)
 {
   struct touch_point_data *touch_point = data;
-
   PhocOutput *output = user_data;
   struct wlr_output *wlr_output = output->wlr_output;
-
   int size = TOUCH_POINT_SIZE * wlr_output->scale;
   struct wlr_box box = phoc_box_from_touch_point (touch_point, size, size);
   pixman_region32_t region;
-  pixman_region32_init_rect(&region, box.x, box.y, box.width, box.height);
-  wlr_output_damage_add(output->damage, &region);
-  pixman_region32_fini(&region);
+
+  pixman_region32_init_rect (&region, box.x, box.y, box.width, box.height);
+  wlr_damage_ring_add (&output->damage_ring, &region);
+  pixman_region32_fini (&region);
 }
 
 static void
@@ -726,9 +725,9 @@ render_damage (PhocRenderer *self, PhocOutput *output)
   pixman_region32_t previous_damage;
 
   pixman_region32_init(&previous_damage);
-  pixman_region32_subtract(&previous_damage,
-                           &output->damage->previous[output->damage->previous_idx],
-                           &output->damage->current);
+  pixman_region32_subtract (&previous_damage,
+                            &output->damage_ring.previous[output->damage_ring.previous_idx],
+                            &output->damage_ring.current);
 
   rects = pixman_region32_rectangles(&previous_damage, &nrects);
   for (int i = 0; i < nrects; ++i) {
@@ -737,13 +736,13 @@ render_damage (PhocRenderer *self, PhocOutput *output)
                     output->wlr_output->transform_matrix);
   }
 
-  rects = pixman_region32_rectangles(&output->damage->current, &nrects);
+  rects = pixman_region32_rectangles (&output->damage_ring.current, &nrects);
   for (int i = 0; i < nrects; ++i) {
     wlr_box_from_pixman_box32(&box, rects[i]);
     wlr_render_rect(self->wlr_renderer, &box, (float[])COLOR_TRANSPARENT_YELLOW,
                     output->wlr_output->transform_matrix);
   }
-  wlr_output_schedule_frame(output->wlr_output);
+  wlr_output_schedule_frame (output->wlr_output);
   pixman_region32_fini(&previous_damage);
 }
 
@@ -761,6 +760,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
   PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
   PhocServer *server = phoc_server_get_default ();
   struct wlr_renderer *wlr_renderer;
+  int buffer_age;
 
   g_assert (PHOC_IS_RENDERER (self));
   wlr_renderer = self->wlr_renderer;
@@ -783,12 +783,14 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
       goto send_frame_done;
   }
 
-  bool needs_frame;
-  pixman_region32_t buffer_damage;
-  pixman_region32_init (&buffer_damage);
-  if (!wlr_output_damage_attach_render (output->damage, &needs_frame, &buffer_damage))
+  if (!wlr_output_attach_render (output->wlr_output, &buffer_age))
     return;
 
+  bool needs_frame = output->wlr_output->needs_frame;
+  pixman_region32_t buffer_damage;
+  pixman_region32_init (&buffer_damage);
+
+  wlr_damage_ring_get_buffer_damage (&output->damage_ring, buffer_age, &buffer_damage);
   struct render_data data = {
     .damage = &buffer_damage,
     .alpha = 1.0,
@@ -801,11 +803,11 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
                                 0, 0, wlr_output->width, wlr_output->height);
     wlr_region_transform (&buffer_damage, &buffer_damage,
                           transform, wlr_output->width, wlr_output->height);
-    needs_frame |= pixman_region32_not_empty (&output->damage->current);
-    needs_frame |= pixman_region32_not_empty (&output->damage->previous[output->damage->previous_idx]);
+    needs_frame |= pixman_region32_not_empty (&output->damage_ring.current);
+    needs_frame |= pixman_region32_not_empty (&output->damage_ring.previous[output->damage_ring.previous_idx]);
   }
 
-  if (!needs_frame) {
+  if (!needs_frame && !pixman_region32_not_empty (&output->damage_ring.current)) {
     // Output doesn't need swap and isn't damaged, skip rendering completely
     wlr_output_rollback (wlr_output);
     goto buffer_damage_finish;
@@ -886,13 +888,15 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
   pixman_region32_t frame_damage;
   pixman_region32_init (&frame_damage);
 
-  wlr_region_transform (&frame_damage, &output->damage->current, transform, width, height);
+  wlr_region_transform (&frame_damage, &output->damage_ring.current, transform, width, height);
 
   wlr_output_set_damage (wlr_output, &frame_damage);
   pixman_region32_fini (&frame_damage);
 
   if (!wlr_output_commit (wlr_output))
     goto buffer_damage_finish;
+
+  wlr_damage_ring_rotate (&output->damage_ring);
 
  buffer_damage_finish:
   pixman_region32_fini (&buffer_damage);
