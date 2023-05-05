@@ -1232,7 +1232,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   // Then enable outputs that need to
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
-    PhocOutput *output = wlr_output->data;
+    PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
 
     if (!config_head->state.enabled)
       continue;

@@ -264,7 +264,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 			return surface;
 		}
 
-		PhocOutput *output = wlr_output->data;
+		PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
 		if (output != NULL && output->fullscreen_view != NULL) {
 
 			if (phoc_output_has_shell_revealed (output)) {

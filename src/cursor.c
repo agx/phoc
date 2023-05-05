@@ -489,7 +489,7 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
     return false;
   }
 
-  PhocOutput *output = wlr_output->data;
+  PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
 
   struct wlr_box output_box;
   wlr_output_layout_get_box (desktop->layout, wlr_output, &output_box);
