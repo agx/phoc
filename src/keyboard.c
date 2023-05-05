@@ -155,10 +155,10 @@ keyboard_execute_compositor_binding(PhocKeyboard *self,
   if (keysym >= XKB_KEY_XF86Switch_VT_1 &&
       keysym <= XKB_KEY_XF86Switch_VT_12) {
 
-    struct wlr_session *session = wlr_backend_get_session(server->backend);
+    struct wlr_session *session = phoc_server_get_session (server);
     if (session) {
       unsigned vt = keysym - XKB_KEY_XF86Switch_VT_1 + 1;
-      wlr_session_change_vt(session, vt);
+      wlr_session_change_vt (session, vt);
     }
 
     return true;

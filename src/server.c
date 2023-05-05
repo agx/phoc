@@ -23,6 +23,7 @@
 
 typedef struct _PhocServerPrivate {
   GStrv dt_compatibles;
+  struct wlr_session *session;
 } PhocServerPrivate;
 
 static void phoc_server_initable_iface_init (GInitableIface *iface);
@@ -194,6 +195,7 @@ phoc_server_initable_init (GInitable    *initable,
                            GError      **error)
 {
   PhocServer *self = PHOC_SERVER (initable);
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   struct wlr_renderer *wlr_renderer;
 
   self->wl_display = wl_display_create();
@@ -204,7 +206,7 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-  self->backend = wlr_backend_autocreate(self->wl_display);
+  self->backend = wlr_backend_autocreate (self->wl_display, &priv->session);
   if (self->backend == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
@@ -452,4 +454,16 @@ phoc_server_get_compatibles (PhocServer *self)
   priv = phoc_server_get_instance_private (self);
 
   return (const char * const *)priv->dt_compatibles;
+}
+
+
+struct wlr_session *
+phoc_server_get_session (PhocServer *self)
+{
+  PhocServerPrivate *priv;
+
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->session;
 }
