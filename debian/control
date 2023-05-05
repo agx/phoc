@@ -35,6 +35,7 @@ Build-Depends:
  libxcb-ewmh-dev <pkg.phoc.embedwlroots>,
  libxcb-icccm4-dev <pkg.phoc.embedwlroots>,
  libxcb-image0-dev <pkg.phoc.embedwlroots>,
+ libdisplay-info-dev (>= 0.1.1) <pkg.phoc.embedwlroots>,
  libxcb-render0-dev <pkg.phoc.embedwlroots>,
  libxcb-res0-dev <pkg.phoc.embedwlroots>,
  libxcb-xfixes0-dev <pkg.phoc.embedwlroots>,
