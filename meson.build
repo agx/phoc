@@ -66,7 +66,7 @@ endif
 if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots = wlroots_proj.get_variable('wlroots')
 else
-        wlroots = dependency('wlroots', version: '>= 0.16.0')
+        wlroots = dependency('wlroots', version: ['>= 0.17.0-dev', '< 0.18.0'])
 endif
 wlroots_has_xwayland = wlroots.get_variable(pkgconfig: 'have_xwayland',
                                             internal: 'have_xwayland') == 'true'
