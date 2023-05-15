@@ -178,6 +178,7 @@ layer_surface_at (PhocOutput                     *output,
 {
   PhocLayerSurface *layer_surface;
 
+  /* TODO: use phoc_output_get_layer_surfaces_for_layer */
   wl_list_for_each_reverse(layer_surface, &output->layer_surfaces, link) {
     if (!layer_surface->mapped)
       continue;
