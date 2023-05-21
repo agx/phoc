@@ -190,8 +190,10 @@ arrange_layer (PhocOutput                     *output,
       box.y -= state->margin.bottom;
     }
     if (box.width < 0 || box.height < 0) {
-      // TODO: Bubble up a protocol error?
-      wlr_layer_surface_v1_destroy (wlr_layer_surface);
+      g_warning_once ("Layer surface '%s' has negative bounds %dx%d - ignoring",
+                      layer_surface->layer_surface->namespace ?: "<unknown>",
+                      box.width, box.height);
+      /* The layer surface never gets configured, hence the client sees a protocol error */
       continue;
     }
 
