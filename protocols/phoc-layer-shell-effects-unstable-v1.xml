@@ -191,9 +191,9 @@
 
     <request name="set_alpha">
       <description summary="Set the surface's alpha value">
-        Sets the surfaces transparency. Valid values are between 0
-        (fully transparent) and 1.0 (fully opaque. The set value
-        also effects subsurfaces and popups.
+        Set the surface's transparency. Valid values are between 0.0
+        (fully transparent) and 1.0 (fully opaque). The set value
+        also affects subsurfaces and popups.
 
         Alpha is double-buffered, see wl_surface.commit.
       </description>
