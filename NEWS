@@ -1,3 +1,10 @@
+phoc 0.29.0
+-----------
+Released July 2023
+* Fix cutout rendering in landscape mode
+* Contributors:
+    * Guido Günther
+
 phoc 0.28.0
 -----------
 Released Mai 2023
