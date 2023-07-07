@@ -245,7 +245,7 @@ _close(PhocView *view)
   struct wlr_xdg_popup *popup, *tmp = NULL;
 
   wl_list_for_each_safe (popup, tmp, &xdg_surface->popups, link) {
-    wlr_xdg_popup_destroy (popup->base);
+    wlr_xdg_popup_destroy (popup);
   }
   wlr_xdg_toplevel_send_close (xdg_surface->toplevel);
 
