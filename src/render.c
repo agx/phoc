@@ -613,7 +613,7 @@ phoc_renderer_render_view_to_buffer (PhocRenderer         *self,
   wl_shm_buffer_begin_access (shm_buffer);
   void *data = wl_shm_buffer_get_data (shm_buffer);
 
-  wlr_renderer_read_pixels (self->wlr_renderer, DRM_FORMAT_ARGB8888, NULL, stride, width, height, 0, 0, 0, 0, data);
+  wlr_renderer_read_pixels (self->wlr_renderer, DRM_FORMAT_ARGB8888, stride, width, height, 0, 0, 0, 0, data);
   wlr_renderer_end (self->wlr_renderer);
 
   wlr_buffer_drop (buffer);
