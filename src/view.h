@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_output_layout.h>
-#include <wlr/types/wlr_surface.h>
+#include <wlr/types/wlr_compositor.h>
 
 #include <glib-object.h>
 #include <gio/gio.h>

@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include <wayland-server-core.h>
 #include <wlr/config.h>
-#include <wlr/types/wlr_surface.h>
 #include <wlr/render/wlr_texture.h>
 #include <wlr/types/wlr_matrix.h>
 #include <phosh-private-protocol.h>
