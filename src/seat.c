@@ -1011,7 +1011,7 @@ seat_add_switch (PhocSeat                *seat,
   switch_device->device_destroy.notify = handle_switch_destroy;
 
   switch_device->toggle.notify = handle_switch_toggle;
-  wl_signal_add (&switch_device->device->switch_device->events.toggle, &switch_device->toggle);
+  wl_signal_add (&wlr_switch->events.toggle, &switch_device->toggle);
 }
 
 static void
@@ -1168,17 +1168,17 @@ seat_add_tablet_pad (PhocSeat                *seat,
                  &tablet_pad->device_destroy);
 
   tablet_pad->attach.notify = handle_tablet_pad_attach;
-  wl_signal_add (&tablet_pad->device->tablet_pad->events.attach_tablet,
+  wl_signal_add (&wlr_tablet_pad->events.attach_tablet,
                  &tablet_pad->attach);
 
   tablet_pad->button.notify = handle_tablet_pad_button;
-  wl_signal_add (&tablet_pad->device->tablet_pad->events.button, &tablet_pad->button);
+  wl_signal_add (&wlr_tablet_pad->events.button, &tablet_pad->button);
 
   tablet_pad->strip.notify = handle_tablet_pad_strip;
-  wl_signal_add (&tablet_pad->device->tablet_pad->events.strip, &tablet_pad->strip);
+  wl_signal_add (&wlr_tablet_pad->events.strip, &tablet_pad->strip);
 
   tablet_pad->ring.notify = handle_tablet_pad_ring;
-  wl_signal_add (&tablet_pad->device->tablet_pad->events.ring, &tablet_pad->ring);
+  wl_signal_add (&wlr_tablet_pad->events.ring, &tablet_pad->ring);
 
   wl_list_init (&tablet_pad->tablet_destroy.link);
 
