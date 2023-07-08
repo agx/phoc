@@ -39,6 +39,7 @@ typedef struct _PhocViewPrivate {
   char          *title;
   char          *app_id;
   GSettings     *settings;
+  pid_t          pid;
 
   float          alpha;
   float          scale;
@@ -1051,6 +1052,7 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   wl_list_insert(&self->desktop->views, &self->link);
   phoc_view_damage_whole (self);
   phoc_input_update_cursor_focus(server->input);
+  priv->pid = PHOC_VIEW_GET_CLASS (self)->get_pid (self);
 
   priv->notify_scale_to_fit_id =
     g_signal_connect_swapped (self->desktop,
@@ -2133,4 +2135,16 @@ phoc_view_get_app_id (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->app_id;
+}
+
+
+pid_t
+phoc_view_get_pid (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->pid;
 }
