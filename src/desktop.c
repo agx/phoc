@@ -34,6 +34,7 @@
 #include <wlr/util/box.h>
 #include <wlr/version.h>
 #include "cursor.h"
+#include "device-state.h"
 #include "idle-inhibit.h"
 #include "layers.h"
 #include "output.h"
@@ -79,6 +80,7 @@ typedef struct _PhocDesktopPrivate {
   PhocGtkShell          *gtk_shell;
   /* Protocols that should go upstream */
   PhocLayerShellEffects *layer_shell_effects;
+  PhocDeviceState       *device_state;
 } PhocDesktopPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocDesktop, phoc_desktop, G_TYPE_OBJECT);
@@ -728,6 +730,7 @@ phoc_desktop_constructed (GObject *object)
 
   self->input_method = wlr_input_method_manager_v2_create (server->wl_display);
   self->text_input = wlr_text_input_manager_v3_create (server->wl_display);
+
   priv->idle_inhibit = phoc_idle_inhibit_create (self->idle);
 
   priv->gtk_shell = phoc_gtk_shell_create (self, server->wl_display);
@@ -843,6 +846,7 @@ phoc_desktop_finalize (GObject *object)
   g_clear_object (&priv->phosh);
   g_clear_pointer (&priv->gtk_shell, phoc_gtk_shell_destroy);
   g_clear_object (&priv->layer_shell_effects);
+  g_clear_object (&priv->device_state);
   g_clear_pointer (&self->layout, wlr_output_layout_destroy);
 
   g_hash_table_remove_all (self->input_output_map);

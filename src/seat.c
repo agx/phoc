@@ -26,6 +26,7 @@
 #include <wlr/types/wlr_tablet_pad.h>
 #include <wlr/version.h>
 #include "cursor.h"
+#include "device-state.h"
 #include "keyboard.h"
 #include "pointer.h"
 #include "switch.h"
@@ -47,6 +48,7 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 typedef struct _PhocSeatPrivate {
   PhocInput             *input;
+  PhocDeviceState       *device_state;
 } PhocSeatPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
@@ -177,6 +179,15 @@ on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
+
+  if (phoc_switch_is_tablet_mode_switch (switch_)) {
+    phoc_device_state_notify_tablet_mode_change (priv->device_state, state);
+  } else if (phoc_switch_is_lid_switch (switch_)) {
+    phoc_device_state_notify_lid_change (priv->device_state, state);
+  } else {
+    g_assert_not_reached ();
+  }
 
   wlr_idle_notify_activity (desktop->idle, self->seat);
 }
@@ -848,6 +859,7 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
 static void
 seat_update_capabilities (PhocSeat *self)
 {
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
   uint32_t caps = 0;
 
   if (self->keyboards != NULL) {
@@ -862,6 +874,8 @@ seat_update_capabilities (PhocSeat *self)
   wlr_seat_set_capabilities (self->seat, caps);
 
   phoc_seat_maybe_set_cursor (self, self->cursor->default_xcursor);
+
+  phoc_device_state_update_capabilities (priv->device_state);
 }
 
 
@@ -1915,6 +1929,7 @@ phoc_seat_constructed (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT(object);
   PhocServer *server = phoc_server_get_default ();
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
@@ -1942,6 +1957,8 @@ phoc_seat_constructed (GObject *object)
   wl_signal_add (&self->seat->events.start_drag, &self->start_drag);
   self->destroy.notify = phoc_seat_handle_destroy;
   wl_signal_add (&self->seat->events.destroy, &self->destroy);
+
+  priv->device_state = phoc_device_state_new (self);
 }
 
 
@@ -1949,7 +1966,9 @@ static void
 phoc_seat_dispose (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
+  g_clear_object (&priv->device_state);
   g_clear_object (&self->cursor);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->dispose (object);
@@ -2060,6 +2079,21 @@ phoc_seat_has_keyboard (PhocSeat *self)
 
   g_assert (self->seat);
   return (self->seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD);
+}
+
+
+gboolean
+phoc_seat_has_switch (PhocSeat *self, enum wlr_switch_type type)
+{
+  g_assert (PHOC_IS_SEAT (self));
+
+  for (GSList *l = self->switches; l; l = l->next) {
+    PhocSwitch *switch_ = PHOC_SWITCH (l->data);
+
+    if (phoc_switch_is_type (switch_, type))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 /**
