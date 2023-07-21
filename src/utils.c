@@ -110,17 +110,10 @@ float
 phoc_utils_compute_scale (int32_t phys_width, int32_t phys_height,
                           int32_t width, int32_t height)
 {
-  float dpi, long_side, short_side, max_scale, scale;
+  float dpi, max_scale, scale;
 
-  if (width > height) {
-    long_side = width;
-    short_side = height;
-  } else {
-    long_side = height;
-    short_side = width;
-  }
   // Ensure scaled resolution won't be inferior to minimum values
-  max_scale = fminf (long_side / MIN_HEIGHT, short_side / MIN_WIDTH);
+  max_scale = fminf (height / MIN_HEIGHT, width / MIN_WIDTH);
 
   /*
    * Round the maximum scale to a sensible value:
