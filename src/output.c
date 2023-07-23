@@ -539,11 +539,27 @@ phoc_output_initable_init (GInitable    *initable,
       wlr_output_state_set_enabled (&pending, false);
     }
   } else {
-    if (preferred_mode != NULL)
+    wlr_output_state_set_enabled (&pending, true);
+    if (preferred_mode != NULL) {
+      g_debug ("Using preferred mode for %s", self->wlr_output->name);
       wlr_output_state_set_mode (&pending, preferred_mode);
+    }
+
+    if (!wlr_output_test_state (self->wlr_output, &pending)) {
+      g_debug ("Preferred mode rejected for %s falling back to another mode",
+               self->wlr_output->name);
+      struct wlr_output_mode *mode;
+      wl_list_for_each (mode, &self->wlr_output->modes, link) {
+        if (mode == preferred_mode)
+          continue;
+
+        wlr_output_state_set_mode (&pending, mode);
+        if (wlr_output_test_state (self->wlr_output, &pending))
+          break;
+      }
+    }
 
     wlr_output_state_set_scale (&pending, phoc_output_compute_scale (self, &pending));
-    wlr_output_state_set_enabled (&pending, true);
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
   wlr_output_commit_state (self->wlr_output, &pending);
