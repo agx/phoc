@@ -257,6 +257,11 @@ update_output_manager_config (PhocDesktop *desktop)
     struct wlr_output_configuration_head_v1 *config_head =
       wlr_output_configuration_head_v1_create (config, output->wlr_output);
     struct wlr_box output_box;
+
+    config_head->state.enabled = output->wlr_output->enabled;
+    config_head->state.mode = output->pending ? output->pending->mode :
+      output->wlr_output->current_mode;
+
     wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
     if (!wlr_box_empty (&output_box)) {
       config_head->state.x = output_box.x;
@@ -374,13 +379,20 @@ phoc_output_handle_mode (struct wl_listener *listener, void *data)
   update_output_manager_config (self->desktop);
 }
 
+
 static void
 phoc_output_handle_commit (struct wl_listener *listener, void *data)
 {
   PhocOutput *self = wl_container_of (listener, self, commit);
+  struct wlr_output_event_commit *event = data;
 
+  /* FIXME: We do this way too often */
   phoc_layer_shell_arrange (self);
+
+  if (event->committed & (WLR_OUTPUT_STATE_TRANSFORM | WLR_OUTPUT_STATE_SCALE))
+    update_output_manager_config (self->desktop);
 }
+
 
 static float
 phoc_output_compute_scale (PhocOutput *self, struct wlr_output_state *pending)
@@ -562,7 +574,9 @@ phoc_output_initable_init (GInitable    *initable,
     wlr_output_state_set_scale (&pending, phoc_output_compute_scale (self, &pending));
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
+  self->pending = &pending;
   wlr_output_commit_state (self->wlr_output, &pending);
+  self->pending = NULL;
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
