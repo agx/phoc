@@ -1270,8 +1270,7 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
 
   g_return_if_fail (event && event->output && event->output->data);
   self = event->output->data;
-  g_debug ("Request to set output power mode of %p to %d",
-           self, event->mode);
+  g_debug ("Request to set output power mode of %p to %d", self->wlr_output->name, event->mode);
   switch (event->mode) {
   case ZWLR_OUTPUT_POWER_V1_MODE_OFF:
     enable = false;
@@ -1280,7 +1279,7 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
     enable = true;
     break;
   default:
-    g_warning ("Unhandled power state %d for %p", event->mode, self);
+    g_warning ("Unhandled power state %d for %p", event->mode, self->wlr_output->name);
     return;
   }
 
