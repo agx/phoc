@@ -115,16 +115,18 @@ apply_size_constraints (PhocView                    *view,
   if (view_is_maximized (view))
     return;
 
-  struct wlr_xwayland_surface_size_hints *size_hints = xwayland_surface->size_hints;
+  xcb_size_hints_t *size_hints = xwayland_surface->size_hints;
   if (size_hints != NULL) {
     if (size_hints->min_width > 0 && width < (uint32_t)size_hints->min_width) {
       *dest_width = size_hints->min_width;
-    } else if (size_hints->max_width > 0 && width > (uint32_t)size_hints->max_width) {
+    } else if (size_hints->max_width > 0 &&
+               width > (uint32_t)size_hints->max_width) {
       *dest_width = size_hints->max_width;
     }
     if (size_hints->min_height > 0 && height < (uint32_t)size_hints->min_height) {
       *dest_height = size_hints->min_height;
-    } else if (size_hints->max_height > 0 && height > (uint32_t)size_hints->max_height) {
+    } else if (size_hints->max_height > 0 &&
+               height > (uint32_t)size_hints->max_height) {
       *dest_height = size_hints->max_height;
     }
   }
