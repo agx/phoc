@@ -391,7 +391,7 @@ static bool scan_out_fullscreen_view(PhocOutput *output) {
 		return false;
 	}
 
-#if WLR_HAS_XWAYLAND
+#ifdef PHOC_XWAYLAND
 	if (PHOC_IS_XWAYLAND_SURFACE (view)) {
 		struct wlr_xwayland_surface *xsurface =
 			phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
