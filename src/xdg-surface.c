@@ -92,7 +92,7 @@ set_active (PhocView *view, bool active)
   struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL)
-    wlr_xdg_toplevel_set_activated(xdg_surface->toplevel, active);
+    wlr_xdg_toplevel_set_activated (xdg_surface->toplevel, active);
 }
 
 static void
@@ -482,6 +482,25 @@ handle_new_popup (struct wl_listener *listener, void *data)
 
 
 static void
+phoc_xdg_surface_set_capabilities (PhocXdgSurface                        *self,
+                                   enum wlr_xdg_toplevel_wm_capabilities  caps)
+{
+  uint32_t version;
+  struct wlr_xdg_toplevel *toplevel;
+
+  if (self->xdg_surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
+    return;
+
+  toplevel = self->xdg_surface->toplevel;
+  version = wl_resource_get_version (toplevel->resource);
+  if (version < XDG_TOPLEVEL_WM_CAPABILITIES_SINCE_VERSION)
+    return;
+
+  wlr_xdg_toplevel_set_wm_capabilities (toplevel, caps);
+}
+
+
+static void
 phoc_xdg_surface_constructed (GObject *object)
 {
   PhocXdgSurface *self = PHOC_XDG_SURFACE(object);
@@ -504,6 +523,10 @@ phoc_xdg_surface_constructed (GObject *object)
                             self->xdg_surface->toplevel->requested.fullscreen_output);
   view_auto_maximize (PHOC_VIEW (self));
   view_set_title (PHOC_VIEW (self), self->xdg_surface->toplevel->title);
+  /* We don't do window menus or minimize */
+  phoc_xdg_surface_set_capabilities (self,
+                                     WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE |
+                                     WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 
   /* Register all handlers */
   self->surface_commit.notify = handle_surface_commit;
