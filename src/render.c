@@ -650,21 +650,22 @@ view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 
 
 gboolean
-phoc_renderer_render_view_to_buffer (PhocRenderer         *self,
-                                     PhocView             *view,
-                                     struct wl_shm_buffer *shm_buffer,
-                                     uint32_t             *flags)
+phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
+                                     PhocView          *view,
+                                     struct wlr_buffer *shm_buffer)
 {
   struct wlr_surface *surface = view->wlr_surface;
   struct wlr_buffer *buffer;
+  void *data;
+  uint32_t format;
+  size_t stride;
 
   g_return_val_if_fail (surface, false);
   g_return_val_if_fail (self->wlr_allocator, false);
   g_return_val_if_fail (shm_buffer, false);
 
-  int32_t width = wl_shm_buffer_get_width (shm_buffer);
-  int32_t height = wl_shm_buffer_get_height (shm_buffer);
-  int32_t stride = wl_shm_buffer_get_stride (shm_buffer);
+  int32_t width = shm_buffer->width;
+  int32_t height = shm_buffer->height;
 
   struct wlr_drm_format_set fmt_set = {};
   wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_INVALID);
@@ -677,7 +678,7 @@ phoc_renderer_render_view_to_buffer (PhocRenderer         *self,
     g_return_val_if_reached (false);
   }
 
-  struct view_render_data render_data ={
+  struct view_render_data render_data = {
     .view = view,
     .width = width,
     .height = height
@@ -687,16 +688,20 @@ phoc_renderer_render_view_to_buffer (PhocRenderer         *self,
   wlr_renderer_clear (self->wlr_renderer, (float[])COLOR_TRANSPARENT);
   wlr_surface_for_each_surface (surface, view_render_iterator, &render_data);
 
-  wl_shm_buffer_begin_access (shm_buffer);
-  void *data = wl_shm_buffer_get_data (shm_buffer);
+  if (!wlr_buffer_begin_data_ptr_access (shm_buffer,
+                                         WLR_BUFFER_DATA_PTR_ACCESS_WRITE,
+                                         &data, &format, &stride)) {
+    return false;
+  }
 
-  wlr_renderer_read_pixels (self->wlr_renderer, DRM_FORMAT_ARGB8888, stride, width, height, 0, 0, 0, 0, data);
+  wlr_renderer_read_pixels (self->wlr_renderer,
+                            DRM_FORMAT_ARGB8888, stride, width, height, 0, 0, 0, 0, data);
   wlr_renderer_end (self->wlr_renderer);
 
   wlr_buffer_drop (buffer);
   wlr_drm_format_set_finish (&fmt_set);
 
-  wl_shm_buffer_end_access(shm_buffer);
+  wlr_buffer_end_data_ptr_access (shm_buffer);
 
   return true;
 }
