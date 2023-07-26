@@ -25,8 +25,13 @@ variables:
   DEPS: git gcovr
   ALPINE_EDGE_DEPS: |
         git meson ninja gnome-desktop-dev gobject-introspection-dev
-        libinput-dev wayland-dev wayland-protocols libxkbcommon-dev wlroots-dev
-        xwayland-dev
+        libinput-dev wayland-dev wayland-protocols libxkbcommon-dev
+        xwayland-dev json-glib-dev
+  ALPINE_EDGE_WLROOTS_DEPS: |
+        eudev-dev ffmpeg-dev glslang libdisplay-info-dev
+        libliftoff-dev mesa-dev pixman-dev vulkan-headers vulkan-loader-dev
+        wayland-dev wayland-protocols xcb-util-image-dev xcb-util-renderutil-dev
+        xcb-util-wm-dev libseat-dev hwdata-dev
   XVFB_RUN: xvfb-run -s -noreset
   DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.20230722
 
@@ -39,13 +44,18 @@ variables:
 
 .before_script_debian: &before_script_debian
   - rm -f ../* || true
+  - echo "deb http://deb.debian.org/debian/ sid main" > /etc/apt/sources.list.d/sid.list
   - eatmydata apt-get -y update
+  - eatmydata apt-get -y install libwayland-dev wayland-protocols
+  - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots eatmydata apt-get -y build-dep .
   - eatmydata apt-get -y install $DEPS xwayland python3-docutils
+  # Don't accidentally pull in system headers
+  - eatmydata apt-get -y remove --purge libwlroots-dev
   - dpkg -l
 
 .before_script_alpine: &before_script_alpine
   - apk -q add alpine-sdk
-  - apk -q add $ALPINE_EDGE_DEPS
+  - apk -q add $ALPINE_EDGE_DEPS $ALPINE_EDGE_WLROOTS_DEPS
 
 .before_script_pureos: &before_script_pureos
   - echo "deb http://repo.pureos.net/pureos octarine main" > /etc/apt/sources.list.d/octarine.list
@@ -57,7 +67,7 @@ build-with-xwayland-debian-bookworm:
   image: ${DEBIAN_IMAGE}
   before_script: *before_script_debian
   variables:
-     BUILD_ARGS: -Dembed-wlroots=disabled -Dxwayland=enabled -Db_coverage=true
+     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true
   <<: *build
   artifacts:
     paths:
@@ -71,7 +81,7 @@ build-with-xwayland-alpinelinux-edge:
   image: alpine:edge
   before_script: *before_script_alpine
   variables:
-     BUILD_ARGS: -Dxwayland=enabled
+     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled
   <<: *build
   allow_failure: true
   except:
@@ -83,7 +93,7 @@ build-without-xwayland-alpinelinux-edge:
   image: alpine:edge
   before_script: *before_script_alpine
   variables:
-     BUILD_ARGS: -Dembed-wlroots=disabled -Dxwayland=disabled
+     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=disabled
   <<: *build
   allow_failure: true
   except:
