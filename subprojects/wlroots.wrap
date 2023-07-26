@@ -1,8 +1,9 @@
 [wrap-git]
 directory=wlroots
 url=https://gitlab.freedesktop.org/wlroots/wlroots
-revision=0.16.2
-depth=1
+revision=2dd95490850c9834091c1d679b78a5af6b520890
+# For release builds
+# depth=1
 
 # Phoc specific patches
 diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch,wlroots/Output-modes-state-before-enable.diff
