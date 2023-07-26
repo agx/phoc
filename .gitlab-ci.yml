@@ -33,7 +33,6 @@ variables:
 .build: &build
   script:
     - export LC_ALL=C.UTF-8
-    - git submodule update --init
     - meson setup _build $BUILD_ARGS
     - meson compile -C _build
     - meson install -C _build
