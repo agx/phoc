@@ -65,12 +65,11 @@ endif
 
 if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots = wlroots_proj.get_variable('wlroots')
-        wlroots_conf = wlroots_proj.get_variable('conf_data')
-        wlroots_has_xwayland = wlroots_conf.get('WLR_HAS_XWAYLAND') == 1
 else
         wlroots = dependency('wlroots', version: '>= 0.16.0')
-        wlroots_has_xwayland = cc.get_define('WLR_HAS_XWAYLAND', prefix: '#include <wlr/config.h>', dependencies: wlroots) == '1'
 endif
+wlroots_has_xwayland = wlroots.get_variable(pkgconfig: 'have_xwayland',
+                                            internal: 'have_xwayland') == 'true'
 
 if get_option('xwayland').enabled() and not wlroots_has_xwayland
         error('Cannot enable Xwayland in phoc: wlroots has been built without Xwayland support')
