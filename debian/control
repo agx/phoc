@@ -21,6 +21,7 @@ Build-Depends:
  libwlroots-dev (>= 0.16.2) <!pkg.phoc.embedwlroots>,
  libwlroots-dev (<< 0.17.0) <!pkg.phoc.embedwlroots>,
 # For wlroots subproject build
+ hwdata <pkg.phoc.embedwlroots>,
  libavcodec-dev <pkg.phoc.embedwlroots>,
  libavformat-dev <pkg.phoc.embedwlroots>,
  libcap-dev <pkg.phoc.embedwlroots>,
@@ -29,6 +30,7 @@ Build-Depends:
  libegl1-mesa-dev <pkg.phoc.embedwlroots>,
  libgbm-dev (>= 17.1.0) <pkg.phoc.embedwlroots>,
  libgles2-mesa-dev <pkg.phoc.embedwlroots>,
+ libliftoff-dev (>= 0.4.1) <pkg.phoc.embedwlroots>,
  libpng-dev <pkg.phoc.embedwlroots>,
  libseat-dev <pkg.phoc.embedwlroots>,
  libsystemd-dev <pkg.phoc.embedwlroots>,
