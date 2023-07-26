@@ -1,0 +1,5 @@
+[wrap-git]
+directory=wlroots
+url=https://source.puri.sm/Librem5/wlroots.git
+revision=librem5-0.16.x
+depth=1
