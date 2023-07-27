@@ -48,7 +48,22 @@ popup_destroy (PhocViewChild *child)
   free (popup);
 }
 
+
+static void
+popup_get_pos (PhocViewChild *child, int *sx, int *sy)
+{
+  PhocXdgPopup *popup = (PhocXdgPopup *)child;
+  struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
+
+  wlr_xdg_popup_get_toplevel_coords (wlr_popup,
+                                     wlr_popup->current.geometry.x - wlr_popup->base->current.geometry.x,
+                                     wlr_popup->current.geometry.y - wlr_popup->base->current.geometry.y,
+                                     sx, sy);
+}
+
+
 static const struct phoc_view_child_interface popup_impl = {
+  .get_pos = popup_get_pos,
   .destroy = popup_destroy,
 };
 

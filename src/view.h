@@ -129,6 +129,7 @@ static inline PhocViewClass * PHOC_VIEW_GET_CLASS (gpointer ptr) {
 typedef struct _PhocViewChild PhocViewChild;
 
 typedef struct phoc_view_child_interface {
+  void (*get_pos)(PhocViewChild *child, int *sx, int *sy);
   void (*destroy)(PhocViewChild *child);
 } PhocViewChildInterface;
 
