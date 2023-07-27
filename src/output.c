@@ -1141,15 +1141,6 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
   wlr_output_schedule_frame (self->wlr_output);
 }
 
-void
-phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *surface, double ox,
-                                        double oy)
-{
-  bool whole = true;
-
-  phoc_output_surface_for_each_surface (self, surface, ox, oy,
-                                        damage_surface_iterator, &whole);
-}
 
 static void
 damage_whole_view (PhocOutput *self, PhocView  *view)
@@ -1198,6 +1189,18 @@ phoc_output_damage_whole_drag_icon (PhocOutput *self, PhocDragIcon *icon)
 
   phoc_output_surface_for_each_surface (self, icon->wlr_drag_icon->surface,
                                         icon->x, icon->y,
+                                        damage_surface_iterator, &whole);
+}
+
+void
+phoc_output_damage_whole_local_surface (PhocOutput         *self,
+                                        struct wlr_surface *surface,
+                                        double              ox,
+                                        double              oy)
+{
+  bool whole = true;
+
+  phoc_output_surface_for_each_surface (self, surface, ox, oy,
                                         damage_surface_iterator, &whole);
 }
 
