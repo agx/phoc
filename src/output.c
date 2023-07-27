@@ -96,6 +96,11 @@ phoc_output_frame_callback_info_free (PhocOutputFrameCallbackInfo *cb_info)
   g_free (cb_info);
 }
 
+/**
+ * get_surface_box:
+ *
+ * Returns: `true` if the resulting box intersects with the output
+ */
 static bool
 get_surface_box (PhocOutputSurfaceIteratorData *data,
                  struct wlr_surface *surface, int sx, int sy,
@@ -133,8 +138,7 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
 
   struct wlr_box output_box = {0};
 
-  wlr_output_effective_resolution (self->wlr_output,
-                                   &output_box.width, &output_box.height);
+  wlr_output_effective_resolution (self->wlr_output, &output_box.width, &output_box.height);
   phoc_output_scale_box (self, &output_box, 1 / data->scale);
 
   struct wlr_box intersection;
@@ -1480,7 +1484,12 @@ phoc_output_remove_frame_callbacks_by_animatable (PhocOutput *self, PhocAnimatab
   } while (found);
 }
 
-
+/**
+ * phoc_output_has_frame_callbacks:
+ * @self: The output to look at
+ *
+ * Returns: `true` if the output has any frame callbacks attached
+ */
 bool
 phoc_output_has_frame_callbacks (PhocOutput *self)
 {
@@ -1492,7 +1501,13 @@ phoc_output_has_frame_callbacks (PhocOutput *self)
   return !!priv->frame_callbacks;
 }
 
-
+/**
+ * phoc_output_lower_shield:
+ * @self: The output lower the shield for
+ *
+ * Lowers an output shield that is in place to hide
+ * the outputs current content.
+ */
 void
 phoc_output_lower_shield (PhocOutput *self)
 {
@@ -1507,7 +1522,13 @@ phoc_output_lower_shield (PhocOutput *self)
   phoc_output_shield_lower (priv->shield);
 }
 
-
+/**
+ * phoc_output_lower_shield:
+ * @self: The output lower the shield for
+ *
+ * Raise an output shield will be put in place to hide the outputs
+ * current content.
+ */
 void
 phoc_output_raise_shield (PhocOutput *self)
 {
