@@ -39,7 +39,7 @@ static void
 popup_destroy (PhocViewChild *child)
 {
   g_assert (child->impl == &popup_impl);
-  struct phoc_xdg_popup *popup = (struct phoc_xdg_popup *)child;
+  PhocXdgPopup *popup = (PhocXdgPopup *)child;
 
   wl_list_remove (&popup->destroy.link);
   wl_list_remove (&popup->new_popup.link);
@@ -55,7 +55,7 @@ static const struct phoc_view_child_interface popup_impl = {
 static void
 popup_handle_destroy (struct wl_listener *listener, void *data)
 {
-  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, destroy);
+  PhocXdgPopup *popup = wl_container_of (listener, popup, destroy);
 
   phoc_view_child_destroy (&popup->child);
 }
@@ -64,7 +64,7 @@ static void
 popup_handle_map (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, map);
+  PhocXdgPopup *popup = wl_container_of (listener, popup, map);
 
   phoc_view_child_damage_whole (&popup->child);
   phoc_input_update_cursor_focus (server->input);
@@ -75,7 +75,7 @@ static void
 popup_handle_unmap (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, unmap);
+  PhocXdgPopup *popup = wl_container_of (listener, popup, unmap);
 
   phoc_view_child_damage_whole (&popup->child);
   phoc_input_update_cursor_focus (server->input);
@@ -86,7 +86,7 @@ popup_handle_unmap (struct wl_listener *listener, void *data)
 static void
 popup_handle_new_popup (struct wl_listener *listener, void *data)
 {
-  struct phoc_xdg_popup *popup = wl_container_of (listener, popup, new_popup);
+  PhocXdgPopup *popup = wl_container_of (listener, popup, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
 
   phoc_xdg_popup_create (popup->child.view, wlr_popup);
@@ -127,7 +127,7 @@ popup_unconstrain (PhocXdgPopup* popup)
 PhocXdgPopup *
 phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
 {
-  struct phoc_xdg_popup *popup = calloc (1, sizeof(struct phoc_xdg_popup));
+  PhocXdgPopup *popup = calloc (1, sizeof(PhocXdgPopup));
 
   if (popup == NULL) {
     return NULL;
