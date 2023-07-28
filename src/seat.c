@@ -45,7 +45,11 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
-G_DEFINE_TYPE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
+typedef struct _PhocSeatPrivate {
+  PhocInput             *input;
+} PhocSeatPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
 
 
 static void
@@ -55,11 +59,12 @@ phoc_seat_set_property (GObject      *object,
                          GParamSpec   *pspec)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   switch (property_id) {
   case PROP_INPUT:
     /* Don't hold a ref since the input object "owns" the seat */
-    self->input = g_value_get_object (value);
+    priv->input = g_value_get_object (value);
     break;
   case PROP_NAME:
     self->name = g_value_dup_string (value);
@@ -78,10 +83,11 @@ phoc_seat_get_property (GObject    *object,
                         GParamSpec *pspec)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   switch (property_id) {
   case PROP_INPUT:
-    g_value_set_object (value, self->input);
+    g_value_set_object (value, priv->input);
     break;
   case PROP_NAME:
     g_value_set_string (value, self->name);
@@ -1485,6 +1491,11 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
 void
 phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
 {
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
   if (view && !phoc_seat_allow_input (seat, view->wlr_surface->resource)) {
     return;
   }
@@ -1556,7 +1567,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   seat->has_focus = false;
 
   // Deactivate the old view if it is not focused by some other seat
-  if (prev_focus != NULL && !phoc_input_view_has_focus (seat->input, prev_focus)) {
+  if (prev_focus != NULL && !phoc_input_view_has_focus (priv->input, prev_focus)) {
     phoc_view_activate (prev_focus, false);
   }
 

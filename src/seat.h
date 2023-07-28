@@ -35,7 +35,6 @@ typedef struct _PhocTablet PhocTablet;
 typedef struct _PhocSeat {
   GObject                         parent;
 
-  PhocInput                      *input;
   char                           *name;
 
   struct wlr_seat                *seat;
