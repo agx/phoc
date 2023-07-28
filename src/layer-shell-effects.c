@@ -103,7 +103,6 @@ struct _PhocAlphaLayerSurface {
 struct _PhocLayerShellEffects {
   GObject             parent;
 
-  guint32             version;
   struct wl_global   *global;
   GSList             *resources;
   GSList             *drag_surfaces;
@@ -659,7 +658,6 @@ layer_shell_effects_bind (struct wl_client *client, void *data, uint32_t version
                                   layer_shell_effects_handle_resource_destroy);
 
   self->resources = g_slist_prepend (self->resources, resource);
-  self->version = version;
   return;
 }
 
