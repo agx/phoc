@@ -1010,6 +1010,8 @@ seat_add_switch (PhocSeat *self, struct wlr_input_device *device)
                            G_CALLBACK (on_switch_toggled),
                            self,
                            G_CONNECT_SWAPPED);
+
+  seat_update_capabilities (self);
 }
 
 static void
