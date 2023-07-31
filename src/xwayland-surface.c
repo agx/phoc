@@ -237,6 +237,16 @@ set_fullscreen(PhocView *view, bool fullscreen)
   wlr_xwayland_surface_set_fullscreen (xwayland_surface, fullscreen);
 }
 
+
+static pid_t
+get_pid (PhocView *view)
+{
+  PhocXWaylandSurface *self = PHOC_XWAYLAND_SURFACE (view);
+
+  return self->xwayland_surface->pid;
+}
+
+
 static void
 phoc_xwayland_surface_set_property (GObject      *object,
                                     guint         property_id,
@@ -557,6 +567,7 @@ phoc_xwayland_surface_class_init (PhocXWaylandSurfaceClass *klass)
   view_class->set_fullscreen = set_fullscreen;
   view_class->set_maximized = set_maximized;
   view_class->close = _close;
+  view_class->get_pid = get_pid;
 
   /**
    * PhocXWaylandSurface:wlr-xwayland-surface:

@@ -288,6 +288,21 @@ get_wlr_surface_at (PhocView *self, double sx, double sy, double *sub_x, double 
 }
 
 
+static pid_t
+get_pid (PhocView *view)
+{
+  PhocXdgSurface *self = PHOC_XDG_SURFACE (view);
+  struct wl_client *client;
+  pid_t pid;
+
+  g_assert (self->xdg_surface);
+  client = wl_resource_get_client (self->xdg_surface->resource);
+
+  wl_client_get_credentials (client, &pid, NULL, NULL);
+
+  return pid;
+}
+
 static void
 handle_surface_commit (struct wl_listener *listener, void *data)
 {
@@ -612,6 +627,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
   view_class->for_each_surface = for_each_surface;
   view_class->get_geometry = get_geometry;
   view_class->get_wlr_surface_at = get_wlr_surface_at;
+  view_class->get_pid = get_pid;
 
   /**
    * PhocXdgSurface:wlr-xdg-surface:
