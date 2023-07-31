@@ -96,6 +96,11 @@ phoc_output_frame_callback_info_free (PhocOutputFrameCallbackInfo *cb_info)
   g_free (cb_info);
 }
 
+/**
+ * get_surface_box:
+ *
+ * Returns: `true` if the resulting box intersects with the output
+ */
 static bool
 get_surface_box (PhocOutputSurfaceIteratorData *data,
                  struct wlr_surface *surface, int sx, int sy,
@@ -133,8 +138,7 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
 
   struct wlr_box output_box = {0};
 
-  wlr_output_effective_resolution (self->wlr_output,
-                                   &output_box.width, &output_box.height);
+  wlr_output_effective_resolution (self->wlr_output, &output_box.width, &output_box.height);
   phoc_output_scale_box (self, &output_box, 1 / data->scale);
 
   struct wlr_box intersection;
@@ -782,10 +786,8 @@ phoc_output_view_for_each_surface (PhocOutput          *self,
   struct wlr_box output_box;
   wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
 
-
-  if (wlr_box_empty (&output_box)) {
+  if (wlr_box_empty (&output_box))
     return;
-  }
 
   PhocOutputSurfaceIteratorData data = {
     .user_iterator = iterator,
@@ -821,9 +823,8 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
   struct wlr_box output_box;
   wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
 
-  if (wlr_box_empty (&output_box)) {
+  if (wlr_box_empty (&output_box))
     return;
-  }
 
   struct wlr_xwayland_surface *child;
 
@@ -968,18 +969,16 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
   struct wlr_box output_box;
   wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
 
-  if (wlr_box_empty (&output_box)) {
+  if (wlr_box_empty (&output_box))
     return;
-  }
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (seat));
     PhocDragIcon *drag_icon = seat->drag_icon;
-    if (!drag_icon || !drag_icon->wlr_drag_icon->mapped) {
+    if (!drag_icon || !drag_icon->wlr_drag_icon->mapped)
       continue;
-    }
 
     double ox = drag_icon->x - output_box.x;
     double oy = drag_icon->y - output_box.y;
@@ -1020,11 +1019,9 @@ phoc_output_for_each_surface (PhocOutput          *self,
 #endif
   } else {
     PhocView *view;
-    wl_list_for_each_reverse (view, &desktop->views, link)
-    {
-      if (!visible_only || phoc_desktop_view_is_visible (desktop, view)) {
+    wl_list_for_each_reverse (view, &desktop->views, link) {
+      if (!visible_only || phoc_desktop_view_is_visible (desktop, view))
         phoc_output_view_for_each_surface (self, view, iterator, user_data);
-      }
     }
   }
 
@@ -1148,15 +1145,6 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
   wlr_output_schedule_frame (self->wlr_output);
 }
 
-void
-phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *surface, double ox,
-                                        double oy)
-{
-  bool whole = true;
-
-  phoc_output_surface_for_each_surface (self, surface, ox, oy,
-                                        damage_surface_iterator, &whole);
-}
 
 static void
 damage_whole_view (PhocOutput *self, PhocView  *view)
@@ -1209,6 +1197,18 @@ phoc_output_damage_whole_drag_icon (PhocOutput *self, PhocDragIcon *icon)
 }
 
 void
+phoc_output_damage_whole_local_surface (PhocOutput         *self,
+                                        struct wlr_surface *surface,
+                                        double              ox,
+                                        double              oy)
+{
+  bool whole = true;
+
+  phoc_output_surface_for_each_surface (self, surface, ox, oy,
+                                        damage_surface_iterator, &whole);
+}
+
+void
 phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_surface
                                        *surface, double ox, double oy)
 {
@@ -1221,8 +1221,7 @@ phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_surface
 void
 handle_output_manager_apply (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop =
-    wl_container_of (listener, desktop, output_manager_apply);
+  PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
 
   bool ok = true;
@@ -1468,7 +1467,7 @@ find_cb_by_animatable (PhocOutputFrameCallbackInfo *info,  PhocAnimatable *anima
  * Remove all frame callbacks for the given #PhocAnimatable.
  */
 void
-phoc_output_remove_frame_callbacks_by_animatable  (PhocOutput *self, PhocAnimatable *animatable)
+phoc_output_remove_frame_callbacks_by_animatable (PhocOutput *self, PhocAnimatable *animatable)
 {
   PhocOutputPrivate *priv;
   GSList *found;
@@ -1485,9 +1484,14 @@ phoc_output_remove_frame_callbacks_by_animatable  (PhocOutput *self, PhocAnimata
   } while (found);
 }
 
-
+/**
+ * phoc_output_has_frame_callbacks:
+ * @self: The output to look at
+ *
+ * Returns: `true` if the output has any frame callbacks attached
+ */
 bool
-phoc_output_has_frame_callbacks  (PhocOutput *self)
+phoc_output_has_frame_callbacks (PhocOutput *self)
 {
   PhocOutputPrivate *priv;
 
@@ -1497,7 +1501,13 @@ phoc_output_has_frame_callbacks  (PhocOutput *self)
   return !!priv->frame_callbacks;
 }
 
-
+/**
+ * phoc_output_lower_shield:
+ * @self: The output lower the shield for
+ *
+ * Lowers an output shield that is in place to hide
+ * the outputs current content.
+ */
 void
 phoc_output_lower_shield (PhocOutput *self)
 {
@@ -1512,7 +1522,13 @@ phoc_output_lower_shield (PhocOutput *self)
   phoc_output_shield_lower (priv->shield);
 }
 
-
+/**
+ * phoc_output_lower_shield:
+ * @self: The output lower the shield for
+ *
+ * Raise an output shield will be put in place to hide the outputs
+ * current content.
+ */
 void
 phoc_output_raise_shield (PhocOutput *self)
 {
@@ -1590,7 +1606,6 @@ should_reveal_shell (PhocOutput *self)
   return priv->force_shell_reveal;
 }
 
-
 /**
  * phoc_output_update_shell_reveal:
  * @self: The #PhocOutput
@@ -1613,7 +1628,6 @@ phoc_output_update_shell_reveal (PhocOutput *self)
   }
 }
 
-
 /**
  * phoc_output_force_shell_reveal:
  * @self: The #PhocOutput
@@ -1632,7 +1646,6 @@ phoc_output_force_shell_reveal (PhocOutput *self, gboolean force)
   priv->force_shell_reveal = force;
   phoc_output_update_shell_reveal (self);
 }
-
 
 /**
  * phoc_output_has_shell_revealed:

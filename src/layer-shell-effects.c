@@ -423,16 +423,6 @@ alpha_layer_surface_handle_destroy (struct wl_listener *listener, void *data)
 }
 
 
-/*
- * TODO: Use wlr_layer_surface_v1_from_resource instead
- *  https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/3480
- */
-static struct wlr_layer_surface_v1*
-phoc_wlr_layer_surface_from_resource (struct wl_resource *resource)
-{
-  return wl_resource_get_user_data (resource);
-}
-
 static void
 draggable_layer_surface_handle_destroy (struct wl_listener *listener, void *data)
 {
@@ -530,7 +520,7 @@ handle_get_draggable_layer_surface (struct wl_client   *client,
 
   self = phoc_layer_shell_effects_from_resource (layer_shell_effects_resource);
   g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (self));
-  wlr_layer_surface = phoc_wlr_layer_surface_from_resource (layer_surface_resource);
+  wlr_layer_surface = wlr_layer_surface_v1_from_resource (layer_surface_resource);
   wlr_surface = wlr_layer_surface->surface;
   g_assert (wlr_surface);
 
@@ -590,7 +580,7 @@ handle_get_alpha_layer_surface (struct wl_client   *client,
 
   self = phoc_layer_shell_effects_from_resource (layer_shell_effects_resource);
   g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (self));
-  wlr_layer_surface = phoc_wlr_layer_surface_from_resource (layer_surface_resource);
+  wlr_layer_surface = wlr_layer_surface_v1_from_resource (layer_surface_resource);
   wlr_surface = wlr_layer_surface->surface;
   g_assert (wlr_surface);
 
