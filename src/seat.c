@@ -1218,6 +1218,8 @@ on_tablet_destroy (PhocSeat *seat, PhocTablet *tablet)
   PhocDesktop *desktop = server->desktop;
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
+  g_assert (PHOC_IS_TABLET (tablet));
+  g_debug ("Removing tablet device: %s", device->name);
   wlr_cursor_detach_input_device (seat->cursor->cursor, device);
   g_hash_table_remove (seat->input_mapping_settings, tablet);
   g_hash_table_remove (desktop->input_output_map, device->name);
