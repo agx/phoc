@@ -1,19 +1,17 @@
 #pragma once
 
 #include "input.h"
+#include "input-device.h"
+
+#include <gio/gio.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
-typedef struct phoc_switch {
-  PhocSeat *seat;
-  struct wlr_input_device *device;
-  struct wl_listener device_destroy;
+#define PHOC_TYPE_SWITCH (phoc_switch_get_type ())
 
-  struct wl_listener toggle;
-  struct wl_list link;
-} PhocSwitch;
+G_DECLARE_FINAL_TYPE (PhocSwitch, phoc_switch, PHOC, SWITCH, PhocInputDevice);
 
-void phoc_switch_handle_toggle(struct phoc_switch *switch_device,
-                               struct wlr_switch_toggle_event *event);
+PhocSwitch *phoc_switch_new (struct wlr_input_device *device, PhocSeat *seat);
 
 G_END_DECLS

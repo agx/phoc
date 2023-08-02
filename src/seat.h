@@ -9,7 +9,6 @@
 #include <wayland-server-core.h>
 #include "input.h"
 #include "layers.h"
-#include "switch.h"
 #include "text_input.h"
 
 #include <glib-object.h>
@@ -61,7 +60,7 @@ typedef struct _PhocSeat {
 
   GSList                         *keyboards; /* PhocKeyboard */
   GSList                         *pointers;  /* PhocPointer */
-  struct wl_list                  switches;
+  GSList                         *switches;  /* PhocSwitch */
   GSList                         *touch;     /* PhocTouch */
   GSList                         *tablets;   /* PhocTablet */
   struct wl_list                  tablet_pads;

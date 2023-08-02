@@ -5,7 +5,6 @@
 
 #include <xf86drmMode.h>
 #include <wlr/types/wlr_input_device.h>
-#include <wlr/types/wlr_switch.h>
 #include <wlr/types/wlr_output_layout.h>
 
 G_BEGIN_DECLS
