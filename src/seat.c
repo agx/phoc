@@ -845,22 +845,22 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
 
 
 static void
-seat_update_capabilities (PhocSeat *seat)
+seat_update_capabilities (PhocSeat *self)
 {
   uint32_t caps = 0;
 
-  if (seat->keyboards != NULL) {
+  if (self->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
-  if (seat->pointers != NULL) {
+  if (self->pointers != NULL) {
     caps |= WL_SEAT_CAPABILITY_POINTER;
   }
-  if (seat->touch != NULL) {
+  if (self->touch != NULL) {
     caps |= WL_SEAT_CAPABILITY_TOUCH;
   }
-  wlr_seat_set_capabilities (seat->seat, caps);
+  wlr_seat_set_capabilities (self->seat, caps);
 
-  phoc_seat_maybe_set_cursor (seat, seat->cursor->default_xcursor);
+  phoc_seat_maybe_set_cursor (self, self->cursor->default_xcursor);
 }
 
 
