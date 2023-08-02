@@ -4,6 +4,7 @@
 
 #include "switch.h"
 
+#include <wlr/backend/libinput.h>
 #include <wlr/types/wlr_switch.h>
 
 enum {
@@ -98,4 +99,31 @@ phoc_switch_new (struct wlr_input_device *device, PhocSeat *seat)
                        "device", device,
                        "seat", seat,
                        NULL);
+}
+
+
+gboolean
+phoc_input_device_has_tablet_mode_switch (PhocSwitch *self)
+{
+  struct libinput_device *ldev;
+
+  if (!phoc_input_device_get_is_libinput (PHOC_INPUT_DEVICE (self)))
+    return FALSE;
+
+  ldev = phoc_input_device_get_libinput_device_handle (PHOC_INPUT_DEVICE (self));
+
+  return libinput_device_switch_has_switch (ldev, LIBINPUT_SWITCH_TABLET_MODE) > 0;
+}
+
+gboolean
+phoc_input_device_has_lid_switch (PhocSwitch *self)
+{
+  struct libinput_device *ldev;
+
+  if (!phoc_input_device_get_is_libinput (PHOC_INPUT_DEVICE (self)))
+    return FALSE;
+
+  ldev = phoc_input_device_get_libinput_device_handle (PHOC_INPUT_DEVICE (self));
+
+  return libinput_device_switch_has_switch (ldev, LIBINPUT_SWITCH_LID) > 0;
 }

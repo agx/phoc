@@ -12,6 +12,9 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocSwitch, phoc_switch, PHOC, SWITCH, PhocInputDevice);
 
-PhocSwitch *phoc_switch_new (struct wlr_input_device *device, PhocSeat *seat);
+PhocSwitch             *phoc_switch_new                            (struct wlr_input_device *device,
+                                                                    PhocSeat                *seat);
+gboolean                phoc_input_device_has_tablet_mode_switch   (PhocSwitch              *self);
+gboolean                phoc_input_device_has_lid_switch           (PhocSwitch              *self);
 
 G_END_DECLS
