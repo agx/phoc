@@ -27,7 +27,19 @@
 
   <interface name="zphoc_layer_shell_effects_v1" version="2">
     <description summary="Adjust properties of layer surfaces">
-      Assigns additional features to layer surfaces
+      Assigns additional features to layer surfaces such as opacity or gestures interaction.
+
+      Warning! The protocol described in this file is experimental and
+      backward incompatible changes may be made. Backward compatible changes
+      may be added together with the corresponding interface version bump.
+      Backward incompatible changes are done by bumping the version number in
+      the protocol and interface names and resetting the interface version.
+      Once the protocol is to be declared stable, the 'z' prefix and the
+      version number in the protocol and interface names are removed and the
+      interface version number is reset.
+
+      This protocol is meant to collect necessary bits before we propose an
+      upstream solution.
     </description>
 
     <enum name="error">
