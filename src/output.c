@@ -26,6 +26,7 @@
 #include "render-private.h"
 #include "seat.h"
 #include "server.h"
+#include "text_input.h"
 #include "utils.h"
 #include "xwayland-surface.h"
 
