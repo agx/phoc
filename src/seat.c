@@ -991,19 +991,18 @@ on_switch_destroy (PhocSwitch *switch_)
 }
 
 static void
-seat_add_switch (PhocSeat                *seat,
-                 struct wlr_input_device *device)
+seat_add_switch (PhocSeat *self, struct wlr_input_device *device)
 {
-  PhocSwitch *switch_ = phoc_switch_new (device, seat);
+  PhocSwitch *switch_ = phoc_switch_new (device, self);
 
-  seat->switches = g_slist_prepend (seat->switches, switch_);
+  self->switches = g_slist_prepend (self->switches, switch_);
   g_signal_connect (switch_, "device-destroy",
                     G_CALLBACK (on_switch_destroy),
                     NULL);
 
   g_signal_connect_object (switch_, "toggled",
                            G_CALLBACK (on_switch_toggled),
-                           seat,
+                           self,
                            G_CONNECT_SWAPPED);
 }
 
