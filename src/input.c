@@ -145,31 +145,6 @@ phoc_input_new (void)
   return g_object_new (PHOC_TYPE_INPUT, NULL);
 }
 
-
-/**
- * phoc_input_seat_from_wlr_seat:
- * @self: The input
- * @wlr_seat: The wlr_seat
- *
- * Returns: (nullable)(transfer none): The [class@Seat] associated with the given wlr_seat
- */
-PhocSeat *
-phoc_input_seat_from_wlr_seat (PhocInput       *self,
-                               struct wlr_seat *wlr_seat)
-{
-  g_assert (PHOC_IS_INPUT (self));
-
-  for (GSList *elem = phoc_input_get_seats (self); elem; elem = elem->next) {
-    PhocSeat *seat = PHOC_SEAT (elem->data);
-
-    g_assert (PHOC_IS_SEAT (seat));
-    if (seat->seat == wlr_seat) {
-      return seat;
-    }
-  }
-  return NULL;
-}
-
 bool
 phoc_input_view_has_focus (PhocInput *self, PhocView *view)
 {

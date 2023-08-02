@@ -2035,3 +2035,15 @@ phoc_seat_has_keyboard (PhocSeat *self)
   g_assert (self->seat);
   return (self->seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD);
 }
+
+/**
+ * phoc_seat_from_wlr_seat:
+ * @wlr_seat: The wlr_seat
+ *
+ * Returns: (transfer none): The [class@Seat] associated with the given wlr_seat
+ */
+PhocSeat *
+phoc_seat_from_wlr_seat (struct wlr_seat *wlr_seat)
+{
+  return PHOC_SEAT (wlr_seat->data);
+}

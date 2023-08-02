@@ -393,11 +393,9 @@ handle_unmap (struct wl_listener *listener, void *data)
 static void
 handle_request_move (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
   PhocXdgSurface *self = wl_container_of (listener, self, request_move);
-  PhocInput *input = server->input;
   struct wlr_xdg_toplevel_move_event *e = data;
-  PhocSeat *seat = phoc_input_seat_from_wlr_seat (input, e->seat->seat);
+  PhocSeat *seat = phoc_seat_from_wlr_seat (e->seat->seat);
 
   // TODO verify event serial
   if (!seat || phoc_seat_get_cursor (seat)->mode != PHOC_CURSOR_PASSTHROUGH)
@@ -410,11 +408,9 @@ handle_request_move (struct wl_listener *listener, void *data)
 static void
 handle_request_resize (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
   PhocXdgSurface *self = wl_container_of (listener, self, request_resize);
-  PhocInput *input = server->input;
   struct wlr_xdg_toplevel_resize_event *e = data;
-  PhocSeat *seat = phoc_input_seat_from_wlr_seat (input, e->seat->seat);
+  PhocSeat *seat = phoc_seat_from_wlr_seat (e->seat->seat);
 
   // TODO verify event serial
   g_assert (seat);

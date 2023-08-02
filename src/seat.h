@@ -137,6 +137,7 @@ typedef struct PhocPointerConstraint {
 
 
 PhocSeat          *phoc_seat_new (PhocInput *input, const char *name);
+PhocSeat          *phoc_seat_from_wlr_seat (struct wlr_seat *wlr_seat);
 
 void               phoc_seat_add_device (PhocSeat                *seat,
                                          struct wlr_input_device *device);
