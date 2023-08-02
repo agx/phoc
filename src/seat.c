@@ -1948,6 +1948,11 @@ phoc_seat_finalize (GObject *object)
   wlr_seat_destroy (self->seat);
   g_clear_pointer (&self->name, g_free);
 
+  g_clear_pointer (&self->keyboards, g_slist_free);
+  g_clear_pointer (&self->pointers, g_slist_free);
+  g_clear_pointer (&self->touch, g_slist_free);
+  g_clear_pointer (&self->tablets, g_slist_free);
+
   G_OBJECT_CLASS (phoc_seat_parent_class)->finalize (object);
 }
 
