@@ -56,6 +56,7 @@ typedef struct _PhocViewPrivate {
   gulong         notify_scale_to_fit_id;
   gboolean       scale_to_fit;
   char          *activation_token;
+  int            activation_token_type;
 
   /* wlr-toplevel-management handling */
   struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
@@ -1964,7 +1965,7 @@ phoc_view_get_scale_to_fit (PhocView *self)
  * once mapped. It will be cleared once the view got activated.
  */
 void
-phoc_view_set_activation_token (PhocView *self, const char* token)
+phoc_view_set_activation_token (PhocView *self, const char *token, int type)
 {
   PhocViewPrivate *priv;
 
@@ -1976,6 +1977,7 @@ phoc_view_set_activation_token (PhocView *self, const char* token)
 
   g_free (priv->activation_token);
   priv->activation_token = g_strdup (token);
+  priv->activation_token_type = type;
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVATION_TOKEN]);
 }
 
@@ -2017,8 +2019,8 @@ phoc_view_flush_activation_token (PhocView *self)
 
   phoc_phosh_private_notify_startup_id (phoc_server_get_default()->desktop->phosh,
                                         priv->activation_token,
-                                        PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
-  phoc_view_set_activation_token (self, NULL);
+                                        priv->activation_token_type);
+  phoc_view_set_activation_token (self, NULL, -1);
 }
 
 /**

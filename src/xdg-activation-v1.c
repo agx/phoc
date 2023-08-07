@@ -42,7 +42,7 @@ phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
   if (view == NULL)
     return;
 
-  phoc_view_set_activation_token (view, token->token);
+  phoc_view_set_activation_token (view, token->token, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
   if (phoc_view_is_mapped (view)) {
     PhocSeat *seat = token->seat ? PHOC_SEAT (token->seat->data) :
       phoc_server_get_last_active_seat (phoc_server_get_default ());
