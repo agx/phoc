@@ -1493,9 +1493,6 @@ phoc_view_set_property (GObject      *object,
   case PROP_SCALE_TO_FIT:
     phoc_view_set_scale_to_fit (self, g_value_get_boolean (value));
     break;
-  case PROP_ACTIVATION_TOKEN:
-    phoc_view_set_activation_token (self, g_value_get_string (value));
-    break;
   case PROP_ALPHA:
     phoc_view_set_alpha (self, g_value_get_float (value));
     break;
@@ -1712,7 +1709,7 @@ phoc_view_class_init (PhocViewClass *klass)
   props[PROP_ACTIVATION_TOKEN] =
     g_param_spec_string ("activation-token", "", "",
                          NULL,
-                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
   /**
    * PhocView:is-mapped:
    *
