@@ -337,13 +337,6 @@ phoc_view_activate (PhocView *self, bool activate)
   if (activate && view_is_fullscreen (self)) {
     phoc_output_force_shell_reveal (priv->fullscreen_output, false);
   }
-
-  if (priv->activation_token) {
-    phoc_phosh_private_notify_startup_id (phoc_server_get_default()->desktop->phosh,
-                                          priv->activation_token,
-                                          PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
-    phoc_view_set_activation_token (self, NULL);
-  }
 }
 
 static void
@@ -1069,11 +1062,6 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
                               "notify::scale-to-fit",
                               G_CALLBACK (on_global_scale_to_fit_changed),
                               self);
-
-
-  /* Process pending activation */
-  if (priv->activation_token)
-    phoc_view_activate (self, TRUE);
 
   if (phoc_desktop_get_enable_animations (self->desktop)
       && self->parent == NULL

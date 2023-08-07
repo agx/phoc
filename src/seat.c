@@ -1567,8 +1567,13 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     return;
   }
 
+  /* Next view to receive focus */
   wl_list_remove (&seat_view->link);
   wl_list_insert (&seat->views, &seat_view->link);
+
+  /* Flush the token early as a layer surface might have focus */
+  if (phoc_view_get_activation_token (view))
+    phoc_view_flush_activation_token (view);
 
   if (seat->focused_layer) {
     return;

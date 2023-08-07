@@ -20,7 +20,6 @@ void
 phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
                                                 void               *data)
 {
-  PhocServer *server = phoc_server_get_default ();
   const struct wlr_xdg_activation_v1_request_activate_event *event = data;
   const struct wlr_xdg_activation_token_v1 *token = event->token;
   struct wlr_xdg_surface *xdg_surface;
@@ -43,14 +42,14 @@ phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
   if (view == NULL)
     return;
 
+  phoc_view_set_activation_token (view, token->token);
   if (phoc_view_is_mapped (view)) {
+    PhocSeat *seat = token->seat ? PHOC_SEAT (token->seat->data) :
+      phoc_server_get_last_active_seat (phoc_server_get_default ());
+
     g_debug ("Activating view %p via token '%s'", view, token->token);
-    phoc_view_activate (view, true);
-    phoc_phosh_private_notify_startup_id (server->desktop->phosh,
-                                          token->token,
-                                          PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
+    phoc_seat_set_focus_view (seat, view);
   } else {
     g_debug ("Setting view %p via token '%s' as pending activation", view, token->token);
-    phoc_view_set_activation_token (view, token->token);
   }
 }
