@@ -1147,15 +1147,10 @@ void view_unmap(PhocView *view) {
 void
 phoc_view_set_initial_focus (PhocView *view)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocInput *input = server->input;
-  // TODO what seat gets focus? the one with the last input event?
-  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
-    PhocSeat *seat = PHOC_SEAT (elem->data);
+  PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
 
-    g_assert (PHOC_IS_SEAT (seat));
-    phoc_seat_set_focus_view (seat, view);
-  }
+  /* This also submits any pending activation tokens */
+  phoc_seat_set_focus_view (seat, view);
 }
 
 /**
