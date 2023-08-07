@@ -2011,6 +2011,29 @@ phoc_view_get_activation_token (PhocView *self)
 }
 
 /**
+ * phoc_view_flush_activation_token:
+ * @self: The view
+ *
+ * Notifies that the compositor handled processing the activation token
+ * and clears it.
+ */
+void
+phoc_view_flush_activation_token (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  g_return_if_fail (priv->activation_token);
+
+  phoc_phosh_private_notify_startup_id (phoc_server_get_default()->desktop->phosh,
+                                        priv->activation_token,
+                                        PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
+  phoc_view_set_activation_token (self, NULL);
+}
+
+/**
  * phoc_view_get_alpha
  * @self: The view
  *
