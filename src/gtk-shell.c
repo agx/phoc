@@ -330,6 +330,7 @@ handle_set_startup_id(struct wl_client *client,
   PhocServer *server = phoc_server_get_default ();
   g_debug ("%s: %s", __func__, startup_id);
 
+  /* TODO: actually activate the corresponding view */
   if (startup_id) {
     phoc_phosh_private_notify_startup_id (server->desktop->phosh,
                                           startup_id,
