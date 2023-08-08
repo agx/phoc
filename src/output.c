@@ -375,15 +375,6 @@ phoc_output_damage_handle_destroy (struct wl_listener *listener,
   wl_list_remove (&self->damage_destroy.link);
 }
 
-static void
-phoc_output_handle_mode (struct wl_listener *listener, void *data)
-{
-  PhocOutput *self = wl_container_of (listener, self, mode);
-
-  phoc_layer_shell_arrange (self);
-  update_output_manager_config (self->desktop);
-}
-
 
 static void
 phoc_output_handle_commit (struct wl_listener *listener, void *data)
@@ -391,7 +382,8 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
   PhocOutput *self = wl_container_of (listener, self, commit);
   struct wlr_output_event_commit *event = data;
 
-  if (event->committed & (WLR_OUTPUT_STATE_TRANSFORM | WLR_OUTPUT_STATE_SCALE)) {
+  if (event->committed & (WLR_OUTPUT_STATE_TRANSFORM | WLR_OUTPUT_STATE_SCALE |
+                          WLR_OUTPUT_STATE_MODE)) {
     phoc_layer_shell_arrange (self);
     update_output_manager_config (self->desktop);
   }
@@ -512,8 +504,6 @@ phoc_output_initable_init (GInitable    *initable,
   wl_signal_add (&self->wlr_output->events.destroy, &self->output_destroy);
   self->enable.notify = phoc_output_handle_enable;
   wl_signal_add (&self->wlr_output->events.enable, &self->enable);
-  self->mode.notify = phoc_output_handle_mode;
-  wl_signal_add (&self->wlr_output->events.mode, &self->mode);
   self->commit.notify = phoc_output_handle_commit;
   wl_signal_add (&self->wlr_output->events.commit, &self->commit);
 
@@ -622,7 +612,6 @@ phoc_output_finalize (GObject *object)
 
   wl_list_remove (&self->link);
   wl_list_remove (&self->enable.link);
-  wl_list_remove (&self->mode.link);
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);
   g_clear_list (&self->debug_touch_points, g_free);
