@@ -503,10 +503,11 @@ static const char *atom_map[XWAYLAND_ATOM_LAST] = {
 	"_NET_WM_WINDOW_TYPE_DIALOG"
 };
 
-static
-void handle_xwayland_ready(struct wl_listener *listener, void *data) {
-  PhocDesktop *desktop = wl_container_of (
-        listener, desktop, xwayland_ready);
+static void
+handle_xwayland_ready (struct wl_listener *listener,
+                       void               *data)
+{
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xwayland_ready);
   xcb_connection_t *xcb_conn = xcb_connect (NULL, NULL);
 
   int err = xcb_connection_has_error (xcb_conn);
@@ -539,10 +540,11 @@ void handle_xwayland_ready(struct wl_listener *listener, void *data) {
   xcb_disconnect (xcb_conn);
 }
 
-static
-void handle_xwayland_remove_startup_id(struct wl_listener *listener, void *data) {
-  PhocDesktop *desktop = wl_container_of (
-        listener, desktop, xwayland_remove_startup_id);
+
+static void
+handle_xwayland_remove_startup_id (struct wl_listener *listener, void *data)
+{
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xwayland_remove_startup_id);
   struct wlr_xwayland_remove_startup_info_event *ev = data;
 
   g_assert (PHOC_IS_DESKTOP (desktop));
