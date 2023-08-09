@@ -538,6 +538,15 @@ handle_xwayland_ready (struct wl_listener *listener,
   }
 
   xcb_disconnect (xcb_conn);
+
+#ifdef PHOC_XWAYLAND
+  if (desktop->xwayland != NULL) {
+    PhocSeat *xwayland_seat = phoc_input_get_seat (phoc_server_get_default ()->input,
+                                                   PHOC_CONFIG_DEFAULT_SEAT_NAME);
+    wlr_xwayland_set_seat (desktop->xwayland, xwayland_seat->seat);
+  }
+#endif
+
 }
 
 

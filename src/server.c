@@ -368,12 +368,6 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   }
 
   g_setenv("WAYLAND_DISPLAY", socket, true);
-#ifdef PHOC_XWAYLAND
-  if (self->desktop->xwayland != NULL) {
-    PhocSeat *xwayland_seat = phoc_input_get_seat(self->input, PHOC_CONFIG_DEFAULT_SEAT_NAME);
-    wlr_xwayland_set_seat(self->desktop->xwayland, xwayland_seat->seat);
-  }
-#endif
 
   if (self->flags & PHOC_SERVER_FLAG_SHELL_MODE) {
     g_message ("Enabling shell mode");
