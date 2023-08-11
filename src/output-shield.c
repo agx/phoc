@@ -41,11 +41,11 @@ struct _PhocOutputShield {
   gulong              render_end_id;
 };
 
-static void phoc_animatable_interface_init (PhocAnimatableInterface *iface);
+static void phoc_output_shield_animatable_interface_init (PhocAnimatableInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (PhocOutputShield, phoc_output_shield, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (PHOC_TYPE_ANIMATABLE,
-                                                phoc_animatable_interface_init))
+                                                phoc_output_shield_animatable_interface_init))
 
 static guint
 phoc_output_shield_add_frame_callback (PhocAnimatable   *iface,
@@ -234,7 +234,7 @@ phoc_output_shield_finalize (GObject *object)
 
 
 static void
-phoc_animatable_interface_init (PhocAnimatableInterface *iface)
+phoc_output_shield_animatable_interface_init (PhocAnimatableInterface *iface)
 {
   iface->add_frame_callback = phoc_output_shield_add_frame_callback;
   iface->remove_frame_callback = phoc_output_shield_remove_frame_callback;
