@@ -224,7 +224,8 @@ collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wl
     g_assert (PHOC_IS_SEAT (seat));
     struct wlr_touch_point *point;
     wl_list_for_each(point, &seat->seat->touch_state.touch_points, link) {
-      if (point->surface != surface) { continue; }
+      if (point->surface != surface)
+        continue;
       struct touch_point_data *touch_point = g_malloc(sizeof(struct touch_point_data));
       touch_point->id = point->touch_id;
       touch_point->x = box.x + point->sx * output->wlr_output->scale * scale;
