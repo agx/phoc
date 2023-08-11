@@ -46,6 +46,7 @@ static guint signals[N_SIGNALS] = { 0 };
 
 typedef struct _PhocOutputPrivate {
   PhocOutputShield *shield;
+  PhocRenderer     *renderer;
 
   GSList *frame_callbacks;
   gint    frame_callback_next_id;
@@ -231,6 +232,7 @@ phoc_output_animatable_interface_init (PhocAnimatableInterface *iface)
 static void
 phoc_output_init (PhocOutput *self)
 {
+  PhocServer *server = phoc_server_get_default ();
   PhocOutputPrivate *priv = phoc_output_get_instance_private(self);
 
   priv->frame_callback_next_id = 1;
@@ -239,6 +241,8 @@ phoc_output_init (PhocOutput *self)
 
   self->debug_touch_points = NULL;
   wl_list_init (&self->layer_surfaces);
+
+  priv->renderer = g_object_ref (phoc_server_get_renderer (server));
 }
 
 PhocOutput *
@@ -329,8 +333,6 @@ phoc_output_damage_handle_frame (struct wl_listener *listener,
 {
   PhocOutput *self = wl_container_of (listener, self, damage_frame);
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
-  PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *renderer = phoc_server_get_renderer (server);
 
   GSList *l = priv->frame_callbacks;
   while (l != NULL) {
@@ -352,7 +354,7 @@ phoc_output_damage_handle_frame (struct wl_listener *listener,
     wlr_output_damage_add_box (self->damage, &box);
   }
 
-  phoc_renderer_render_output (renderer, self);
+  phoc_renderer_render_output (priv->renderer, self);
 
   /* Want frame clock ticking as long as we have frame callbacks */
   if (priv->frame_callbacks)
@@ -621,6 +623,7 @@ phoc_output_finalize (GObject *object)
 
   wl_list_init (&self->layer_surfaces);
 
+  g_clear_object (&priv->renderer);
   g_clear_object (&priv->cutouts);
   g_clear_pointer (&priv->cutouts_texture, wlr_texture_destroy);
   g_clear_signal_handler (&priv->render_cutouts_id, self);
