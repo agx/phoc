@@ -513,10 +513,9 @@ render_touch_point_cb (gpointer data, gpointer user_data)
 static void
 render_touch_points (PhocOutput *output)
 {
-  PhocServer *server = phoc_server_get_default ();
-  if (G_LIKELY (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))) {
+  if (G_LIKELY (output->debug_touch_points == NULL))
     return;
-  }
+
   g_list_foreach (output->debug_touch_points, render_touch_point_cb, output);
 }
 
@@ -539,7 +538,7 @@ damage_touch_point_cb (gpointer data, gpointer user_data)
 static void
 damage_touch_points (PhocOutput *output)
 {
-  if (output->debug_touch_points == NULL)
+  if (G_LIKELY (output->debug_touch_points == NULL))
     return;
 
   g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
