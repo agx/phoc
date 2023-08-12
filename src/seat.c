@@ -683,7 +683,7 @@ phoc_drag_icon_handle_destroy (struct wl_listener *listener,
 
   phoc_drag_icon_damage_whole (icon);
 
-  assert (icon->seat->drag_icon == icon);
+  g_assert (icon->seat->drag_icon == icon);
   icon->seat->drag_icon = NULL;
 
   wl_list_remove (&icon->surface_commit.link);
@@ -745,7 +745,7 @@ phoc_seat_handle_start_drag (struct wl_listener *listener,
   icon->destroy.notify = phoc_drag_icon_handle_destroy;
   wl_signal_add (&wlr_drag_icon->events.destroy, &icon->destroy);
 
-  assert (seat->drag_icon == NULL);
+  g_assert (seat->drag_icon == NULL);
   seat->drag_icon = icon;
 
   phoc_drag_icon_update_position (icon);
@@ -781,7 +781,7 @@ phoc_drag_icon_update_position (PhocDragIcon *icon)
   PhocSeat *seat = icon->seat;
   struct wlr_drag *wlr_drag = icon->wlr_drag_icon->drag;
 
-  assert (wlr_drag != NULL);
+  g_assert (wlr_drag != NULL);
 
   switch (seat->seat->drag->grab_type) {
   case WLR_DRAG_GRAB_KEYBOARD_POINTER:;
@@ -932,7 +932,7 @@ static void
 seat_add_keyboard (PhocSeat                *seat,
                    struct wlr_input_device *device)
 {
-  assert (device->type == WLR_INPUT_DEVICE_KEYBOARD);
+  g_assert (device->type == WLR_INPUT_DEVICE_KEYBOARD);
   PhocKeyboard *keyboard = phoc_keyboard_new (device, seat);
 
   seat->keyboards = g_slist_prepend (seat->keyboards, keyboard);

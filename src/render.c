@@ -392,7 +392,7 @@ scan_out_fullscreen_view (PhocOutput *output)
   }
 
   PhocView *view = output->fullscreen_view;
-  assert (view != NULL);
+  g_assert (view != NULL);
   if (!phoc_view_is_mapped (view)) {
     return false;
   }

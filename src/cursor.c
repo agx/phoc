@@ -1012,7 +1012,7 @@ handle_pointer_motion (struct wl_listener *listener, void *data)
 
   if (self->active_constraint) {
     PhocView *view = self->pointer_view->view;
-    assert (view);
+    g_assert (view);
 
     double lx1 = self->cursor->x;
     double ly1 = self->cursor->y;
@@ -1482,7 +1482,7 @@ handle_constraint_commit (struct wl_listener *listener,
 {
   PhocCursor *self = wl_container_of (listener, self, constraint_commit);
 
-  assert (self->active_constraint->surface == data);
+  g_assert (self->active_constraint->surface == data);
   phoc_cursor_handle_constraint_commit (self);
 }
 
