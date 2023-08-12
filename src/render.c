@@ -174,40 +174,40 @@ scissor_output (struct wlr_output *wlr_output, pixman_box32_t *rect)
 }
 
 
-static void render_texture(struct wlr_output *wlr_output,
-		pixman_region32_t *output_damage, struct wlr_texture *texture,
-		const struct wlr_fbox *src_box, const struct wlr_box *dst_box,
-		const float matrix[static 9],
-		float rotation, float alpha) {
-	struct wlr_box rotated;
-	phoc_utils_rotated_bounds(&rotated, dst_box, rotation);
+static void
+render_texture (struct wlr_output     *wlr_output,
+                pixman_region32_t     *output_damage,
+                struct wlr_texture    *texture,
+                const struct wlr_fbox *src_box,
+                const struct wlr_box  *dst_box,
+                const float            matrix[static 9],
+                float                  rotation,
+                float                  alpha)
+{
+  struct wlr_box rotated;
+  phoc_utils_rotated_bounds (&rotated, dst_box, rotation);
 
-	pixman_region32_t damage;
-	pixman_region32_init(&damage);
-	pixman_region32_union_rect(&damage, &damage, dst_box->x, dst_box->y,
-		dst_box->width, dst_box->height);
-	pixman_region32_intersect(&damage, &damage, output_damage);
-	bool damaged = pixman_region32_not_empty(&damage);
-	if (!damaged) {
-		goto buffer_damage_finish;
-	}
+  pixman_region32_t damage;
+  pixman_region32_init (&damage);
+  pixman_region32_union_rect (&damage, &damage, dst_box->x, dst_box->y, dst_box->width, dst_box->height);
+  pixman_region32_intersect (&damage, &damage, output_damage);
+  bool damaged = pixman_region32_not_empty (&damage);
+  if (!damaged)
+    goto buffer_damage_finish;
 
-	int nrects;
-	pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
-	for (int i = 0; i < nrects; ++i) {
-		scissor_output(wlr_output, &rects[i]);
+  int nrects;
+  pixman_box32_t *rects = pixman_region32_rectangles (&damage, &nrects);
+  for (int i = 0; i < nrects; ++i) {
+    scissor_output (wlr_output, &rects[i]);
 
-		if (src_box != NULL) {
-			wlr_render_subtexture_with_matrix(wlr_output->renderer,
-                                                          texture, src_box, matrix, alpha);
-		} else {
-			wlr_render_texture_with_matrix(wlr_output->renderer,
-                                                       texture, matrix, alpha);
-		}
-	}
+    if (src_box != NULL)
+      wlr_render_subtexture_with_matrix (wlr_output->renderer, texture, src_box, matrix, alpha);
+    else
+      wlr_render_texture_with_matrix (wlr_output->renderer, texture, matrix, alpha);
+  }
 
-buffer_damage_finish:
-	pixman_region32_fini(&damage);
+ buffer_damage_finish:
+  pixman_region32_fini (&damage);
 }
 
 static void
