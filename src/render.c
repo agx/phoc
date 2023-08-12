@@ -42,16 +42,6 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-
-static void wlr_box_from_pixman_box32(struct wlr_box *dest, const pixman_box32_t box) {
-	*dest = (struct wlr_box){
-		.x = box.x1,
-		.y = box.y1,
-		.width = box.x2 - box.x1,
-		.height = box.y2 - box.y1,
-	};
-}
-
 #define TOUCH_POINT_SIZE 20
 #define TOUCH_POINT_BORDER 0.1
 
@@ -112,6 +102,18 @@ struct touch_point_data {
   double x;
   double y;
 };
+
+
+static void
+wlr_box_from_pixman_box32 (struct wlr_box *dest, const pixman_box32_t box)
+{
+  *dest = (struct wlr_box){
+    .x = box.x1,
+    .y = box.y1,
+    .width = box.x2 - box.x1,
+    .height = box.y2 - box.y1,
+  };
+}
 
 
 static void
