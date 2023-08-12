@@ -432,15 +432,18 @@ scan_out_fullscreen_view (PhocOutput *output)
   return wlr_output_commit (wlr_output);
 }
 
-static void render_drag_icons(PhocOutput *output,
-		pixman_region32_t *damage, PhocInput *input) {
-	struct render_data data = {
-		.damage = damage,
-		.alpha = 1.0f,
-	};
-	phoc_output_drag_icons_for_each_surface(output, input,
-		render_surface_iterator, &data);
+
+static void
+render_drag_icons (PhocOutput *output, pixman_region32_t *damage, PhocInput *input)
+{
+  struct render_data data = {
+    .damage = damage,
+    .alpha = 1.0f,
+  };
+
+  phoc_output_drag_icons_for_each_surface (output, input, render_surface_iterator, &data);
 }
+
 
 static void
 color_hsv_to_rgb (float* color)
