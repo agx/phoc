@@ -637,11 +637,18 @@ phoc_renderer_render_view_to_buffer (PhocRenderer         *self,
   return true;
 }
 
-static void surface_send_frame_done_iterator(PhocOutput *output,
-		struct wlr_surface *surface, struct wlr_box *box, float rotation,
-		float scale, void *data) {
-	struct timespec *when = data;
-	wlr_surface_send_frame_done(surface, when);
+
+static void
+surface_send_frame_done_iterator (PhocOutput         *output,
+                                  struct wlr_surface *surface,
+                                  struct wlr_box     *box,
+                                  float               rotation,
+                                  float               scale,
+                                  void               *data)
+{
+  struct timespec *when = data;
+
+  wlr_surface_send_frame_done (surface, when);
 }
 
 
