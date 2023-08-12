@@ -1040,6 +1040,7 @@ handle_pointer_motion (struct wl_listener *listener, void *data)
   phoc_cursor_update_position (self, event->time_msec);
 }
 
+
 static void
 handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 {

@@ -363,72 +363,73 @@ static void count_surface_iterator (PhocOutput         *output,
 }
 
 
-static bool scan_out_fullscreen_view(PhocOutput *output) {
-	struct wlr_output *wlr_output = output->wlr_output;
-	PhocServer *server = phoc_server_get_default ();
+static bool
+scan_out_fullscreen_view (PhocOutput *output)
+{
+  struct wlr_output *wlr_output = output->wlr_output;
+  PhocServer *server = phoc_server_get_default ();
 
-	for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
-		PhocSeat *seat = PHOC_SEAT (elem->data);
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
 
-		g_assert (PHOC_IS_SEAT (seat));
-		PhocDragIcon *drag_icon = seat->drag_icon;
-		if (drag_icon && drag_icon->wlr_drag_icon->mapped) {
-			return false;
-		}
-	}
+    g_assert (PHOC_IS_SEAT (seat));
+    PhocDragIcon *drag_icon = seat->drag_icon;
+    if (drag_icon && drag_icon->wlr_drag_icon->mapped) {
+      return false;
+    }
+  }
 
-	if (phoc_output_has_layer (output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
-		return false;
+  if (phoc_output_has_layer (output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
+    return false;
 
-	struct wlr_output_cursor *cursor;
-	wl_list_for_each(cursor, &wlr_output->cursors, link) {
-		if (cursor->enabled && cursor->visible &&
-				wlr_output->hardware_cursor != cursor) {
-			return false;
-		}
-	}
+  struct wlr_output_cursor *cursor;
+  wl_list_for_each (cursor, &wlr_output->cursors, link) {
+    if (cursor->enabled && cursor->visible && wlr_output->hardware_cursor != cursor)
+      return false;
+  }
 
-	PhocView *view = output->fullscreen_view;
-	assert(view != NULL);
-	if (!phoc_view_is_mapped (view)) {
-		return false;
-	}
-	size_t n_surfaces = 0;
-	phoc_output_view_for_each_surface(output, view,
-		count_surface_iterator, &n_surfaces);
-	if (n_surfaces > 1) {
-		return false;
-	}
+  PhocView *view = output->fullscreen_view;
+  assert (view != NULL);
+  if (!phoc_view_is_mapped (view)) {
+    return false;
+  }
+  size_t n_surfaces = 0;
+
+  phoc_output_view_for_each_surface (output, view,
+                                     count_surface_iterator, &n_surfaces);
+  if (n_surfaces > 1) {
+    return false;
+  }
 
 #ifdef PHOC_XWAYLAND
-	if (PHOC_IS_XWAYLAND_SURFACE (view)) {
-		struct wlr_xwayland_surface *xsurface =
-			phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-		if (!wl_list_empty(&xsurface->children)) {
-			return false;
-		}
-	}
+  if (PHOC_IS_XWAYLAND_SURFACE (view)) {
+    struct wlr_xwayland_surface *xsurface =
+      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
+    if (!wl_list_empty (&xsurface->children)) {
+      return false;
+    }
+  }
 #endif
 
-	struct wlr_surface *surface = view->wlr_surface;
+  struct wlr_surface *surface = view->wlr_surface;
 
-	if (surface->buffer == NULL) {
-		return false;
-	}
+  if (surface->buffer == NULL) {
+    return false;
+  }
 
-	if ((float)surface->current.scale != wlr_output->scale ||
-			surface->current.transform != wlr_output->transform) {
-		return false;
-	}
+  if ((float)surface->current.scale != wlr_output->scale ||
+      surface->current.transform != wlr_output->transform) {
+    return false;
+  }
 
-	wlr_output_attach_buffer(wlr_output, &surface->buffer->base);
-	if (!wlr_output_test(wlr_output)) {
-		return false;
-	}
+  wlr_output_attach_buffer (wlr_output, &surface->buffer->base);
+  if (!wlr_output_test (wlr_output)) {
+    return false;
+  }
 
-	wlr_presentation_surface_sampled_on_output(output->desktop->presentation, surface, output->wlr_output);
+  wlr_presentation_surface_sampled_on_output (output->desktop->presentation, surface, output->wlr_output);
 
-	return wlr_output_commit(wlr_output);
+  return wlr_output_commit (wlr_output);
 }
 
 static void render_drag_icons(PhocOutput *output,
