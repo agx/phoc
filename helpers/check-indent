@@ -6,7 +6,6 @@ TO_CLEANUP="
     src/desktop.h
     src/layers.h
     src/layer_shell.c
-    src/render.c
     src/text_input.c
     src/text_input.h
     src/view.c

@@ -852,7 +852,7 @@ phoc_renderer_initable_init (GInitable    *initable,
   if (self->wlr_renderer == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
-		 "Could not create renderer");
+                 "Could not create renderer");
     return FALSE;
   }
 
@@ -861,7 +861,7 @@ phoc_renderer_initable_init (GInitable    *initable,
   if (self->wlr_allocator == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
-		 "Could not create allocator");
+                 "Could not create allocator");
     return FALSE;
   }
 
