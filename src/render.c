@@ -154,24 +154,25 @@ phoc_renderer_get_property (GObject    *object,
 }
 
 
-static void scissor_output(struct wlr_output *wlr_output,
-		pixman_box32_t *rect) {
-	struct wlr_box box = {
-		.x = rect->x1,
-		.y = rect->y1,
-		.width = rect->x2 - rect->x1,
-		.height = rect->y2 - rect->y1,
-	};
+static void
+scissor_output (struct wlr_output *wlr_output, pixman_box32_t *rect)
+{
+  struct wlr_box box = {
+    .x = rect->x1,
+    .y = rect->y1,
+    .width = rect->x2 - rect->x1,
+    .height = rect->y2 - rect->y1,
+  };
 
-	int ow, oh;
-	wlr_output_transformed_resolution(wlr_output, &ow, &oh);
+  int ow, oh;
+  wlr_output_transformed_resolution (wlr_output, &ow, &oh);
 
-	enum wl_output_transform transform =
-		wlr_output_transform_invert(wlr_output->transform);
-	wlr_box_transform(&box, &box, transform, ow, oh);
+  enum wl_output_transform transform = wlr_output_transform_invert(wlr_output->transform);
+  wlr_box_transform (&box, &box, transform, ow, oh);
 
-	wlr_renderer_scissor(wlr_output->renderer, &box);
+  wlr_renderer_scissor (wlr_output->renderer, &box);
 }
+
 
 static void render_texture(struct wlr_output *wlr_output,
 		pixman_region32_t *output_damage, struct wlr_texture *texture,
