@@ -682,7 +682,6 @@ render_damage (PhocRenderer *self, PhocOutput *output)
   pixman_region32_fini(&previous_damage);
 }
 
-
 /**
  * phoc_renderer_render_output:
  * @self: The renderer
@@ -690,161 +689,155 @@ render_damage (PhocRenderer *self, PhocOutput *output)
  *
  * Render a given output.
  */
-void phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output) {
-	struct wlr_output *wlr_output = output->wlr_output;
-	PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
-	PhocServer *server = phoc_server_get_default ();
-	struct wlr_renderer *wlr_renderer;
+void
+phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
+{
+  struct wlr_output *wlr_output = output->wlr_output;
+  PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
+  PhocServer *server = phoc_server_get_default ();
+  struct wlr_renderer *wlr_renderer;
 
-        g_assert (PHOC_IS_RENDERER (self));
-        wlr_renderer = self->wlr_renderer;
+  g_assert (PHOC_IS_RENDERER (self));
+  wlr_renderer = self->wlr_renderer;
 
-	if (!wlr_output->enabled) {
-		return;
-	}
+  if (!wlr_output->enabled)
+    return;
 
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
+  struct timespec now;
+  clock_gettime (CLOCK_MONOTONIC, &now);
 
-	float clear_color[] = COLOR_BLACK;
+  float clear_color[] = COLOR_BLACK;
 
-	g_signal_emit (self, signals[RENDER_START], 0, output);
+  g_signal_emit (self, signals[RENDER_START], 0, output);
 
-	// Check if we can delegate the fullscreen surface to the output
-	if (phoc_output_has_fullscreen_view (output)) {
-		bool scanned_out = scan_out_fullscreen_view(output);
+  // Check if we can delegate the fullscreen surface to the output
+  if (phoc_output_has_fullscreen_view (output)) {
+    bool scanned_out = scan_out_fullscreen_view (output);
 
-		if (scanned_out) {
-			goto send_frame_done;
-		}
-	}
+    if (scanned_out)
+      goto send_frame_done;
+  }
 
-	bool needs_frame;
-	pixman_region32_t buffer_damage;
-	pixman_region32_init(&buffer_damage);
-	if (!wlr_output_damage_attach_render(output->damage, &needs_frame,
-			&buffer_damage)) {
-		return;
-	}
+  bool needs_frame;
+  pixman_region32_t buffer_damage;
+  pixman_region32_init (&buffer_damage);
+  if (!wlr_output_damage_attach_render (output->damage, &needs_frame, &buffer_damage))
+    return;
 
-	struct render_data data = {
-		.damage = &buffer_damage,
-		.alpha = 1.0,
-	};
+  struct render_data data = {
+    .damage = &buffer_damage,
+    .alpha = 1.0,
+  };
 
-	enum wl_output_transform transform =
-		wlr_output_transform_invert(wlr_output->transform);
+  enum wl_output_transform transform = wlr_output_transform_invert (wlr_output->transform);
 
-	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
-		pixman_region32_union_rect(&buffer_damage, &buffer_damage,
-			0, 0, wlr_output->width, wlr_output->height);
-		wlr_region_transform(&buffer_damage, &buffer_damage,
-			transform, wlr_output->width, wlr_output->height);
-		needs_frame |= pixman_region32_not_empty(&output->damage->current);
-		needs_frame |= pixman_region32_not_empty(&output->damage->previous[output->damage->previous_idx]);
-	}
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
+    pixman_region32_union_rect (&buffer_damage, &buffer_damage,
+                                0, 0, wlr_output->width, wlr_output->height);
+    wlr_region_transform (&buffer_damage, &buffer_damage,
+                          transform, wlr_output->width, wlr_output->height);
+    needs_frame |= pixman_region32_not_empty (&output->damage->current);
+    needs_frame |= pixman_region32_not_empty (&output->damage->previous[output->damage->previous_idx]);
+  }
 
-	if (!needs_frame) {
-		// Output doesn't need swap and isn't damaged, skip rendering completely
-		wlr_output_rollback(wlr_output);
-		goto buffer_damage_finish;
-	}
+  if (!needs_frame) {
+    // Output doesn't need swap and isn't damaged, skip rendering completely
+    wlr_output_rollback (wlr_output);
+    goto buffer_damage_finish;
+  }
 
-	wlr_renderer_begin(wlr_renderer, wlr_output->width, wlr_output->height);
+  wlr_renderer_begin (wlr_renderer, wlr_output->width, wlr_output->height);
 
-	if (!pixman_region32_not_empty(&buffer_damage)) {
-		// Output isn't damaged but needs buffer swap
-		goto renderer_end;
-	}
+  if (!pixman_region32_not_empty (&buffer_damage)) {
+    // Output isn't damaged but needs buffer swap
+    goto renderer_end;
+  }
 
-	int nrects;
-	pixman_box32_t *rects = pixman_region32_rectangles(&buffer_damage, &nrects);
-	for (int i = 0; i < nrects; ++i) {
-		scissor_output(output->wlr_output, &rects[i]);
-		wlr_renderer_clear(wlr_renderer, clear_color);
-	}
+  int nrects;
+  pixman_box32_t *rects = pixman_region32_rectangles (&buffer_damage, &nrects);
+  for (int i = 0; i < nrects; ++i) {
+    scissor_output (output->wlr_output, &rects[i]);
+    wlr_renderer_clear (wlr_renderer, clear_color);
+  }
 
-	// If a view is fullscreen on this output, render it
-	if (output->fullscreen_view != NULL) {
-		PhocView *view = output->fullscreen_view;
+  // If a view is fullscreen on this output, render it
+  if (output->fullscreen_view != NULL) {
+    PhocView *view = output->fullscreen_view;
 
-		render_view(output, view, &data);
+    render_view (output, view, &data);
 
-		// During normal rendering the xwayland window tree isn't traversed
-		// because all windows are rendered. Here we only want to render
-		// the fullscreen window's children so we have to traverse the tree.
+    // During normal rendering the xwayland window tree isn't traversed
+    // because all windows are rendered. Here we only want to render
+    // the fullscreen window's children so we have to traverse the tree.
 #ifdef PHOC_XWAYLAND
-		if (PHOC_IS_XWAYLAND_SURFACE (view)) {
-			struct wlr_xwayland_surface *xsurface =
-				phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-			phoc_output_xwayland_children_for_each_surface(output,
-								       xsurface,
-								       render_surface_iterator,
-								       &data);
-		}
+    if (PHOC_IS_XWAYLAND_SURFACE (view)) {
+      struct wlr_xwayland_surface *xsurface =
+        phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
+      phoc_output_xwayland_children_for_each_surface (output,
+                                                      xsurface,
+                                                      render_surface_iterator,
+                                                      &data);
+    }
 #endif
 
-		if (phoc_output_has_shell_revealed (output)) {
-			// Render top layer above fullscreen view when requested
-			render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
-		}
-	} else {
-		// Render background and bottom layers under views
-		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND);
-		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM);
+    if (phoc_output_has_shell_revealed (output)) {
+      // Render top layer above fullscreen view when requested
+      render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
+    }
+  } else {
+    // Render background and bottom layers under views
+    render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND);
+    render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM);
 
-		PhocView *view;
-			// Render all views
-		wl_list_for_each_reverse(view, &desktop->views, link) {
-			if (phoc_desktop_view_is_visible(desktop, view)) {
-				render_view(output, view, &data);
-			}
-		}
+    PhocView *view;
+    // Render all views
+    wl_list_for_each_reverse(view, &desktop->views, link) {
+      if (phoc_desktop_view_is_visible (desktop, view))
+        render_view (output, view, &data);
+    }
 
-		// Render top layer above views
-		render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
-	}
+    // Render top layer above views
+    render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
+  }
 
-	render_drag_icons(output, &buffer_damage, server->input);
+  render_drag_icons (output, &buffer_damage, server->input);
 
-	render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
+  render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
 
-renderer_end:
-	wlr_output_render_software_cursors(wlr_output, &buffer_damage);
-	wlr_renderer_scissor(wlr_renderer, NULL);
+ renderer_end:
+  wlr_output_render_software_cursors (wlr_output, &buffer_damage);
+  wlr_renderer_scissor (wlr_renderer, NULL);
 
-	render_touch_points (output);
-	g_signal_emit (self, signals[RENDER_END], 0, output);
-	if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
-		render_damage (self, output);
+  render_touch_points (output);
+  g_signal_emit (self, signals[RENDER_END], 0, output);
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
+    render_damage (self, output);
 
-	wlr_renderer_end(wlr_renderer);
+  wlr_renderer_end (wlr_renderer);
 
-	int width, height;
-	wlr_output_transformed_resolution(wlr_output, &width, &height);
+  int width, height;
+  wlr_output_transformed_resolution (wlr_output, &width, &height);
 
-	pixman_region32_t frame_damage;
-	pixman_region32_init(&frame_damage);
+  pixman_region32_t frame_damage;
+  pixman_region32_init (&frame_damage);
 
-	wlr_region_transform(&frame_damage, &output->damage->current,
-		transform, width, height);
+  wlr_region_transform (&frame_damage, &output->damage->current, transform, width, height);
 
-	wlr_output_set_damage(wlr_output, &frame_damage);
-	pixman_region32_fini(&frame_damage);
+  wlr_output_set_damage (wlr_output, &frame_damage);
+  pixman_region32_fini (&frame_damage);
 
-	if (!wlr_output_commit(wlr_output)) {
-		goto buffer_damage_finish;
-	}
+  if (!wlr_output_commit (wlr_output))
+    goto buffer_damage_finish;
 
-buffer_damage_finish:
-	pixman_region32_fini(&buffer_damage);
+ buffer_damage_finish:
+  pixman_region32_fini (&buffer_damage);
 
-send_frame_done:
-	// Send frame done events to all visible surfaces
-	phoc_output_for_each_surface(output, surface_send_frame_done_iterator, &now, true);
+ send_frame_done:
+  // Send frame done events to all visible surfaces
+  phoc_output_for_each_surface (output, surface_send_frame_done_iterator, &now, true);
 
-	damage_touch_points(output);
-	g_clear_list (&output->debug_touch_points, g_free);
+  damage_touch_points (output);
+  g_clear_list (&output->debug_touch_points, g_free);
 }
 
 
