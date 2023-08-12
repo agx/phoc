@@ -173,6 +173,36 @@ scissor_output (struct wlr_output *wlr_output, pixman_box32_t *rect)
   wlr_renderer_scissor (wlr_output->renderer, &box);
 }
 
+/**
+ * is_damaged:
+ * @x: The x coordinate of the rectangle to check
+ * @y: The y coordinate of the rectangle to check
+ * @width: The width of the rectangle to check
+ * @height: The height of the rectangle to check
+ * @whole_damage: The damaged area
+ * @damage: (out): The overlap of the rectangle with the damaged area. Don't init the pixman region
+ *   `is_damaged` does that for you.
+ *
+ * Checks if a given rectangle overlaps with a given damage area, if so returns
+ * true and fills `damage` with the overlap.
+ *
+ * Returns: %TRUE on overlap otherwise %FALSE
+ */
+static gboolean
+is_damaged (int                x,
+            int                y,
+            guint              width,
+            guint              height,
+            pixman_region32_t *whole_damage,
+            pixman_region32_t *damage)
+{
+  pixman_region32_init (damage);
+  pixman_region32_union_rect (damage, damage, x, y, width, height);
+  pixman_region32_intersect (damage, damage, whole_damage);
+
+  return !!pixman_region32_not_empty (damage);
+}
+
 
 static void
 render_texture (struct wlr_output     *wlr_output,
@@ -188,11 +218,7 @@ render_texture (struct wlr_output     *wlr_output,
   phoc_utils_rotated_bounds (&rotated, dst_box, rotation);
 
   pixman_region32_t damage;
-  pixman_region32_init (&damage);
-  pixman_region32_union_rect (&damage, &damage, dst_box->x, dst_box->y, dst_box->width, dst_box->height);
-  pixman_region32_intersect (&damage, &damage, output_damage);
-  bool damaged = pixman_region32_not_empty (&damage);
-  if (!damaged)
+  if (!is_damaged (dst_box->x, dst_box->y, dst_box->width, dst_box->height, output_damage, &damage))
     goto buffer_damage_finish;
 
   int nrects;
@@ -287,12 +313,7 @@ render_decorations (PhocOutput         *output,
   phoc_output_get_decoration_box(output, view, &box);
 
   pixman_region32_t damage;
-  pixman_region32_init (&damage);
-  pixman_region32_union_rect (&damage, &damage, box.x, box.y,
-                              box.width, box.height);
-  pixman_region32_intersect (&damage, &damage, data->damage);
-  bool damaged = pixman_region32_not_empty (&damage);
-  if (!damaged)
+  if (!is_damaged (box.x, box.y, box.width, box.height, data->damage, &damage))
     goto buffer_damage_finish;
 
   float matrix[9];
