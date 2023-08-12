@@ -351,14 +351,16 @@ render_layer (PhocOutput                     *output,
 }
 
 
-static void count_surface_iterator (PhocOutput         *output,
-                                    struct wlr_surface *surface,
-                                    struct wlr_box     *box,
-                                    float               rotation,
-                                    float               scale,
-                                    void               *data)
+static void
+count_surface_iterator (PhocOutput         *output,
+                        struct wlr_surface *surface,
+                        struct wlr_box     *box,
+                        float               rotation,
+                        float               scale,
+                        void               *data)
 {
   size_t *n = data;
+
   (*n)++;
 }
 
