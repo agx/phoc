@@ -9,7 +9,6 @@
 #include <wayland-server-core.h>
 #include "input.h"
 #include "layers.h"
-#include "switch.h"
 #include "text_input.h"
 
 #include <glib-object.h>
@@ -59,11 +58,11 @@ typedef struct _PhocSeat {
 
   PhocDragIcon                   *drag_icon; // can be NULL
 
-  GSList                         *keyboards;
-  GSList                         *pointers;
-  struct wl_list                  switches;
-  GSList                         *touch;
-  GSList                         *tablets;
+  GSList                         *keyboards; /* PhocKeyboard */
+  GSList                         *pointers;  /* PhocPointer */
+  GSList                         *switches;  /* PhocSwitch */
+  GSList                         *touch;     /* PhocTouch */
+  GSList                         *tablets;   /* PhocTablet */
   struct wl_list                  tablet_pads;
 
   struct wl_listener              request_set_selection;
@@ -138,6 +137,7 @@ typedef struct PhocPointerConstraint {
 
 
 PhocSeat          *phoc_seat_new (PhocInput *input, const char *name);
+PhocSeat          *phoc_seat_from_wlr_seat (struct wlr_seat *wlr_seat);
 
 void               phoc_seat_add_device (PhocSeat                *seat,
                                          struct wlr_input_device *device);

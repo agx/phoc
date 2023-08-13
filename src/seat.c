@@ -21,7 +21,6 @@
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_primary_selection.h>
-#include <wlr/types/wlr_switch.h>
 #include <wlr/types/wlr_tablet_v2.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_tablet_pad.h>
@@ -29,6 +28,7 @@
 #include "cursor.h"
 #include "keyboard.h"
 #include "pointer.h"
+#include "switch.h"
 #include "seat.h"
 #include "server.h"
 #include "tablet.h"
@@ -167,17 +167,12 @@ handle_pinch_end (struct wl_listener *listener, void *data)
 }
 
 static void
-handle_switch_toggle (struct wl_listener *listener, void *data)
+on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
 {
   PhocServer *server = phoc_server_get_default ();
-  struct phoc_switch *switch_device =
-    wl_container_of (listener, switch_device, toggle);
   PhocDesktop *desktop = server->desktop;
 
-  wlr_idle_notify_activity (desktop->idle, switch_device->seat->seat);
-  struct wlr_switch_toggle_event *event = data;
-
-  phoc_switch_handle_toggle (switch_device, event);
+  wlr_idle_notify_activity (desktop->idle, self->seat);
 }
 
 static void
@@ -845,22 +840,22 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
 
 
 static void
-seat_update_capabilities (PhocSeat *seat)
+seat_update_capabilities (PhocSeat *self)
 {
   uint32_t caps = 0;
 
-  if (seat->keyboards != NULL) {
+  if (self->keyboards != NULL) {
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
   }
-  if (seat->pointers != NULL) {
+  if (self->pointers != NULL) {
     caps |= WL_SEAT_CAPABILITY_POINTER;
   }
-  if (seat->touch != NULL) {
+  if (self->touch != NULL) {
     caps |= WL_SEAT_CAPABILITY_TOUCH;
   }
-  wlr_seat_set_capabilities (seat->seat, caps);
+  wlr_seat_set_capabilities (self->seat, caps);
 
-  phoc_seat_maybe_set_cursor (seat, seat->cursor->default_xcursor);
+  phoc_seat_maybe_set_cursor (self, self->cursor->default_xcursor);
 }
 
 
@@ -983,35 +978,32 @@ seat_add_pointer (PhocSeat                *seat,
 }
 
 static void
-handle_switch_destroy (struct wl_listener *listener, void *data)
+on_switch_destroy (PhocSwitch *switch_)
 {
-  struct phoc_switch *switch_device =
-    wl_container_of (listener, switch_device, device_destroy);
-  PhocSeat *seat = switch_device->seat;
+  PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (switch_));
 
-  wl_list_remove (&switch_device->link);
-  wl_list_remove (&switch_device->device_destroy.link);
-  free (switch_device);
+  g_assert (PHOC_IS_SWITCH (switch_));
+  g_debug ("Removing switch device: %s", phoc_input_device_get_name (PHOC_INPUT_DEVICE (switch_)));
+  seat->switches = g_slist_remove (seat->switches, switch_);
+  g_object_unref (switch_);
 
   seat_update_capabilities (seat);
 }
 
 static void
-seat_add_switch (PhocSeat                *seat,
-                 struct wlr_input_device *device)
+seat_add_switch (PhocSeat *self, struct wlr_input_device *device)
 {
-  assert (device->type == WLR_INPUT_DEVICE_SWITCH);
-  struct phoc_switch *switch_device = g_new0 (struct phoc_switch, 1);
-  struct wlr_switch *wlr_switch = wlr_switch_from_input_device (device);
+  PhocSwitch *switch_ = phoc_switch_new (device, self);
 
-  device->data = switch_device;
-  switch_device->device = device;
-  switch_device->seat = seat;
-  wl_list_insert (&seat->switches, &switch_device->link);
-  switch_device->device_destroy.notify = handle_switch_destroy;
+  self->switches = g_slist_prepend (self->switches, switch_);
+  g_signal_connect (switch_, "device-destroy",
+                    G_CALLBACK (on_switch_destroy),
+                    NULL);
 
-  switch_device->toggle.notify = handle_switch_toggle;
-  wl_signal_add (&wlr_switch->events.toggle, &switch_device->toggle);
+  g_signal_connect_object (switch_, "toggled",
+                           G_CALLBACK (on_switch_toggled),
+                           self,
+                           G_CONNECT_SWAPPED);
 }
 
 static void
@@ -1218,6 +1210,8 @@ on_tablet_destroy (PhocSeat *seat, PhocTablet *tablet)
   PhocDesktop *desktop = server->desktop;
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
+  g_assert (PHOC_IS_TABLET (tablet));
+  g_debug ("Removing tablet device: %s", device->name);
   wlr_cursor_detach_input_device (seat->cursor->cursor, device);
   g_hash_table_remove (seat->input_mapping_settings, tablet);
   g_hash_table_remove (desktop->input_output_map, device->name);
@@ -1946,6 +1940,12 @@ phoc_seat_finalize (GObject *object)
   wlr_seat_destroy (self->seat);
   g_clear_pointer (&self->name, g_free);
 
+  g_clear_pointer (&self->keyboards, g_slist_free);
+  g_clear_pointer (&self->pointers, g_slist_free);
+  g_clear_pointer (&self->switches, g_slist_free);
+  g_clear_pointer (&self->touch, g_slist_free);
+  g_clear_pointer (&self->tablets, g_slist_free);
+
   G_OBJECT_CLASS (phoc_seat_parent_class)->finalize (object);
 }
 
@@ -1986,7 +1986,6 @@ static void
 phoc_seat_init (PhocSeat *self)
 {
   wl_list_init (&self->tablet_pads);
-  wl_list_init (&self->switches);
   wl_list_init (&self->views);
 
   self->touch_id = -1;
@@ -2035,4 +2034,16 @@ phoc_seat_has_keyboard (PhocSeat *self)
 
   g_assert (self->seat);
   return (self->seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD);
+}
+
+/**
+ * phoc_seat_from_wlr_seat:
+ * @wlr_seat: The wlr_seat
+ *
+ * Returns: (transfer none): The [class@Seat] associated with the given wlr_seat
+ */
+PhocSeat *
+phoc_seat_from_wlr_seat (struct wlr_seat *wlr_seat)
+{
+  return PHOC_SEAT (wlr_seat->data);
 }

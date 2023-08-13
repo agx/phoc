@@ -2,6 +2,9 @@
   <interface name="phosh_private" version="7">
     <description summary="Phone shell extensions">
       Private protocol between phosh and the compositor.
+
+      Instead of adding more interfaces here consider adding a separate
+      zphoc-unstable protocol instead.
     </description>
 
     <enum name="error">
