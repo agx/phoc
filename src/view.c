@@ -384,6 +384,49 @@ static struct wlr_output *view_get_output(PhocView *view) {
 		output_y);
 }
 
+/**
+ * phoc_view_get_maximized_box:
+ * self: The view to get the box for
+ * output: The output the view is on
+ * box: (out): The box used if the view was maximized
+ *
+ * Gets the "visible bounds" that a view will use on a given output
+ * when maximized.
+ *
+ * Returns: %TRUE if the box can be maximized, otherwise %FALSE.
+ */
+gboolean
+phoc_view_get_maximized_box (PhocView *self, PhocOutput *output, struct wlr_box *box)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (view_is_fullscreen (self))
+    return FALSE;
+
+  if (!output)
+    output = phoc_view_get_output (self);
+
+  if (!output)
+    return FALSE;
+
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (self->desktop->layout, output->wlr_output, &output_box);
+  struct wlr_box usable_area = output->usable_area;
+  usable_area.x += output_box.x;
+  usable_area.y += output_box.y;
+
+  box->x = usable_area.x / priv->scale;
+  box->y = usable_area.y / priv->scale;
+  box->width = usable_area.width / priv->scale;
+  box->height = usable_area.height / priv->scale;
+
+  return TRUE;
+}
+
+
 void view_arrange_maximized(PhocView *view, struct wlr_output *output) {
         PhocViewPrivate *priv;
 

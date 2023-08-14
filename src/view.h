@@ -213,6 +213,9 @@ void                 phoc_view_set_decoration (PhocView *self,
 gboolean             phoc_view_is_decorated (PhocView *self);
 PhocOutput          *phoc_view_get_fullscreen_output (PhocView *self);
 bool                 phoc_view_want_auto_maximize (PhocView *self);
+gboolean             phoc_view_get_maximized_box                (PhocView              *self,
+                                                                 PhocOutput            *output,
+                                                                 struct wlr_box        *box);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,
