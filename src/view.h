@@ -216,6 +216,10 @@ bool                 phoc_view_want_auto_maximize (PhocView *self);
 gboolean             phoc_view_get_maximized_box                (PhocView              *self,
                                                                  PhocOutput            *output,
                                                                  struct wlr_box        *box);
+gboolean             phoc_view_get_tiled_box                    (PhocView              *self,
+                                                                 PhocViewTileDirection  dir,
+                                                                 PhocOutput            *output,
+                                                                 struct wlr_box        *box);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,

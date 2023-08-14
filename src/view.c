@@ -450,6 +450,67 @@ view_arrange_maximized (PhocView *self, struct wlr_output *wlr_output)
   phoc_view_move_resize (self, box.x, box.y, box.width, box.height);
 }
 
+
+/**
+ * phoc_view_get_tiled_box:
+ * self: The view to get the box for
+ * output: The output the view is on
+ * box: (out): The box used if the view was tiled
+ *
+ * Gets the "visible bounds" a view will use on a given output when
+ * tiled.
+ *
+ * Returns: %TRUE if the box can be maximized, otherwise %FALSE.
+ */
+gboolean
+phoc_view_get_tiled_box (PhocView               *self,
+                         PhocViewTileDirection   dir,
+                         PhocOutput             *output,
+                         struct wlr_box         *box)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (box);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (view_is_fullscreen (self))
+    return FALSE;
+
+  if (!output)
+    output = phoc_view_get_output (self);
+
+  if (!output)
+    return FALSE;
+
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (self->desktop->layout, output->wlr_output, &output_box);
+  struct wlr_box usable_area = output->usable_area;
+  int x;
+
+  usable_area.x += output_box.x;
+  usable_area.y += output_box.y;
+
+  switch (dir) {
+  case PHOC_VIEW_TILE_LEFT:
+    x = usable_area.x;
+    break;
+  case PHOC_VIEW_TILE_RIGHT:
+    x = usable_area.x + (0.5 * usable_area.width);
+    break;
+  default:
+    g_error ("Invalid tiling direction %d", dir);
+  }
+
+  box->x = x / priv->scale;
+  box->y = usable_area.y / priv->scale;
+  box->width = usable_area.width / 2 / priv->scale;
+  box->height = usable_area.height / priv->scale;
+
+  return TRUE;
+}
+
+
 void
 view_arrange_tiled (PhocView *view, struct wlr_output *output)
 {
