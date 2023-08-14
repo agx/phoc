@@ -427,35 +427,27 @@ phoc_view_get_maximized_box (PhocView *self, PhocOutput *output, struct wlr_box 
 }
 
 
-void view_arrange_maximized(PhocView *view, struct wlr_output *output) {
-        PhocViewPrivate *priv;
+void
+view_arrange_maximized (PhocView *self, struct wlr_output *wlr_output)
+{
+  PhocViewPrivate *priv;
+  struct wlr_box  box, geom;
+  PhocOutput *output = NULL;
 
-        g_assert (PHOC_IS_VIEW (view));
-        priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
-	if (view_is_fullscreen (view))
-		return;
+  if (wlr_output)
+    output = PHOC_OUTPUT (wlr_output->data);
 
-	if (!output)
-		output = view_get_output(view);
+  if (!phoc_view_get_maximized_box (self, output, &box))
+    return;
 
-	if (!output)
-		return;
+  phoc_view_get_geometry (self, &geom);
+  box.x -= geom.x / priv->scale;
+  box.y -= geom.y / priv->scale;
 
-	PhocOutput *phoc_output = output->data;
-	struct wlr_box output_box;
-	wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
-	struct wlr_box usable_area = phoc_output->usable_area;
-	usable_area.x += output_box.x;
-	usable_area.y += output_box.y;
-
-	struct wlr_box geom;
-	phoc_view_get_geometry (view, &geom);
-	phoc_view_move_resize (view,
-			       (usable_area.x - geom.x) / priv->scale,
-			       (usable_area.y - geom.y) / priv->scale,
-			       usable_area.width / priv->scale,
-			       usable_area.height / priv->scale);
+  phoc_view_move_resize (self, box.x, box.y, box.width, box.height);
 }
 
 void
