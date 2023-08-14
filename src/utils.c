@@ -140,3 +140,26 @@ phoc_utils_compute_scale (int32_t phys_width, int32_t phys_height,
 
   return scale;
 }
+
+
+static int
+scale_length (int length, int offset, float scale)
+{
+  return round ((offset + length) * scale) - round (offset * scale);
+}
+
+/**
+ * phoc_utils_scale_box:
+ * @box: (inout): The box to scale
+ * @scale: The scale to apply
+ *
+ * Scales the passed in box by scale.
+ */
+void
+phoc_utils_scale_box (struct wlr_box *box, float scale)
+{
+  box->width = scale_length (box->width, box->x, scale);
+  box->height = scale_length (box->height, box->y, scale);
+  box->x = round (box->x * scale);
+  box->y = round (box->y * scale);
+}

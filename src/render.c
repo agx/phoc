@@ -284,8 +284,8 @@ render_surface_iterator (PhocOutput         *output,
   wlr_surface_get_buffer_source_box (surface, &src_box);
 
   struct wlr_box dst_box = *box;
-  phoc_output_scale_box (output, &dst_box, scale);
-  phoc_output_scale_box (output, &dst_box, wlr_output->scale);
+  phoc_utils_scale_box (&dst_box, scale);
+  phoc_utils_scale_box (&dst_box, wlr_output->scale);
 
   float matrix[9];
   enum wl_output_transform transform = wlr_output_transform_invert (surface->current.transform);
