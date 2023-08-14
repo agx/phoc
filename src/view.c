@@ -373,19 +373,6 @@ phoc_view_move_resize (PhocView *view, double x, double y, uint32_t width, uint3
   PHOC_VIEW_GET_CLASS (view)->move_resize(view, x, y, width, height);
 }
 
-static struct wlr_output *view_get_output(PhocView *view) {
-	struct wlr_box view_box;
-	view_get_box(view, &view_box);
-
-	double output_x, output_y;
-	wlr_output_layout_closest_point(view->desktop->layout, NULL,
-		view->box.x + (double)view_box.width/2,
-		view->box.y + (double)view_box.height/2,
-		&output_x, &output_y);
-	return wlr_output_layout_output_at(view->desktop->layout, output_x,
-		output_y);
-}
-
 /**
  * phoc_view_get_maximized_box:
  * self: The view to get the box for
@@ -1069,16 +1056,15 @@ view_update_scale (PhocView *view)
   if (!PHOC_VIEW_GET_CLASS (view)->want_scaling(view))
     return;
 
-  struct wlr_output *output = view_get_output(view);
+  PhocOutput *output = phoc_view_get_output (view);
   if (!output)
     return;
 
-  PhocOutput *phoc_output = output->data;
   float scalex = 1.0f, scaley = 1.0f, oldscale = priv->scale;
 
   if (priv->scale_to_fit || phoc_desktop_get_scale_to_fit (server->desktop)) {
-    scalex = phoc_output->usable_area.width / (float)view->box.width;
-    scaley = phoc_output->usable_area.height / (float)view->box.height;
+    scalex = output->usable_area.width / (float)view->box.width;
+    scaley = output->usable_area.height / (float)view->box.height;
     if (scaley < scalex)
       priv->scale = scaley;
     else
@@ -1911,7 +1897,17 @@ phoc_view_get_tile_direction (PhocView *self)
 PhocOutput *
 phoc_view_get_output (PhocView *view)
 {
-  struct wlr_output *wlr_output = view_get_output (view);
+  struct wlr_output *wlr_output;
+  struct wlr_box view_box;
+  double output_x, output_y;
+
+  view_get_box(view, &view_box);
+
+  wlr_output_layout_closest_point (view->desktop->layout, NULL,
+                                   view->box.x + (double)view_box.width/2,
+                                   view->box.y + (double)view_box.height/2,
+                                   &output_x, &output_y);
+  wlr_output = wlr_output_layout_output_at (view->desktop->layout, output_x, output_y);
 
   if (wlr_output == NULL)
     return NULL;
