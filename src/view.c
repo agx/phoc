@@ -430,17 +430,13 @@ phoc_view_get_maximized_box (PhocView *self, PhocOutput *output, struct wlr_box 
 
 
 void
-view_arrange_maximized (PhocView *self, struct wlr_output *wlr_output)
+view_arrange_maximized (PhocView *self, PhocOutput *output)
 {
   PhocViewPrivate *priv;
   struct wlr_box  box, geom;
-  PhocOutput *output = NULL;
 
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
-
-  if (wlr_output)
-    output = PHOC_OUTPUT (wlr_output->data);
 
   if (!phoc_view_get_maximized_box (self, output, &box))
     return;
@@ -514,17 +510,13 @@ phoc_view_get_tiled_box (PhocView               *self,
 
 
 void
-view_arrange_tiled (PhocView *self, struct wlr_output *wlr_output)
+view_arrange_tiled (PhocView *self, PhocOutput *output)
 {
   PhocViewPrivate *priv;
   struct wlr_box box, geom;
-  PhocOutput *output = NULL;
 
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
-
-  if (wlr_output)
-    output = PHOC_OUTPUT (wlr_output->data);
 
   if (!phoc_view_get_tiled_box (self, priv->tile_direction, output, &box))
       return;
@@ -537,13 +529,13 @@ view_arrange_tiled (PhocView *self, struct wlr_output *wlr_output)
 }
 
 
-void view_maximize(PhocView *view, struct wlr_output *output) {
+void view_maximize(PhocView *view, PhocOutput *output) {
         PhocViewPrivate *priv;
 
         g_assert (PHOC_IS_VIEW (view));
         priv = phoc_view_get_instance_private (view);
 
-	if (view_is_maximized (view) && view_get_output(view) == output) {
+	if (view_is_maximized (view) && phoc_view_get_output (view) == output) {
 		return;
 	}
 
@@ -618,7 +610,7 @@ view_restore(PhocView *view)
  * (if @output is %NULL) on the view's current output. Unfullscreens
  * the @view if @fullscreens is `false`.
  */
-void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output *output) {
+void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, PhocOutput *output) {
         PhocViewPrivate *priv;
 
         g_assert (PHOC_IS_VIEW (view));
@@ -644,11 +636,7 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 
 	if (fullscreen) {
 		if (output == NULL) {
-			output = view_get_output(view);
-		}
-		PhocOutput *phoc_output = output->data;
-		if (phoc_output == NULL) {
-			return;
+			output = phoc_view_get_output (view);
 		}
 
 		if (was_fullscreen) {
@@ -661,17 +649,17 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 		view_save (view);
 
 		struct wlr_box output_box;
-		wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
+		wlr_output_layout_get_box (view->desktop->layout, output->wlr_output, &output_box);
 		phoc_view_move_resize (view,
 				       output_box.x,
 				       output_box.y,
 				       output_box.width,
 				       output_box.height);
 
-		phoc_output->fullscreen_view = view;
-		phoc_output_force_shell_reveal (phoc_output, false);
-		priv->fullscreen_output = phoc_output;
-		phoc_output_damage_whole(phoc_output);
+		output->fullscreen_view = view;
+		phoc_output_force_shell_reveal (output, false);
+		priv->fullscreen_output = output;
+		phoc_output_damage_whole (output);
 	}
 
 	if (was_fullscreen && !fullscreen) {
@@ -682,9 +670,9 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, struct wlr_output
 		phoc_output_damage_whole(phoc_output);
 
 		if (priv->state == PHOC_VIEW_STATE_MAXIMIZED) {
-			view_arrange_maximized (view, phoc_output->wlr_output);
+			view_arrange_maximized (view, phoc_output);
 		} else if (priv->state == PHOC_VIEW_STATE_TILED) {
-			view_arrange_tiled (view, phoc_output->wlr_output);
+			view_arrange_tiled (view, phoc_output);
 		} else if (!wlr_box_empty(&view->saved)) {
 			phoc_view_move_resize (view,
 					       view->saved.x - view_geom.x * priv->scale,
@@ -707,23 +695,23 @@ view_move_to_next_output (PhocView *view, enum wlr_direction direction)
   PhocDesktop *desktop = view->desktop;
   struct wlr_output_layout *layout = view->desktop->layout;
   const struct wlr_output_layout_output *l_output;
-  PhocOutput *phoc_output;
-  struct wlr_output *output, *new_output;
+  PhocOutput *output;
+  struct wlr_output *new_output;
   struct wlr_box usable_area;
   double x, y;
 
-  output = view_get_output(view);
+  output = phoc_view_get_output (view);
   if (!output)
     return false;
 
   /* use current view's x,y as ref_lx, ref_ly */
-  new_output = wlr_output_layout_adjacent_output (layout, direction, output,
+  new_output = wlr_output_layout_adjacent_output (layout, direction, output->wlr_output,
 						  view->box.x, view->box.y);
   if (!new_output)
     return false;
 
-  phoc_output = new_output->data;
-  usable_area = phoc_output->usable_area;
+  output = PHOC_OUTPUT (new_output->data);
+  usable_area = output->usable_area;
   l_output = wlr_output_layout_get(desktop->layout, new_output);
 
   /* update saved position to the new output */
@@ -734,23 +722,23 @@ view_move_to_next_output (PhocView *view, enum wlr_direction direction)
   view->saved.y = y;
 
   if (view_is_fullscreen (view)) {
-    phoc_view_set_fullscreen (view, true, new_output);
+    phoc_view_set_fullscreen (view, true, PHOC_OUTPUT (new_output->data));
     return true;
   }
 
   if (view_is_maximized (view)) {
-    view_arrange_maximized (view, new_output);
+    view_arrange_maximized (view, output);
   } else if (view_is_tiled (view)) {
-    view_arrange_tiled (view, new_output);
+    view_arrange_tiled (view, output);
   } else {
-    view_center (view, new_output);
+    view_center (view, output);
   }
 
   return true;
 }
 
 void
-view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *output)
+view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)
 {
   PhocViewPrivate *priv;
 
@@ -773,7 +761,7 @@ view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *ou
 
 
 bool
-view_center (PhocView *view, struct wlr_output *wlr_output)
+view_center (PhocView *view, PhocOutput *output)
 {
   PhocServer *server = phoc_server_get_default ();
   struct wlr_box box, geom;
@@ -797,19 +785,20 @@ view_center (PhocView *view, struct wlr_output *wlr_output)
 
   cursor = phoc_seat_get_cursor (seat);
 
-  struct wlr_output *output = wlr_output ?: wlr_output_layout_output_at(desktop->layout,
-                                                                        cursor->cursor->x, cursor->cursor->y);
   if (!output) {
-    // empty layout
-    return false;
+    struct wlr_output *wlr_output = wlr_output_layout_output_at(desktop->layout,
+                                                                cursor->cursor->x,
+                                                                cursor->cursor->y);
+    if (!wlr_output) {
+      // empty layout
+      return false;
+    }
+    output = PHOC_OUTPUT (wlr_output->data);
   }
 
-  const struct wlr_output_layout_output *l_output = wlr_output_layout_get (desktop->layout, output);
-
-  PhocOutput *phoc_output = PHOC_OUTPUT (output->data);
-  g_assert (PHOC_IS_OUTPUT (phoc_output));
-
-  struct wlr_box usable_area = phoc_output->usable_area;
+  const struct wlr_output_layout_output *l_output = wlr_output_layout_get (desktop->layout,
+                                                                           output->wlr_output);
+  struct wlr_box usable_area = output->usable_area;
 
   double view_x = (double)(usable_area.width - box.width) / 2 +
     usable_area.x + l_output->x - geom.x * priv->scale;
@@ -824,10 +813,10 @@ view_center (PhocView *view, struct wlr_output *wlr_output)
     return true;
   }
 
-  if (view->box.width > phoc_output->usable_area.width || view->box.height > phoc_output->usable_area.height) {
+  if (view->box.width > output->usable_area.width || view->box.height > output->usable_area.height) {
     phoc_view_resize (view,
-                      (view->box.width > phoc_output->usable_area.width) ? phoc_output->usable_area.width : view->box.width,
-                      (view->box.height > phoc_output->usable_area.height) ? phoc_output->usable_area.height : view->box.height);
+                      (view->box.width > output->usable_area.width) ? output->usable_area.width : view->box.width,
+                      (view->box.height > output->usable_area.height) ? output->usable_area.height : view->box.height);
   }
 
   return true;
@@ -1514,7 +1503,7 @@ handle_toplevel_handle_request_fullscreen (struct wl_listener *listener, void *d
   PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_foreign_toplevel_handle_v1_fullscreen_event *event = data;
 
-  phoc_view_set_fullscreen (self, event->fullscreen, event->output);
+  phoc_view_set_fullscreen (self, event->fullscreen, PHOC_OUTPUT (event->output->data));
 }
 
 static void

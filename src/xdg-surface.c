@@ -442,11 +442,14 @@ handle_request_fullscreen (struct wl_listener *listener, void *data)
 {
   PhocXdgSurface *self = wl_container_of (listener, self, request_fullscreen);
   struct wlr_xdg_surface *surface = self->xdg_surface;
+  PhocOutput *output = NULL;
 
   if (surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL)
     return;
 
-  phoc_view_set_fullscreen (PHOC_VIEW (self), surface->toplevel->requested.fullscreen, surface->toplevel->requested.fullscreen_output);
+  if (surface->toplevel->requested.fullscreen_output)
+    output = PHOC_OUTPUT (surface->toplevel->requested.fullscreen_output->data);
+  phoc_view_set_fullscreen (PHOC_VIEW (self), surface->toplevel->requested.fullscreen, output);
 }
 
 
@@ -515,6 +518,7 @@ static void
 phoc_xdg_surface_constructed (GObject *object)
 {
   PhocXdgSurface *self = PHOC_XDG_SURFACE(object);
+  PhocOutput *output = NULL;
 
   g_assert (self->xdg_surface);
 
@@ -529,9 +533,12 @@ phoc_xdg_surface_constructed (GObject *object)
   if (self->xdg_surface->toplevel->requested.maximized)
     view_maximize (PHOC_VIEW (self), NULL);
 
+  if (self->xdg_surface->toplevel->requested.fullscreen_output)
+    output = PHOC_OUTPUT (self->xdg_surface->toplevel->requested.fullscreen_output->data);
+
   phoc_view_set_fullscreen (PHOC_VIEW (self),
                             self->xdg_surface->toplevel->requested.fullscreen,
-                            self->xdg_surface->toplevel->requested.fullscreen_output);
+                            output);
   view_auto_maximize (PHOC_VIEW (self));
   view_set_title (PHOC_VIEW (self), self->xdg_surface->toplevel->title);
   /* We don't do window menus or minimize */
