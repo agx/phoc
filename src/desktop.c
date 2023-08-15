@@ -461,7 +461,7 @@ static void handle_pointer_constraint(struct wl_listener *listener,
 		cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
 	if (surface == wlr_constraint->surface) {
-		assert(!cursor->active_constraint);
+		g_assert (!cursor->active_constraint);
 		phoc_cursor_constrain(cursor, wlr_constraint, sx, sy);
 	}
 }

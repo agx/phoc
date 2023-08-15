@@ -695,8 +695,8 @@ phosh_private_bind (struct wl_client *client, void *data, uint32_t version, uint
 static PhocPhoshPrivate *
 phoc_phosh_private_from_resource (struct wl_resource *resource)
 {
-  assert (wl_resource_instance_of (resource, &phosh_private_interface,
-                                   &phosh_private_impl));
+  g_assert (wl_resource_instance_of (resource, &phosh_private_interface,
+                                     &phosh_private_impl));
   return wl_resource_get_user_data (resource);
 }
 
@@ -704,8 +704,8 @@ phoc_phosh_private_from_resource (struct wl_resource *resource)
 static PhocPhoshPrivateScreencopyFrame *
 phoc_phosh_private_screencopy_frame_from_resource (struct wl_resource *resource)
 {
-  assert (wl_resource_instance_of (resource, &zwlr_screencopy_frame_v1_interface,
-                                   &phoc_phosh_private_screencopy_frame_impl));
+  g_assert (wl_resource_instance_of (resource, &zwlr_screencopy_frame_v1_interface,
+                                     &phoc_phosh_private_screencopy_frame_impl));
   return wl_resource_get_user_data (resource);
 }
 
@@ -713,8 +713,8 @@ phoc_phosh_private_screencopy_frame_from_resource (struct wl_resource *resource)
 static PhocPhoshPrivateKeyboardEventData *
 phoc_phosh_private_keyboard_event_from_resource (struct wl_resource *resource)
 {
-  assert (wl_resource_instance_of (resource, &phosh_private_keyboard_event_interface,
-                                   &phoc_phosh_private_keyboard_event_impl));
+  g_assert (wl_resource_instance_of (resource, &phosh_private_keyboard_event_interface,
+                                     &phoc_phosh_private_keyboard_event_impl));
   return wl_resource_get_user_data (resource);
 }
 
@@ -722,8 +722,8 @@ phoc_phosh_private_keyboard_event_from_resource (struct wl_resource *resource)
 static PhocPhoshPrivateStartupTracker *
 phoc_phosh_private_startup_tracker_from_resource (struct wl_resource *resource)
 {
-  assert (wl_resource_instance_of (resource, &phosh_private_startup_tracker_interface,
-                                   &phoc_phosh_private_startup_tracker_impl));
+  g_assert (wl_resource_instance_of (resource, &phosh_private_startup_tracker_interface,
+                                     &phoc_phosh_private_startup_tracker_impl));
   return wl_resource_get_user_data (resource);
 }
 

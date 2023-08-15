@@ -106,7 +106,7 @@ phoc_input_constructed (GObject *object)
   PhocServer *server = phoc_server_get_default ();
 
   g_debug ("Initializing phoc input");
-  assert (server->desktop);
+  g_assert (server->desktop);
 
   self->new_input.notify = handle_new_input;
   wl_signal_add (&server->backend->events.new_input, &self->new_input);

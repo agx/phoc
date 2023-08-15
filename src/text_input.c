@@ -46,7 +46,7 @@ static PhocTextInput *relay_get_focused_text_input(
 	PhocTextInput *text_input = NULL;
 	wl_list_for_each(text_input, &relay->text_inputs, link) {
 		if (text_input->input->focused_surface) {
-			assert(text_input->pending_focused_surface == NULL);
+			g_assert (text_input->pending_focused_surface == NULL);
 			return text_input;
 		}
 	}
@@ -62,7 +62,7 @@ static void handle_im_commit(struct wl_listener *listener, void *data) {
 		return;
 	}
 	struct wlr_input_method_v2 *context = data;
-	assert(context == relay->input_method);
+	g_assert (context == relay->input_method);
 	if (context->current.preedit.text) {
 		wlr_text_input_v3_send_preedit_string(text_input->input,
 			context->current.preedit.text,
@@ -133,13 +133,13 @@ static void handle_im_destroy(struct wl_listener *listener, void *data) {
 	PhocInputMethodRelay *relay = wl_container_of(listener, relay,
 		input_method_destroy);
 	struct wlr_input_method_v2 *context = data;
-	assert(context == relay->input_method);
+	g_assert (context == relay->input_method);
 	relay->input_method = NULL;
 	PhocTextInput *text_input = relay_get_focused_text_input(relay);
 	if (text_input) {
 		// keyboard focus is still there, so keep the surface at hand in case
 		// the input method returns
-		assert(text_input->pending_focused_surface == NULL);
+		g_assert (text_input->pending_focused_surface == NULL);
 		text_input_set_pending_focused_surface(text_input,
 			text_input->input->focused_surface);
 		wlr_text_input_v3_send_leave(text_input->input);
@@ -261,7 +261,7 @@ static void handle_pending_focused_surface_destroy(struct wl_listener *listener,
 	PhocTextInput *text_input = wl_container_of(listener, text_input,
 		pending_focused_surface_destroy);
 	struct wlr_surface *surface = data;
-	assert(text_input->pending_focused_surface == surface);
+	g_assert (text_input->pending_focused_surface == surface);
 	text_input_clear_pending_focused_surface(text_input);
 }
 
@@ -400,12 +400,12 @@ phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
   wl_list_for_each(text_input, &relay->text_inputs, link) {
 
     if (text_input->pending_focused_surface) {
-      assert(text_input->input->focused_surface == NULL);
+      g_assert (text_input->input->focused_surface == NULL);
       if (surface != text_input->pending_focused_surface) {
         text_input_clear_pending_focused_surface(text_input);
       }
     } else if (text_input->input->focused_surface) {
-      assert(text_input->pending_focused_surface == NULL);
+      g_assert (text_input->pending_focused_surface == NULL);
       if (surface != text_input->input->focused_surface) {
         relay_disable_text_input(relay, text_input);
         wlr_text_input_v3_send_leave(text_input->input);
