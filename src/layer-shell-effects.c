@@ -369,7 +369,7 @@ phoc_alpha_layer_surface_destroy (PhocAlphaLayerSurface *alpha_surface)
   if (alpha_surface == NULL)
     return;
 
-  g_debug ("Destroying alpa_layer_surface %p (res %p)", alpha_surface, alpha_surface->resource);
+  g_debug ("Destroying alpha_layer_surface %p (res %p)", alpha_surface, alpha_surface->resource);
   layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (alpha_surface->layer_shell_effects);
   g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (layer_shell_effects));
 

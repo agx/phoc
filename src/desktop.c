@@ -21,6 +21,7 @@
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_server_decoration.h>
+#include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_tablet_v2.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_xcursor_manager.h>
@@ -502,10 +503,11 @@ static const char *atom_map[XWAYLAND_ATOM_LAST] = {
 	"_NET_WM_WINDOW_TYPE_DIALOG"
 };
 
-static
-void handle_xwayland_ready(struct wl_listener *listener, void *data) {
-  PhocDesktop *desktop = wl_container_of (
-        listener, desktop, xwayland_ready);
+static void
+handle_xwayland_ready (struct wl_listener *listener,
+                       void               *data)
+{
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xwayland_ready);
   xcb_connection_t *xcb_conn = xcb_connect (NULL, NULL);
 
   int err = xcb_connection_has_error (xcb_conn);
@@ -536,12 +538,22 @@ void handle_xwayland_ready(struct wl_listener *listener, void *data) {
   }
 
   xcb_disconnect (xcb_conn);
+
+#ifdef PHOC_XWAYLAND
+  if (desktop->xwayland != NULL) {
+    PhocSeat *xwayland_seat = phoc_input_get_seat (phoc_server_get_default ()->input,
+                                                   PHOC_CONFIG_DEFAULT_SEAT_NAME);
+    wlr_xwayland_set_seat (desktop->xwayland, xwayland_seat->seat);
+  }
+#endif
+
 }
 
-static
-void handle_xwayland_remove_startup_id(struct wl_listener *listener, void *data) {
-  PhocDesktop *desktop = wl_container_of (
-        listener, desktop, xwayland_remove_startup_id);
+
+static void
+handle_xwayland_remove_startup_id (struct wl_listener *listener, void *data)
+{
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xwayland_remove_startup_id);
   struct wlr_xwayland_remove_startup_info_event *ev = data;
 
   g_assert (PHOC_IS_DESKTOP (desktop));
@@ -669,63 +681,53 @@ phoc_desktop_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
 
-  wl_list_init(&self->views);
-  wl_list_init(&self->outputs);
+  wl_list_init (&self->views);
+  wl_list_init (&self->outputs);
 
   self->new_output.notify = handle_new_output;
-  wl_signal_add(&server->backend->events.new_output, &self->new_output);
+  wl_signal_add (&server->backend->events.new_output, &self->new_output);
 
-  self->layout = wlr_output_layout_create();
-  wlr_xdg_output_manager_v1_create(server->wl_display, self->layout);
+  self->layout = wlr_output_layout_create ();
+  wlr_xdg_output_manager_v1_create (server->wl_display, self->layout);
   self->layout_change.notify = handle_layout_change;
-  wl_signal_add(&self->layout->events.change, &self->layout_change);
+  wl_signal_add (&self->layout->events.change, &self->layout_change);
 
-  self->xdg_shell = wlr_xdg_shell_create(server->wl_display, 5);
-  wl_signal_add(&self->xdg_shell->events.new_surface,
-		&self->xdg_shell_surface);
+  self->xdg_shell = wlr_xdg_shell_create (server->wl_display, 5);
+  wl_signal_add (&self->xdg_shell->events.new_surface, &self->xdg_shell_surface);
   self->xdg_shell_surface.notify = handle_xdg_shell_surface;
 
-  self->layer_shell = wlr_layer_shell_v1_create(server->wl_display);
-  wl_signal_add(&self->layer_shell->events.new_surface,
-		&self->layer_shell_surface);
+  self->layer_shell = wlr_layer_shell_v1_create (server->wl_display);
+  wl_signal_add (&self->layer_shell->events.new_surface, &self->layer_shell_surface);
   self->layer_shell_surface.notify = handle_layer_shell_surface;
   self->layer_shell_effects = phoc_layer_shell_effects_new ();
 
-  self->tablet_v2 = wlr_tablet_v2_create(server->wl_display);
+  self->tablet_v2 = wlr_tablet_v2_create (server->wl_display);
 
   char cursor_size_fmt[16];
-  snprintf(cursor_size_fmt, sizeof(cursor_size_fmt),
-	   "%d", PHOC_XCURSOR_SIZE);
-  g_setenv("XCURSOR_SIZE", cursor_size_fmt, 1);
+  snprintf (cursor_size_fmt, sizeof (cursor_size_fmt), "%d", PHOC_XCURSOR_SIZE);
+  g_setenv ("XCURSOR_SIZE", cursor_size_fmt, 1);
 
   phoc_desktop_setup_xwayland (self);
 
-  self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create(server->wl_display);
-  self->export_dmabuf_manager_v1 =
-    wlr_export_dmabuf_manager_v1_create(server->wl_display);
-  self->server_decoration_manager =
-    wlr_server_decoration_manager_create(server->wl_display);
-  wlr_server_decoration_manager_set_default_mode(self->server_decoration_manager,
-						 WLR_SERVER_DECORATION_MANAGER_MODE_CLIENT);
-  self->idle = wlr_idle_create(server->wl_display);
+  self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create (server->wl_display);
+  self->export_dmabuf_manager_v1 = wlr_export_dmabuf_manager_v1_create (server->wl_display);
+  self->server_decoration_manager = wlr_server_decoration_manager_create (server->wl_display);
+  wlr_server_decoration_manager_set_default_mode (self->server_decoration_manager,
+                                                  WLR_SERVER_DECORATION_MANAGER_MODE_CLIENT);
+  self->idle = wlr_idle_create (server->wl_display);
   self->primary_selection_device_manager =
-    wlr_primary_selection_v1_device_manager_create(server->wl_display);
-  self->input_inhibit =
-    wlr_input_inhibit_manager_create(server->wl_display);
+    wlr_primary_selection_v1_device_manager_create (server->wl_display);
+
+  self->input_inhibit = wlr_input_inhibit_manager_create (server->wl_display);
   self->input_inhibit_activate.notify = input_inhibit_activate;
-  wl_signal_add(&self->input_inhibit->events.activate,
-		&self->input_inhibit_activate);
+  wl_signal_add (&self->input_inhibit->events.activate, &self->input_inhibit_activate);
   self->input_inhibit_deactivate.notify = input_inhibit_deactivate;
-  wl_signal_add(&self->input_inhibit->events.deactivate,
-		&self->input_inhibit_deactivate);
+  wl_signal_add (&self->input_inhibit->events.deactivate, &self->input_inhibit_deactivate);
 
-  self->input_method =
-    wlr_input_method_manager_v2_create(server->wl_display);
-
-  self->text_input = wlr_text_input_manager_v3_create(server->wl_display);
-
+  self->input_method = wlr_input_method_manager_v2_create (server->wl_display);
+  self->text_input = wlr_text_input_manager_v3_create (server->wl_display);
   priv->idle_inhibit = phoc_idle_inhibit_create (self->idle);
-  self->gtk_shell = phoc_gtk_shell_create(self, server->wl_display);
+  self->gtk_shell = phoc_gtk_shell_create (self, server->wl_display);
   self->phosh = phoc_phosh_private_new ();
 
   self->xdg_activation_v1 = wlr_xdg_activation_v1_create (server->wl_display);
@@ -733,63 +735,51 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->xdg_activation_v1->events.request_activate,
                  &self->xdg_activation_v1_request_activate);
 
-  self->virtual_keyboard = wlr_virtual_keyboard_manager_v1_create(
-								  server->wl_display);
-  wl_signal_add(&self->virtual_keyboard->events.new_virtual_keyboard,
-		&self->virtual_keyboard_new);
+  self->virtual_keyboard = wlr_virtual_keyboard_manager_v1_create (server->wl_display);
+  wl_signal_add (&self->virtual_keyboard->events.new_virtual_keyboard,
+                 &self->virtual_keyboard_new);
   self->virtual_keyboard_new.notify = phoc_handle_virtual_keyboard;
 
-  self->virtual_pointer = wlr_virtual_pointer_manager_v1_create(server->wl_display);
-  wl_signal_add(&self->virtual_pointer->events.new_virtual_pointer,
-		&self->virtual_pointer_new);
+  self->virtual_pointer = wlr_virtual_pointer_manager_v1_create (server->wl_display);
+  wl_signal_add (&self->virtual_pointer->events.new_virtual_pointer, &self->virtual_pointer_new);
   self->virtual_pointer_new.notify = phoc_handle_virtual_pointer;
 
-  self->screencopy = wlr_screencopy_manager_v1_create(server->wl_display);
+  self->screencopy = wlr_screencopy_manager_v1_create (server->wl_display);
 
-  self->xdg_decoration_manager =
-    wlr_xdg_decoration_manager_v1_create(server->wl_display);
-  wl_signal_add(&self->xdg_decoration_manager->events.new_toplevel_decoration,
-		&self->xdg_toplevel_decoration);
+  self->xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create (server->wl_display);
+  wl_signal_add (&self->xdg_decoration_manager->events.new_toplevel_decoration,
+                 &self->xdg_toplevel_decoration);
+
   self->xdg_toplevel_decoration.notify = handle_xdg_toplevel_decoration;
-  wlr_viewporter_create(server->wl_display);
+  wlr_viewporter_create (server->wl_display);
+  wlr_single_pixel_buffer_manager_v1_create (server->wl_display);
 
   struct wlr_xdg_foreign_registry *foreign_registry =
-                wlr_xdg_foreign_registry_create(server->wl_display);
-  wlr_xdg_foreign_v1_create(server->wl_display, foreign_registry);
-  wlr_xdg_foreign_v2_create(server->wl_display, foreign_registry);
+                wlr_xdg_foreign_registry_create (server->wl_display);
+  wlr_xdg_foreign_v1_create (server->wl_display, foreign_registry);
+  wlr_xdg_foreign_v2_create (server->wl_display, foreign_registry);
 
-  self->pointer_constraints =
-    wlr_pointer_constraints_v1_create(server->wl_display);
+  self->pointer_constraints = wlr_pointer_constraints_v1_create (server->wl_display);
   self->pointer_constraint.notify = handle_pointer_constraint;
-  wl_signal_add(&self->pointer_constraints->events.new_constraint,
-		&self->pointer_constraint);
+  wl_signal_add (&self->pointer_constraints->events.new_constraint, &self->pointer_constraint);
 
-  self->presentation =
-    wlr_presentation_create(server->wl_display, server->backend);
-  self->foreign_toplevel_manager_v1 =
-    wlr_foreign_toplevel_manager_v1_create(server->wl_display);
-  self->relative_pointer_manager =
-    wlr_relative_pointer_manager_v1_create(server->wl_display);
-  self->pointer_gestures =
-    wlr_pointer_gestures_v1_create(server->wl_display);
+  self->presentation = wlr_presentation_create (server->wl_display, server->backend);
+  self->foreign_toplevel_manager_v1 = wlr_foreign_toplevel_manager_v1_create (server->wl_display);
+  self->relative_pointer_manager = wlr_relative_pointer_manager_v1_create (server->wl_display);
+  self->pointer_gestures = wlr_pointer_gestures_v1_create (server->wl_display);
 
-  self->output_manager_v1 =
-    wlr_output_manager_v1_create(server->wl_display);
+  self->output_manager_v1 = wlr_output_manager_v1_create (server->wl_display);
   self->output_manager_apply.notify = handle_output_manager_apply;
-  wl_signal_add(&self->output_manager_v1->events.apply,
-		&self->output_manager_apply);
+  wl_signal_add (&self->output_manager_v1->events.apply, &self->output_manager_apply);
   self->output_manager_test.notify = handle_output_manager_test;
-  wl_signal_add(&self->output_manager_v1->events.test,
-		&self->output_manager_test);
+  wl_signal_add (&self->output_manager_v1->events.test, &self->output_manager_test);
 
-  self->output_power_manager_v1 =
-    wlr_output_power_manager_v1_create(server->wl_display);
-  self->output_power_manager_set_mode.notify =
-    phoc_output_handle_output_power_manager_set_mode;
-  wl_signal_add(&self->output_power_manager_v1->events.set_mode,
-		&self->output_power_manager_set_mode);
+  self->output_power_manager_v1 = wlr_output_power_manager_v1_create (server->wl_display);
+  self->output_power_manager_set_mode.notify = phoc_output_handle_output_power_manager_set_mode;
+  wl_signal_add (&self->output_power_manager_v1->events.set_mode,
+                 &self->output_power_manager_set_mode);
 
-  wlr_data_control_manager_v1_create(server->wl_display);
+  wlr_data_control_manager_v1_create (server->wl_display);
 
   /* sm.puri.phosh settings */
   priv->settings = g_settings_new ("sm.puri.phoc");

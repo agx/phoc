@@ -1191,7 +1191,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
     }
   }
 
-  if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS) {
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)) {
     PhocOutput *output;
     wl_list_for_each (output, &desktop->outputs, link) {
       if (wlr_output_layout_contains_point (desktop->layout, output->wlr_output, lx, ly)) {
@@ -1265,19 +1265,17 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
   if (!point)
     return;
 
-  struct wlr_output *wlr_output =
-    wlr_output_layout_output_at (desktop->layout, lx, ly);
+  struct wlr_output *wlr_output = wlr_output_layout_output_at (desktop->layout, lx, ly);
 
   if (!wlr_output)
     return;
 
-  PhocOutput *phoc_output = wlr_output->data;
+  PhocOutput *phoc_output = PHOC_OUTPUT (wlr_output->data);
 
   double sx, sy;
   struct wlr_surface *surface = point->surface;
 
   // TODO: test with input regions
-
   if (surface) {
     bool found = false;
     float scale = 1.0;
