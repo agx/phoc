@@ -1126,6 +1126,30 @@ phoc_desktop_get_builtin_output (PhocDesktop *self)
 }
 
 /**
+ * phoc_desktop_layout_get_output:
+ * @self: The desktop
+ * @lx: The x coordinate in layout coordinates
+ * @ly: The y coordinate in layout coordinates
+ *
+ * Get the output at layout coordinates.
+ *
+ * Returns: (transfer none) (nullable): The output
+ */
+PhocOutput *
+phoc_desktop_layout_get_output (PhocDesktop *self, double lx, double ly)
+{
+  struct wlr_output *wlr_output;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  wlr_output = wlr_output_layout_output_at (self->layout, lx, ly);
+  if (wlr_output == NULL)
+    return NULL;
+
+  return PHOC_OUTPUT (wlr_output->data);
+}
+
+/**
  * phoc_desktop_get_draggable_layer_surface:
  * @self: The `PhocDesktop` to look the surface up for
  * @layer_surface: The layer surface to look up
