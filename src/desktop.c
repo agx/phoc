@@ -247,28 +247,24 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		double lx, double ly, double *sx, double *sy,
 		PhocView **view) {
 	struct wlr_surface *surface = NULL;
-	struct wlr_output *wlr_output =
-		wlr_output_layout_output_at(desktop->layout, lx, ly);
-	PhocOutput *phoc_output = NULL;
+	PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
 	double ox = lx, oy = ly;
 	if (view) {
 		*view = NULL;
 	}
 
-	if (wlr_output) {
-		phoc_output = PHOC_OUTPUT (wlr_output->data);
-		wlr_output_layout_output_coords(desktop->layout, wlr_output, &ox, &oy);
+	if (output) {
+		wlr_output_layout_output_coords(desktop->layout, output->wlr_output, &ox, &oy);
 
-		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
 
-		PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
-		if (output != NULL && output->fullscreen_view != NULL) {
+		if (output->fullscreen_view != NULL) {
 
 			if (phoc_output_has_shell_revealed (output)) {
-				if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+				if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
 								ox, oy, sx, sy))) {
 					return surface;
 				}
@@ -284,7 +280,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 			}
 		}
 
-		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
@@ -298,12 +294,12 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
 		return surface;
 	}
 
-	if (wlr_output) {
-		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
+	if (output) {
+		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
-		if ((surface = layer_surface_at(phoc_output, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND,
+		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND,
 						ox, oy, sx, sy))) {
 			return surface;
 		}
