@@ -483,16 +483,12 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
     }
   }
 
-  struct wlr_output *wlr_output = wlr_output_layout_output_at (desktop->layout, lx, ly);
-
-  if (!wlr_output) {
+  PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
+  if (!output)
     return false;
-  }
-
-  PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
 
   struct wlr_box output_box;
-  wlr_output_layout_get_box (desktop->layout, wlr_output, &output_box);
+  wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
 
   PhocLayerSurface *layer_surface;
   bool left = false, right = false, top = false, bottom = false;
@@ -855,20 +851,20 @@ phoc_cursor_update_position (PhocCursor *self,
       double dx = self->cursor->x - self->offs_x;
       double dy = self->cursor->y - self->offs_y;
 
-      struct wlr_output *wlr_output = wlr_output_layout_output_at (desktop->layout, self->cursor->x, self->cursor->y);
+      PhocOutput *output = phoc_desktop_layout_get_output (desktop, self->cursor->x, self->cursor->y);
       struct wlr_box output_box;
-      wlr_output_layout_get_box (desktop->layout, wlr_output, &output_box);
+      wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
 
       bool output_is_landscape = output_box.width > output_box.height;
 
       if (view_is_fullscreen (view)) {
-        phoc_view_set_fullscreen (view, true, wlr_output);
+        phoc_view_set_fullscreen (view, true, output->wlr_output);
       } else if (self->cursor->y < output_box.y + PHOC_EDGE_SNAP_THRESHOLD) {
-        view_maximize (view, wlr_output);
+        view_maximize (view, output->wlr_output);
       } else if (output_is_landscape && self->cursor->x < output_box.x + PHOC_EDGE_SNAP_THRESHOLD) {
-        view_tile (view, PHOC_VIEW_TILE_LEFT, wlr_output);
+        view_tile (view, PHOC_VIEW_TILE_LEFT, output->wlr_output);
       } else if (output_is_landscape && self->cursor->x > output_box.x + output_box.width - PHOC_EDGE_SNAP_THRESHOLD) {
-        view_tile (view, PHOC_VIEW_TILE_RIGHT, wlr_output);
+        view_tile (view, PHOC_VIEW_TILE_RIGHT, output->wlr_output);
       } else {
         view_restore (view);
         phoc_view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
@@ -1265,12 +1261,9 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
   if (!point)
     return;
 
-  struct wlr_output *wlr_output = wlr_output_layout_output_at (desktop->layout, lx, ly);
-
-  if (!wlr_output)
+  PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
+  if (!output)
     return;
-
-  PhocOutput *phoc_output = PHOC_OUTPUT (wlr_output->data);
 
   double sx, sy;
   struct wlr_surface *surface = point->surface;
@@ -1284,10 +1277,10 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
     if (wlr_surface_is_layer_surface (root)) {
       struct wlr_layer_surface_v1 *wlr_layer_surface = wlr_layer_surface_v1_from_wlr_surface (root);
       struct wlr_box output_box;
-      wlr_output_layout_get_box (desktop->layout, wlr_output, &output_box);
+      wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
 
       PhocLayerSurface *layer_surface;
-      wl_list_for_each_reverse (layer_surface, &phoc_output->layer_surfaces, link)
+      wl_list_for_each_reverse (layer_surface, &output->layer_surfaces, link)
       {
         if (layer_surface->layer != wlr_layer_surface->current.layer)
           continue;
@@ -1300,7 +1293,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
         }
       }
       // try the overlay layer as well since the on-screen keyboard might have been elevated there
-      wl_list_for_each_reverse (layer_surface, &phoc_output->layer_surfaces, link)
+      wl_list_for_each_reverse (layer_surface, &output->layer_surfaces, link)
       {
         if (layer_surface->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY)
           continue;
