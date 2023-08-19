@@ -5,7 +5,6 @@
 #include "switch.h"
 
 #include <wlr/backend/libinput.h>
-#include <wlr/types/wlr_switch.h>
 
 enum {
   TOGGLED,
@@ -103,7 +102,7 @@ phoc_switch_new (struct wlr_input_device *device, PhocSeat *seat)
 
 
 gboolean
-phoc_input_device_has_tablet_mode_switch (PhocSwitch *self)
+phoc_switch_is_tablet_mode_switch (PhocSwitch *self)
 {
   struct libinput_device *ldev;
 
@@ -115,8 +114,9 @@ phoc_input_device_has_tablet_mode_switch (PhocSwitch *self)
   return libinput_device_switch_has_switch (ldev, LIBINPUT_SWITCH_TABLET_MODE) > 0;
 }
 
+
 gboolean
-phoc_input_device_has_lid_switch (PhocSwitch *self)
+phoc_switch_is_lid_switch (PhocSwitch *self)
 {
   struct libinput_device *ldev;
 
@@ -126,4 +126,18 @@ phoc_input_device_has_lid_switch (PhocSwitch *self)
   ldev = phoc_input_device_get_libinput_device_handle (PHOC_INPUT_DEVICE (self));
 
   return libinput_device_switch_has_switch (ldev, LIBINPUT_SWITCH_LID) > 0;
+}
+
+
+gboolean
+phoc_switch_is_type (PhocSwitch *self, enum wlr_switch_type type)
+{
+  switch (type) {
+  case WLR_SWITCH_TYPE_LID:
+    return phoc_switch_is_lid_switch (self);
+  case WLR_SWITCH_TYPE_TABLET_MODE:
+    return phoc_switch_is_tablet_mode_switch (self);
+  default:
+    g_assert_not_reached ();
+  }
 }
