@@ -173,7 +173,7 @@ phoc_phosh_private_accelerator_already_subscribed (PhocKeyCombo *combo)
   PhocPhoshPrivateKeyboardEventData *kbevent;
   PhocServer *server = phoc_server_get_default ();
 
-  PhocPhoshPrivate *phosh = server->desktop->phosh;
+  PhocPhoshPrivate *phosh = phoc_desktop_get_phosh_private (server->desktop);
 
   for (l = phosh->keyboard_events; l != NULL; l = l->next) {
     kbevent = (PhocPhoshPrivateKeyboardEventData *)l->data;
@@ -799,7 +799,7 @@ phoc_phosh_private_forward_keysym (PhocKeyCombo *combo,
 {
   GList *l;
   PhocServer *server = phoc_server_get_default ();
-  PhocPhoshPrivate *phosh = server->desktop->phosh;
+  PhocPhoshPrivate *phosh = phoc_desktop_get_phosh_private (server->desktop);
   bool forwarded = false;
 
   for (l = phosh->keyboard_events; l != NULL; l = l->next) {

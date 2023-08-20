@@ -182,7 +182,8 @@ handle_xdg_shell_surface (struct wl_listener *listener, void *data)
   PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (surface);
 
   // Check for app-id override coming from gtk-shell
-  PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (desktop->gtk_shell,
+  PhocGtkShell *gtk_shell = phoc_desktop_get_gtk_shell (desktop);
+  PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (gtk_shell,
                                                                                  surface->surface);
   if (gtk_surface && phoc_gtk_surface_get_app_id (gtk_surface))
     phoc_view_set_app_id (PHOC_VIEW (phoc_surface), phoc_gtk_surface_get_app_id (gtk_surface));

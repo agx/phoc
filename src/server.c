@@ -371,11 +371,11 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 
   if (self->flags & PHOC_SERVER_FLAG_SHELL_MODE) {
     g_message ("Enabling shell mode");
-    g_signal_connect_object (self->desktop->phosh,
+    g_signal_connect_object (phoc_desktop_get_phosh_private (self->desktop),
                              "notify::shell-state",
                              G_CALLBACK (on_shell_state_changed),
                              self, G_CONNECT_SWAPPED);
-    on_shell_state_changed (self, NULL, self->desktop->phosh);
+    on_shell_state_changed (self, NULL, phoc_desktop_get_phosh_private (self->desktop));
   }
 
   phoc_wayland_init (self);

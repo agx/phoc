@@ -100,12 +100,6 @@ struct _PhocDesktop {
 
 	gboolean maximize, scale_to_fit;
 	GHashTable *input_output_map;
-
-	/* Protocols without upstreamable implementations */
-	PhocPhoshPrivate *phosh;
-	PhocGtkShell *gtk_shell;
-        /* Protocols that should go upstream */
-	PhocLayerShellEffects *layer_shell_effects;
 };
 
 PhocDesktop *phoc_desktop_new (PhocConfig *config);
@@ -132,6 +126,9 @@ PhocLayerSurface  *phoc_desktop_layer_surface_at(PhocDesktop *self,
                                                  double *sx, double *sy);
 PhocDraggableLayerSurface *
 phoc_desktop_get_draggable_layer_surface (PhocDesktop *self, PhocLayerSurface *layer_surface);
+
+PhocGtkShell        *phoc_desktop_get_gtk_shell                  (PhocDesktop *self);
+PhocPhoshPrivate    *phoc_desktop_get_phosh_private              (PhocDesktop *self);
 
 void handle_xdg_shell_surface(struct wl_listener *listener, void *data);
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data);

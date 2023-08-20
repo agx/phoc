@@ -2038,7 +2038,7 @@ phoc_view_flush_activation_token (PhocView *self)
 
   g_return_if_fail (priv->activation_token);
 
-  phoc_phosh_private_notify_startup_id (phoc_server_get_default()->desktop->phosh,
+  phoc_phosh_private_notify_startup_id (phoc_desktop_get_phosh_private (phoc_server_get_default ()->desktop),
                                         priv->activation_token,
                                         priv->activation_token_type);
   phoc_view_set_activation_token (self, NULL, -1);
