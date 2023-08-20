@@ -43,7 +43,7 @@ G_DEFINE_TYPE (PhocKeybindings, phoc_keybindings, G_TYPE_OBJECT);
 static void
 handle_maximize (PhocSeat *seat)
 {
-  PhocView *focus = phoc_seat_get_focus(seat);
+  PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus != NULL)
     view_maximize(focus, NULL);
@@ -52,7 +52,7 @@ handle_maximize (PhocSeat *seat)
 static void
 handle_unmaximize (PhocSeat *seat)
 {
-  PhocView *focus = phoc_seat_get_focus(seat);
+  PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus != NULL)
     view_restore(focus);
@@ -61,7 +61,7 @@ handle_unmaximize (PhocSeat *seat)
 static void
 handle_tile_right (PhocSeat *seat)
 {
-  PhocView *view = phoc_seat_get_focus(seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
   if (!view)
     return;
@@ -76,7 +76,7 @@ handle_tile_right (PhocSeat *seat)
 static void
 handle_tile_left (PhocSeat *seat)
 {
-  PhocView *view = phoc_seat_get_focus(seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
   if (!view)
     return;
@@ -91,7 +91,7 @@ handle_tile_left (PhocSeat *seat)
 static void
 handle_toggle_maximized (PhocSeat *seat)
 {
-  PhocView *focus = phoc_seat_get_focus(seat);
+  PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus != NULL) {
     if (view_is_maximized(focus))
@@ -104,7 +104,7 @@ handle_toggle_maximized (PhocSeat *seat)
 static void
 handle_toggle_fullscreen (PhocSeat *seat)
 {
-  PhocView *focus = phoc_seat_get_focus(seat);
+  PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus) {
     phoc_view_set_fullscreen(focus, !view_is_fullscreen (focus), NULL);
@@ -126,7 +126,7 @@ static void handle_cycle_windows_backwards (PhocSeat *seat)
 
 static void handle_close (PhocSeat *seat)
 {
-  PhocView *focus = phoc_seat_get_focus(seat);
+  PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus)
     phoc_view_close (focus);
@@ -135,7 +135,7 @@ static void handle_close (PhocSeat *seat)
 static void
 handle_move_to_monitor_right (PhocSeat *seat)
 {
-  PhocView *view = phoc_seat_get_focus(seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
   if (view)
     view_move_to_next_output(view, WLR_DIRECTION_RIGHT);
@@ -145,7 +145,7 @@ handle_move_to_monitor_right (PhocSeat *seat)
 static void
 handle_move_to_monitor_left (PhocSeat *seat)
 {
-  PhocView *view = phoc_seat_get_focus(seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
   if (view)
     view_move_to_next_output(view, WLR_DIRECTION_LEFT);

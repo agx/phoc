@@ -381,13 +381,21 @@ handle_set_class (struct wl_listener *listener, void *data)
 static void
 handle_set_startup_id (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
   PhocXWaylandSurface *self = wl_container_of (listener, self, set_startup_id);
+  const char *token;
 
   g_debug ("Got startup-id %s", self->xwayland_surface->startup_id);
-  phoc_phosh_private_notify_startup_id (server->desktop->phosh,
-                                        self->xwayland_surface->startup_id,
-                                        PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
+
+  token = self->xwayland_surface->startup_id;
+  phoc_view_set_activation_token (PHOC_VIEW (self), token, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
+  if (phoc_view_is_mapped (PHOC_VIEW (self))) {
+    PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
+
+    g_debug ("Activating view %p via token '%s'", PHOC_VIEW (self), token);
+    phoc_seat_set_focus_view (seat, PHOC_VIEW (self));
+  } else {
+    g_debug ("Setting view %p via token '%s' as pending activation", PHOC_VIEW (self),token);
+  }
 }
 
 static void
@@ -452,9 +460,9 @@ handle_map (struct wl_listener *listener, void *data)
   if (!surface->override_redirect) {
     if (surface->decorations == WLR_XWAYLAND_SURFACE_DECORATIONS_ALL)
       phoc_view_set_decoration (view, TRUE, 12, 4);
-    view_setup (view);
+    phoc_view_setup (view);
   } else {
-    view_initial_focus (view);
+    phoc_view_set_initial_focus (view);
   }
 }
 

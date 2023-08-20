@@ -378,7 +378,7 @@ handle_map (struct wl_listener *listener, void *data)
   phoc_xdg_surface_get_geometry (self, &self->saved_geometry);
 
   phoc_view_map (view, self->xdg_surface->surface);
-  view_setup (view);
+  phoc_view_setup (view);
 }
 
 

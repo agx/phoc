@@ -149,10 +149,8 @@ void               phoc_seat_configure_xcursor (PhocSeat *seat);
 
 bool               phoc_seat_has_meta_pressed (PhocSeat *seat);
 
-PhocView          *phoc_seat_get_focus (PhocSeat *seat);
-
-void               phoc_seat_set_focus (PhocSeat *seat, PhocView *view);
-
+PhocView          *phoc_seat_get_focus_view  (PhocSeat *seat);
+void               phoc_seat_set_focus_view  (PhocSeat *seat, PhocView *view);
 void               phoc_seat_set_focus_layer (PhocSeat                    *seat,
                                               struct wlr_layer_surface_v1 *layer);
 

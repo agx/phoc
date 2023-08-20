@@ -201,8 +201,9 @@ bool                 phoc_view_is_mapped (PhocView *view);
 PhocViewDecoPart     view_get_deco_part(PhocView *view, double sx, double sy);
 void                 phoc_view_set_scale_to_fit (PhocView *self, gboolean enable);
 gboolean             phoc_view_get_scale_to_fit (PhocView *self);
-void                 phoc_view_set_activation_token (PhocView *self, const char* token);
+void                 phoc_view_set_activation_token (PhocView *self, const char *token, int type);
 const char          *phoc_view_get_activation_token (PhocView *self);
+void                 phoc_view_flush_activation_token (PhocView *self);
 float                phoc_view_get_alpha (PhocView *self);
 float                phoc_view_get_scale (PhocView *self);
 void                 phoc_view_set_decoration (PhocView *self,

@@ -101,9 +101,7 @@ handle_request_focus(struct wl_client *client,
                      const char *startup_id)
 {
   PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
-  PhocServer *server = phoc_server_get_default ();
-  PhocInput *input = server->input;
-  PhocSeat *seat = phoc_input_get_last_active_seat (input);
+  PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
   PhocView *view;
 
   g_debug ("Requesting focus for surface %p (res %p)", gtk_surface->wlr_surface, resource);
@@ -112,7 +110,7 @@ handle_request_focus(struct wl_client *client,
 
   view = phoc_view_from_wlr_surface (gtk_surface->wlr_surface);
   if (view)
-    phoc_seat_set_focus(seat, view);
+    phoc_seat_set_focus_view (seat, view);
 }
 
 static const struct gtk_surface1_interface gtk_surface1_impl = {
@@ -332,6 +330,7 @@ handle_set_startup_id(struct wl_client *client,
   PhocServer *server = phoc_server_get_default ();
   g_debug ("%s: %s", __func__, startup_id);
 
+  /* TODO: actually activate the corresponding view */
   if (startup_id) {
     phoc_phosh_private_notify_startup_id (server->desktop->phosh,
                                           startup_id,

@@ -56,6 +56,7 @@ typedef struct _PhocViewPrivate {
   gulong         notify_scale_to_fit_id;
   gboolean       scale_to_fit;
   char          *activation_token;
+  int            activation_token_type;
 
   /* wlr-toplevel-management handling */
   struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
@@ -309,7 +310,16 @@ phoc_view_appear_activated (PhocView *view, bool activated)
   PHOC_VIEW_GET_CLASS (view)->set_active (view, activated);
 }
 
-
+/**
+ * phoc_view_activate:
+ * @self : The view
+ * @activate: Whether to activate or deactivate a view
+ *
+ * Performs the necessary steps to make the view itself appear activated
+ * and send out the corresponding view related protocol events.
+ * Note that this is not enough to actually focus the view for the user
+ * See [method@phoc_seat_set_focus].
+ */
 void
 phoc_view_activate (PhocView *self, bool activate)
 {
@@ -327,13 +337,6 @@ phoc_view_activate (PhocView *self, bool activate)
 
   if (activate && view_is_fullscreen (self)) {
     phoc_output_force_shell_reveal (priv->fullscreen_output, false);
-  }
-
-  if (priv->activation_token) {
-    phoc_phosh_private_notify_startup_id (phoc_server_get_default()->desktop->phosh,
-                                          priv->activation_token,
-                                          PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
-    phoc_view_set_activation_token (self, NULL);
   }
 }
 
@@ -1061,11 +1064,6 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
                               G_CALLBACK (on_global_scale_to_fit_changed),
                               self);
 
-
-  /* Process pending activation */
-  if (priv->activation_token)
-    phoc_view_activate (self, TRUE);
-
   if (phoc_desktop_get_enable_animations (self->desktop)
       && self->parent == NULL
       && !phoc_view_want_auto_maximize (self)) {
@@ -1135,16 +1133,13 @@ void view_unmap(PhocView *view) {
 	g_object_notify_by_pspec (G_OBJECT (view), props[PROP_IS_MAPPED]);
 }
 
-void view_initial_focus(PhocView *view) {
-	PhocServer *server = phoc_server_get_default ();
-	PhocInput *input = server->input;
-	// TODO what seat gets focus? the one with the last input event?
-	for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
-		PhocSeat *seat = PHOC_SEAT (elem->data);
+void
+phoc_view_set_initial_focus (PhocView *view)
+{
+  PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
 
-		g_assert (PHOC_IS_SEAT (seat));
-		phoc_seat_set_focus(seat, view);
-	}
+  /* This also submits any pending activation tokens */
+  phoc_seat_set_focus_view (seat, view);
 }
 
 /**
@@ -1170,30 +1165,39 @@ view_send_frame_done_if_not_visible (PhocView *view)
 
 static void view_create_foreign_toplevel_handle (PhocView *view);
 
-void view_setup(PhocView *view) {
-        PhocViewPrivate *priv = phoc_view_get_instance_private (view);
-        struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
+/**
+ * phoc_view_setup:
+ * @view: The view to setup
+ *
+ * Setup view parameters on map. This should be invoked by derived
+ * classes past [method@phoc_view_map].
+ */
+void
+phoc_view_setup (PhocView *view)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (view);
+  struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
 
-	view_create_foreign_toplevel_handle(view);
-	view_initial_focus(view);
+  view_create_foreign_toplevel_handle (view);
+  phoc_view_set_initial_focus (view);
 
-	view_center(view, NULL);
-	view_update_scale(view);
+  view_center (view, NULL);
+  view_update_scale (view);
 
-	view_update_output(view, NULL);
+  view_update_output(view, NULL);
 
-	wlr_foreign_toplevel_handle_v1_set_fullscreen(priv->toplevel_handle,
-	                                              view_is_fullscreen (view));
-	wlr_foreign_toplevel_handle_v1_set_maximized(priv->toplevel_handle,
-	                                             view_is_maximized(view));
-	wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle,
-	                                         priv->title ?: "");
-	wlr_foreign_toplevel_handle_v1_set_app_id(priv->toplevel_handle,
-	                                          priv->app_id ?: "");
-	if (view->parent)
-		toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
+  wlr_foreign_toplevel_handle_v1_set_fullscreen (priv->toplevel_handle,
+                                                 view_is_fullscreen (view));
+  wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle,
+                                                view_is_maximized(view));
+  wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle,
+                                            priv->title ?: "");
+  wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle,
+                                             priv->app_id ?: "");
+  if (view->parent)
+    toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
 
-	wlr_foreign_toplevel_handle_v1_set_parent(priv->toplevel_handle, toplevel_handle);
+  wlr_foreign_toplevel_handle_v1_set_parent (priv->toplevel_handle, toplevel_handle);
 }
 
 /**
@@ -1395,7 +1399,7 @@ handle_toplevel_handle_request_activate (struct wl_listener *listener, void *dat
 
     g_assert (PHOC_IS_SEAT (seat));
     if (event->seat == seat->seat)
-      phoc_seat_set_focus (seat, self);
+      phoc_seat_set_focus_view (seat, self);
   }
 }
 
@@ -1477,9 +1481,6 @@ phoc_view_set_property (GObject      *object,
   switch (property_id) {
   case PROP_SCALE_TO_FIT:
     phoc_view_set_scale_to_fit (self, g_value_get_boolean (value));
-    break;
-  case PROP_ACTIVATION_TOKEN:
-    phoc_view_set_activation_token (self, g_value_get_string (value));
     break;
   case PROP_ALPHA:
     phoc_view_set_alpha (self, g_value_get_float (value));
@@ -1697,7 +1698,7 @@ phoc_view_class_init (PhocViewClass *klass)
   props[PROP_ACTIVATION_TOKEN] =
     g_param_spec_string ("activation-token", "", "",
                          NULL,
-                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
   /**
    * PhocView:is-mapped:
    *
@@ -1964,7 +1965,7 @@ phoc_view_get_scale_to_fit (PhocView *self)
  * once mapped. It will be cleared once the view got activated.
  */
 void
-phoc_view_set_activation_token (PhocView *self, const char* token)
+phoc_view_set_activation_token (PhocView *self, const char *token, int type)
 {
   PhocViewPrivate *priv;
 
@@ -1976,6 +1977,7 @@ phoc_view_set_activation_token (PhocView *self, const char* token)
 
   g_free (priv->activation_token);
   priv->activation_token = g_strdup (token);
+  priv->activation_token_type = type;
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVATION_TOKEN]);
 }
 
@@ -1996,6 +1998,29 @@ phoc_view_get_activation_token (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->activation_token;
+}
+
+/**
+ * phoc_view_flush_activation_token:
+ * @self: The view
+ *
+ * Notifies that the compositor handled processing the activation token
+ * and clears it.
+ */
+void
+phoc_view_flush_activation_token (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  g_return_if_fail (priv->activation_token);
+
+  phoc_phosh_private_notify_startup_id (phoc_server_get_default()->desktop->phosh,
+                                        priv->activation_token,
+                                        priv->activation_token_type);
+  phoc_view_set_activation_token (self, NULL, -1);
 }
 
 /**

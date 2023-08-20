@@ -157,7 +157,7 @@ phoc_input_view_has_focus (PhocInput *self, PhocView *view)
     PhocSeat *seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (seat));
-    if (view == phoc_seat_get_focus (seat)) {
+    if (view == phoc_seat_get_focus_view (seat)) {
       return true;
     }
   }
