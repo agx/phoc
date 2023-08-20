@@ -81,6 +81,8 @@ can be specified as `*` to match any value. The configuration options are:
 - `scale-filter`: Filter to use to scale down textures. Valid values are `bilinear`, `nearest` and `auto`.
   The later selects `bilinear` for fractional and `nearest` for integer scales automatically. If unset
   `auto` is assumed.
+- `drm-panel-orientation`: If `true` applies the panel orientation read from the DRM connector
+  (if available). Defaults to `true`.
 
 Example:
 

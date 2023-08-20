@@ -49,16 +49,16 @@ enum {
 static guint signals[N_SIGNALS] = { 0 };
 
 typedef struct _PhocOutputPrivate {
-  PhocOutputShield *shield;
-  PhocRenderer     *renderer;
+  PhocRenderer            *renderer;
+  PhocOutputShield        *shield;
 
-  GSList *frame_callbacks;
-  gint    frame_callback_next_id;
-  gint64  last_frame_us;
+  GSList                  *frame_callbacks;
+  gint                     frame_callback_next_id;
+  gint64                   last_frame_us;
 
-  PhocCutoutsOverlay *cutouts;
-  gulong              render_cutouts_id;
-  struct wlr_texture *cutouts_texture;
+  PhocCutoutsOverlay      *cutouts;
+  gulong                   render_cutouts_id;
+  struct wlr_texture      *cutouts_texture;
 
   gboolean shell_revealed;
   gboolean force_shell_reveal;
@@ -767,9 +767,13 @@ phoc_output_fill_state (PhocOutput              *self,
   }
 
   if (output_config && enable) {
+    enum wl_output_transform transform = output_config->transform;
     double scale;
 
     if (wlr_output_is_drm (self->wlr_output)) {
+      if (output_config->drm_panel_orientation)
+        transform = wlr_drm_connector_get_panel_orientation (self->wlr_output);
+
       for (GSList *l = output_config->modes; l; l = l->next) {
         PhocOutputModeConfig *mode_config = l->data;
         wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
@@ -790,9 +794,11 @@ phoc_output_fill_state (PhocOutput              *self,
 
     wlr_output_state_set_scale (pending, adjust_frac_scale (scale));
 
-    wlr_output_state_set_transform (pending, output_config->transform);
+    wlr_output_state_set_transform (pending, transform);
     priv->scale_filter = output_config->scale_filter;
   } else if (enable) {
+    enum wl_output_transform transform = WL_OUTPUT_TRANSFORM_NORMAL;
+
     if (preferred_mode != NULL) {
       g_debug ("Using preferred mode for %s", self->wlr_output->name);
       wlr_output_state_set_mode (pending, preferred_mode);
@@ -811,7 +817,12 @@ phoc_output_fill_state (PhocOutput              *self,
           break;
       }
     }
+
+    if (wlr_output_is_drm (self->wlr_output))
+      transform = wlr_drm_connector_get_panel_orientation (self->wlr_output);
+
     wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
+    wlr_output_state_set_transform (pending, transform);
   }
 
   if (output_config && output_config->x > 0 && output_config->y > 0) {

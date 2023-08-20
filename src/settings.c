@@ -108,6 +108,7 @@ phoc_output_config_new (const char *name)
   oc->x = -1;
   oc->y = -1;
   oc->scale_filter = PHOC_OUTPUT_SCALE_FILTER_AUTO;
+  oc->drm_panel_orientation = false;
 
   return oc;
 }
@@ -217,6 +218,8 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
         g_critical ("Invalid modeline: %s", value);
     } else if (strcmp (name, "scale-filter") == 0) {
       oc->scale_filter = parse_scale_filter (value);
+    } else if (strcmp (name, "drm-panel-orientation") == 0) {
+      oc->drm_panel_orientation = parse_boolean (value, true);
     }
   } else {
     g_critical ("Found unknown config section: %s", section);
