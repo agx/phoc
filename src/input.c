@@ -112,6 +112,9 @@ phoc_input_constructed (GObject *object)
 
   self->new_input.notify = handle_new_input;
   wl_signal_add (&server->backend->events.new_input, &self->new_input);
+
+  /* Add the default seat */
+  phoc_input_get_seat (self, PHOC_CONFIG_DEFAULT_SEAT_NAME);
 }
 
 static void
