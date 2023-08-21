@@ -838,20 +838,26 @@ phoc_view_child_init (PhocViewChild *child,
   phoc_view_child_init_subsurfaces (child, wlr_surface);
 }
 
+
 static const struct phoc_view_child_interface subsurface_impl;
 
-static void subsurface_destroy(PhocViewChild *child) {
-	g_assert (child->impl == &subsurface_impl);
-	PhocSubsurface *subsurface = (PhocSubsurface *)child;
-	wl_list_remove(&subsurface->destroy.link);
-	wl_list_remove(&subsurface->map.link);
-	wl_list_remove(&subsurface->unmap.link);
-	g_free (subsurface);
+static void
+subsurface_destroy (PhocViewChild *child)
+{
+  PhocSubsurface *subsurface = (PhocSubsurface *)child;
+
+  g_assert (child->impl == &subsurface_impl);
+  wl_list_remove (&subsurface->destroy.link);
+  wl_list_remove (&subsurface->map.link);
+  wl_list_remove (&subsurface->unmap.link);
+  g_free (subsurface);
 }
 
+
 static const struct phoc_view_child_interface subsurface_impl = {
-	.destroy = subsurface_destroy,
+  .destroy = subsurface_destroy,
 };
+
 
 static void subsurface_handle_destroy(struct wl_listener *listener,
 		void *data) {
