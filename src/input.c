@@ -47,7 +47,6 @@ phoc_input_get_device_type (enum wlr_input_device_type type)
   }
 }
 
-
 /**
  * phoc_input_get_seat:
  * @self: The input to look up the seat on
@@ -77,15 +76,16 @@ phoc_input_get_seat (PhocInput *self, char *name)
   return seat;
 }
 
+
 static void
 handle_new_input (struct wl_listener *listener, void *data)
 {
   struct wlr_input_device *device = data;
-  PhocInput *input = wl_container_of (listener, input, new_input);
-
+  PhocInput *self = wl_container_of (listener, self, new_input);
   char *seat_name = PHOC_CONFIG_DEFAULT_SEAT_NAME;
-  PhocSeat *seat = phoc_input_get_seat (input, seat_name);
+  PhocSeat *seat;
 
+  seat = phoc_input_get_seat (self, seat_name);
   if (!seat) {
     g_warning ("could not create PhocSeat");
     return;
