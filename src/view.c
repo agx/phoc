@@ -1918,25 +1918,20 @@ phoc_view_child_damage_whole (PhocViewChild *child)
   if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
     return;
 
-  if (child->impl->get_pos) {
-    PhocOutput *output;
-    int sx, sy;
-    struct wlr_box view_box;
+  PhocOutput *output;
+  int sx, sy;
+  struct wlr_box view_box;
 
-    view_get_box (child->view, &view_box);
-    child->impl->get_pos (child, &sx, &sy);
+  view_get_box (child->view, &view_box);
+  child->impl->get_pos (child, &sx, &sy);
 
-    wl_list_for_each (output, &child->view->desktop->outputs, link) {
-      struct wlr_box output_box;
-      wlr_output_layout_get_box (child->view->desktop->layout, output->wlr_output, &output_box);
-      phoc_output_damage_whole_local_surface (output, child->wlr_surface,
-                                              view_box.x + sx,
-                                              view_box.y + sy);
+  wl_list_for_each (output, &child->view->desktop->outputs, link) {
+    struct wlr_box output_box;
+    wlr_output_layout_get_box (child->view->desktop->layout, output->wlr_output, &output_box);
+    phoc_output_damage_whole_local_surface (output, child->wlr_surface,
+                                            view_box.x + sx,
+                                            view_box.y + sy);
 
-    }
-  } else {
-    /* TODO: Implement impl->get_pos for subsurfaces too */
-    phoc_view_damage_whole (child->view);
   }
 }
 
