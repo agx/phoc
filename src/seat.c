@@ -1496,8 +1496,8 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
 }
 
 /**
- * phoc_set_set_focus_view:
- * @self: The seat
+ * phoc_seat_set_focus_view:
+ * @seat: The seat
  * @view:(nullable): The view to focus
  *
  * If possible it will unfocus the currently focused view and focus
