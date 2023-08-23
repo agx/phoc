@@ -1035,20 +1035,11 @@ phoc_output_for_each_surface (PhocOutput          *self,
 void
 phoc_output_get_decoration_box (PhocOutput *self, PhocView *view, struct wlr_box *box)
 {
-  struct wlr_box deco_box;
+  view_get_deco_box (view, box);
 
-  view_get_deco_box (view, &deco_box);
-
-  double x = deco_box.x;
-  double y = deco_box.y;
-
-  wlr_output_layout_output_coords (self->desktop->layout,
-                                   self->wlr_output, &x, &y);
-
-  box->x = x * self->wlr_output->scale;
-  box->y = y * self->wlr_output->scale;
-  box->width = deco_box.width * self->wlr_output->scale;
-  box->height = deco_box.height * self->wlr_output->scale;
+  box->x -= self->lx;
+  box->y -= self->ly;
+  phoc_utils_scale_box (box, self->wlr_output->scale);
 }
 
 void
