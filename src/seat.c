@@ -50,6 +50,8 @@ typedef struct _PhocSeatPrivate {
   PhocInput             *input;
   PhocDeviceState       *device_state;
   char                  *name;
+
+  struct wl_client      *exclusive_client;
 } PhocSeatPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
@@ -1467,13 +1469,19 @@ phoc_seat_view_from_view (PhocSeat *seat, PhocView *view)
   return seat_view;
 }
 
+
 bool
 phoc_seat_allow_input (PhocSeat           *seat,
                        struct wl_resource *resource)
 {
-  return !seat->exclusive_client ||
-         wl_resource_get_client (resource) == seat->exclusive_client;
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
+  return !priv->exclusive_client || wl_resource_get_client (resource) == priv->exclusive_client;
 }
+
 
 static void
 seat_raise_view_stack (PhocSeat *seat, PhocView *view)
@@ -1692,12 +1700,23 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   phoc_output_update_shell_reveal (PHOC_OUTPUT (layer->output->data));
 }
 
+/**
+ * phoc_seat_set_exclusive_client:
+ * @seat: The seat
+ * @client:(nullable): The exclusive client
+ *
+ * If %client is no %NULL only this client can receive input events.
+ */
 void
-phoc_seat_set_exclusive_client (PhocSeat         *seat,
-                                struct wl_client *client)
+phoc_seat_set_exclusive_client (PhocSeat *seat, struct wl_client *client)
 {
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
   if (!client) {
-    seat->exclusive_client = client;
+    priv->exclusive_client = client;
     // Triggers a refocus of the topmost surface layer if necessary
     phoc_layer_shell_update_focus ();
     return;
@@ -1729,7 +1748,7 @@ phoc_seat_set_exclusive_client (PhocSeat         *seat,
                                         now.tv_nsec / 1000, point->touch_id);
     }
   }
-  seat->exclusive_client = client;
+  priv->exclusive_client = client;
 }
 
 /**

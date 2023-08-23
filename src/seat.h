@@ -50,9 +50,6 @@ typedef struct _PhocSeat {
 
   PhocInputMethodRelay            im_relay;
 
-  // If non-null, only this client can receive input events
-  struct wl_client               *exclusive_client;
-
   struct wl_list                  views; // PhocSeatView::link
   bool                            has_focus;
 
