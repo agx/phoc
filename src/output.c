@@ -1662,3 +1662,20 @@ phoc_output_get_name (PhocOutput *self)
 
   return self->wlr_output->name;
 }
+
+/**
+ * phoc_output_damage_add_box:
+ * @self: The output to add a damaged area to
+ * @box: The box describing the damaged area in output coordinates
+ *
+ * Damages a screen area on the given output. The box is conveniently
+ * clipped to the output's box. See `wlr_output_damage_add` for
+ * details.
+ */
+void
+phoc_output_damage_add_box (PhocOutput *self, struct wlr_box *box)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  wlr_output_damage_add_box (self->damage, box);
+}
