@@ -49,6 +49,7 @@ static GParamSpec *props[PROP_LAST_PROP];
 typedef struct _PhocSeatPrivate {
   PhocInput             *input;
   PhocDeviceState       *device_state;
+  char                  *name;
 } PhocSeatPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
@@ -69,7 +70,7 @@ phoc_seat_set_property (GObject      *object,
     priv->input = g_value_get_object (value);
     break;
   case PROP_NAME:
-    self->name = g_value_dup_string (value);
+    priv->name = g_value_dup_string (value);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -92,7 +93,7 @@ phoc_seat_get_property (GObject    *object,
     g_value_set_object (value, priv->input);
     break;
   case PROP_NAME:
-    g_value_set_string (value, self->name);
+    g_value_set_string (value, priv->name);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1933,7 +1934,7 @@ phoc_seat_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  self->seat = wlr_seat_create (server->wl_display, self->name);
+  self->seat = wlr_seat_create (server->wl_display, priv->name);
   g_assert (self->seat);
   self->seat->data = self;
 
@@ -1979,11 +1980,12 @@ static void
 phoc_seat_finalize (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   g_clear_pointer (&self->input_mapping_settings, g_hash_table_destroy);
   phoc_seat_handle_destroy (&self->destroy, self->seat);
   wlr_seat_destroy (self->seat);
-  g_clear_pointer (&self->name, g_free);
+  g_clear_pointer (&priv->name, g_free);
 
   g_clear_pointer (&self->keyboards, g_slist_free);
   g_clear_pointer (&self->pointers, g_slist_free);

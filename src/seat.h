@@ -38,8 +38,6 @@ typedef struct _PhocTablet PhocTablet;
 typedef struct _PhocSeat {
   GObject                         parent;
 
-  char                           *name;
-
   struct wlr_seat                *seat;
   PhocCursor                     *cursor;
 
