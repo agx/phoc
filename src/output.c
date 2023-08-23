@@ -474,6 +474,7 @@ phoc_output_initable_init (GInitable    *initable,
   PhocServer *server = phoc_server_get_default ();
   PhocRenderer *renderer = phoc_server_get_renderer (server);
   PhocInput *input = server->input;
+  struct wlr_box output_box;
 
   g_assert (PHOC_IS_DESKTOP (server->desktop));
 
@@ -570,9 +571,13 @@ phoc_output_initable_init (GInitable    *initable,
     wlr_output_state_set_scale (&pending, phoc_output_compute_scale (self, &pending));
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
+
   self->pending = &pending;
   wlr_output_commit_state (self->wlr_output, &pending);
   self->pending = NULL;
+  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
+  self->lx = output_box.x;
+  self->ly = output_box.y;
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
@@ -1224,6 +1229,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
+    struct wlr_box output_box;
 
     if (!config_head->state.enabled)
       continue;
@@ -1245,6 +1251,10 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     if (output->fullscreen_view) {
       phoc_view_set_fullscreen (output->fullscreen_view, true, wlr_output);
     }
+
+    wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
+    output->lx = output_box.x;
+    output->ly = output_box.y;
   }
 
   if (ok) {

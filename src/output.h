@@ -46,6 +46,7 @@ struct _PhocOutput {
   GList                    *debug_touch_points;
 
   struct wlr_box            usable_area;
+  int                       lx, ly;
 
   struct wl_listener        enable;
   struct wl_listener        commit;
