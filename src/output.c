@@ -845,7 +845,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
 /**
  * phoc_output_layer_surface_for_each_surface:
  * @self: the output
- * @layer: The layer surface to iterate over
+ * @layer_surface: The layer surface to iterate over
  * @iterator: (scope call): The callback invoked on each iteration
  * @user_data: Callback user data
  *
