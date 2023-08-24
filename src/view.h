@@ -157,7 +157,7 @@ typedef struct _PhocViewChild {
 } PhocViewChild;
 
 void phoc_view_appear_activated (PhocView *view, bool activated);
-void phoc_view_activate (PhocView *view, bool activate);
+void phoc_view_activate (PhocView *self, bool activate);
 void phoc_view_damage_whole (PhocView *view);
 gboolean view_is_floating(PhocView *view);
 gboolean view_is_maximized(PhocView *view);
