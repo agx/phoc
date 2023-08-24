@@ -7,7 +7,9 @@
 #define G_LOG_DOMAIN "phoc-cursor"
 
 #include "phoc-config.h"
+#include "color-rect.h"
 #include "server.h"
+#include "timed-animation.h"
 #include "gesture.h"
 #include "gesture-drag.h"
 #include "layer-shell-effects.h"
@@ -28,6 +30,9 @@
 #include "view.h"
 #include "xcursor.h"
 
+#define PHOC_ANIM_SUGGEST_STATE_CHANGE_COLOR    (PhocColor){0.0f, 0.3f, 0.5f, 0.5f}
+#define PHOC_ANIM_DURATION_SUGGEST_STATE_CHANGE 200
+
 enum {
   PROP_0,
   PROP_SEAT,
@@ -42,6 +47,15 @@ typedef struct _PhocCursorPrivate {
 
   /* The compositor tracked touch points */
   GHashTable       *touch_points;
+
+  struct {
+    PhocColorRect         *rect;
+    PhocView              *view;
+    PhocViewState          state;
+    PhocViewTileDirection  tile_dir;
+    PhocOutput            *output;
+    PhocTimedAnimation    *anim;
+  } view_state;
 } PhocCursorPrivate;
 
 
@@ -53,6 +67,184 @@ static void handle_pointer_button (struct wl_listener *listener, void *data);
 static void handle_pointer_axis (struct wl_listener *listener, void *data);
 static void handle_pointer_frame (struct wl_listener *listener, void *data);
 static void handle_touch_frame (struct wl_listener *listener, void *data);
+
+
+static void
+phoc_cursor_view_state_set_view (PhocCursor *self, PhocView *view)
+{
+  PhocCursorPrivate *priv;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  if (priv->view_state.view == view)
+    return;
+
+  if (priv->view_state.view)
+    g_object_remove_weak_pointer (G_OBJECT (priv->view_state.view),
+                                  (gpointer *)&priv->view_state.view);
+
+  priv->view_state.view = view;
+
+  if (priv->view_state.view) {
+    g_object_add_weak_pointer (G_OBJECT (priv->view_state.view),
+                               (gpointer *)&priv->view_state.view);
+  }
+}
+
+
+static void
+phoc_cursor_view_state_set_output (PhocCursor *self, PhocOutput *output)
+{
+  PhocCursorPrivate *priv;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  if (priv->view_state.output == output)
+    return;
+
+  if (priv->view_state.output)
+    g_object_remove_weak_pointer (G_OBJECT (priv->view_state.output),
+                                  (gpointer *)&priv->view_state.output);
+
+  priv->view_state.output = output;
+
+  if (priv->view_state.output) {
+    g_object_add_weak_pointer (G_OBJECT (priv->view_state.output),
+                               (gpointer *)&priv->view_state.output);
+  }
+}
+
+
+static void
+phoc_cursor_suggest_view_state_change (PhocCursor            *self,
+                                       PhocView              *view,
+                                       PhocOutput            *output,
+                                       PhocViewState          state,
+                                       PhocViewTileDirection  dir)
+{
+  PhocCursorPrivate *priv;
+  struct wlr_box view_box, suggested_box;
+  g_autoptr (PhocPropertyEaser) easer = NULL;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  g_assert (PHOC_IS_VIEW (view));
+  g_assert (PHOC_IS_OUTPUT (output));
+  priv = phoc_cursor_get_instance_private (self);
+
+  if (priv->view_state.view)
+    return;
+
+  switch (state) {
+  case PHOC_VIEW_STATE_TILED:
+  case PHOC_VIEW_STATE_MAXIMIZED:
+    priv->view_state.state = state;
+    priv->view_state.tile_dir = dir;
+    break;
+  case PHOC_VIEW_STATE_FLOATING:
+  default:
+    g_assert_not_reached ();
+  }
+
+  phoc_cursor_view_state_set_view (self, view);
+  phoc_cursor_view_state_set_output (self, output);
+  view_get_box (view, &view_box);
+  priv->view_state.rect = phoc_color_rect_new ((PhocBox *)&view_box,
+                                               &PHOC_ANIM_SUGGEST_STATE_CHANGE_COLOR);
+  phoc_view_add_bling (view, PHOC_BLING (priv->view_state.rect));
+
+  switch (state) {
+  case PHOC_VIEW_STATE_MAXIMIZED:
+    if (!phoc_view_get_maximized_box (view, output, &suggested_box)) {
+      g_warning ("Failed to get target box for %d on %s", state, phoc_output_get_name (output));
+      return;
+    }
+    break;
+  case PHOC_VIEW_STATE_TILED:
+    if (!phoc_view_get_tiled_box (view, dir, output, &suggested_box)) {
+      g_warning ("Failed to get target box for %d on %s", state, phoc_output_get_name (output));
+      return;
+    }
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  g_debug ("Suggest %s: %d,%d %dx%d for %p on %s",
+           state == PHOC_VIEW_STATE_MAXIMIZED ? "maximize" : "tile",
+           suggested_box.x, suggested_box.y, suggested_box.width, suggested_box.height,
+           view, phoc_output_get_name (output));
+  easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
+                        "target", priv->view_state.rect,
+                        "easing", PHOC_EASING_EASE_OUT_QUAD,
+                        NULL);
+
+  phoc_property_easer_set_props (easer,
+                                 "x", view_box.x, suggested_box.x,
+                                 "y", view_box.y, suggested_box.y,
+                                 "width", view_box.width, suggested_box.width,
+                                 "height", view_box.height, suggested_box.height,
+                                 NULL);
+
+  priv->view_state.anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
+                                        "duration", PHOC_ANIM_DURATION_SUGGEST_STATE_CHANGE,
+                                        "property-easer", easer,
+                                        "animatable", output,
+                                        "dispose-on-done", FALSE,
+                                        NULL);
+  phoc_bling_map (PHOC_BLING (priv->view_state.rect));
+  phoc_timed_animation_play (priv->view_state.anim);
+}
+
+
+static void
+phoc_cursor_clear_view_state_change (PhocCursor *self)
+{
+  PhocCursorPrivate *priv;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  if (priv->view_state.view) {
+    phoc_view_remove_bling (priv->view_state.view, PHOC_BLING (priv->view_state.rect));
+    g_clear_object (&priv->view_state.rect);
+    g_clear_object (&priv->view_state.anim);
+  }
+
+  phoc_cursor_view_state_set_view (self, NULL);
+  phoc_cursor_view_state_set_output (self, NULL);
+}
+
+
+static void
+phoc_cursor_submit_pending_view_state_change (PhocCursor *self, PhocView *view)
+{
+  PhocCursorPrivate *priv;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  g_assert (PHOC_IS_VIEW (priv->view_state.view));
+
+  switch (priv->view_state.state) {
+  case PHOC_VIEW_STATE_MAXIMIZED:
+    view_maximize (priv->view_state.view, priv->view_state.output->wlr_output);
+    break;
+  case PHOC_VIEW_STATE_TILED:
+    view_tile (priv->view_state.view, priv->view_state.tile_dir,
+               priv->view_state.output->wlr_output);
+    break;
+  case PHOC_VIEW_STATE_FLOATING:
+    /* Nothing to do */
+    break;
+  default:
+    g_return_if_reached();
+  }
+
+  /* Dispose animation and color-rect */
+  phoc_cursor_clear_view_state_change (self);
+}
 
 
 static bool
@@ -643,6 +835,7 @@ phoc_cursor_finalize (GObject *object)
   PhocCursor *self = PHOC_CURSOR (object);
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
+  phoc_cursor_clear_view_state_change (self);
   g_clear_pointer (&priv->touch_points, g_hash_table_destroy);
   g_clear_pointer (&priv->gestures, free_gestures);
 
@@ -831,8 +1024,7 @@ phoc_cursor_update_focus (PhocCursor *self)
 }
 
 void
-phoc_cursor_update_position (PhocCursor *self,
-                             uint32_t    time)
+phoc_cursor_update_position (PhocCursor *self, uint32_t time)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
@@ -850,7 +1042,6 @@ phoc_cursor_update_position (PhocCursor *self,
       phoc_view_get_geometry (view, &geom);
       double dx = self->cursor->x - self->offs_x;
       double dy = self->cursor->y - self->offs_y;
-
       PhocOutput *output = phoc_desktop_layout_get_output (desktop, self->cursor->x, self->cursor->y);
       struct wlr_box output_box;
       wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
@@ -860,12 +1051,23 @@ phoc_cursor_update_position (PhocCursor *self,
       if (view_is_fullscreen (view)) {
         phoc_view_set_fullscreen (view, true, output->wlr_output);
       } else if (self->cursor->y < output_box.y + PHOC_EDGE_SNAP_THRESHOLD) {
-        view_maximize (view, output->wlr_output);
-      } else if (output_is_landscape && self->cursor->x < output_box.x + PHOC_EDGE_SNAP_THRESHOLD) {
-        view_tile (view, PHOC_VIEW_TILE_LEFT, output->wlr_output);
-      } else if (output_is_landscape && self->cursor->x > output_box.x + output_box.width - PHOC_EDGE_SNAP_THRESHOLD) {
-        view_tile (view, PHOC_VIEW_TILE_RIGHT, output->wlr_output);
+        phoc_cursor_suggest_view_state_change (self, view, output, PHOC_VIEW_STATE_MAXIMIZED, -1);
+      } else if (output_is_landscape &&
+                 self->cursor->x < output_box.x + PHOC_EDGE_SNAP_THRESHOLD) {
+        phoc_cursor_suggest_view_state_change (self,
+                                               view,
+                                               output,
+                                               PHOC_VIEW_STATE_TILED,
+                                               PHOC_VIEW_TILE_LEFT);
+      } else if (output_is_landscape &&
+                 self->cursor->x > output_box.x + output_box.width - PHOC_EDGE_SNAP_THRESHOLD) {
+        phoc_cursor_suggest_view_state_change (self,
+                                               view,
+                                               output,
+                                               PHOC_VIEW_STATE_TILED,
+                                               PHOC_VIEW_TILE_RIGHT);
       } else {
+        phoc_cursor_clear_view_state_change (self);
         view_restore (view);
         phoc_view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
                         self->view_y + dy - geom.y * phoc_view_get_scale (view));
@@ -917,6 +1119,7 @@ phoc_cursor_press_button (PhocCursor *self,
                           uint32_t state, double lx, double ly)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   PhocSeat *seat = self->seat;
   PhocDesktop *desktop = server->desktop;
 
@@ -960,8 +1163,9 @@ phoc_cursor_press_button (PhocCursor *self,
                              sx, sy, button, state);
     }
 
-    if (state == WLR_BUTTON_RELEASED &&
-        self->mode != PHOC_CURSOR_PASSTHROUGH) {
+    if (state == WLR_BUTTON_RELEASED && self->mode != PHOC_CURSOR_PASSTHROUGH) {
+      if (priv->view_state.view)
+        phoc_cursor_submit_pending_view_state_change (self, view);
       self->mode = PHOC_CURSOR_PASSTHROUGH;
       phoc_cursor_update_focus (self);
     }
