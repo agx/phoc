@@ -144,7 +144,7 @@ view_is_fullscreen (PhocView *self)
  * Gets the output a view is fullscreen on. Returns %NULL if
  * the view isn't currently fullscreen.
  *
- * Returns:(nullable): The fullscreen output
+ * Returns:(transfer none)(nullable): The fullscreen output
  */
 PhocOutput *
 phoc_view_get_fullscreen_output (PhocView *self)
