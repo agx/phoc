@@ -31,6 +31,8 @@ static GParamSpec *props[PROP_LAST_PROP];
  *
  * A shield that covers a whole `PhocOutput`. It can be raised (to cover
  * the whole screen) and lowered to show the screens content.
+ *
+ * TODO: Use PhocColorRect to simplify
  */
 struct _PhocOutputShield {
   GObject             parent;
