@@ -170,7 +170,7 @@ void view_get_box(PhocView *view, struct wlr_box *box) {
 	box->height = view->box.height * priv->scale;
 }
 
-
+/* TODO: Use PhocBling for decorations too */
 void view_get_deco_box(PhocView *view, struct wlr_box *box) {
         PhocViewPrivate *priv;
 
