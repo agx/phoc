@@ -516,7 +516,7 @@ phoc_timed_animation_get_state (PhocTimedAnimation *self)
  *
  * Whether the animation tracks it's own reference.
  *
- * Returns: Whether [prop@TimedAnimation:dispose-on-done] is set.
+ * Returns: Whether [property@TimedAnimation:dispose-on-done] is set.
  */
 gboolean
 phoc_timed_animation_get_dispose_on_done (PhocTimedAnimation *self)

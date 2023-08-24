@@ -144,7 +144,7 @@ view_is_fullscreen (PhocView *self)
  * Gets the output a view is fullscreen on. Returns %NULL if
  * the view isn't currently fullscreen.
  *
- * Returns:(nullable): The fullscreen output
+ * Returns:(transfer none)(nullable): The fullscreen output
  */
 PhocOutput *
 phoc_view_get_fullscreen_output (PhocView *self)
@@ -318,7 +318,7 @@ phoc_view_appear_activated (PhocView *view, bool activated)
  * Performs the necessary steps to make the view itself appear activated
  * and send out the corresponding view related protocol events.
  * Note that this is not enough to actually focus the view for the user
- * See [method@phoc_seat_set_focus].
+ * See [method@Seat.set_focus_view].
  */
 void
 phoc_view_activate (PhocView *self, bool activate)

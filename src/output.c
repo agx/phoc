@@ -845,7 +845,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
 /**
  * phoc_output_layer_surface_for_each_surface:
  * @self: the output
- * @layer: The layer surface to iterate over
+ * @layer_surface: The layer surface to iterate over
  * @iterator: (scope call): The callback invoked on each iteration
  * @user_data: Callback user data
  *
@@ -1504,7 +1504,7 @@ phoc_output_has_frame_callbacks (PhocOutput *self)
 
 /**
  * phoc_output_lower_shield:
- * @self: The output lower the shield for
+ * @self: The output to lower the shield for
  *
  * Lowers an output shield that is in place to hide
  * the outputs current content.
@@ -1524,8 +1524,8 @@ phoc_output_lower_shield (PhocOutput *self)
 }
 
 /**
- * phoc_output_lower_shield:
- * @self: The output lower the shield for
+ * phoc_output_raise_shield:
+ * @self: The output to raise the shield for
  *
  * Raise an output shield will be put in place to hide the outputs
  * current content.

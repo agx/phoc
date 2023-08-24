@@ -284,7 +284,7 @@ phoc_config_new_from_file (const char *config_path)
 
 /**
  * phoc_config_new_from_data:
- * @config_data: (nullable): The config data
+ * @data: (nullable): The config data
  *
  * Parse the given config data
  *

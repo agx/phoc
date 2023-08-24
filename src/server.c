@@ -323,7 +323,7 @@ phoc_server_get_default (void)
  * phoc_server_setup:
  * @self: The server
  * @config:(transfer full): The configuration
- * @session: The session name
+ * @exec: The executable to run
  * @mainloop:(transfer none): The mainloop
  * @flags: The flags to use for spawning the server
  * @debug_flags: The debug flags to use

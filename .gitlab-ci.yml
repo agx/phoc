@@ -137,7 +137,7 @@ build-gtkdoc:
     - git clean -dfx
     - 'echo "Build opts: ${BUILD_ARGS}"'
     - meson . _build $BUILD_ARGS
-    - ninja -C _build
+    - helpers/doc-check _build
     - test -f _build/doc/phoc-*/index.html
     - mv _build/doc/phoc-*/ _reference/
   artifacts:
