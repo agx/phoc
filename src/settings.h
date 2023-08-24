@@ -22,7 +22,7 @@ typedef struct _PhocOutputConfig {
   int                      x, y;
   float                    scale;
 
-  struct Mode {
+  struct PhocMode {
     int   width, height;
     float refresh_rate;
   } mode;
