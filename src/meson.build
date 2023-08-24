@@ -58,6 +58,8 @@ sources = files(
   'output.h',
   'output-shield.c',
   'output-shield.h',
+  'phoc-types.h',
+  'phoc-types.c',
   'phosh-private.c',
   'phosh-private.h',
   'pointer.c',
