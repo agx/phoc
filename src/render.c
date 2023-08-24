@@ -543,7 +543,6 @@ damage_touch_points (PhocOutput *output)
     return;
 
   g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
-  wlr_output_schedule_frame(output->wlr_output);
 }
 
 static void
