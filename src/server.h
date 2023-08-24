@@ -79,7 +79,7 @@ struct _PhocServer {
 };
 
 PhocServer        *phoc_server_get_default (void);
-gboolean           phoc_server_setup (PhocServer *server, PhocConfig *config,
+gboolean           phoc_server_setup (PhocServer *self, PhocConfig *config,
                                       const char *exec, GMainLoop *mainloop,
                                       PhocServerFlags flags,
                                       PhocServerDebugFlags debug_flags);
