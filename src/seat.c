@@ -1333,7 +1333,7 @@ phoc_seat_has_meta_pressed (PhocSeat *seat)
 
 
 /**
- * phoc_seat_get_focus:
+ * phoc_seat_get_focus_view:
  * @seat: The seat
  *
  * Returns: (nullable)(transfer none): The currently focused view
