@@ -16,6 +16,8 @@ phoc_marshalers = gnome.genmarshal('phoc-marshalers',
   valist_marshallers : true)
 
 sources = files(
+  'bling.c',
+  'bling.h',
   'cursor.c',
   'cursor.h',
   'cutouts-overlay.c',
