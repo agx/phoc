@@ -150,10 +150,6 @@ if get_option('gtk_doc')
     '--quiet',
   ]
 
-  if have_xwayland
-    phoc_gir_extra_args += '-DPHOC_XWAYLAND'
-  endif
-
   gir_sources = sources + phoc_anim_enum_sources + phoc_enum_sources
 
   phoc_gir = gnome.generate_gir(phoc_lib,
