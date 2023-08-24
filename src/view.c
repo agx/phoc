@@ -9,6 +9,7 @@
 #include <string.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_output_layout.h>
+#include "bling.h"
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"
@@ -56,6 +57,7 @@ typedef struct _PhocViewPrivate {
   gboolean       scale_to_fit;
   char          *activation_token;
   int            activation_token_type;
+  GSList        *blings; /* PhocBlings */
 
   /* wlr-toplevel-management handling */
   struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
@@ -1649,6 +1651,7 @@ phoc_view_finalize (GObject *object)
     priv->fullscreen_output->fullscreen_view = NULL;
   }
 
+  g_clear_slist (&priv->blings, g_object_unref);
   g_clear_pointer (&priv->title, g_free);
   g_clear_pointer (&priv->app_id, g_free);
   g_clear_pointer (&priv->activation_token, g_free);
@@ -2285,4 +2288,68 @@ phoc_view_get_pid (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->pid;
+}
+
+/**
+ * phoc_view_add_bling:
+ * @self: The view
+ * @bling: The bling to add
+ *
+ * By adding a [type@Bling] to a view you ensure that it gets rendered
+ * just before the view if both the view and the bling are mapped.
+ *
+ * Thew view will take a reference on the [type@Bling] that will be
+ * dropped when the bling is removed or the view is destroyed.
+ */
+void
+phoc_view_add_bling (PhocView *self, PhocBling *bling)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_BLING (bling));
+  priv = phoc_view_get_instance_private (self);
+
+  priv->blings = g_slist_prepend (priv->blings, g_object_ref (bling));
+}
+
+/**
+ * phoc_view_remove_bling:
+ * @self: The view
+ * @bling: The bling to add
+ *
+ * Removes the given bling from the view.
+ */
+void
+phoc_view_remove_bling (PhocView *self, PhocBling *bling)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_BLING (bling));
+  priv = phoc_view_get_instance_private (self);
+
+  g_return_if_fail (g_slist_find (priv->blings, bling));
+
+  priv->blings = g_slist_remove (priv->blings, bling);
+  g_object_unref (bling);
+}
+
+/**
+ * phoc_view_get_blings:
+ * @self: The view
+ *
+ * Gets the view's current list of blings.
+ *
+ * Returns: (transfer none)(element-type PhocBling): A list
+ */
+GSList *
+phoc_view_get_blings (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->blings;
 }

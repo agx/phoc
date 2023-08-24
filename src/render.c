@@ -11,6 +11,7 @@
 #define G_LOG_DOMAIN "phoc-render"
 
 #include "phoc-config.h"
+#include "bling.h"
 #include "layers.h"
 #include "seat.h"
 #include "server.h"
@@ -334,6 +335,46 @@ render_decorations (PhocOutput         *output,
 
 
 static void
+render_blings (PhocOutput *output, PhocView *view, struct render_data *data)
+{
+  GSList *blings;
+
+  if (!phoc_view_is_mapped (view))
+    return;
+
+  blings = phoc_view_get_blings (view);
+  if (!blings)
+    return;
+
+  for (GSList *l = blings; l; l = l->next) {
+    PhocBling *bling = PHOC_BLING (l->data);
+    PhocBox box;
+
+    box = phoc_bling_get_box (bling);
+
+    box.x -= output->lx;
+    box.y -= output->ly;
+    phoc_utils_scale_box (&box, output->wlr_output->scale);
+
+    pixman_region32_t damage;
+    if (!is_damaged (box.x, box.y, box.width, box.height, data->damage, &damage)) {
+      pixman_region32_fini (&damage);
+      continue;
+    }
+
+    int nrects;
+    pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
+    for (int i = 0; i < nrects; ++i) {
+      scissor_output (output->wlr_output, &rects[i]);
+      phoc_bling_render (bling, output);
+    }
+
+    pixman_region32_fini (&damage);
+  }
+}
+
+
+static void
 render_view (PhocOutput *output, PhocView *view, struct render_data *data)
 {
   // Do not render views fullscreened on other outputs
@@ -342,8 +383,10 @@ render_view (PhocOutput *output, PhocView *view, struct render_data *data)
 
   data->alpha = phoc_view_get_alpha (view);
 
-  if (!view_is_fullscreen (view))
+  if (!view_is_fullscreen (view)) {
     render_decorations (output, view, data);
+    render_blings (output, view, data);
+  }
 
   phoc_output_view_for_each_surface (output, view, render_surface_iterator, data);
 }

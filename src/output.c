@@ -16,6 +16,7 @@
 #include <wlr/util/region.h>
 
 #include "anim/animatable.h"
+#include "bling.h"
 #include "cutouts-overlay.h"
 #include "settings.h"
 #include "layers.h"
@@ -1123,6 +1124,8 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
 static void
 damage_whole_view (PhocOutput *self, PhocView  *view)
 {
+  GSList *blings;
+
   if (!phoc_view_is_mapped (view)) {
     return;
   }
@@ -1130,8 +1133,21 @@ damage_whole_view (PhocOutput *self, PhocView  *view)
   struct wlr_box box;
 
   phoc_output_get_decoration_box (self, view, &box);
-
   wlr_output_damage_add_box (self->damage, &box);
+
+  blings = phoc_view_get_blings (view);
+  if (G_LIKELY (!blings))
+    return;
+
+  for (GSList *l = blings; l; l = l->next) {
+    PhocBling *bling = PHOC_BLING (l->data);
+
+    box = phoc_bling_get_box (bling);
+    box.x -= self->lx;
+    box.y -= self->ly;
+    phoc_utils_scale_box (&box, self->wlr_output->scale);
+    wlr_output_damage_add_box (self->damage, &box);
+  }
 }
 
 

@@ -5,11 +5,13 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_compositor.h>
 
+#include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
 
+typedef struct _PhocBling PhocBling;
 typedef struct _PhocView PhocView;
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
@@ -220,6 +222,11 @@ gboolean             phoc_view_get_tiled_box                    (PhocView       
                                                                  PhocViewTileDirection  dir,
                                                                  PhocOutput            *output,
                                                                  struct wlr_box        *box);
+void                 phoc_view_add_bling                        (PhocView              *self,
+                                                                 PhocBling             *bling);
+void                 phoc_view_remove_bling                     (PhocView              *self,
+                                                                 PhocBling             *bling);
+GSList              *phoc_view_get_blings                       (PhocView              *self);
 
 void phoc_view_child_init(PhocViewChild *child,
                           const struct phoc_view_child_interface *impl,
