@@ -219,6 +219,15 @@ arrange_layer (PhocOutput                     *output,
   }
 }
 
+/**
+ * phoc_layer_shell_find_osk:
+ * @output: An output
+ *
+ * Checks whether the given [type@Output] has the on screen keyboard and returns
+ * the associated [type@LayerSurface] if found.
+ *
+ * Returns:(transfer none)(nullable): The OSKs layer surface or %NULL
+ */
 PhocLayerSurface *
 phoc_layer_shell_find_osk (PhocOutput *output)
 {
