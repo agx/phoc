@@ -37,6 +37,8 @@ static guint signals[N_SIGNALS];
 /**
  * PhocTimedAnimation:
  *
+ * An animation that ends after the given period of time.
+ *
  * [type@TimedAnimation] implements a timed animation using the given
  * [type@PropertyEaser] to animate properties of the [type@Animatable].
  */
