@@ -771,65 +771,68 @@ view_tile(PhocView *view, PhocViewTileDirection direction, struct wlr_output *ou
   view_arrange_tiled (view, output);
 }
 
-bool view_center(PhocView *view, struct wlr_output *wlr_output) {
-	PhocServer *server = phoc_server_get_default ();
-	struct wlr_box box, geom;
-	PhocViewPrivate *priv;
 
-	g_assert (PHOC_IS_VIEW (view));
-	priv = phoc_view_get_instance_private (view);
-	view_get_box(view, &box);
-	phoc_view_get_geometry (view, &geom);
+bool
+view_center (PhocView *view, struct wlr_output *wlr_output)
+{
+  PhocServer *server = phoc_server_get_default ();
+  struct wlr_box box, geom;
+  PhocViewPrivate *priv;
 
-	if (!view_is_floating (view))
-		return false;
+  g_assert (PHOC_IS_VIEW (view));
+  priv = phoc_view_get_instance_private (view);
+  view_get_box (view, &box);
+  phoc_view_get_geometry (view, &geom);
 
-	PhocDesktop *desktop = view->desktop;
-	PhocInput *input = server->input;
-	PhocSeat *seat = phoc_input_get_last_active_seat(input);
-	PhocCursor *cursor;
+  if (!view_is_floating (view))
+    return false;
 
-	if (!seat) {
-		return false;
-	}
-	cursor = phoc_seat_get_cursor (seat);
+  PhocDesktop *desktop = view->desktop;
+  PhocInput *input = server->input;
+  PhocSeat *seat = phoc_input_get_last_active_seat (input);
+  PhocCursor *cursor;
 
-	struct wlr_output *output = wlr_output ?: wlr_output_layout_output_at(desktop->layout,
-		cursor->cursor->x, cursor->cursor->y);
-	if (!output) {
-		// empty layout
-		return false;
-	}
+  if (!seat)
+    return false;
 
-	const struct wlr_output_layout_output *l_output =
-		wlr_output_layout_get(desktop->layout, output);
+  cursor = phoc_seat_get_cursor (seat);
 
-	PhocOutput *phoc_output = PHOC_OUTPUT (output->data);
-	g_assert (PHOC_IS_OUTPUT (phoc_output));
+  struct wlr_output *output = wlr_output ?: wlr_output_layout_output_at(desktop->layout,
+                                                                        cursor->cursor->x, cursor->cursor->y);
+  if (!output) {
+    // empty layout
+    return false;
+  }
 
-	struct wlr_box usable_area = phoc_output->usable_area;
+  const struct wlr_output_layout_output *l_output = wlr_output_layout_get (desktop->layout, output);
 
-	double view_x = (double)(usable_area.width - box.width) / 2 +
-	  usable_area.x + l_output->x - geom.x * priv->scale;
-	double view_y = (double)(usable_area.height - box.height) / 2 +
-	  usable_area.y + l_output->y - geom.y * priv->scale;
+  PhocOutput *phoc_output = PHOC_OUTPUT (output->data);
+  g_assert (PHOC_IS_OUTPUT (phoc_output));
 
-	g_debug ("moving view to %f %f", view_x, view_y);
-	phoc_view_move (view, view_x / priv->scale, view_y / priv->scale);
+  struct wlr_box usable_area = phoc_output->usable_area;
 
-	if (!desktop->maximize) {
-		// TODO: fitting floating oversized windows requires more work (!228)
-		return true;
-	}
+  double view_x = (double)(usable_area.width - box.width) / 2 +
+    usable_area.x + l_output->x - geom.x * priv->scale;
+  double view_y = (double)(usable_area.height - box.height) / 2 +
+    usable_area.y + l_output->y - geom.y * priv->scale;
 
-	if (view->box.width > phoc_output->usable_area.width || view->box.height > phoc_output->usable_area.height) {
-		phoc_view_resize (view,
-		             (view->box.width > phoc_output->usable_area.width) ? phoc_output->usable_area.width : view->box.width,
-		             (view->box.height > phoc_output->usable_area.height) ? phoc_output->usable_area.height : view->box.height);
-	}
+  g_debug ("moving view to %f %f", view_x, view_y);
+  phoc_view_move (view, view_x / priv->scale, view_y / priv->scale);
 
-	return true;
+  if (!desktop->maximize) {
+    // TODO: fitting floating oversized windows requires more work (!228)
+    return true;
+  }
+
+  if (view->box.width > phoc_output->usable_area.width || view->box.height > phoc_output->usable_area.height) {
+    phoc_view_resize (view,
+                      (view->box.width > phoc_output->usable_area.width) ? phoc_output->usable_area.width : view->box.width,
+                      (view->box.height > phoc_output->usable_area.height) ? phoc_output->usable_area.height : view->box.height);
+  }
+
+  return true;
 }
+
 
 static bool
 phoc_view_child_is_mapped (PhocViewChild *child)
