@@ -838,20 +838,47 @@ phoc_view_child_init (PhocViewChild *child,
   phoc_view_child_init_subsurfaces (child, wlr_surface);
 }
 
+
 static const struct phoc_view_child_interface subsurface_impl;
 
-static void subsurface_destroy(PhocViewChild *child) {
-	g_assert (child->impl == &subsurface_impl);
-	PhocSubsurface *subsurface = (PhocSubsurface *)child;
-	wl_list_remove(&subsurface->destroy.link);
-	wl_list_remove(&subsurface->map.link);
-	wl_list_remove(&subsurface->unmap.link);
-	g_free (subsurface);
+static void
+subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
+{
+  struct wlr_surface *wlr_surface;
+  struct wlr_subsurface *wlr_subsurface;
+
+  g_assert (child->impl == &subsurface_impl);
+
+  wlr_surface = child->wlr_surface;
+  if (child->parent && child->parent->impl && child->parent->impl->get_pos)
+    child->parent->impl->get_pos (child->parent, sx, sy);
+  else
+    *sx = *sy = 0;
+
+  wlr_subsurface = wlr_subsurface_from_wlr_surface (wlr_surface);
+  *sx += wlr_subsurface->current.x;
+  *sy += wlr_subsurface->current.y;
 }
 
+
+static void
+subsurface_destroy (PhocViewChild *child)
+{
+  PhocSubsurface *subsurface = (PhocSubsurface *)child;
+
+  g_assert (child->impl == &subsurface_impl);
+  wl_list_remove (&subsurface->destroy.link);
+  wl_list_remove (&subsurface->map.link);
+  wl_list_remove (&subsurface->unmap.link);
+  g_free (subsurface);
+}
+
+
 static const struct phoc_view_child_interface subsurface_impl = {
-	.destroy = subsurface_destroy,
+  .get_pos = subsurface_get_pos,
+  .destroy = subsurface_destroy,
 };
+
 
 static void subsurface_handle_destroy(struct wl_listener *listener,
 		void *data) {
@@ -1891,25 +1918,20 @@ phoc_view_child_damage_whole (PhocViewChild *child)
   if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
     return;
 
-  if (child->impl->get_pos) {
-    PhocOutput *output;
-    int sx, sy;
-    struct wlr_box view_box;
+  PhocOutput *output;
+  int sx, sy;
+  struct wlr_box view_box;
 
-    view_get_box (child->view, &view_box);
-    child->impl->get_pos (child, &sx, &sy);
+  view_get_box (child->view, &view_box);
+  child->impl->get_pos (child, &sx, &sy);
 
-    wl_list_for_each (output, &child->view->desktop->outputs, link) {
-      struct wlr_box output_box;
-      wlr_output_layout_get_box (child->view->desktop->layout, output->wlr_output, &output_box);
-      phoc_output_damage_whole_local_surface (output, child->wlr_surface,
-                                              view_box.x + sx,
-                                              view_box.y + sy);
+  wl_list_for_each (output, &child->view->desktop->outputs, link) {
+    struct wlr_box output_box;
+    wlr_output_layout_get_box (child->view->desktop->layout, output->wlr_output, &output_box);
+    phoc_output_damage_whole_local_surface (output, child->wlr_surface,
+                                            view_box.x + sx,
+                                            view_box.y + sy);
 
-    }
-  } else {
-    /* TODO: Implement impl->get_pos for subsurfaces too */
-    phoc_view_damage_whole (child->view);
   }
 }
 
