@@ -214,6 +214,8 @@ float                 phoc_view_get_scale (PhocView *self);
 gboolean              phoc_view_is_decorated (PhocView *self);
 PhocOutput           *phoc_view_get_fullscreen_output (PhocView *self);
 bool                  phoc_view_want_auto_maximize (PhocView *self);
+void                  phoc_view_set_decorated (PhocView *self,
+                                               gboolean  decorated);
 gboolean              phoc_view_get_maximized_box (PhocView       *self,
                                                    PhocOutput     *output,
                                                    struct wlr_box *box);

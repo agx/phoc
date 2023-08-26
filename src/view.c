@@ -1323,25 +1323,6 @@ view_update_size (PhocView *view, int width, int height)
   phoc_view_damage_whole (view);
 }
 
-void
-phoc_view_update_decorated (PhocView *view, bool decorated)
-{
-  PhocViewPrivate *priv;
-
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
-
-  if (!!priv->decorated == !!decorated)
-    return;
-
-  phoc_view_damage_whole (view);
-  if (decorated)
-    phoc_view_set_decoration (view, TRUE);
-  else
-    phoc_view_set_decoration (view, FALSE);
-
-  phoc_view_damage_whole (view);
-}
 
 void
 view_set_title (PhocView *view, const char *title)
@@ -2121,7 +2102,7 @@ phoc_view_get_scale (PhocView *self)
 }
 
 /**
- * phoc_view_set_decoration
+ * phoc_view_set_decorated
  * @self: The view
  * @decorated: Whether the compositor should draw window decorations
  *
@@ -2129,7 +2110,7 @@ phoc_view_get_scale (PhocView *self)
  * decoration.
  */
 void
-phoc_view_set_decoration (PhocView *self, gboolean decorated)
+phoc_view_set_decorated (PhocView *self, gboolean decorated)
 {
   PhocViewPrivate *priv;
 
@@ -2144,8 +2125,10 @@ phoc_view_set_decoration (PhocView *self, gboolean decorated)
     phoc_view_add_bling (self, PHOC_BLING (priv->deco));
     phoc_bling_map (PHOC_BLING (priv->deco));
   } else {
-    if (priv->deco)
+    if (priv->deco) {
+      phoc_bling_unmap (PHOC_BLING (priv->deco));
       phoc_view_remove_bling (self, PHOC_BLING (priv->deco));
+    }
     g_clear_object (&priv->deco);
   }
 }
