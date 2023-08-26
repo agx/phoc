@@ -2139,10 +2139,15 @@ phoc_view_set_decoration (PhocView *self, gboolean decorated)
   if (!!priv->deco == !!decorated)
     return;
 
-  if (decorated)
+  if (decorated) {
     priv->deco = phoc_view_deco_new (self);
-  else
+    phoc_view_add_bling (self, PHOC_BLING (priv->deco));
+    phoc_bling_map (PHOC_BLING (priv->deco));
+  } else {
+    if (priv->deco)
+      phoc_view_remove_bling (self, PHOC_BLING (priv->deco));
     g_clear_object (&priv->deco);
+  }
 }
 
 

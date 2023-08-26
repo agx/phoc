@@ -1317,17 +1317,6 @@ phoc_output_for_each_surface (PhocOutput          *self,
 
 
 void
-phoc_output_get_decoration_box (PhocOutput *self, PhocView *view, struct wlr_box *box)
-{
-  phoc_view_get_deco_box (view, box);
-
-  box->x -= self->lx;
-  box->y -= self->ly;
-  phoc_utils_scale_box (box, self->wlr_output->scale);
-}
-
-
-void
 phoc_output_damage_whole (PhocOutput *self)
 {
   if (self == NULL || self->wlr_output == NULL)
@@ -1416,10 +1405,6 @@ damage_whole_view (PhocOutput *self, PhocView  *view)
   if (!phoc_view_is_mapped (view)) {
     return;
   }
-
-  phoc_output_get_decoration_box (self, view, &box);
-  if (wlr_damage_ring_add_box (&self->damage_ring, &box))
-    wlr_output_schedule_frame (self->wlr_output);
 
   blings = phoc_view_get_blings (view);
   if (G_LIKELY (!blings))

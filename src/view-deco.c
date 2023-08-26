@@ -11,10 +11,17 @@
 #include "phoc-config.h"
 
 #include "bling.h"
+#include "desktop.h"
+#include "output.h"
+#include "server.h"
 #include "view-deco.h"
+#include "utils.h"
+
+#include <wlr/types/wlr_matrix.h>
 
 #define PHOC_DECO_BORDER_WIDTH      4
 #define PHOC_DECO_TITLEBAR_HEIGHT  12
+#define PHOC_DECO_COLOR            { 0.2, 0.2, 0.2, 1.0 }
 
 /**
  * PhocViewDeco:
@@ -35,6 +42,7 @@ struct _PhocViewDeco {
   PhocView       *view;
   guint           border_width;
   guint           titlebar_height;
+  gboolean        mapped;
 };
 
 static void bling_interface_init (PhocBlingInterface *iface);
@@ -61,9 +69,83 @@ phoc_view_deco_bling_get_box (PhocBling *bling)
 
 
 static void
+phoc_view_deco_damage_box (PhocViewDeco *self)
+{
+  PhocDesktop *desktop = phoc_server_get_default ()->desktop;
+  PhocOutput *output;
+
+  if (!self->mapped)
+    return;
+
+  wl_list_for_each (output, &desktop->outputs, link) {
+    struct wlr_box damage_box = phoc_bling_get_box (PHOC_BLING (self));
+    bool intersects = wlr_output_layout_intersects (desktop->layout, output->wlr_output, &damage_box);
+    if (!intersects)
+      continue;
+
+    damage_box.x -= output->lx;
+    damage_box.y -= output->ly;
+    phoc_utils_scale_box (&damage_box, output->wlr_output->scale);
+
+    if (wlr_damage_ring_add_box (&output->damage_ring, &damage_box))
+      wlr_output_schedule_frame (output->wlr_output);
+  }
+}
+
+
+
+static void
+phoc_view_deco_bling_render (PhocBling *bling, PhocOutput *output)
+{
+  PhocViewDeco *self = PHOC_VIEW_DECO (bling);
+  struct wlr_box box = phoc_view_deco_bling_get_box (bling);
+  float color[] = PHOC_DECO_COLOR;
+  float matrix[9];
+
+  color[3] = phoc_view_get_alpha (self->view);
+  wlr_matrix_project_box (matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL, 0, output->wlr_output->transform_matrix);
+
+  wlr_render_quad_with_matrix (output->wlr_output->renderer, color, matrix);
+}
+
+
+static void
+phoc_view_deco_bling_map (PhocBling *bling)
+{
+  PhocViewDeco *self = PHOC_VIEW_DECO (bling);
+
+  self->mapped = TRUE;
+  phoc_view_deco_damage_box (self);
+}
+
+
+static void
+phoc_view_deco_bling_unmap (PhocBling *bling)
+{
+  PhocViewDeco *self = PHOC_VIEW_DECO (bling);
+
+  phoc_view_deco_damage_box (self);
+  self->mapped = FALSE;
+}
+
+
+static gboolean
+phoc_view_deco_bling_is_mapped (PhocBling *bling)
+{
+  PhocViewDeco *self = PHOC_VIEW_DECO (bling);
+
+  return self->mapped;
+}
+
+
+static void
 bling_interface_init (PhocBlingInterface *iface)
 {
   iface->get_box = phoc_view_deco_bling_get_box;
+  iface->render = phoc_view_deco_bling_render;
+  iface->map = phoc_view_deco_bling_map;
+  iface->unmap = phoc_view_deco_bling_unmap;
+  iface->is_mapped = phoc_view_deco_bling_is_mapped;
 }
 
 
