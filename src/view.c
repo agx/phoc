@@ -911,7 +911,8 @@ subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
   else
     *sx = *sy = 0;
 
-  wlr_subsurface = wlr_subsurface_from_wlr_surface (wlr_surface);
+  wlr_subsurface = wlr_subsurface_try_from_wlr_surface (wlr_surface);
+  g_assert (wlr_subsurface);
   *sx += wlr_subsurface->current.x;
   *sy += wlr_subsurface->current.y;
 }
