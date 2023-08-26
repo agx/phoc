@@ -11,6 +11,7 @@
 #include <wlr/types/wlr_output_layout.h>
 #include "bling.h"
 #include "cursor.h"
+#include "view-deco.h"
 #include "desktop.h"
 #include "input.h"
 #include "seat.h"
@@ -46,8 +47,7 @@ typedef struct _PhocViewPrivate {
   float          alpha;
   float          scale;
   gboolean       decorated;
-  int            titlebar_height;
-  int            border_width;
+  PhocViewDeco  *deco;
   PhocViewState  state;
   PhocViewTileDirection tile_direction;
 
@@ -184,59 +184,26 @@ phoc_view_get_deco_box (PhocView *view, struct wlr_box *box)
   priv = phoc_view_get_instance_private (view);
 
   phoc_view_get_box(view, box);
-  if (!priv->decorated) {
+  if (!priv->deco)
     return;
-  }
 
-  box->x -= priv->border_width;
-  box->y -= (priv->border_width + priv->titlebar_height);
-  box->width += priv->border_width * 2;
-  box->height += (priv->border_width * 2 + priv->titlebar_height);
+  *box = phoc_bling_get_box (PHOC_BLING (priv->deco));
 }
 
 PhocViewDecoPart
-phoc_view_get_deco_part (PhocView *view, double sx, double sy)
+phoc_view_get_deco_part (PhocView *self, double sx, double sy)
 {
   PhocViewPrivate *priv;
 
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
-  if (!priv->decorated) {
+  if (!priv->deco)
     return PHOC_VIEW_DECO_PART_NONE;
-  }
 
-  int sw = view->wlr_surface->current.width;
-  int sh = view->wlr_surface->current.height;
-  int bw = priv->border_width;
-  int titlebar_h = priv->titlebar_height;
-
-  if (sx > 0 && sx < sw && sy < 0 && sy > -priv->titlebar_height) {
-    return PHOC_VIEW_DECO_PART_TITLEBAR;
-  }
-
-  PhocViewDecoPart parts = 0;
-  if (sy >= -(titlebar_h + bw) &&
-      sy <= sh + bw) {
-    if (sx < 0 && sx > -bw) {
-      parts |= PHOC_VIEW_DECO_PART_LEFT_BORDER;
-    } else if (sx > sw && sx < sw + bw) {
-      parts |= PHOC_VIEW_DECO_PART_RIGHT_BORDER;
-    }
-  }
-
-  if (sx >= -bw && sx <= sw + bw) {
-    if (sy > sh && sy <= sh + bw) {
-      parts |= PHOC_VIEW_DECO_PART_BOTTOM_BORDER;
-    } else if (sy >= -(titlebar_h + bw) && sy < 0) {
-      parts |= PHOC_VIEW_DECO_PART_TOP_BORDER;
-    }
-  }
-
-  // TODO corners
-
-  return parts;
+  return phoc_view_deco_get_part (priv->deco, sx, sy);
 }
+
 
 static void
 surface_send_enter_iterator (struct wlr_surface *surface, int x, int y, void *data)
@@ -1364,14 +1331,14 @@ phoc_view_update_decorated (PhocView *view, bool decorated)
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  if (priv->decorated == decorated)
+  if (!!priv->decorated == !!decorated)
     return;
 
   phoc_view_damage_whole (view);
   if (decorated)
-    phoc_view_set_decoration (view, TRUE, 12, 4);
+    phoc_view_set_decoration (view, TRUE);
   else
-    phoc_view_set_decoration (view, FALSE, 0, 0);
+    phoc_view_set_decoration (view, FALSE);
 
   phoc_view_damage_whole (view);
 }
@@ -1639,6 +1606,7 @@ phoc_view_finalize (GObject *object)
   g_clear_pointer (&priv->title, g_free);
   g_clear_pointer (&priv->app_id, g_free);
   g_clear_pointer (&priv->activation_token, g_free);
+  g_clear_object (&priv->deco);
   g_clear_object (&priv->settings);
 
   G_OBJECT_CLASS (phoc_view_parent_class)->finalize (object);
@@ -2156,28 +2124,25 @@ phoc_view_get_scale (PhocView *self)
  * phoc_view_set_decoration
  * @self: The view
  * @decorated: Whether the compositor should draw window decorations
- * @titlebar_height: The height of the titlebar
- * @border_width: The border width
  *
  * Sets whether the window is decorated. If %TRUE also specifies the
  * decoration.
  */
 void
-phoc_view_set_decoration (PhocView *self, gboolean decorated, int titlebar_height, int border_width)
+phoc_view_set_decoration (PhocView *self, gboolean decorated)
 {
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  priv->decorated = decorated;
-  if (decorated) {
-    priv->titlebar_height = titlebar_height;
-    priv->border_width = border_width;
-  } else {
-    priv->titlebar_height = 0;
-    priv->border_width = 0;
-  }
+  if (!!priv->deco == !!decorated)
+    return;
+
+  if (decorated)
+    priv->deco = phoc_view_deco_new (self);
+  else
+    g_clear_object (&priv->deco);
 }
 
 

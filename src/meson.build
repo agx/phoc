@@ -89,6 +89,8 @@ sources = files(
   'utils.h',
   'view.c',
   'view.h',
+  'view-deco.c',
+  'view-deco.h',
   'virtual.c',
   'virtual.h',
   'xdg-activation-v1.c',

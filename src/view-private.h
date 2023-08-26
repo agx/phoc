@@ -21,5 +21,7 @@ void             phoc_view_set_initial_focus         (PhocView *self);
 void             phoc_view_map                       (PhocView *self, struct wlr_surface *surface);
 void             phoc_view_unmap                     (PhocView *self);
 void             phoc_view_apply_damage              (PhocView *self);
+void             phoc_view_set_decoration            (PhocView *self, gboolean decorated);
+
 
 G_END_DECLS

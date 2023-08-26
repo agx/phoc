@@ -211,10 +211,6 @@ const char           *phoc_view_get_activation_token (PhocView *self);
 void                  phoc_view_flush_activation_token (PhocView *self);
 float                 phoc_view_get_alpha (PhocView *self);
 float                 phoc_view_get_scale (PhocView *self);
-void                  phoc_view_set_decoration (PhocView *self,
-                                                gboolean  decorated,
-                                                int       titlebar_height,
-                                                int       border_width);
 gboolean              phoc_view_is_decorated (PhocView *self);
 PhocOutput           *phoc_view_get_fullscreen_output (PhocView *self);
 bool                  phoc_view_want_auto_maximize (PhocView *self);
