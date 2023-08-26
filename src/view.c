@@ -46,7 +46,6 @@ typedef struct _PhocViewPrivate {
 
   float          alpha;
   float          scale;
-  gboolean       decorated;
   PhocViewDeco  *deco;
   PhocViewState  state;
   PhocViewTileDirection tile_direction;
@@ -2142,7 +2141,7 @@ phoc_view_is_decorated (PhocView *self)
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  return priv->decorated;
+  return !!priv->deco;
 }
 
 
