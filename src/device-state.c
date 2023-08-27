@@ -57,7 +57,10 @@ struct _PhocDeviceState {
   GSList             *resources;
 
   GSList             *tablet_mode_switches;
+  PhocSwitchState     tablet_mode_state;
+
   GSList             *lid_switches;
+  PhocSwitchState     lid_state;
 };
 
 G_DEFINE_TYPE (PhocDeviceState, phoc_device_state, G_TYPE_OBJECT)
@@ -148,6 +151,18 @@ handle_get_tablet_mode_switch (struct wl_client   *client,
                                   tablet_mode_switch,
                                   tablet_mode_switch_handle_resource_destroy);
 
+  /* Send initial state when known */
+  switch (self->tablet_mode_state) {
+  case PHOC_SWITCH_STATE_ON:
+    zphoc_tablet_mode_switch_v1_send_enabled (tablet_mode_switch->resource);
+    break;
+  case PHOC_SWITCH_STATE_OFF:
+    zphoc_tablet_mode_switch_v1_send_disabled (tablet_mode_switch->resource);
+    break;
+  default:
+    /* nothing to do */
+  }
+
   self->tablet_mode_switches = g_slist_prepend (self->tablet_mode_switches,
                                                 g_steal_pointer (&tablet_mode_switch));
 }
@@ -228,6 +243,18 @@ handle_get_lid_switch (struct wl_client   *client,
                                   &lid_switch_v1_impl,
                                   lid_switch,
                                   lid_switch_handle_resource_destroy);
+
+  /* Send initial state when known */
+  switch (self->lid_state) {
+  case PHOC_SWITCH_STATE_ON:
+    zphoc_lid_switch_v1_send_closed (lid_switch->resource);
+    break;
+  case PHOC_SWITCH_STATE_OFF:
+    zphoc_lid_switch_v1_send_opened (lid_switch->resource);
+    break;
+  default:
+    /* nothing to do */
+  }
 
   self->lid_switches = g_slist_prepend (self->lid_switches,
                                         g_steal_pointer (&lid_switch));
@@ -403,6 +430,11 @@ void
 phoc_device_state_notify_lid_change (PhocDeviceState *self, gboolean closed)
 {
   g_assert (PHOC_IS_DEVICE_STATE (self));
+  PhocSwitchState state = closed ? PHOC_SWITCH_STATE_ON : PHOC_SWITCH_STATE_OFF;
+
+  if (self->lid_state == state)
+    return;
+  self->lid_state = state;
 
   for (GSList *l = self->lid_switches; l; l = l->next) {
     PhocLidSwitch *switch_ = l->data;
@@ -419,6 +451,11 @@ void
 phoc_device_state_notify_tablet_mode_change (PhocDeviceState *self, gboolean enabled)
 {
   g_assert (PHOC_IS_DEVICE_STATE (self));
+  PhocSwitchState state = enabled ? PHOC_SWITCH_STATE_ON : PHOC_SWITCH_STATE_OFF;
+
+  if (self->tablet_mode_state == state)
+    return;
+  self->tablet_mode_state = state;
 
   for (GSList *l = self->tablet_mode_switches; l; l = l->next) {
     PhocTabletModeSwitch *switch_ = l->data;
