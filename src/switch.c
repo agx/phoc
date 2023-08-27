@@ -21,6 +21,7 @@ struct _PhocSwitch {
   PhocInputDevice          parent;
 
   struct wl_listener       toggle;
+  PhocSwitchState          state;
 };
 
 G_DEFINE_TYPE (PhocSwitch, phoc_switch, PHOC_TYPE_INPUT_DEVICE);
@@ -36,6 +37,8 @@ handle_switch_toggle (struct wl_listener *listener, void *data)
            phoc_input_device_get_name (PHOC_INPUT_DEVICE (self)),
            event->switch_type,
            event->switch_state);
+
+  self->state = !!event->switch_state ? PHOC_SWITCH_STATE_ON : PHOC_SWITCH_STATE_OFF;
 
   g_signal_emit (self, signals[TOGGLED], 0, !!event->switch_state);
 }
@@ -88,6 +91,8 @@ phoc_switch_class_init (PhocSwitchClass *klass)
 static void
 phoc_switch_init (PhocSwitch *self)
 {
+  /* libinput will notify us if switch is on initially */
+  self->state = PHOC_SWITCH_STATE_OFF;
 }
 
 

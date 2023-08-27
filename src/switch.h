@@ -10,6 +10,18 @@
 
 G_BEGIN_DECLS
 
+/**
+ * PhocSwitchState:
+ * @PHOC_SWITCH_STATE_OFF: Switch is off
+ * @PHOC_SWITCH_STATE_ON: Swtich is on
+ *
+ * State of a switch (e.g. a tablet mode or lid switch).
+ */
+typedef enum _PhocSwitchState {
+  PHOC_SWITCH_STATE_OFF     =  0,
+  PHOC_SWITCH_STATE_ON      =  1,
+} PhocSwitchState;
+
 #define PHOC_TYPE_SWITCH (phoc_switch_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocSwitch, phoc_switch, PHOC, SWITCH, PhocInputDevice);
