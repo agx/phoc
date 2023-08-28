@@ -173,21 +173,6 @@ phoc_view_get_box (PhocView *view, struct wlr_box *box)
   box->height = view->box.height * priv->scale;
 }
 
-/* TODO: Use PhocBling for decorations too */
-void
-phoc_view_get_deco_box (PhocView *view, struct wlr_box *box)
-{
-  PhocViewPrivate *priv;
-
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
-
-  phoc_view_get_box(view, box);
-  if (!priv->deco)
-    return;
-
-  *box = phoc_bling_get_box (PHOC_BLING (priv->deco));
-}
 
 PhocViewDecoPart
 phoc_view_get_deco_part (PhocView *self, double sx, double sy)
