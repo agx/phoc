@@ -140,7 +140,7 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
   struct wlr_box output_box = {0};
 
   wlr_output_effective_resolution (self->wlr_output, &output_box.width, &output_box.height);
-  phoc_output_scale_box (self, &output_box, 1 / data->scale);
+  phoc_utils_scale_box (&output_box, 1 / data->scale);
 
   struct wlr_box intersection;
 
@@ -1035,20 +1035,6 @@ phoc_output_for_each_surface (PhocOutput          *self,
   }
 }
 
-static int
-scale_length (int length, int offset, float scale)
-{
-  return round ((offset + length) * scale) - round (offset * scale);
-}
-
-void
-phoc_output_scale_box (PhocOutput *self, struct wlr_box *box, float scale)
-{
-  box->width = scale_length (box->width, box->x, scale);
-  box->height = scale_length (box->height, box->y, scale);
-  box->x = round (box->x * scale);
-  box->y = round (box->y * scale);
-}
 
 void
 phoc_output_get_decoration_box (PhocOutput *self, PhocView *view, struct wlr_box *box)
@@ -1115,8 +1101,8 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
 
   struct wlr_box box = *_box;
 
-  phoc_output_scale_box (self, &box, scale);
-  phoc_output_scale_box (self, &box, self->wlr_output->scale);
+  phoc_utils_scale_box (&box, scale);
+  phoc_utils_scale_box (&box, self->wlr_output->scale);
 
   int center_x = box.x + box.width/2;
   int center_y = box.y + box.height/2;
@@ -1246,7 +1232,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   // Then enable outputs that need to
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
-    PhocOutput *output = wlr_output->data;
+    PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
 
     if (!config_head->state.enabled)
       continue;

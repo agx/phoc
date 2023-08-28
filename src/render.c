@@ -173,6 +173,36 @@ scissor_output (struct wlr_output *wlr_output, pixman_box32_t *rect)
   wlr_renderer_scissor (wlr_output->renderer, &box);
 }
 
+/**
+ * is_damaged:
+ * @x: The x coordinate of the rectangle to check
+ * @y: The y coordinate of the rectangle to check
+ * @width: The width of the rectangle to check
+ * @height: The height of the rectangle to check
+ * @whole_damage: The damaged area
+ * @damage: (out): The overlap of the rectangle with the damaged area. Don't init the pixman region
+ *   `is_damaged` does that for you.
+ *
+ * Checks if a given rectangle overlaps with a given damage area, if so returns
+ * true and fills `damage` with the overlap.
+ *
+ * Returns: %TRUE on overlap otherwise %FALSE
+ */
+static gboolean
+is_damaged (int                x,
+            int                y,
+            guint              width,
+            guint              height,
+            pixman_region32_t *whole_damage,
+            pixman_region32_t *damage)
+{
+  pixman_region32_init (damage);
+  pixman_region32_union_rect (damage, damage, x, y, width, height);
+  pixman_region32_intersect (damage, damage, whole_damage);
+
+  return !!pixman_region32_not_empty (damage);
+}
+
 
 static void
 render_texture (struct wlr_output     *wlr_output,
@@ -188,11 +218,7 @@ render_texture (struct wlr_output     *wlr_output,
   phoc_utils_rotated_bounds (&rotated, dst_box, rotation);
 
   pixman_region32_t damage;
-  pixman_region32_init (&damage);
-  pixman_region32_union_rect (&damage, &damage, dst_box->x, dst_box->y, dst_box->width, dst_box->height);
-  pixman_region32_intersect (&damage, &damage, output_damage);
-  bool damaged = pixman_region32_not_empty (&damage);
-  if (!damaged)
+  if (!is_damaged (dst_box->x, dst_box->y, dst_box->width, dst_box->height, output_damage, &damage))
     goto buffer_damage_finish;
 
   int nrects;
@@ -258,8 +284,8 @@ render_surface_iterator (PhocOutput         *output,
   wlr_surface_get_buffer_source_box (surface, &src_box);
 
   struct wlr_box dst_box = *box;
-  phoc_output_scale_box (output, &dst_box, scale);
-  phoc_output_scale_box (output, &dst_box, wlr_output->scale);
+  phoc_utils_scale_box (&dst_box, scale);
+  phoc_utils_scale_box (&dst_box, wlr_output->scale);
 
   float matrix[9];
   enum wl_output_transform transform = wlr_output_transform_invert (surface->current.transform);
@@ -287,12 +313,7 @@ render_decorations (PhocOutput         *output,
   phoc_output_get_decoration_box(output, view, &box);
 
   pixman_region32_t damage;
-  pixman_region32_init (&damage);
-  pixman_region32_union_rect (&damage, &damage, box.x, box.y,
-                              box.width, box.height);
-  pixman_region32_intersect (&damage, &damage, data->damage);
-  bool damaged = pixman_region32_not_empty (&damage);
-  if (!damaged)
+  if (!is_damaged (box.x, box.y, box.width, box.height, data->damage, &damage))
     goto buffer_damage_finish;
 
   float matrix[9];
@@ -474,7 +495,7 @@ color_hsv_to_rgb (float* color)
 }
 
 static struct wlr_box
-wlr_box_from_touch_point (struct touch_point_data *touch_point, int width, int height)
+phoc_box_from_touch_point (struct touch_point_data *touch_point, int width, int height)
 {
   return (struct wlr_box) {
     .x = touch_point->x - width / 2.0,
@@ -494,20 +515,20 @@ render_touch_point_cb (gpointer data, gpointer user_data)
   struct wlr_renderer *wlr_renderer = wlr_output->renderer;
 
   int size = TOUCH_POINT_SIZE * wlr_output->scale;
-  struct wlr_box point_box = wlr_box_from_touch_point (touch_point, size, size);
+  struct wlr_box point_box = phoc_box_from_touch_point (touch_point, size, size);
 
   float color[4] = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
   color_hsv_to_rgb (color);
   wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
 
   size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
-  point_box = wlr_box_from_touch_point (touch_point, size, size);
+  point_box = phoc_box_from_touch_point (touch_point, size, size);
   wlr_render_rect (wlr_renderer, &point_box,
                    (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
 
-  point_box = wlr_box_from_touch_point (touch_point, 8 * wlr_output->scale, 2 * wlr_output->scale);
+  point_box = phoc_box_from_touch_point (touch_point, 8 * wlr_output->scale, 2 * wlr_output->scale);
   wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
-  point_box = wlr_box_from_touch_point (touch_point, 2 * wlr_output->scale, 8 * wlr_output->scale);
+  point_box = phoc_box_from_touch_point (touch_point, 2 * wlr_output->scale, 8 * wlr_output->scale);
   wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
 }
 
@@ -529,7 +550,7 @@ damage_touch_point_cb (gpointer data, gpointer user_data)
   struct wlr_output *wlr_output = output->wlr_output;
 
   int size = TOUCH_POINT_SIZE * wlr_output->scale;
-  struct wlr_box box = wlr_box_from_touch_point (touch_point, size, size);
+  struct wlr_box box = phoc_box_from_touch_point (touch_point, size, size);
   pixman_region32_t region;
   pixman_region32_init_rect(&region, box.x, box.y, box.width, box.height);
   wlr_output_damage_add(output->damage, &region);
@@ -543,7 +564,6 @@ damage_touch_points (PhocOutput *output)
     return;
 
   g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
-  wlr_output_schedule_frame(output->wlr_output);
 }
 
 static void

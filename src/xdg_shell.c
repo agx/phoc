@@ -114,16 +114,14 @@ popup_unconstrain (PhocXdgPopup* popup)
   // the toplevel parent's coordinate system and then pass it to
   // wlr_xdg_popup_unconstrain_from_box
   PhocView *view = PHOC_VIEW (popup->child.view);
-  struct wlr_output_layout *layout = view->desktop->layout;
 
-  struct wlr_output *output = wlr_output_layout_output_at (layout, view->box.x, view->box.y);
+  PhocOutput *output = phoc_desktop_layout_get_output (view->desktop, view->box.x, view->box.y);
   if (output == NULL)
     return;
 
   struct wlr_box output_box;
-  wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
-  PhocOutput *phoc_output = PHOC_OUTPUT (output->data);
-  struct wlr_box usable_area = phoc_output->usable_area;
+  wlr_output_layout_get_box (view->desktop->layout, output->wlr_output, &output_box);
+  struct wlr_box usable_area = output->usable_area;
   usable_area.x += output_box.x;
   usable_area.y += output_box.y;
 

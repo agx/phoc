@@ -106,6 +106,17 @@ phoc_utils_rotated_bounds (struct wlr_box *dest, const struct wlr_box *box, floa
 #define MAX_DPI_TARGET  180.0
 #define INCH_IN_MM      25.4
 
+/**
+ * phoc_utils_compute_scale:
+ * @phys_width: The physical width
+ * @phys_height: The physical height
+ * @width: The width in pixels
+ * @height: The height in pixels
+ *
+ * Compute a suitable output scale based on the physical size and resolution.
+ *
+ * Returns: The output scale
+ */
 float
 phoc_utils_compute_scale (int32_t phys_width, int32_t phys_height,
                           int32_t width, int32_t height)
@@ -139,4 +150,27 @@ phoc_utils_compute_scale (int32_t phys_width, int32_t phys_height,
            dpi, width, height, scale);
 
   return scale;
+}
+
+
+static int
+scale_length (int length, int offset, float scale)
+{
+  return round ((offset + length) * scale) - round (offset * scale);
+}
+
+/**
+ * phoc_utils_scale_box:
+ * @box: (inout): The box to scale
+ * @scale: The scale to apply
+ *
+ * Scales the passed in box by scale.
+ */
+void
+phoc_utils_scale_box (struct wlr_box *box, float scale)
+{
+  box->width = scale_length (box->width, box->x, scale);
+  box->height = scale_length (box->height, box->y, scale);
+  box->x = round (box->x * scale);
+  box->y = round (box->y * scale);
 }

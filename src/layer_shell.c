@@ -386,7 +386,7 @@ static void handle_surface_commit(struct wl_listener *listener, void *data) {
 	struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
 	struct wlr_output *wlr_output = wlr_layer_surface->output;
 	if (wlr_output != NULL) {
-		PhocOutput *output = wlr_output->data;
+		PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
 		struct wlr_box old_geo = layer_surface->geo;
 
 		bool layer_changed = false;

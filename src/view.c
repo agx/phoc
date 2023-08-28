@@ -48,10 +48,9 @@ typedef struct _PhocViewPrivate {
   int            titlebar_height;
   int            border_width;
   PhocViewState  state;
+  PhocViewTileDirection tile_direction;
 
   PhocOutput    *fullscreen_output;
-
-  PhocViewTileDirection tile_direction;
 
   gulong         notify_scale_to_fit_id;
   gboolean       scale_to_fit;

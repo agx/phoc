@@ -32,5 +32,6 @@ void phoc_utils_rotate_child_position (double *sx, double *sy, double sw, double
 void phoc_utils_rotated_bounds (struct wlr_box *dest, const struct wlr_box *box, float rotation);
 float      phoc_utils_compute_scale         (int32_t phys_width, int32_t phys_height,
                                              int32_t width, int32_t height);
+void       phoc_utils_scale_box             (struct wlr_box *box, float scale);
 
 G_END_DECLS
