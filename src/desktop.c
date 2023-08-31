@@ -34,6 +34,7 @@
 #include <wlr/util/box.h>
 #include <wlr/version.h>
 #include "cursor.h"
+#include "device-state.h"
 #include "idle-inhibit.h"
 #include "layers.h"
 #include "output.h"
@@ -67,12 +68,19 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 
 typedef struct _PhocDesktopPrivate {
-  PhocIdleInhibit *idle_inhibit;
+  PhocIdleInhibit       *idle_inhibit;
 
-  gboolean         enable_animations;
+  gboolean               enable_animations;
 
-  GSettings       *settings;
-  GSettings       *interface_settings;
+  GSettings             *settings;
+  GSettings             *interface_settings;
+
+  /* Protocols without upstreamable implementations */
+  PhocPhoshPrivate      *phosh;
+  PhocGtkShell          *gtk_shell;
+  /* Protocols that should go upstream */
+  PhocLayerShellEffects *layer_shell_effects;
+  PhocDeviceState       *device_state;
 } PhocDesktopPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocDesktop, phoc_desktop, G_TYPE_OBJECT);
@@ -555,7 +563,7 @@ handle_xwayland_remove_startup_id (struct wl_listener *listener, void *data)
   g_assert (PHOC_IS_DESKTOP (desktop));
   g_assert (ev->id);
 
-  phoc_phosh_private_notify_startup_id (desktop->phosh,
+  phoc_phosh_private_notify_startup_id (phoc_desktop_get_phosh_private (desktop),
                                         ev->id,
                                         PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_X11);
 }
@@ -695,7 +703,7 @@ phoc_desktop_constructed (GObject *object)
   self->layer_shell = wlr_layer_shell_v1_create (server->wl_display);
   wl_signal_add (&self->layer_shell->events.new_surface, &self->layer_shell_surface);
   self->layer_shell_surface.notify = handle_layer_shell_surface;
-  self->layer_shell_effects = phoc_layer_shell_effects_new ();
+  priv->layer_shell_effects = phoc_layer_shell_effects_new ();
 
   self->tablet_v2 = wlr_tablet_v2_create (server->wl_display);
 
@@ -722,9 +730,11 @@ phoc_desktop_constructed (GObject *object)
 
   self->input_method = wlr_input_method_manager_v2_create (server->wl_display);
   self->text_input = wlr_text_input_manager_v3_create (server->wl_display);
+
   priv->idle_inhibit = phoc_idle_inhibit_create (self->idle);
-  self->gtk_shell = phoc_gtk_shell_create (self, server->wl_display);
-  self->phosh = phoc_phosh_private_new ();
+
+  priv->gtk_shell = phoc_gtk_shell_create (self, server->wl_display);
+  priv->phosh = phoc_phosh_private_new ();
 
   self->xdg_activation_v1 = wlr_xdg_activation_v1_create (server->wl_display);
   self->xdg_activation_v1_request_activate.notify = phoc_xdg_activation_v1_handle_request_activate;
@@ -833,9 +843,10 @@ phoc_desktop_finalize (GObject *object)
 #endif
 
   g_clear_pointer (&priv->idle_inhibit, phoc_idle_inhibit_destroy);
-  g_clear_object (&self->phosh);
-  g_clear_pointer (&self->gtk_shell, phoc_gtk_shell_destroy);
-  g_clear_object (&self->layer_shell_effects);
+  g_clear_object (&priv->phosh);
+  g_clear_pointer (&priv->gtk_shell, phoc_gtk_shell_destroy);
+  g_clear_object (&priv->layer_shell_effects);
+  g_clear_object (&priv->device_state);
   g_clear_pointer (&self->layout, wlr_output_layout_destroy);
 
   g_hash_table_remove_all (self->input_output_map);
@@ -1153,14 +1164,57 @@ phoc_desktop_layout_get_output (PhocDesktop *self, double lx, double ly)
  * Returns a draggable layer surface if `layer_surface` is configured as
  * such. `NULL` otherwise.
  *
- * Returns: (nullable): The `PhocDraggableLayerSurface`
+ * Returns: (transfer none)(nullable): The `PhocDraggableLayerSurface`
  */
 PhocDraggableLayerSurface *
 phoc_desktop_get_draggable_layer_surface (PhocDesktop *self, PhocLayerSurface *layer_surface)
 {
+  PhocDesktopPrivate *priv;
+
   g_assert (PHOC_IS_DESKTOP (self));
   g_assert (layer_surface);
 
+  priv = phoc_desktop_get_instance_private (self);
   return phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
-    self->layer_shell_effects, layer_surface);
+    priv->layer_shell_effects, layer_surface);
+}
+
+/**
+ * phoc_desktop_get_gtk_shell:
+ * @self: The `PhocDesktop`
+ *
+ * Gets a handler of the gtk_shell Wayland protocol implementations
+ *
+ * Returns: (transfer none): gtk_shell protocol implementation handler
+ */
+PhocGtkShell *
+phoc_desktop_get_gtk_shell (PhocDesktop *self)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  priv = phoc_desktop_get_instance_private (self);
+
+  return priv->gtk_shell;
+}
+
+/**
+ * phoc_desktop_get_phosh_private:
+ * @self: The `PhocDesktop`
+ *
+ * Gets a handler of the phosh-private Wayland protocol implementations
+ *
+ * Returns: (transfer none): phosh_private protocol implementation handler
+ */
+PhocPhoshPrivate *
+phoc_desktop_get_phosh_private (PhocDesktop *self)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  priv = phoc_desktop_get_instance_private (self);
+
+  return priv->phosh;
 }

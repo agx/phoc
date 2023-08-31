@@ -5,7 +5,6 @@
 #include "switch.h"
 
 #include <wlr/backend/libinput.h>
-#include <wlr/types/wlr_switch.h>
 
 enum {
   TOGGLED,
@@ -22,6 +21,7 @@ struct _PhocSwitch {
   PhocInputDevice          parent;
 
   struct wl_listener       toggle;
+  PhocSwitchState          state;
 };
 
 G_DEFINE_TYPE (PhocSwitch, phoc_switch, PHOC_TYPE_INPUT_DEVICE);
@@ -37,6 +37,8 @@ handle_switch_toggle (struct wl_listener *listener, void *data)
            phoc_input_device_get_name (PHOC_INPUT_DEVICE (self)),
            event->switch_type,
            event->switch_state);
+
+  self->state = !!event->switch_state ? PHOC_SWITCH_STATE_ON : PHOC_SWITCH_STATE_OFF;
 
   g_signal_emit (self, signals[TOGGLED], 0, !!event->switch_state);
 }
@@ -89,6 +91,8 @@ phoc_switch_class_init (PhocSwitchClass *klass)
 static void
 phoc_switch_init (PhocSwitch *self)
 {
+  /* libinput will notify us if switch is on initially */
+  self->state = PHOC_SWITCH_STATE_OFF;
 }
 
 
@@ -103,7 +107,7 @@ phoc_switch_new (struct wlr_input_device *device, PhocSeat *seat)
 
 
 gboolean
-phoc_input_device_has_tablet_mode_switch (PhocSwitch *self)
+phoc_switch_is_tablet_mode_switch (PhocSwitch *self)
 {
   struct libinput_device *ldev;
 
@@ -115,8 +119,9 @@ phoc_input_device_has_tablet_mode_switch (PhocSwitch *self)
   return libinput_device_switch_has_switch (ldev, LIBINPUT_SWITCH_TABLET_MODE) > 0;
 }
 
+
 gboolean
-phoc_input_device_has_lid_switch (PhocSwitch *self)
+phoc_switch_is_lid_switch (PhocSwitch *self)
 {
   struct libinput_device *ldev;
 
@@ -126,4 +131,18 @@ phoc_input_device_has_lid_switch (PhocSwitch *self)
   ldev = phoc_input_device_get_libinput_device_handle (PHOC_INPUT_DEVICE (self));
 
   return libinput_device_switch_has_switch (ldev, LIBINPUT_SWITCH_LID) > 0;
+}
+
+
+gboolean
+phoc_switch_is_type (PhocSwitch *self, enum wlr_switch_type type)
+{
+  switch (type) {
+  case WLR_SWITCH_TYPE_LID:
+    return phoc_switch_is_lid_switch (self);
+  case WLR_SWITCH_TYPE_TABLET_MODE:
+    return phoc_switch_is_tablet_mode_switch (self);
+  default:
+    g_assert_not_reached ();
+  }
 }

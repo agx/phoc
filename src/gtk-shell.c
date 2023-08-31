@@ -332,7 +332,7 @@ handle_set_startup_id(struct wl_client *client,
 
   /* TODO: actually activate the corresponding view */
   if (startup_id) {
-    phoc_phosh_private_notify_startup_id (server->desktop->phosh,
+    phoc_phosh_private_notify_startup_id (phoc_desktop_get_phosh_private (server->desktop),
                                           startup_id,
                                           PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
   }
@@ -356,7 +356,7 @@ handle_notify_launch(struct wl_client *client,
   g_debug ("%s: %s", __func__, startup_id);
   if (startup_id) {
     wlr_xdg_activation_v1_add_token (server->desktop->xdg_activation_v1, startup_id);
-    phoc_phosh_private_notify_launch (server->desktop->phosh,
+    phoc_phosh_private_notify_launch (phoc_desktop_get_phosh_private (server->desktop),
                                       startup_id,
                                       PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
   }

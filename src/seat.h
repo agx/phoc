@@ -6,12 +6,15 @@
 
 #pragma once
 
-#include <wayland-server-core.h>
 #include "input.h"
 #include "layers.h"
 #include "text_input.h"
 
+#include <wlr/types/wlr_switch.h>
+
 #include <glib-object.h>
+
+#include <wayland-server-core.h>
 
 G_BEGIN_DECLS
 
@@ -35,7 +38,6 @@ typedef struct _PhocTablet PhocTablet;
 typedef struct _PhocSeat {
   GObject                         parent;
 
-  PhocInput                      *input;
   char                           *name;
 
   struct wlr_seat                *seat;
@@ -180,3 +182,4 @@ void               phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
 gboolean           phoc_seat_has_touch    (PhocSeat *self);
 gboolean           phoc_seat_has_pointer  (PhocSeat *self);
 gboolean           phoc_seat_has_keyboard (PhocSeat *self);
+gboolean           phoc_seat_has_switch   (PhocSeat *self, enum wlr_switch_type type);

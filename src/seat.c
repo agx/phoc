@@ -26,6 +26,7 @@
 #include <wlr/types/wlr_tablet_pad.h>
 #include <wlr/version.h>
 #include "cursor.h"
+#include "device-state.h"
 #include "keyboard.h"
 #include "pointer.h"
 #include "switch.h"
@@ -45,7 +46,12 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
-G_DEFINE_TYPE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
+typedef struct _PhocSeatPrivate {
+  PhocInput             *input;
+  PhocDeviceState       *device_state;
+} PhocSeatPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
 
 
 static void
@@ -55,11 +61,12 @@ phoc_seat_set_property (GObject      *object,
                          GParamSpec   *pspec)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   switch (property_id) {
   case PROP_INPUT:
     /* Don't hold a ref since the input object "owns" the seat */
-    self->input = g_value_get_object (value);
+    priv->input = g_value_get_object (value);
     break;
   case PROP_NAME:
     self->name = g_value_dup_string (value);
@@ -78,10 +85,11 @@ phoc_seat_get_property (GObject    *object,
                         GParamSpec *pspec)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   switch (property_id) {
   case PROP_INPUT:
-    g_value_set_object (value, self->input);
+    g_value_set_object (value, priv->input);
     break;
   case PROP_NAME:
     g_value_set_string (value, self->name);
@@ -171,6 +179,15 @@ on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
+
+  if (phoc_switch_is_tablet_mode_switch (switch_)) {
+    phoc_device_state_notify_tablet_mode_change (priv->device_state, state);
+  } else if (phoc_switch_is_lid_switch (switch_)) {
+    phoc_device_state_notify_lid_change (priv->device_state, state);
+  } else {
+    g_assert_not_reached ();
+  }
 
   wlr_idle_notify_activity (desktop->idle, self->seat);
 }
@@ -842,6 +859,7 @@ phoc_seat_handle_destroy (struct wl_listener *listener,
 static void
 seat_update_capabilities (PhocSeat *self)
 {
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
   uint32_t caps = 0;
 
   if (self->keyboards != NULL) {
@@ -856,6 +874,8 @@ seat_update_capabilities (PhocSeat *self)
   wlr_seat_set_capabilities (self->seat, caps);
 
   phoc_seat_maybe_set_cursor (self, self->cursor->default_xcursor);
+
+  phoc_device_state_update_capabilities (priv->device_state);
 }
 
 
@@ -1004,6 +1024,8 @@ seat_add_switch (PhocSeat *self, struct wlr_input_device *device)
                            G_CALLBACK (on_switch_toggled),
                            self,
                            G_CONNECT_SWAPPED);
+
+  seat_update_capabilities (self);
 }
 
 static void
@@ -1485,6 +1507,11 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
 void
 phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
 {
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
   if (view && !phoc_seat_allow_input (seat, view->wlr_surface->resource)) {
     return;
   }
@@ -1556,7 +1583,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   seat->has_focus = false;
 
   // Deactivate the old view if it is not focused by some other seat
-  if (prev_focus != NULL && !phoc_input_view_has_focus (seat->input, prev_focus)) {
+  if (prev_focus != NULL && !phoc_input_view_has_focus (priv->input, prev_focus)) {
     phoc_view_activate (prev_focus, false);
   }
 
@@ -1902,6 +1929,7 @@ phoc_seat_constructed (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT(object);
   PhocServer *server = phoc_server_get_default ();
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
@@ -1929,6 +1957,8 @@ phoc_seat_constructed (GObject *object)
   wl_signal_add (&self->seat->events.start_drag, &self->start_drag);
   self->destroy.notify = phoc_seat_handle_destroy;
   wl_signal_add (&self->seat->events.destroy, &self->destroy);
+
+  priv->device_state = phoc_device_state_new (self);
 }
 
 
@@ -1936,7 +1966,9 @@ static void
 phoc_seat_dispose (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
+  g_clear_object (&priv->device_state);
   g_clear_object (&self->cursor);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->dispose (object);
@@ -2047,6 +2079,21 @@ phoc_seat_has_keyboard (PhocSeat *self)
 
   g_assert (self->seat);
   return (self->seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD);
+}
+
+
+gboolean
+phoc_seat_has_switch (PhocSeat *self, enum wlr_switch_type type)
+{
+  g_assert (PHOC_IS_SEAT (self));
+
+  for (GSList *l = self->switches; l; l = l->next) {
+    PhocSwitch *switch_ = PHOC_SWITCH (l->data);
+
+    if (phoc_switch_is_type (switch_, type))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 /**

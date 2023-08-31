@@ -52,6 +52,9 @@ phoc_input_get_device_type (enum wlr_input_device_type type)
  * @self: The input to look up the seat on
  * @name: The seats name
  *
+ * Looks up a seat by name and if it doesn't exist creates
+ * a new one.
+ *
  * Returns: (transfer none): The seat of the given name.
  */
 PhocSeat *

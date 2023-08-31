@@ -22,6 +22,8 @@ sources = files(
   'cutouts-overlay.h',
   'desktop.c',
   'desktop.h',
+  'device-state.c',
+  'device-state.h',
   'event.c',
   'event.h',
   'gesture.h',
