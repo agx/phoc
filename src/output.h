@@ -46,6 +46,7 @@ struct _PhocOutput {
   GList                    *debug_touch_points;
 
   struct wlr_box            usable_area;
+  int                       lx, ly;
 
   struct wl_listener        enable;
   struct wl_listener        commit;
@@ -147,5 +148,6 @@ void       phoc_output_lower_shield          (PhocOutput *self);
 void       phoc_output_raise_shield          (PhocOutput *self);
 float      phoc_output_get_scale             (PhocOutput *self);
 const char *phoc_output_get_name             (PhocOutput *self);
+void       phoc_output_damage_add_box        (PhocOutput *self, struct wlr_box *box);
 
 G_END_DECLS

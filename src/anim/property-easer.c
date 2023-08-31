@@ -413,6 +413,9 @@ phoc_property_easer_set_props_valist (PhocPropertyEaser *self,
     } else if (pspec->value_type == G_TYPE_INT) {
       start = va_arg (var_args, int);
       end = va_arg (var_args, int);
+    } else if (pspec->value_type == G_TYPE_UINT) {
+      start = va_arg (var_args, guint);
+      end = va_arg (var_args, guint);
     } else {
       g_warning ("'%s' is not a float or int property", name);
       continue;

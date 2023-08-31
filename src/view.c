@@ -9,6 +9,7 @@
 #include <string.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_output_layout.h>
+#include "bling.h"
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"
@@ -56,6 +57,7 @@ typedef struct _PhocViewPrivate {
   gboolean       scale_to_fit;
   char          *activation_token;
   int            activation_token_type;
+  GSList        *blings; /* PhocBlings */
 
   /* wlr-toplevel-management handling */
   struct wlr_foreign_toplevel_handle_v1 *toplevel_handle;
@@ -168,7 +170,7 @@ void view_get_box(PhocView *view, struct wlr_box *box) {
 	box->height = view->box.height * priv->scale;
 }
 
-
+/* TODO: Use PhocBling for decorations too */
 void view_get_deco_box(PhocView *view, struct wlr_box *box) {
         PhocViewPrivate *priv;
 
@@ -384,64 +386,114 @@ static struct wlr_output *view_get_output(PhocView *view) {
 		output_y);
 }
 
-void view_arrange_maximized(PhocView *view, struct wlr_output *output) {
-        PhocViewPrivate *priv;
-
-        g_assert (PHOC_IS_VIEW (view));
-        priv = phoc_view_get_instance_private (view);
-
-	if (view_is_fullscreen (view))
-		return;
-
-	if (!output)
-		output = view_get_output(view);
-
-	if (!output)
-		return;
-
-	PhocOutput *phoc_output = output->data;
-	struct wlr_box output_box;
-	wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
-	struct wlr_box usable_area = phoc_output->usable_area;
-	usable_area.x += output_box.x;
-	usable_area.y += output_box.y;
-
-	struct wlr_box geom;
-	phoc_view_get_geometry (view, &geom);
-	phoc_view_move_resize (view,
-			       (usable_area.x - geom.x) / priv->scale,
-			       (usable_area.y - geom.y) / priv->scale,
-			       usable_area.width / priv->scale,
-			       usable_area.height / priv->scale);
-}
-
-void
-view_arrange_tiled (PhocView *view, struct wlr_output *output)
+/**
+ * phoc_view_get_maximized_box:
+ * self: The view to get the box for
+ * output: The output the view is on
+ * box: (out): The box used if the view was maximized
+ *
+ * Gets the "visible bounds" that a view will use on a given output
+ * when maximized.
+ *
+ * Returns: %TRUE if the box can be maximized, otherwise %FALSE.
+ */
+gboolean
+phoc_view_get_maximized_box (PhocView *self, PhocOutput *output, struct wlr_box *box)
 {
   PhocViewPrivate *priv;
 
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
-  if (view_is_fullscreen (view))
-    return;
-
-  if (!output)
-    output = view_get_output(view);
+  if (view_is_fullscreen (self))
+    return FALSE;
 
   if (!output)
-    return;
+    output = phoc_view_get_output (self);
 
-  PhocOutput *phoc_output = output->data;
+  if (!output)
+    return FALSE;
+
   struct wlr_box output_box;
-  wlr_output_layout_get_box (view->desktop->layout, output, &output_box);
-  struct wlr_box usable_area = phoc_output->usable_area;
+  wlr_output_layout_get_box (self->desktop->layout, output->wlr_output, &output_box);
+  struct wlr_box usable_area = output->usable_area;
+  usable_area.x += output_box.x;
+  usable_area.y += output_box.y;
+
+  box->x = usable_area.x / priv->scale;
+  box->y = usable_area.y / priv->scale;
+  box->width = usable_area.width / priv->scale;
+  box->height = usable_area.height / priv->scale;
+
+  return TRUE;
+}
+
+
+void
+view_arrange_maximized (PhocView *self, struct wlr_output *wlr_output)
+{
+  PhocViewPrivate *priv;
+  struct wlr_box  box, geom;
+  PhocOutput *output = NULL;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (wlr_output)
+    output = PHOC_OUTPUT (wlr_output->data);
+
+  if (!phoc_view_get_maximized_box (self, output, &box))
+    return;
+
+  phoc_view_get_geometry (self, &geom);
+  box.x -= geom.x / priv->scale;
+  box.y -= geom.y / priv->scale;
+
+  phoc_view_move_resize (self, box.x, box.y, box.width, box.height);
+}
+
+
+/**
+ * phoc_view_get_tiled_box:
+ * self: The view to get the box for
+ * output: The output the view is on
+ * box: (out): The box used if the view was tiled
+ *
+ * Gets the "visible bounds" a view will use on a given output when
+ * tiled.
+ *
+ * Returns: %TRUE if the box can be maximized, otherwise %FALSE.
+ */
+gboolean
+phoc_view_get_tiled_box (PhocView               *self,
+                         PhocViewTileDirection   dir,
+                         PhocOutput             *output,
+                         struct wlr_box         *box)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (box);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (view_is_fullscreen (self))
+    return FALSE;
+
+  if (!output)
+    output = phoc_view_get_output (self);
+
+  if (!output)
+    return FALSE;
+
+  struct wlr_box output_box;
+  wlr_output_layout_get_box (self->desktop->layout, output->wlr_output, &output_box);
+  struct wlr_box usable_area = output->usable_area;
   int x;
 
   usable_area.x += output_box.x;
   usable_area.y += output_box.y;
 
-  switch (priv->tile_direction) {
+  switch (dir) {
   case PHOC_VIEW_TILE_LEFT:
     x = usable_area.x;
     break;
@@ -449,16 +501,39 @@ view_arrange_tiled (PhocView *view, struct wlr_output *output)
     x = usable_area.x + (0.5 * usable_area.width);
     break;
   default:
-    g_error ("Invalid tiling direction %d", priv->tile_direction);
+    g_error ("Invalid tiling direction %d", dir);
   }
 
-  struct wlr_box geom;
-  phoc_view_get_geometry (view, &geom);
-  phoc_view_move_resize (view,
-                         (x - geom.x) / priv->scale,
-                         (usable_area.y - geom.y) / priv->scale,
-                         usable_area.width / 2 / priv->scale,
-                         usable_area.height / priv->scale);
+  box->x = x / priv->scale;
+  box->y = usable_area.y / priv->scale;
+  box->width = usable_area.width / 2 / priv->scale;
+  box->height = usable_area.height / priv->scale;
+
+  return TRUE;
+}
+
+
+void
+view_arrange_tiled (PhocView *self, struct wlr_output *wlr_output)
+{
+  PhocViewPrivate *priv;
+  struct wlr_box box, geom;
+  PhocOutput *output = NULL;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (wlr_output)
+    output = PHOC_OUTPUT (wlr_output->data);
+
+  if (!phoc_view_get_tiled_box (self, priv->tile_direction, output, &box))
+      return;
+
+  phoc_view_get_geometry (self, &geom);
+  box.x -= geom.x / priv->scale;
+  box.y -= geom.y / priv->scale;
+
+  phoc_view_move_resize (self, box.x, box.y, box.width, box.height);
 }
 
 
@@ -1576,6 +1651,7 @@ phoc_view_finalize (GObject *object)
     priv->fullscreen_output->fullscreen_view = NULL;
   }
 
+  g_clear_slist (&priv->blings, g_object_unref);
   g_clear_pointer (&priv->title, g_free);
   g_clear_pointer (&priv->app_id, g_free);
   g_clear_pointer (&priv->activation_token, g_free);
@@ -2212,4 +2288,68 @@ phoc_view_get_pid (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->pid;
+}
+
+/**
+ * phoc_view_add_bling:
+ * @self: The view
+ * @bling: The bling to add
+ *
+ * By adding a [type@Bling] to a view you ensure that it gets rendered
+ * just before the view if both the view and the bling are mapped.
+ *
+ * Thew view will take a reference on the [type@Bling] that will be
+ * dropped when the bling is removed or the view is destroyed.
+ */
+void
+phoc_view_add_bling (PhocView *self, PhocBling *bling)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_BLING (bling));
+  priv = phoc_view_get_instance_private (self);
+
+  priv->blings = g_slist_prepend (priv->blings, g_object_ref (bling));
+}
+
+/**
+ * phoc_view_remove_bling:
+ * @self: The view
+ * @bling: The bling to add
+ *
+ * Removes the given bling from the view.
+ */
+void
+phoc_view_remove_bling (PhocView *self, PhocBling *bling)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_BLING (bling));
+  priv = phoc_view_get_instance_private (self);
+
+  g_return_if_fail (g_slist_find (priv->blings, bling));
+
+  priv->blings = g_slist_remove (priv->blings, bling);
+  g_object_unref (bling);
+}
+
+/**
+ * phoc_view_get_blings:
+ * @self: The view
+ *
+ * Gets the view's current list of blings.
+ *
+ * Returns: (transfer none)(element-type PhocBling): A list
+ */
+GSList *
+phoc_view_get_blings (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->blings;
 }

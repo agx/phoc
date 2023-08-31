@@ -30,6 +30,7 @@ test_link_args = [
 
 tests = [
   'client',
+  'color-rect',
   'layer-shell',
   'layer-shell-effects',
   'phosh-private',

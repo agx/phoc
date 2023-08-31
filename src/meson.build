@@ -16,6 +16,10 @@ phoc_marshalers = gnome.genmarshal('phoc-marshalers',
   valist_marshallers : true)
 
 sources = files(
+  'bling.c',
+  'bling.h',
+  'color-rect.c',
+  'color-rect.h',
   'cursor.c',
   'cursor.h',
   'cutouts-overlay.c',
@@ -58,6 +62,8 @@ sources = files(
   'output.h',
   'output-shield.c',
   'output-shield.h',
+  'phoc-types.h',
+  'phoc-types.c',
   'phosh-private.c',
   'phosh-private.h',
   'pointer.c',
