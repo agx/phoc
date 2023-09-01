@@ -218,7 +218,7 @@ phoc_cursor_clear_view_state_change (PhocCursor *self)
 
 
 static void
-phoc_cursor_submit_pending_view_state_change (PhocCursor *self, PhocView *view)
+phoc_cursor_submit_pending_view_state_change (PhocCursor *self)
 {
   PhocCursorPrivate *priv;
 
@@ -1165,7 +1165,7 @@ phoc_cursor_press_button (PhocCursor *self,
 
     if (state == WLR_BUTTON_RELEASED && self->mode != PHOC_CURSOR_PASSTHROUGH) {
       if (priv->view_state.view)
-        phoc_cursor_submit_pending_view_state_change (self, view);
+        phoc_cursor_submit_pending_view_state_change (self);
       self->mode = PHOC_CURSOR_PASSTHROUGH;
       phoc_cursor_update_focus (self);
     }
