@@ -1651,7 +1651,7 @@ phoc_cursor_handle_focus_change (PhocCursor                                 *sel
                          sx, sy);
 }
 
-void
+static void
 phoc_cursor_handle_constraint_commit (PhocCursor *self)
 {
   PhocServer *server = phoc_server_get_default ();
