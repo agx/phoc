@@ -1,3 +1,21 @@
+phoc 0.31.0
+-----------
+Released Sepembter 2023
+* Suggest window state changes when mouse/touch dragging
+* Better support for lid and tablet mode switches
+* Reduce CPU usage on every frame
+* Various damage tracking fixes triggered by the wlroots 0.16.2 switch
+* Better handle xdg-activation tokens
+* Unbreak copy/paste for X11 apps
+* More internal cleanups
+* Issued fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/203
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/309
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/326
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/331
+* Contributors:
+    * Guido Günther
+
 phoc 0.30.0
 -----------
 Released August 2023

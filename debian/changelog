@@ -1,3 +1,221 @@
+phoc (0.31.0) experimental; urgency=medium
+
+  * ci: Install gcovr.
+    Use that instead of lcov to make ninja happy
+  * utils: Drop long_side and short_side when calculating scale.
+    Otherwise we no longer match the correct width in mm to the
+    pixel width and physical height to the pixel height.
+  * Add missing includes.
+    The modules use wlr_subcompositor or PhocInputMethodRelay
+    but didn't include the headers.
+  * seat: Add types for GSLists
+  * seat: Name `self` as such.
+    We're not super consistent in seat.c yet but can fixup functions we
+    touch anyway.
+  * seat: Make on_tablet_destroy consistent with other on_*_destroy
+  * seat: Free device lists
+  * virtual: Fix indent
+  * pointer: Add missing G_{BEGIN,END}_DECLS
+  * switch: Make switches GObjects.
+    Helps to further unclutter the headers and improves separation: Switch
+    notifies and the seat acts on it.
+  * seat: Use `self` in seat_add_switch
+  * switch: Allow to infer switch type
+  * Simplify getting PhocSeat from wlr_seat.
+    No need to get an input (which often involves getting the server first)
+    and then iterate when we can infer it directly.
+  * render: Move wlr_box_from_pixman_box32 past struct declarations
+  * render: Untabify phoc_renderer_initable_init.
+    This removes the last tab in this file so we can drop it from
+    check-indent to not break the tests.
+  * render: Use G_LIKELY to check if touch point debugging is disabled.
+    It's likely off so let the compiler optimize for that. In cases
+    where we iterate over the list we can check that rather than the
+    debug flag.
+  * render: Move `continue` to separate line.
+    While at that fix some other indentation nits in
+    collect_touch_points().
+  * treewide: Use g_assert consistently.
+    We had some remaining plain `assert ()`. This makes sure we can use
+    G_DISABLE_ASSERT.
+  * cursor: Use G_UNLIKELY for debug flag
+  * cursor: Fix indentation
+  * cursor: Use explicit cast
+    Make use of the full line length and give every protocol that also
+    registers signals a small block to ease readability.
+    This also gets rid of tabs in that function which made indenting
+    harder than necessary.
+  * desktop: Enable support for wp_single_pixel_buffer protocol
+  * desktop: Fix formatting of handle_xwayland_*
+  * Set xwayland seat when XWayland comes up.
+    Since XWayland can run on demand setting it only on server startup
+    is not enough.
+    This unbreaks copy/paste between X11 and Wayland applications as
+    selection handling doesn't work without an assigned seat.
+    It also prevents emacs from hanging on close when trying to safe the
+    clipboard.
+  * seat: Rename seat_{set,get}_focus to seat_{set,get}_focus_view.
+    This makes it consistent with seat_set_focus_layer().
+  * view: Document phoc_view_activate
+  * server: Make it simple to get the last focused seat.
+    The current server -> input -> seat wasn't nice.
+  * view: Reindent and prefix view_initial_focus
+  * view: Reindent and prefix view_setup()
+  * view: Simplify phoc_view_set_initial_focus()
+    Just use phoc_server_get_last_active_seat ()
+  * view: Make the activation token a r/o property.
+    It's only supposed to be set by derived classes and those can use the
+    phoc_view_set_activation_token().
+    We could move that method to view-private.h but keep it in view.h
+    for the moment to keep code movement at bay.
+  * view: Allow to submit and clear the activation token.
+    Will be used in follow up commits
+  * xdg-activation: Just let the seat handle the activation.
+    The token is meant to focus the view so invoke phoc_seat_focus_view()
+    and handle the token submission there.
+    This also works for yet unmapped view as all view derived classes
+    call phoc_view_setup()
+           --> phoc_view_set_initial_focus()
+             --> phoc_set_set_focus_view ()
+  * view: Drag token type around.
+    This will allow us to flush tokens for other protocols too
+  * gtk-shell: Add TODO.
+    We should use the startup-id for activation.
+  * xwayland-surface: Use startup_id for activation.
+    Instead of just notifying that we received the startup-id use
+    it for actual activation.
+  * build: Don't redefine PHOC_XWAYLAND for the doc build.
+    We bring it in via phoc-config.h already
+  * doc-check: Fail on gi-docgen and (most) gir compiler warnings.
+    This way we can use it in ci. We filter out some warnings we don't want
+    to fix right away.
+  * ci: Fail on gi-docgen warnings.
+    Let's make sure we catch these.
+  * view: Reindent subsurface_destroy.
+    We're adding more code around that
+  * view: Implement subsurface:get_pos.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/331
+  * view: Drop fallback for ChildView without get_pos.
+    It's mandatory now
+  * render: No need to schedule frame after adding touch point damage
+    damage_touch_point_cb invokes wlr_output_damage_add which does that
+    already.
+  * render: Move damage checking to a separate function
+  * render: Stay clear of wlr_ namespace.
+    We use `box` instead of `wlr_box` in function and method names elsewhere.
+    This makes sure a function doesn't look like if it's coming from
+    wlroots.
+  * output: Move phoc_output_scale_box to utils.
+    The output argument is unused. This makes it clearer that we don't care
+    about any output rotation or scale in this function.
+  * output-shield: Use proper prefix
+  * utils: Document phoc_utils_compute_scale
+  * treewide: Use explicit cast for wlr_output->data.
+    This gives us some additional type checks.
+  * desktop: Make it simple to get the output at given layout coordinates
+  * cursor: Use phoc_desktop_layout_get_output.
+    This simplifies the back and forth between output and
+    wlr_output. PhocView's methods will soon switch to using PhocOutput
+    rather than wlr_output as arguments which will further simplify this.
+  * desktop: Simplify phoc_desktop_surface_at
+    wlr_output->data, phoc_output and output all refer to the same output.
+    Just use output everywhere.
+  * view: Use phoc_desktop_layout_get_output
+  * output: Invoke arrange-layers less
+    phoc_layer_shell_arrange() needs to be called on mode, scale and
+    transform changes to adjust the layer surfaces and available space for
+    views. It doesn't need to be called when we only submit damage or attach
+    new buffers. This reduces the number of invocations (and hence used CPU
+    time).
+    Fixes: 3d788792 ("Update to wlroots 0.13 and drop support for older versions")
+  * output: Handle mode changes in commit handler.
+    No need for an extra listener
+  * input: Invoke constructed of parent object first.
+    For consistency with other objects, doesn't change anything here.
+  * input: Use 'self' in 'handle_new_input'
+  * input: Make sure we always add a seat.
+    Otherwise the headless backend doesn't expose a wl_seat which makes it
+    hard to use for tests.
+  * layer-shell-effects: Drop version.
+    We want to check resource versions anyway so no need to track
+    the passed in version.
+  * desktop: Make phoc specific protocols private.
+    We want to empty out PhocDesktop and as we add a new protocol
+    this is another step in that direction.
+  * input: Add a doc string for phoc_input_get_seat()
+  * seat: Introduce private struct.
+    As with other objects we don't want to make more internal members
+    public. So introduce a private struct and should we have all members
+    private we can drop this again.
+    Let's start with PhocInput which will already help to e.g. unclutter
+    headers further.
+    There's a bunch of easy follow ups like the device lists.
+  * switch: Allow to query switch by type.
+    We use wlroots enums for the switch types.
+  * seat: Update capabilities for seat on switch changes too.
+    We want to update the device state caps as well.
+  * Add phoc-device-state-unstable protocol.
+    This is meant to inform interested clients about hardware device state
+    not handled via wl_seat's capabilities. This for now includes lid
+    and tablet mode switches but we can also extend that to cover hardware
+    keyboards later.
+    The `PhocSeat` dispatches between the signals emitted from the
+    `PhocSwitch` and the device-state protocol so we keep the switch
+    itself clear from caring about any protocol details.
+    Can be tested via the `device-state` example.
+    Helps: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/320
+  * switch: Keep track of switch state.
+    This allows us to query the switch state at any time and not only when
+    receiving events.
+  * device-state: Send initial switch state.
+    Whenever a client connects send the switch state if known
+  * build: Bump required meson version to 0.63.0
+    diff_files was only introduces there and 1.0 is in Debian stable
+  * property-easer: Allow for unsigned int properties too
+  * output: cache renderer.
+    We need the renderer at different places, no need to get it over
+    and over again.
+  * view: Add method to get dimensions of the maximized box
+  * view: Use phoc_view_get_maximized_box in phoc_view_arrange_maximized.
+    Note that we don't take the geometry into account as this is the
+    clients geometry prior to resize anyway.
+  * view: Add method to get dimensions of the tiled box
+  * view: Use phoc_view_get_tiled_box in phoc_view_arrange_tiled
+  * output: Keep the outputs layout coordinates around.
+    We need them ever so often
+  * output: Simplify phoc_output_get_decoration_box.
+    By using phoc_utils_scale_box we also handle fractional scaling better.
+  * output: Make it simple to submit damage
+  * Add boxed types for colors and boxes.
+    We want to use these as GObject properties so create
+    thin wrappers.
+  * Add an interface to render blings.
+    To attach some graphical sugar in various spaces of the compositor
+    add an interface the objects can implement to get rendered.
+    This will allow us to have e.g. additional rects or quads in various
+    places when needed. We can combine this nicely with PhocTimedAnimation.
+  * view: Allow to add and render blings.
+    These are currently all rendered before the view.
+  * view: Add TODO.
+    We want decorations to use the bling interface too
+  * Add support for using colored rectangles as blings.
+    This allows them to be rendered e.g. when attached to views.
+  * output-shield: Add TODO.
+    The PhocOutputShields can use a PhocColorRect
+  * cursor: Suggest window state changes.
+    Instead of changing the size right away suggest the new size when tiling
+    and maximizing and only resize if still within the threshold when
+    releasing the button.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/309
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/203
+  * cursor: Make phoc_cursor_handle_constraint_commit static.
+    Not needed outside the cursor code.
+  * cursor: Drop unnused view parameter from phoc_cursor_submit_pending_view_state_change
+  * cursor: Don't forget to apply state changes with touch.
+    Fixes: 3c14012350548d49cd074ac9327b4bfd17a7d28c
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 31 Aug 2023 11:21:07 +0200
+
 phoc (0.30.0) experimental; urgency=medium
 
   [ Guido Günther ]
