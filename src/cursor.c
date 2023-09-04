@@ -218,7 +218,7 @@ phoc_cursor_clear_view_state_change (PhocCursor *self)
 
 
 static void
-phoc_cursor_submit_pending_view_state_change (PhocCursor *self, PhocView *view)
+phoc_cursor_submit_pending_view_state_change (PhocCursor *self)
 {
   PhocCursorPrivate *priv;
 
@@ -1165,7 +1165,7 @@ phoc_cursor_press_button (PhocCursor *self,
 
     if (state == WLR_BUTTON_RELEASED && self->mode != PHOC_CURSOR_PASSTHROUGH) {
       if (priv->view_state.view)
-        phoc_cursor_submit_pending_view_state_change (self, view);
+        phoc_cursor_submit_pending_view_state_change (self);
       self->mode = PHOC_CURSOR_PASSTHROUGH;
       phoc_cursor_update_focus (self);
     }
@@ -1417,6 +1417,10 @@ phoc_cursor_handle_touch_up (PhocCursor                *self,
   struct wlr_touch_point *point =
     wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
   PhocTouchPoint *touch_point;
+  PhocCursorPrivate *priv;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
 
   touch_point = phoc_cursor_get_touch_point (self, event->touch_id);
 
@@ -1436,6 +1440,9 @@ phoc_cursor_handle_touch_up (PhocCursor                *self,
     return;
 
   if (self->mode != PHOC_CURSOR_PASSTHROUGH) {
+    if (priv->view_state.view)
+      phoc_cursor_submit_pending_view_state_change (self);
+
     self->mode = PHOC_CURSOR_PASSTHROUGH;
     phoc_cursor_update_focus (self);
   }
@@ -1651,7 +1658,7 @@ phoc_cursor_handle_focus_change (PhocCursor                                 *sel
                          sx, sy);
 }
 
-void
+static void
 phoc_cursor_handle_constraint_commit (PhocCursor *self)
 {
   PhocServer *server = phoc_server_get_default ();
