@@ -161,6 +161,7 @@ handle_get_tablet_mode_switch (struct wl_client   *client,
     break;
   default:
     /* nothing to do */
+    g_assert_not_reached ();
   }
 
   self->tablet_mode_switches = g_slist_prepend (self->tablet_mode_switches,
@@ -254,6 +255,7 @@ handle_get_lid_switch (struct wl_client   *client,
     break;
   default:
     /* nothing to do */
+    g_assert_not_reached ();
   }
 
   self->lid_switches = g_slist_prepend (self->lid_switches,
