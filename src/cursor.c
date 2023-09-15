@@ -229,11 +229,10 @@ phoc_cursor_submit_pending_view_state_change (PhocCursor *self)
 
   switch (priv->view_state.state) {
   case PHOC_VIEW_STATE_MAXIMIZED:
-    view_maximize (priv->view_state.view, priv->view_state.output->wlr_output);
+    view_maximize (priv->view_state.view, priv->view_state.output);
     break;
   case PHOC_VIEW_STATE_TILED:
-    view_tile (priv->view_state.view, priv->view_state.tile_dir,
-               priv->view_state.output->wlr_output);
+    view_tile (priv->view_state.view, priv->view_state.tile_dir, priv->view_state.output);
     break;
   case PHOC_VIEW_STATE_FLOATING:
     /* Nothing to do */
@@ -1049,7 +1048,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
       bool output_is_landscape = output_box.width > output_box.height;
 
       if (view_is_fullscreen (view)) {
-        phoc_view_set_fullscreen (view, true, output->wlr_output);
+        phoc_view_set_fullscreen (view, true, output);
       } else if (self->cursor->y < output_box.y + PHOC_EDGE_SNAP_THRESHOLD) {
         phoc_cursor_suggest_view_state_change (self, view, output, PHOC_VIEW_STATE_MAXIMIZED, -1);
       } else if (output_is_landscape &&
