@@ -41,10 +41,11 @@ popup_destroy (PhocViewChild *child)
   g_assert (child->impl == &popup_impl);
   PhocXdgPopup *popup = (PhocXdgPopup *)child;
 
-  wl_list_remove (&popup->destroy.link);
   wl_list_remove (&popup->new_popup.link);
-  wl_list_remove (&popup->map.link);
   wl_list_remove (&popup->unmap.link);
+  wl_list_remove (&popup->map.link);
+  wl_list_remove (&popup->destroy.link);
+
   free (popup);
 }
 
