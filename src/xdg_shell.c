@@ -31,6 +31,7 @@ typedef struct phoc_xdg_popup {
   struct wl_listener map;
   struct wl_listener unmap;
   struct wl_listener new_popup;
+  struct wl_listener reposition;
 } PhocXdgPopup;
 
 static const struct phoc_view_child_interface popup_impl;
@@ -41,6 +42,7 @@ popup_destroy (PhocViewChild *child)
   g_assert (child->impl == &popup_impl);
   PhocXdgPopup *popup = (PhocXdgPopup *)child;
 
+  wl_list_remove (&popup->reposition.link);
   wl_list_remove (&popup->new_popup.link);
   wl_list_remove (&popup->unmap.link);
   wl_list_remove (&popup->map.link);
@@ -141,6 +143,15 @@ popup_handle_new_popup (struct wl_listener *listener, void *data)
 }
 
 
+static void
+popup_handle_reposition (struct wl_listener *listener, void *data)
+{
+  PhocXdgPopup *popup = wl_container_of (listener, popup, reposition);
+
+  popup_unconstrain (popup);
+}
+
+
 PhocXdgPopup *
 phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
 {
@@ -160,6 +171,8 @@ phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
   wl_signal_add (&wlr_popup->base->events.unmap, &popup->unmap);
   popup->new_popup.notify = popup_handle_new_popup;
   wl_signal_add (&wlr_popup->base->events.new_popup, &popup->new_popup);
+  popup->reposition.notify = popup_handle_reposition;
+  wl_signal_add (&wlr_popup->events.reposition, &popup->reposition);
 
   popup_unconstrain (popup);
 
