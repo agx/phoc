@@ -46,7 +46,7 @@ handle_maximize (PhocSeat *seat)
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus != NULL)
-    view_maximize(focus, NULL);
+    phoc_view_maximize (focus, NULL);
 }
 
 static void
@@ -97,7 +97,7 @@ handle_toggle_maximized (PhocSeat *seat)
     if (view_is_maximized(focus))
       view_restore(focus);
     else
-      view_maximize(focus, NULL);
+      phoc_view_maximize (focus, NULL);
   }
 }
 

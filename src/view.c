@@ -135,7 +135,7 @@ view_is_fullscreen (PhocView *self)
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  return priv->fullscreen_output != NULL;
+  return (priv->fullscreen_output != NULL);
 }
 
 /**
@@ -517,7 +517,7 @@ view_arrange_tiled (PhocView *self, PhocOutput *output)
 
 
 void
-view_maximize (PhocView *view, PhocOutput *output)
+phoc_view_maximize (PhocView *view, PhocOutput *output)
 {
   PhocViewPrivate *priv;
 
@@ -549,7 +549,7 @@ void
 view_auto_maximize(PhocView *view)
 {
   if (phoc_view_want_auto_maximize (view))
-    view_maximize (view, NULL);
+    phoc_view_maximize (view, NULL);
 }
 
 void
@@ -1459,7 +1459,7 @@ handle_toplevel_handle_request_maximize (struct wl_listener *listener,void *data
   struct wlr_foreign_toplevel_handle_v1_maximized_event *event = data;
 
   if (event->maximized)
-    view_maximize (self, NULL);
+    phoc_view_maximize (self, NULL);
   else
     view_restore (self);
 }

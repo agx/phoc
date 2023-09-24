@@ -431,7 +431,7 @@ handle_request_maximize (struct wl_listener *listener, void *data)
     return;
 
   if (surface->toplevel->requested.maximized)
-    view_maximize (PHOC_VIEW (self), NULL);
+    phoc_view_maximize (PHOC_VIEW (self), NULL);
   else
     view_restore (PHOC_VIEW (self));
 }
@@ -531,7 +531,7 @@ phoc_xdg_surface_constructed (GObject *object)
   }
 
   if (self->xdg_surface->toplevel->requested.maximized)
-    view_maximize (PHOC_VIEW (self), NULL);
+    phoc_view_maximize (PHOC_VIEW (self), NULL);
 
   if (self->xdg_surface->toplevel->requested.fullscreen_output)
     output = PHOC_OUTPUT (self->xdg_surface->toplevel->requested.fullscreen_output->data);
