@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Files containing tab indented code blogs
+# Files still containing tab indented code blocks
 TO_CLEANUP="
     src/desktop.c
     src/desktop.h
@@ -8,8 +8,6 @@ TO_CLEANUP="
     src/layer_shell.c
     src/text_input.c
     src/text_input.h
-    src/view.c
-    src/view.h
 "
 
 export LC_ALL=C
