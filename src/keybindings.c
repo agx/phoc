@@ -132,6 +132,27 @@ static void handle_close (PhocSeat *seat)
     phoc_view_close (focus);
 }
 
+
+static void
+handle_move_to_monitor_up (PhocSeat *seat)
+{
+  PhocView *view = phoc_seat_get_focus_view (seat);
+
+  if (view)
+    view_move_to_next_output (view, WLR_DIRECTION_UP);
+}
+
+
+static void
+handle_move_to_monitor_down (PhocSeat *seat)
+{
+  PhocView *view = phoc_seat_get_focus_view (seat);
+
+  if (view)
+    view_move_to_next_output (view, WLR_DIRECTION_DOWN);
+}
+
+
 static void
 handle_move_to_monitor_right (PhocSeat *seat)
 {
@@ -558,6 +579,10 @@ phoc_keybindings_constructed (GObject *object)
                        "toggle-fullscreen", handle_toggle_fullscreen);
   phoc_add_keybinding (self, self->settings,
                        "toggle-maximized", handle_toggle_maximized);
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-monitor-up", handle_move_to_monitor_up);
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-monitor-down", handle_move_to_monitor_down);
   phoc_add_keybinding (self, self->settings,
                        "move-to-monitor-right", handle_move_to_monitor_right);
   phoc_add_keybinding (self, self->settings,
