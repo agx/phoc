@@ -49,6 +49,12 @@ static GParamSpec *props[PROP_LAST_PROP];
 typedef struct _PhocSeatPrivate {
   PhocInput             *input;
   PhocDeviceState       *device_state;
+  char                  *name;
+
+  struct wl_client      *exclusive_client;
+
+
+  GHashTable            *input_mapping_settings;
 } PhocSeatPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
@@ -69,7 +75,7 @@ phoc_seat_set_property (GObject      *object,
     priv->input = g_value_get_object (value);
     break;
   case PROP_NAME:
-    self->name = g_value_dup_string (value);
+    priv->name = g_value_dup_string (value);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -92,7 +98,7 @@ phoc_seat_get_property (GObject    *object,
     g_value_set_object (value, priv->input);
     break;
   case PROP_NAME:
-    g_value_set_string (value, self->name);
+    g_value_set_string (value, priv->name);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -495,12 +501,13 @@ handle_pointer_focus_change (struct wl_listener *listener,
 static PhocOutput *
 get_output_from_settings (PhocSeat *self, PhocInputDevice *device)
 {
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   GSettings *settings;
   g_auto (GStrv) edid = NULL;
 
-  settings = g_hash_table_lookup (self->input_mapping_settings, device);
+  settings = g_hash_table_lookup (priv->input_mapping_settings, device);
   g_assert (G_IS_SETTINGS (settings));
 
   edid = g_settings_get_strv (settings, "output");
@@ -892,6 +899,7 @@ on_settings_output_changed (PhocSeat *seat)
 static void
 phoc_seat_add_input_mapping_settings (PhocSeat *self, PhocInputDevice *device)
 {
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
   const char *schema, *group, *vendor, *product;
   g_autofree char *path = NULL;
   g_autoptr (GSettings) settings = NULL;
@@ -918,7 +926,7 @@ phoc_seat_add_input_mapping_settings (PhocSeat *self, PhocInputDevice *device)
   settings = g_settings_new_with_path (schema, path);
   g_signal_connect_swapped (settings, "changed::output",
                             G_CALLBACK (on_settings_output_changed), self);
-  g_hash_table_insert (self->input_mapping_settings, device, g_steal_pointer (&settings));
+  g_hash_table_insert (priv->input_mapping_settings, device, g_steal_pointer (&settings));
   on_settings_output_changed (self);
 }
 
@@ -1032,6 +1040,7 @@ static void
 on_touch_destroy (PhocTouch *touch)
 {
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (touch));
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (touch));
@@ -1039,7 +1048,7 @@ on_touch_destroy (PhocTouch *touch)
   g_assert (PHOC_IS_TOUCH (touch));
   g_debug ("Removing touch device: %s", device->name);
   g_hash_table_remove (desktop->input_output_map, device->name);
-  g_hash_table_remove (seat->input_mapping_settings, touch);
+  g_hash_table_remove (priv->input_mapping_settings, touch);
 
   seat->touch = g_slist_remove (seat->touch, touch);
   wlr_cursor_detach_input_device (seat->cursor->cursor, device);
@@ -1228,6 +1237,7 @@ seat_add_tablet_pad (PhocSeat                *seat,
 static void
 on_tablet_destroy (PhocSeat *seat, PhocTablet *tablet)
 {
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
@@ -1235,7 +1245,7 @@ on_tablet_destroy (PhocSeat *seat, PhocTablet *tablet)
   g_assert (PHOC_IS_TABLET (tablet));
   g_debug ("Removing tablet device: %s", device->name);
   wlr_cursor_detach_input_device (seat->cursor->cursor, device);
-  g_hash_table_remove (seat->input_mapping_settings, tablet);
+  g_hash_table_remove (priv->input_mapping_settings, tablet);
   g_hash_table_remove (desktop->input_output_map, device->name);
 
   seat->tablets = g_slist_remove (seat->tablets, tablet);
@@ -1466,13 +1476,19 @@ phoc_seat_view_from_view (PhocSeat *seat, PhocView *view)
   return seat_view;
 }
 
+
 bool
 phoc_seat_allow_input (PhocSeat           *seat,
                        struct wl_resource *resource)
 {
-  return !seat->exclusive_client ||
-         wl_resource_get_client (resource) == seat->exclusive_client;
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
+  return !priv->exclusive_client || wl_resource_get_client (resource) == priv->exclusive_client;
 }
+
 
 static void
 seat_raise_view_stack (PhocSeat *seat, PhocView *view)
@@ -1496,8 +1512,8 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
 }
 
 /**
- * phoc_set_set_focus_view:
- * @self: The seat
+ * phoc_seat_set_focus_view:
+ * @seat: The seat
  * @view:(nullable): The view to focus
  *
  * If possible it will unfocus the currently focused view and focus
@@ -1691,12 +1707,23 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   phoc_output_update_shell_reveal (PHOC_OUTPUT (layer->output->data));
 }
 
+/**
+ * phoc_seat_set_exclusive_client:
+ * @seat: The seat
+ * @client:(nullable): The exclusive client
+ *
+ * If %client is no %NULL only this client can receive input events.
+ */
 void
-phoc_seat_set_exclusive_client (PhocSeat         *seat,
-                                struct wl_client *client)
+phoc_seat_set_exclusive_client (PhocSeat *seat, struct wl_client *client)
 {
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
   if (!client) {
-    seat->exclusive_client = client;
+    priv->exclusive_client = client;
     // Triggers a refocus of the topmost surface layer if necessary
     phoc_layer_shell_update_focus ();
     return;
@@ -1728,7 +1755,7 @@ phoc_seat_set_exclusive_client (PhocSeat         *seat,
                                         now.tv_nsec / 1000, point->touch_id);
     }
   }
-  seat->exclusive_client = client;
+  priv->exclusive_client = client;
 }
 
 /**
@@ -1933,7 +1960,7 @@ phoc_seat_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  self->seat = wlr_seat_create (server->wl_display, self->name);
+  self->seat = wlr_seat_create (server->wl_display, priv->name);
   g_assert (self->seat);
   self->seat->data = self;
 
@@ -1979,11 +2006,12 @@ static void
 phoc_seat_finalize (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT (object);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
-  g_clear_pointer (&self->input_mapping_settings, g_hash_table_destroy);
+  g_clear_pointer (&priv->input_mapping_settings, g_hash_table_destroy);
   phoc_seat_handle_destroy (&self->destroy, self->seat);
   wlr_seat_destroy (self->seat);
-  g_clear_pointer (&self->name, g_free);
+  g_clear_pointer (&priv->name, g_free);
 
   g_clear_pointer (&self->keyboards, g_slist_free);
   g_clear_pointer (&self->pointers, g_slist_free);
@@ -2030,12 +2058,14 @@ phoc_seat_class_init (PhocSeatClass *klass)
 static void
 phoc_seat_init (PhocSeat *self)
 {
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
+
   wl_list_init (&self->tablet_pads);
   wl_list_init (&self->views);
 
   self->touch_id = -1;
 
-  self->input_mapping_settings = g_hash_table_new_full (g_direct_hash,
+  priv->input_mapping_settings = g_hash_table_new_full (g_direct_hash,
                                                         g_direct_equal,
                                                         NULL,
                                                         g_object_unref);

@@ -38,8 +38,6 @@ typedef struct _PhocTablet PhocTablet;
 typedef struct _PhocSeat {
   GObject                         parent;
 
-  char                           *name;
-
   struct wlr_seat                *seat;
   PhocCursor                     *cursor;
 
@@ -51,9 +49,6 @@ typedef struct _PhocSeat {
   struct wlr_layer_surface_v1    *focused_layer;
 
   PhocInputMethodRelay            im_relay;
-
-  // If non-null, only this client can receive input events
-  struct wl_client               *exclusive_client;
 
   struct wl_list                  views; // PhocSeatView::link
   bool                            has_focus;
@@ -72,8 +67,6 @@ typedef struct _PhocSeat {
   struct wl_listener              request_start_drag;
   struct wl_listener              start_drag;
   struct wl_listener              destroy;
-
-  GHashTable                     *input_mapping_settings;
 } PhocSeat;
 
 typedef struct _PhocSeatView {

@@ -392,30 +392,35 @@ handle_layout_change (struct wl_listener *listener, void *data)
     phoc_output_damage_whole(output);
 }
 
-static void input_inhibit_activate(struct wl_listener *listener, void *data) {
-	PhocDesktop *desktop = wl_container_of(
-			listener, desktop, input_inhibit_activate);
-	PhocServer *server = phoc_server_get_default ();
 
-	for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
-		PhocSeat *seat = PHOC_SEAT (elem->data);
+static void
+input_inhibit_activate (struct wl_listener *listener, void *data)
+{
+  PhocDesktop *desktop = wl_container_of(listener, desktop, input_inhibit_activate);
+  PhocServer *server = phoc_server_get_default ();
 
-		g_assert (PHOC_IS_SEAT (seat));
-		phoc_seat_set_exclusive_client(seat,
-				desktop->input_inhibit->active_client);
-	}
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (seat));
+    phoc_seat_set_exclusive_client (seat, desktop->input_inhibit->active_client);
+  }
 }
 
-static void input_inhibit_deactivate(struct wl_listener *listener, void *data) {
-	PhocServer *server = phoc_server_get_default ();
 
-	for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
-		PhocSeat *seat = PHOC_SEAT (elem->data);
+static void
+input_inhibit_deactivate (struct wl_listener *listener, void *data)
+{
+  PhocServer *server = phoc_server_get_default ();
 
-		g_assert (PHOC_IS_SEAT (seat));
-		phoc_seat_set_exclusive_client(seat, NULL);
-	}
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+
+    g_assert (PHOC_IS_SEAT (seat));
+    phoc_seat_set_exclusive_client (seat, NULL);
+  }
 }
+
 
 static void handle_constraint_destroy(struct wl_listener *listener,
 		void *data) {
