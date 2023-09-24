@@ -251,68 +251,70 @@ layer_surface_at (PhocOutput                     *output,
  *
  * Returns: (nullable): The `struct wlr_surface`
  */
-struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
-		double lx, double ly, double *sx, double *sy,
-		PhocView **view) {
-	struct wlr_surface *surface = NULL;
-	PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
-	double ox = lx, oy = ly;
-	if (view) {
-		*view = NULL;
-	}
+struct wlr_surface *
+phoc_desktop_surface_at(PhocDesktop *desktop,
+                        double lx, double ly, double *sx, double *sy,
+                        PhocView **view)
+{
+  struct wlr_surface *surface = NULL;
+  PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
+  double ox = lx, oy = ly;
+  if (view) {
+    *view = NULL;
+  }
 
-	if (output) {
-		wlr_output_layout_output_coords(desktop->layout, output->wlr_output, &ox, &oy);
+  if (output) {
+    wlr_output_layout_output_coords(desktop->layout, output->wlr_output, &ox, &oy);
 
-		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
-						ox, oy, sx, sy))) {
-			return surface;
-		}
+    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+                                    ox, oy, sx, sy))) {
+      return surface;
+    }
 
-		if (output->fullscreen_view != NULL) {
+    if (output->fullscreen_view != NULL) {
 
-			if (phoc_output_has_shell_revealed (output)) {
-				if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-								ox, oy, sx, sy))) {
-					return surface;
-				}
-			}
+      if (phoc_output_has_shell_revealed (output)) {
+        if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+                                        ox, oy, sx, sy))) {
+          return surface;
+        }
+      }
 
-			if (view_at(output->fullscreen_view, lx, ly, &surface, sx, sy)) {
-				if (view) {
-					*view = output->fullscreen_view;
-				}
-				return surface;
-			} else {
-				return NULL;
-			}
-		}
+      if (view_at(output->fullscreen_view, lx, ly, &surface, sx, sy)) {
+        if (view) {
+          *view = output->fullscreen_view;
+        }
+        return surface;
+      } else {
+        return NULL;
+      }
+    }
 
-		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-						ox, oy, sx, sy))) {
-			return surface;
-		}
-	}
+    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+                                    ox, oy, sx, sy))) {
+      return surface;
+    }
+  }
 
-	PhocView *_view;
-	if ((_view = desktop_view_at(desktop, lx, ly, &surface, sx, sy))) {
-		if (view) {
-			*view = _view;
-		}
-		return surface;
-	}
+  PhocView *_view;
+  if ((_view = desktop_view_at(desktop, lx, ly, &surface, sx, sy))) {
+    if (view) {
+      *view = _view;
+    }
+    return surface;
+  }
 
-	if (output) {
-		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
-						ox, oy, sx, sy))) {
-			return surface;
-		}
-		if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND,
-						ox, oy, sx, sy))) {
-			return surface;
-		}
-	}
-	return NULL;
+  if (output) {
+    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
+                                    ox, oy, sx, sy))) {
+      return surface;
+    }
+    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND,
+                                    ox, oy, sx, sy))) {
+      return surface;
+    }
+  }
+  return NULL;
 }
 
 gboolean
@@ -422,64 +424,65 @@ input_inhibit_deactivate (struct wl_listener *listener, void *data)
 }
 
 
-static void handle_constraint_destroy(struct wl_listener *listener,
-		void *data) {
-	PhocPointerConstraint *constraint =
-		wl_container_of(listener, constraint, destroy);
-	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
-	PhocSeat *seat = wlr_constraint->seat->data;
-	PhocCursor *cursor = phoc_seat_get_cursor (seat);
+static void
+handle_constraint_destroy (struct wl_listener *listener, void *data)
+{
+  PhocPointerConstraint *constraint = wl_container_of(listener, constraint, destroy);
+  struct wlr_pointer_constraint_v1 *wlr_constraint = data;
+  PhocSeat *seat = wlr_constraint->seat->data;
+  PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
-	wl_list_remove(&constraint->destroy.link);
+  wl_list_remove(&constraint->destroy.link);
 
-	if (cursor->active_constraint == wlr_constraint) {
-		wl_list_remove(&cursor->constraint_commit.link);
-		wl_list_init(&cursor->constraint_commit.link);
-		cursor->active_constraint = NULL;
+  if (cursor->active_constraint == wlr_constraint) {
+    wl_list_remove(&cursor->constraint_commit.link);
+    wl_list_init(&cursor->constraint_commit.link);
+    cursor->active_constraint = NULL;
 
-		if (wlr_constraint->current.committed &
-				WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT &&
-				cursor->pointer_view) {
-			PhocView *view = cursor->pointer_view->view;
-			double lx = view->box.x + wlr_constraint->current.cursor_hint.x;
-			double ly = view->box.y + wlr_constraint->current.cursor_hint.y;
+    if (wlr_constraint->current.committed &
+        WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT &&
+        cursor->pointer_view) {
+      PhocView *view = cursor->pointer_view->view;
+      double lx = view->box.x + wlr_constraint->current.cursor_hint.x;
+      double ly = view->box.y + wlr_constraint->current.cursor_hint.y;
 
-			wlr_cursor_warp(cursor->cursor, NULL, lx, ly);
-		}
-	}
+      wlr_cursor_warp(cursor->cursor, NULL, lx, ly);
+    }
+  }
 
-	free(constraint);
+  free(constraint);
 }
 
-static void handle_pointer_constraint(struct wl_listener *listener,
-		void *data) {
-	PhocServer *server = phoc_server_get_default ();
-	struct wlr_pointer_constraint_v1 *wlr_constraint = data;
-	PhocSeat *seat = wlr_constraint->seat->data;
-	PhocCursor *cursor = phoc_seat_get_cursor (seat);
+static
+void handle_pointer_constraint (struct wl_listener *listener, void *data)
+{
+  PhocServer *server = phoc_server_get_default ();
+  struct wlr_pointer_constraint_v1 *wlr_constraint = data;
+  PhocSeat *seat = wlr_constraint->seat->data;
+  PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
-	PhocPointerConstraint *constraint =
-		calloc(1, sizeof(PhocPointerConstraint));
-	constraint->constraint = wlr_constraint;
+  PhocPointerConstraint *constraint =
+    calloc(1, sizeof(PhocPointerConstraint));
+  constraint->constraint = wlr_constraint;
 
-	constraint->destroy.notify = handle_constraint_destroy;
-	wl_signal_add(&wlr_constraint->events.destroy, &constraint->destroy);
+  constraint->destroy.notify = handle_constraint_destroy;
+  wl_signal_add(&wlr_constraint->events.destroy, &constraint->destroy);
 
-	double sx, sy;
-	struct wlr_surface *surface = phoc_desktop_surface_at(
-		server->desktop,
-		cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
+  double sx, sy;
+  struct wlr_surface *surface = phoc_desktop_surface_at(
+    server->desktop,
+    cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
-	if (surface == wlr_constraint->surface) {
-		g_assert (!cursor->active_constraint);
-		phoc_cursor_constrain(cursor, wlr_constraint, sx, sy);
-	}
+  if (surface == wlr_constraint->surface) {
+    g_assert (!cursor->active_constraint);
+    phoc_cursor_constrain(cursor, wlr_constraint, sx, sy);
+  }
 }
 
 static void
 auto_maximize_changed_cb (PhocDesktop *self,
-			  const gchar *key,
-			  GSettings   *settings)
+                          const gchar *key,
+                          GSettings   *settings)
 {
   gboolean max = g_settings_get_boolean (settings, key);
 
@@ -508,8 +511,8 @@ on_enable_animations_changed (PhocDesktop *self,
 
 #ifdef PHOC_XWAYLAND
 static const char *atom_map[XWAYLAND_ATOM_LAST] = {
-	"_NET_WM_WINDOW_TYPE_NORMAL",
-	"_NET_WM_WINDOW_TYPE_DIALOG"
+        "_NET_WM_WINDOW_TYPE_NORMAL",
+        "_NET_WM_WINDOW_TYPE_DIALOG"
 };
 
 static void
@@ -644,7 +647,7 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
 
   if (config->xwayland) {
     self->xwayland = wlr_xwayland_create(server->wl_display,
-					 server->compositor, config->xwayland_lazy);
+                                         server->compositor, config->xwayland_lazy);
     if (!self->xwayland) {
       g_critical ("Failed to initialize Xwayland");
       g_unsetenv ("DISPLAY");
@@ -652,15 +655,15 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
     }
 
     wl_signal_add(&self->xwayland->events.new_surface,
-		  &self->xwayland_surface);
+                  &self->xwayland_surface);
     self->xwayland_surface.notify = handle_xwayland_surface;
 
     wl_signal_add(&self->xwayland->events.ready,
-		  &self->xwayland_ready);
+                  &self->xwayland_ready);
     self->xwayland_ready.notify = handle_xwayland_ready;
 
     wl_signal_add(&self->xwayland->events.remove_startup_info,
-		  &self->xwayland_remove_startup_id);
+                  &self->xwayland_remove_startup_id);
     self->xwayland_remove_startup_id.notify = handle_xwayland_remove_startup_id;
 
     g_setenv ("DISPLAY", self->xwayland->display_name, true);
@@ -669,12 +672,12 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
       g_critical ("Cannot load XWayland XCursor theme");
 
     struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor(
-								  self->xcursor_manager, cursor_default, 1);
+                                                                  self->xcursor_manager, cursor_default, 1);
     if (xcursor != NULL) {
       struct wlr_xcursor_image *image = xcursor->images[0];
       wlr_xwayland_set_cursor(self->xwayland, image->buffer,
-			      image->width * 4, image->width, image->height, image->hotspot_x,
-			      image->hotspot_y);
+                              image->width * 4, image->width, image->height, image->hotspot_x,
+                              image->hotspot_y);
     }
   }
 #endif

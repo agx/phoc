@@ -2,8 +2,6 @@
 
 # Files still containing tab indented code blocks
 TO_CLEANUP="
-    src/desktop.c
-    src/desktop.h
     src/layers.h
     src/layer_shell.c
     src/text_input.c
