@@ -4,8 +4,6 @@
 TO_CLEANUP="
     src/layers.h
     src/layer_shell.c
-    src/text_input.c
-    src/text_input.h
 "
 
 export LC_ALL=C
