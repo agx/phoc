@@ -190,8 +190,8 @@ relay_send_im_done (PhocInputMethodRelay *relay, struct wlr_text_input_v3 *input
 static void
 handle_text_input_enable (struct wl_listener *listener, void *data)
 {
-  PhocTextInput *text_input = wl_container_of(listener, text_input,
-                                              enable);
+  PhocTextInput *text_input = wl_container_of (listener, text_input, enable);
+
   PhocInputMethodRelay *relay = text_input->relay;
   if (relay->input_method == NULL) {
     g_debug ("Enabling text input when input method is gone");
@@ -200,19 +200,19 @@ handle_text_input_enable (struct wl_listener *listener, void *data)
   // relay_send_im_done protects from receiving unfocussed done,
   // but activate must be prevented too.
   // TODO: when enter happens?
-  if (!text_input_is_focused(text_input->input)) {
+  if (!text_input_is_focused (text_input->input))
     return;
-  }
-  wlr_input_method_v2_send_activate(relay->input_method);
-  relay_send_im_done(relay, text_input->input);
+
+  wlr_input_method_v2_send_activate (relay->input_method);
+  relay_send_im_done (relay, text_input->input);
 }
 
 static void
 handle_text_input_commit (struct wl_listener *listener, void *data)
 {
-  PhocTextInput *text_input = wl_container_of(listener, text_input,
-                                              commit);
+  PhocTextInput *text_input = wl_container_of (listener, text_input, commit);
   PhocInputMethodRelay *relay = text_input->relay;
+
   if (!text_input->input->current_enabled) {
     g_debug ("Inactive text input tried to commit an update");
     return;
