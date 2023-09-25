@@ -30,6 +30,19 @@ typedef struct _PhocTextInput {
 } PhocTextInput;
 
 
+static void
+elevate_osk (struct wlr_surface *surface)
+{
+  struct wlr_layer_surface_v1 *layer;
+
+  if (!surface || !wlr_surface_is_layer_surface (surface))
+    return;
+
+  layer = wlr_layer_surface_v1_from_wlr_surface (surface);
+  phoc_layer_shell_update_osk (PHOC_OUTPUT (layer->output->data), TRUE);
+}
+
+
 static PhocTextInput *
 relay_get_focusable_text_input (PhocInputMethodRelay *relay)
 {
@@ -205,6 +218,8 @@ handle_text_input_enable (struct wl_listener *listener, void *data)
 
   wlr_input_method_v2_send_activate (relay->input_method);
   relay_send_im_done (relay, text_input->input);
+
+  elevate_osk (text_input->input->focused_surface);
 }
 
 static void
