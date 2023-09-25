@@ -448,6 +448,8 @@ phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
  * @surface: The surface to check
  *
  * Checks whether input method is currently enabled for surface.
+ *
+ * Returns: `true` if input method is enabled, otherwise `false`.
  */
 bool
 phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay,
