@@ -41,65 +41,65 @@
 G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
 
 struct _PhocDesktop {
-	GObject parent;
+  GObject parent;
 
-	struct wl_list views; // PhocView::link
+  struct wl_list views; // PhocView::link
 
-	struct wl_list outputs; // PhocOutput::link
+  struct wl_list outputs; // PhocOutput::link
 
-	PhocConfig *config;
+  PhocConfig *config;
 
-	struct wlr_output_layout *layout;
-	struct wlr_xdg_shell *xdg_shell;
-	struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
-	struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;
-	struct wlr_server_decoration_manager *server_decoration_manager;
-	struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
-	struct wlr_primary_selection_v1_device_manager *primary_selection_device_manager;
-	struct wlr_idle *idle;
-	struct wlr_input_inhibit_manager *input_inhibit;
-	struct wlr_layer_shell_v1 *layer_shell;
-	struct wlr_input_method_manager_v2 *input_method;
-	struct wlr_text_input_manager_v3 *text_input;
-	struct wlr_virtual_keyboard_manager_v1 *virtual_keyboard;
-	struct wlr_virtual_pointer_manager_v1 *virtual_pointer;
-	struct wlr_screencopy_manager_v1 *screencopy;
-	struct wlr_tablet_manager_v2 *tablet_v2;
-	struct wlr_pointer_constraints_v1 *pointer_constraints;
-	struct wlr_presentation *presentation;
-	struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager_v1;
-	struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
-	struct wlr_pointer_gestures_v1 *pointer_gestures;
-	struct wlr_output_manager_v1 *output_manager_v1;
-	struct wlr_output_power_manager_v1 *output_power_manager_v1;
-	struct wlr_xdg_activation_v1 *xdg_activation_v1;
+  struct wlr_output_layout *layout;
+  struct wlr_xdg_shell *xdg_shell;
+  struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
+  struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;
+  struct wlr_server_decoration_manager *server_decoration_manager;
+  struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
+  struct wlr_primary_selection_v1_device_manager *primary_selection_device_manager;
+  struct wlr_idle *idle;
+  struct wlr_input_inhibit_manager *input_inhibit;
+  struct wlr_layer_shell_v1 *layer_shell;
+  struct wlr_input_method_manager_v2 *input_method;
+  struct wlr_text_input_manager_v3 *text_input;
+  struct wlr_virtual_keyboard_manager_v1 *virtual_keyboard;
+  struct wlr_virtual_pointer_manager_v1 *virtual_pointer;
+  struct wlr_screencopy_manager_v1 *screencopy;
+  struct wlr_tablet_manager_v2 *tablet_v2;
+  struct wlr_pointer_constraints_v1 *pointer_constraints;
+  struct wlr_presentation *presentation;
+  struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager_v1;
+  struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
+  struct wlr_pointer_gestures_v1 *pointer_gestures;
+  struct wlr_output_manager_v1 *output_manager_v1;
+  struct wlr_output_power_manager_v1 *output_power_manager_v1;
+  struct wlr_xdg_activation_v1 *xdg_activation_v1;
 
-	struct wl_listener new_output;
-	struct wl_listener layout_change;
-	struct wl_listener xdg_shell_surface;
-	struct wl_listener layer_shell_surface;
-	struct wl_listener xdg_toplevel_decoration;
-	struct wl_listener input_inhibit_activate;
-	struct wl_listener input_inhibit_deactivate;
-	struct wl_listener virtual_keyboard_new;
-	struct wl_listener virtual_pointer_new;
-	struct wl_listener pointer_constraint;
-	struct wl_listener output_manager_apply;
-	struct wl_listener output_manager_test;
-	struct wl_listener output_power_manager_set_mode;
-	struct wl_listener xdg_activation_v1_request_activate;
+  struct wl_listener new_output;
+  struct wl_listener layout_change;
+  struct wl_listener xdg_shell_surface;
+  struct wl_listener layer_shell_surface;
+  struct wl_listener xdg_toplevel_decoration;
+  struct wl_listener input_inhibit_activate;
+  struct wl_listener input_inhibit_deactivate;
+  struct wl_listener virtual_keyboard_new;
+  struct wl_listener virtual_pointer_new;
+  struct wl_listener pointer_constraint;
+  struct wl_listener output_manager_apply;
+  struct wl_listener output_manager_test;
+  struct wl_listener output_power_manager_set_mode;
+  struct wl_listener xdg_activation_v1_request_activate;
 
 #ifdef PHOC_XWAYLAND
-	struct wlr_xcursor_manager *xcursor_manager;
-	struct wlr_xwayland *xwayland;
-	struct wl_listener xwayland_surface;
-	struct wl_listener xwayland_ready;
-	struct wl_listener xwayland_remove_startup_id;
-	xcb_atom_t xwayland_atoms[XWAYLAND_ATOM_LAST];
+  struct wlr_xcursor_manager *xcursor_manager;
+  struct wlr_xwayland *xwayland;
+  struct wl_listener xwayland_surface;
+  struct wl_listener xwayland_ready;
+  struct wl_listener xwayland_remove_startup_id;
+  xcb_atom_t xwayland_atoms[XWAYLAND_ATOM_LAST];
 #endif
 
-	gboolean maximize, scale_to_fit;
-	GHashTable *input_output_map;
+  gboolean maximize, scale_to_fit;
+  GHashTable *input_output_map;
 };
 
 PhocDesktop *phoc_desktop_new (PhocConfig *config);
@@ -117,8 +117,8 @@ PhocOutput *phoc_desktop_get_builtin_output (PhocDesktop *self);
 PhocOutput *phoc_desktop_layout_get_output (PhocDesktop *self, double lx, double ly);
 
 struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
-		double lx, double ly, double *sx, double *sy,
-		PhocView **view);
+                                            double lx, double ly, double *sx, double *sy,
+                                            PhocView **view);
 gboolean phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view);
 
 PhocLayerSurface  *phoc_desktop_layer_surface_at(PhocDesktop *self,

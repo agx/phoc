@@ -43,26 +43,26 @@ typedef enum _PhocViewDecoPart {
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
 struct _PhocView {
-	GObject parent_instance;
+  GObject parent_instance;
 
-	PhocDesktop *desktop;
-	struct wl_list link; // PhocDesktop::views
-	struct wl_list parent_link; // PhocView::stack
+  PhocDesktop *desktop;
+  struct wl_list link; // PhocDesktop::views
+  struct wl_list parent_link; // PhocView::stack
 
-	struct wlr_box box;
-	struct wlr_box saved;
+  struct wlr_box box;
+  struct wlr_box saved;
 
-	struct {
-		bool update_x, update_y;
-		double x, y;
-		uint32_t width, height;
-	} pending_move_resize;
-	bool pending_centering;
+  struct {
+    bool update_x, update_y;
+    double x, y;
+    uint32_t width, height;
+  } pending_move_resize;
+  bool pending_centering;
 
-	PhocView *parent;
-	struct wl_list stack; // PhocView::link
+  PhocView *parent;
+  struct wl_list stack; // PhocView::link
 
-	struct wlr_surface *wlr_surface; // set only when the surface is mapped
+  struct wlr_surface *wlr_surface; // set only when the surface is mapped
 };
 
 /**
@@ -178,7 +178,7 @@ void view_auto_maximize(PhocView *view);
 void view_tile(PhocView *view, PhocViewTileDirection direction, PhocOutput *output);
 PhocViewTileDirection
      phoc_view_get_tile_direction (PhocView *view);
-void view_maximize(PhocView *view, PhocOutput *output);
+void phoc_view_maximize (PhocView *view, PhocOutput *output);
 void view_restore(PhocView *view);
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, PhocOutput *output);
 void phoc_view_close (PhocView *self);

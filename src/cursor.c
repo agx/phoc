@@ -229,7 +229,7 @@ phoc_cursor_submit_pending_view_state_change (PhocCursor *self)
 
   switch (priv->view_state.state) {
   case PHOC_VIEW_STATE_MAXIMIZED:
-    view_maximize (priv->view_state.view, priv->view_state.output);
+    phoc_view_maximize (priv->view_state.view, priv->view_state.output);
     break;
   case PHOC_VIEW_STATE_TILED:
     view_tile (priv->view_state.view, priv->view_state.tile_dir, priv->view_state.output);
