@@ -1999,8 +1999,8 @@ phoc_view_child_damage_whole (PhocViewChild *child)
     struct wlr_box output_box;
     wlr_output_layout_get_box (child->view->desktop->layout, output->wlr_output, &output_box);
     phoc_output_damage_whole_local_surface (output, child->wlr_surface,
-                                            view_box.x + sx,
-                                            view_box.y + sy);
+                                            view_box.x + sx - output_box.x,
+                                            view_box.y + sy - output_box.y);
 
   }
 }
