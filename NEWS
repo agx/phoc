@@ -1,6 +1,20 @@
+phoc 0.32.0
+-----------
+Released October 2023
+* Fix several (mostly popup related) rendering issues
+* Fix keyboard elevation corner case
+* Handle move window to output above/below keybinding
+* More internal cleanups
+* Issued fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/303
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/334
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/336
+* Contributors:
+    * Guido Günther
+
 phoc 0.31.0
 -----------
-Released Sepembter 2023
+Released September 2023
 * Suggest window state changes when mouse/touch dragging
 * Better support for lid and tablet mode switches
 * Reduce CPU usage on every frame
