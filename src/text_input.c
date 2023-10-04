@@ -30,6 +30,19 @@ typedef struct _PhocTextInput {
 } PhocTextInput;
 
 
+static void
+elevate_osk (struct wlr_surface *surface)
+{
+  struct wlr_layer_surface_v1 *layer;
+
+  if (!surface || !wlr_surface_is_layer_surface (surface))
+    return;
+
+  layer = wlr_layer_surface_v1_from_wlr_surface (surface);
+  phoc_layer_shell_update_osk (PHOC_OUTPUT (layer->output->data), TRUE);
+}
+
+
 static PhocTextInput *
 relay_get_focusable_text_input (PhocInputMethodRelay *relay)
 {
@@ -190,8 +203,8 @@ relay_send_im_done (PhocInputMethodRelay *relay, struct wlr_text_input_v3 *input
 static void
 handle_text_input_enable (struct wl_listener *listener, void *data)
 {
-  PhocTextInput *text_input = wl_container_of(listener, text_input,
-                                              enable);
+  PhocTextInput *text_input = wl_container_of (listener, text_input, enable);
+
   PhocInputMethodRelay *relay = text_input->relay;
   if (relay->input_method == NULL) {
     g_debug ("Enabling text input when input method is gone");
@@ -200,19 +213,21 @@ handle_text_input_enable (struct wl_listener *listener, void *data)
   // relay_send_im_done protects from receiving unfocussed done,
   // but activate must be prevented too.
   // TODO: when enter happens?
-  if (!text_input_is_focused(text_input->input)) {
+  if (!text_input_is_focused (text_input->input))
     return;
-  }
-  wlr_input_method_v2_send_activate(relay->input_method);
-  relay_send_im_done(relay, text_input->input);
+
+  wlr_input_method_v2_send_activate (relay->input_method);
+  relay_send_im_done (relay, text_input->input);
+
+  elevate_osk (text_input->input->focused_surface);
 }
 
 static void
 handle_text_input_commit (struct wl_listener *listener, void *data)
 {
-  PhocTextInput *text_input = wl_container_of(listener, text_input,
-                                              commit);
+  PhocTextInput *text_input = wl_container_of (listener, text_input, commit);
   PhocInputMethodRelay *relay = text_input->relay;
+
   if (!text_input->input->current_enabled) {
     g_debug ("Inactive text input tried to commit an update");
     return;
@@ -448,6 +463,8 @@ phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
  * @surface: The surface to check
  *
  * Checks whether input method is currently enabled for surface.
+ *
+ * Returns: `true` if input method is enabled, otherwise `false`.
  */
 bool
 phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay,

@@ -245,16 +245,6 @@ phoc_layer_shell_find_osk (PhocOutput *output)
   return NULL;
 }
 
-/// Adjusts keyboard properties
-static void
-change_osk (PhocLayerSurface *osk, bool force_overlay)
-{
-  if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY)
-    osk->layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
-
-  if (!force_overlay && osk->layer != osk->layer_surface->pending.layer)
-    osk->layer = osk->layer_surface->pending.layer;
-}
 
 void
 phoc_layer_shell_arrange (PhocOutput *output)
@@ -269,25 +259,13 @@ phoc_layer_shell_arrange (PhocOutput *output)
     ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND
   };
 
+  /*
+   * Whenever we rearrange layers we need to check for the OSK's layer as
+   * the new surface might need it raised (or the new surface might be the OSK itself)
+   */
+  phoc_layer_shell_update_osk (output, FALSE);
+
   wlr_output_effective_resolution (output->wlr_output, &usable_area.width, &usable_area.height);
-
-  PhocLayerSurface *osk = phoc_layer_shell_find_osk (output);
-  if (osk) {
-    bool osk_force_overlay = false;
-
-    for (GSList *elem = seats; elem; elem = elem->next) {
-      PhocSeat *seat = PHOC_SEAT (elem->data);
-
-      g_assert (PHOC_IS_SEAT (seat));
-      if (seat->focused_layer && seat->focused_layer->pending.layer >= osk->layer_surface->pending.layer &&
-          phoc_input_method_relay_is_enabled (&seat->im_relay, seat->focused_layer->surface)) {
-        osk_force_overlay = true;
-        break;
-      }
-    }
-    change_osk (osk, osk_force_overlay);
-  }
-
   // Arrange exclusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
     arrange_layer (output, seats, layers[i], &usable_area, true);
@@ -904,4 +882,54 @@ handle_layer_shell_surface (struct wl_listener *listener, void *data)
   phoc_layer_shell_update_focus ();
 
   wlr_layer_surface->current = old_state;
+}
+
+/**
+ * phoc_layer_shell_update_osk:
+ * @output: The output to act on
+ * @arrange: Whether to arrange other layers too
+ *
+ * When a layer surface gets focus and there's an OSK we need to make
+ * sure the OSK is above that layer as otherwise keyboard input isn't possible.
+ * This can be used to adjust the OSKs layer accordingly.
+ *
+ * When `arrange` is `TRUE` the layers will also be rearranged to reflect that change
+ * immediately.
+ */
+void
+phoc_layer_shell_update_osk (PhocOutput *output, gboolean arrange)
+{
+  PhocLayerSurface *osk;
+  PhocServer *server = phoc_server_get_default ();
+  GSList *seats = phoc_input_get_seats (server->input);
+  gboolean force_overlay = FALSE;
+
+  g_assert (PHOC_IS_OUTPUT (output));
+
+  osk = phoc_layer_shell_find_osk (output);
+  if (osk == NULL)
+    return;
+
+  for (GSList *elem = seats; elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+
+    if (!seat->focused_layer)
+      continue;
+
+    g_assert (PHOC_IS_SEAT (seat));
+    if (seat->focused_layer->pending.layer >= osk->layer_surface->pending.layer &&
+        phoc_input_method_relay_is_enabled (&seat->im_relay, seat->focused_layer->surface)) {
+      force_overlay = TRUE;
+      break;
+    }
+  }
+
+  if (force_overlay && osk->layer != ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY)
+    osk->layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
+
+  if (!force_overlay && osk->layer != osk->layer_surface->pending.layer)
+    osk->layer = osk->layer_surface->pending.layer;
+
+  if (force_overlay && arrange)
+    phoc_layer_shell_arrange (output);
 }
