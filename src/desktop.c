@@ -75,9 +75,13 @@ typedef struct _PhocDesktopPrivate {
   GSettings             *settings;
   GSettings             *interface_settings;
 
+  /* Protocols from wlroots */
+  struct wlr_idle_notifier_v1 *idle_notifier_v1;
+
   /* Protocols without upstreamable implementations */
   PhocPhoshPrivate      *phosh;
   PhocGtkShell          *gtk_shell;
+
   /* Protocols that should go upstream */
   PhocLayerShellEffects *layer_shell_effects;
   PhocDeviceState       *device_state;
@@ -726,7 +730,6 @@ phoc_desktop_constructed (GObject *object)
   self->server_decoration_manager = wlr_server_decoration_manager_create (server->wl_display);
   wlr_server_decoration_manager_set_default_mode (self->server_decoration_manager,
                                                   WLR_SERVER_DECORATION_MANAGER_MODE_CLIENT);
-  self->idle = wlr_idle_create (server->wl_display);
   self->primary_selection_device_manager =
     wlr_primary_selection_v1_device_manager_create (server->wl_display);
 
@@ -739,6 +742,7 @@ phoc_desktop_constructed (GObject *object)
   self->input_method = wlr_input_method_manager_v2_create (server->wl_display);
   self->text_input = wlr_text_input_manager_v3_create (server->wl_display);
 
+  self->idle = wlr_idle_create (server->wl_display);
   priv->idle_inhibit = phoc_idle_inhibit_create (self->idle);
 
   priv->gtk_shell = phoc_gtk_shell_create (self, server->wl_display);
@@ -1225,4 +1229,12 @@ phoc_desktop_get_phosh_private (PhocDesktop *self)
   priv = phoc_desktop_get_instance_private (self);
 
   return priv->phosh;
+}
+
+void
+phoc_desktop_notify_activity (PhocDesktop *self, PhocSeat *seat)
+{
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  wlr_idle_notify_activity (self->idle, seat->seat);
 }

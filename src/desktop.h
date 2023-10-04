@@ -130,6 +130,9 @@ phoc_desktop_get_draggable_layer_surface (PhocDesktop *self, PhocLayerSurface *l
 PhocGtkShell        *phoc_desktop_get_gtk_shell                  (PhocDesktop *self);
 PhocPhoshPrivate    *phoc_desktop_get_phosh_private              (PhocDesktop *self);
 
+void                 phoc_desktop_notify_activity                (PhocDesktop *self,
+                                                                  PhocSeat    *seat);
+
 void handle_xdg_shell_surface(struct wl_listener *listener, void *data);
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data);
 void handle_layer_shell_surface(struct wl_listener *listener, void *data);

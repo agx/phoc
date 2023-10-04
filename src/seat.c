@@ -18,7 +18,6 @@
 #include <wlr/backend/libinput.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_primary_selection.h>
 #include <wlr/types/wlr_tablet_v2.h>
@@ -195,7 +194,7 @@ on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
     g_assert_not_reached ();
   }
 
-  wlr_idle_notify_activity (desktop->idle, self->seat);
+  phoc_desktop_notify_activity (desktop, self);
 }
 
 static void
@@ -213,7 +212,7 @@ handle_touch_down (struct wl_listener *listener, void *data)
              output->wlr_output->name);
     return;
   }
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
+  phoc_desktop_notify_activity (desktop, cursor->seat);
   phoc_cursor_handle_touch_down (cursor, event);
 }
 
@@ -229,7 +228,7 @@ handle_touch_up (struct wl_listener *listener, void *data)
     return;
   }
   phoc_cursor_handle_touch_up (cursor, event);
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
+  phoc_desktop_notify_activity (desktop, cursor->seat);
 }
 
 static void
@@ -244,7 +243,7 @@ handle_touch_motion (struct wl_listener *listener, void *data)
     return;
   }
   phoc_cursor_handle_touch_motion (cursor, event);
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
+  phoc_desktop_notify_activity (desktop, cursor->seat);
 }
 
 static void
@@ -302,7 +301,6 @@ handle_tool_axis (struct wl_listener *listener, void *data)
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_axis);
   PhocDesktop *desktop = server->desktop;
 
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
   struct wlr_tablet_tool_axis_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
@@ -358,6 +356,8 @@ handle_tool_axis (struct wl_listener *listener, void *data)
     wlr_tablet_v2_tablet_tool_notify_wheel (
       phoc_tool->tablet_v2_tool, event->wheel_delta, 0);
   }
+
+  phoc_desktop_notify_activity (desktop, cursor->seat);
 }
 
 static void
@@ -366,8 +366,6 @@ handle_tool_tip (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_tip);
   PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
   struct wlr_tablet_tool_tip_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
@@ -377,6 +375,8 @@ handle_tool_tip (struct wl_listener *listener, void *data)
   } else {
     wlr_tablet_v2_tablet_tool_notify_up (phoc_tool->tablet_v2_tool);
   }
+
+  phoc_desktop_notify_activity (desktop, cursor->seat);
 }
 
 static void
@@ -400,14 +400,14 @@ handle_tool_button (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_button);
   PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
   struct wlr_tablet_tool_button_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
   wlr_tablet_v2_tablet_tool_notify_button (phoc_tool->tablet_v2_tool,
                                            (enum zwp_tablet_pad_v2_button_state)event->button,
                                            (enum zwp_tablet_pad_v2_button_state)event->state);
+
+  phoc_desktop_notify_activity (desktop, cursor->seat);
 }
 
 static void
@@ -427,7 +427,7 @@ handle_tablet_tool_set_cursor (struct wl_listener *listener, void *data)
     .seat_client = evt->seat_client,
   };
 
-  wlr_idle_notify_activity (desktop->idle, tool->seat->seat);
+  phoc_desktop_notify_activity (desktop, tool->seat);
   phoc_cursor_handle_request_set_cursor (tool->seat->cursor, &event);
 }
 
@@ -437,11 +437,10 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_proximity);
   PhocDesktop *desktop = server->desktop;
-
-  wlr_idle_notify_activity (desktop->idle, cursor->seat->seat);
   struct wlr_tablet_tool_proximity_event *event = data;
-
   struct wlr_tablet_tool *tool = event->tool;
+
+  phoc_desktop_notify_activity (desktop, cursor->seat);
 
   if (!tool->data) {
     PhocTabletTool *phoc_tool = g_new0 (PhocTabletTool, 1);
@@ -952,7 +951,7 @@ on_keyboard_activity (PhocSeat *self, PhocKeyboard *keyboard)
   g_assert (PHOC_IS_SEAT (self));
   g_assert (PHOC_IS_KEYBOARD (keyboard));
 
-  wlr_idle_notify_activity (desktop->idle, self->seat);
+  phoc_desktop_notify_activity (desktop, self);
 }
 
 
