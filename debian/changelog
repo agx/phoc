@@ -1,3 +1,51 @@
+phoc (0.32.0) experimental; urgency=medium
+
+  * device-state: Assert on invalid values in switch statement.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/334
+  * view: Reindent view_center.
+    We'll do some more changes there
+  * view: Always pass PhocOutput when an output is needed.
+    This boosts readability as we no longer have phoc_output, wlr_output
+    and output (the later sometimes meaning a PhocOutput and sometimes
+    a wlr_output). We also don't have to guess on function alements.
+    Another cleanup series finished.
+  * view: Nuke view_get_output. Use phoc_view_get_output() everywhere.
+  * seat: Make name private
+  * seat: Make exclusive client private. We already have getters and setters
+  * seat: Make input mapping settings private. Only used within the seat
+  * desktop: Reindent input_inhibit related handlers.
+    No changes expected here for some time so let's get this sorted out.
+    (spotted while looking at phoc_seat_set_exclusive_client).
+  * view: Reindent view_maximize. No other changes
+  * view: Add phoc_ prefix to view_maximize
+  * view,desktop,text-input,layer-shell: Untabify and the reindent remaining
+    bits. Since most parts use the "modern" indent let's move over the last
+    bits. Other changes kept to a minimum.
+  * keybindig: Handle move-to-monitor-{up,down}
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/336
+  * xdg-shell: Sort popup signal unregistration.
+    Use the opposite order from registration/as they appear in the struct
+  * xdg_shell: Move popup_unconstrain further upwards. Code move only so
+    other functions can use it.
+  * xdg_shell: Handle reposition event. Unconstrain the popup as it can
+    otherwise be positioned oddly.
+  * view: Use output relative coordinates when damaging whole child view.
+    Otherwise we damage the wrong area. This doesn't show with a single
+    output at 0,0 but when e.g. doing
+       wlr-randr --output eDP-1 --pos 100,100
+    and then e.g opening the right click menu in gnome-terminal and closing
+    one can see that the content under the menu isn't redrawn properly.
+  * layer-shell: Move osk layer switching into a single function.
+    Make it public so it can be used from other parts of the compositor
+    Fix up some indent around code we'll change in the next commit
+  * text-input: Elevate OSK when text input gets enabled.
+    When text input gets enabled on a layer surface we possibly need to
+    elevate the OSK. This didn't matter until recently when we rearranged
+    the layers on every frame as arrange_layers raises the OSK as well.
+    Fixes: a6b3511f0eaadaee9e67843b8495d73ae0374fe3
+
+ -- Guido Günther <agx@sigxcpu.org>  Mon, 02 Oct 2023 14:25:39 +0200
+
 phoc (0.31.0) experimental; urgency=medium
 
   * ci: Install gcovr.
