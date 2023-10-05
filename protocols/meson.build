@@ -19,6 +19,10 @@ wayland_protocols = [
   ['wlr-screencopy-unstable-v1.xml'],
 ]
 
+wayland_client_protocols = [
+  [wl_protocol_dir, 'staging/ext-idle-notify/ext-idle-notify-v1.xml'],
+]
+
 protos_sources = []
 server_protos_headers = []
 client_protos_headers = []
@@ -46,6 +50,31 @@ foreach p : wayland_protocols
                                                    '@INPUT@',
                                                    '@OUTPUT@']
                                         )
+
+  client_protos_headers += custom_target('@0@ client header'.format(proto),
+                                         input: xml,
+                                         output: '@0@-client-protocol.h'.format(proto),
+                                         command: [wayland_scanner,
+                                                   'client-header',
+                                                   '@INPUT@',
+                                                   '@OUTPUT@']
+                                        )
+endforeach
+
+foreach p : wayland_client_protocols
+  xml = join_paths(p)
+
+  base = fs.name(xml)
+  proto = fs.stem(base)
+
+  protos_sources += custom_target('@0@ source'.format(proto),
+                                  input: xml,
+                                  output: '@0@-protocol.c'.format(proto),
+                                  command: [wayland_scanner,
+                                            'private-code',
+                                            '@INPUT@',
+                                            '@OUTPUT@']
+                                 )
 
   client_protos_headers += custom_target('@0@ client header'.format(proto),
                                          input: xml,
