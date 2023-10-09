@@ -439,7 +439,7 @@ static void
 handle_map (struct wl_listener *listener, void *data)
 {
   PhocXWaylandSurface *self = wl_container_of (listener, self, map);
-  struct wlr_xwayland_surface *surface = data;
+  struct wlr_xwayland_surface *surface = self->xwayland_surface;
   PhocView *view = PHOC_VIEW (self);
 
   view->box.x = surface->x;
