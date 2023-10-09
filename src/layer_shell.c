@@ -203,7 +203,7 @@ arrange_layer (PhocOutput                     *output,
     // Apply
     struct wlr_box old_geo = layer_surface->geo;
     layer_surface->geo = box;
-    if (wlr_layer_surface->mapped) {
+    if (wlr_layer_surface->surface->mapped) {
       apply_exclusive (usable_area, state->anchor, state->exclusive_zone,
                        state->margin.top, state->margin.right,
                        state->margin.bottom, state->margin.left);
@@ -327,7 +327,7 @@ phoc_layer_shell_update_focus (void)
           continue;
 
         if (layer_surface->layer_surface->current.keyboard_interactive &&
-            layer_surface->layer_surface->mapped) {
+            layer_surface->layer_surface->surface->mapped) {
           topmost = layer_surface;
           break;
         }
@@ -344,7 +344,7 @@ phoc_layer_shell_update_focus (void)
           continue;
 
         if (layer_surface->layer_surface->current.keyboard_interactive &&
-            layer_surface->layer_surface->mapped) {
+            layer_surface->layer_surface->surface->mapped) {
           topmost = layer_surface;
           break;
         }
@@ -589,9 +589,9 @@ popup_create (struct wlr_xdg_popup *wlr_popup)
   }
   popup->wlr_popup = wlr_popup;
   popup->map.notify = popup_handle_map;
-  wl_signal_add(&wlr_popup->base->events.map, &popup->map);
+  wl_signal_add(&wlr_popup->base->surface->events.map, &popup->map);
   popup->unmap.notify = popup_handle_unmap;
-  wl_signal_add(&wlr_popup->base->events.unmap, &popup->unmap);
+  wl_signal_add(&wlr_popup->base->surface->events.unmap, &popup->unmap);
   popup->destroy.notify = popup_handle_destroy;
   wl_signal_add(&wlr_popup->base->events.destroy, &popup->destroy);
   popup->commit.notify = popup_handle_commit;
@@ -728,9 +728,9 @@ layer_subsurface_create(struct wlr_subsurface *wlr_subsurface)
   subsurface->wlr_subsurface = wlr_subsurface;
 
   subsurface->map.notify = subsurface_handle_map;
-  wl_signal_add(&wlr_subsurface->events.map, &subsurface->map);
+  wl_signal_add(&wlr_subsurface->surface->events.map, &subsurface->map);
   subsurface->unmap.notify = subsurface_handle_unmap;
-  wl_signal_add(&wlr_subsurface->events.unmap, &subsurface->unmap);
+  wl_signal_add(&wlr_subsurface->surface->events.unmap, &subsurface->unmap);
   subsurface->destroy.notify = subsurface_handle_destroy;
   wl_signal_add(&wlr_subsurface->events.destroy, &subsurface->destroy);
   subsurface->commit.notify = subsurface_handle_commit;
@@ -864,9 +864,9 @@ handle_layer_shell_surface (struct wl_listener *listener, void *data)
   layer_surface->destroy.notify = handle_destroy;
   wl_signal_add(&wlr_layer_surface->events.destroy, &layer_surface->destroy);
   layer_surface->map.notify = handle_map;
-  wl_signal_add(&wlr_layer_surface->events.map, &layer_surface->map);
+  wl_signal_add(&wlr_layer_surface->surface->events.map, &layer_surface->map);
   layer_surface->unmap.notify = handle_unmap;
-  wl_signal_add(&wlr_layer_surface->events.unmap, &layer_surface->unmap);
+  wl_signal_add(&wlr_layer_surface->surface->events.unmap, &layer_surface->unmap);
   layer_surface->new_popup.notify = handle_new_popup;
   wl_signal_add(&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
 

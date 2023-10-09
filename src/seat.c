@@ -762,9 +762,9 @@ phoc_seat_handle_start_drag (struct wl_listener *listener,
   icon->surface_commit.notify = phoc_drag_icon_handle_surface_commit;
   wl_signal_add (&wlr_drag_icon->surface->events.commit, &icon->surface_commit);
   icon->unmap.notify = phoc_drag_icon_handle_unmap;
-  wl_signal_add (&wlr_drag_icon->events.unmap, &icon->unmap);
+  wl_signal_add (&wlr_drag_icon->surface->events.unmap, &icon->unmap);
   icon->map.notify = phoc_drag_icon_handle_map;
-  wl_signal_add (&wlr_drag_icon->events.map, &icon->map);
+  wl_signal_add (&wlr_drag_icon->surface->events.map, &icon->map);
   icon->destroy.notify = phoc_drag_icon_handle_destroy;
   wl_signal_add (&wlr_drag_icon->events.destroy, &icon->destroy);
 

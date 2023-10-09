@@ -121,7 +121,7 @@ phoc_layer_surface_finalize (GObject *object)
   PhocLayerSurface *self = PHOC_LAYER_SURFACE (object);
   PhocOutput *output = phoc_layer_surface_get_output (self);
 
-  if (self->layer_surface->mapped)
+  if (self->layer_surface->surface->mapped)
     phoc_layer_surface_unmap (self);
 
   wl_list_remove (&self->link);

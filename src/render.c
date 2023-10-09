@@ -441,7 +441,7 @@ scan_out_fullscreen_view (PhocOutput *output)
 
     g_assert (PHOC_IS_SEAT (seat));
     PhocDragIcon *drag_icon = seat->drag_icon;
-    if (drag_icon && drag_icon->wlr_drag_icon->mapped) {
+    if (drag_icon && drag_icon->wlr_drag_icon->surface->mapped) {
       return false;
     }
   }

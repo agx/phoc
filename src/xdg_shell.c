@@ -166,9 +166,9 @@ phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
   popup->destroy.notify = popup_handle_destroy;
   wl_signal_add (&wlr_popup->base->events.destroy, &popup->destroy);
   popup->map.notify = popup_handle_map;
-  wl_signal_add (&wlr_popup->base->events.map, &popup->map);
+  wl_signal_add (&wlr_popup->base->surface->events.map, &popup->map);
   popup->unmap.notify = popup_handle_unmap;
-  wl_signal_add (&wlr_popup->base->events.unmap, &popup->unmap);
+  wl_signal_add (&wlr_popup->base->surface->events.unmap, &popup->unmap);
   popup->new_popup.notify = popup_handle_new_popup;
   wl_signal_add (&wlr_popup->base->events.new_popup, &popup->new_popup);
   popup->reposition.notify = popup_handle_reposition;

@@ -870,7 +870,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
   struct wlr_xwayland_surface *child;
 
   wl_list_for_each (child, &surface->children, parent_link) {
-    if (child->mapped) {
+    if (child->surface->mapped) {
       double ox = child->x - output_box.x;
       double oy = child->y - output_box.y;
       phoc_output_surface_for_each_surface (self, child->surface, ox, oy, iterator,
@@ -1018,7 +1018,7 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
 
     g_assert (PHOC_IS_SEAT (seat));
     PhocDragIcon *drag_icon = seat->drag_icon;
-    if (!drag_icon || !drag_icon->wlr_drag_icon->mapped)
+    if (!drag_icon || !drag_icon->wlr_drag_icon->surface->mapped)
       continue;
 
     double ox = drag_icon->x - output_box.x;

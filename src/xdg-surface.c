@@ -310,7 +310,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   PhocView *view = PHOC_VIEW (self);
   struct wlr_xdg_surface *surface = self->xdg_surface;
 
-  if (!surface->mapped)
+  if (!surface->surface->mapped)
     return;
 
   phoc_view_apply_damage (view);
@@ -554,10 +554,10 @@ phoc_xdg_surface_constructed (GObject *object)
   wl_signal_add (&self->xdg_surface->events.destroy, &self->destroy);
 
   self->map.notify = handle_map;
-  wl_signal_add (&self->xdg_surface->events.map, &self->map);
+  wl_signal_add (&self->xdg_surface->surface->events.map, &self->map);
 
   self->unmap.notify = handle_unmap;
-  wl_signal_add (&self->xdg_surface->events.unmap, &self->unmap);
+  wl_signal_add (&self->xdg_surface->surface->events.unmap, &self->unmap);
 
   self->request_move.notify = handle_request_move;
   wl_signal_add (&self->xdg_surface->toplevel->events.request_move, &self->request_move);

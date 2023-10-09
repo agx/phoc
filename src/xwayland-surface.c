@@ -42,6 +42,8 @@ typedef struct _PhocXWaylandSurface {
   struct wl_listener request_resize;
   struct wl_listener request_maximize;
   struct wl_listener request_fullscreen;
+  struct wl_listener associate;
+  struct wl_listener dissociate;
   struct wl_listener map;
   struct wl_listener unmap;
   struct wl_listener set_title;
@@ -476,6 +478,30 @@ handle_unmap (struct wl_listener *listener, void *data)
   view_unmap (view);
 }
 
+
+static void
+handle_associate (struct wl_listener *listener, void *data)
+{
+  PhocXWaylandSurface *self = wl_container_of (listener, self, associate);
+  struct wlr_xwayland_surface *xwayland_surface = self->xwayland_surface;
+
+  wl_signal_add (&xwayland_surface->surface->events.unmap, &self->unmap);
+  self->unmap.notify = handle_unmap;
+  wl_signal_add (&xwayland_surface->surface->events.map, &self->map);
+  self->map.notify = handle_map;
+}
+
+
+static void
+handle_dissociate (struct wl_listener *listener, void *data)
+{
+  PhocXWaylandSurface *self = wl_container_of (listener, self, dissociate);
+
+  wl_list_remove (&self->map.link);
+  wl_list_remove (&self->unmap.link);
+}
+
+
 /* }}} */
 
 
@@ -516,11 +542,11 @@ phoc_xwayland_surface_constructed (GObject *object)
   self->request_fullscreen.notify = handle_request_fullscreen;
   wl_signal_add(&surface->events.request_fullscreen, &self->request_fullscreen);
 
-  self->map.notify = handle_map;
-  wl_signal_add(&surface->events.map, &self->map);
+  self->associate.notify = handle_associate;
+  wl_signal_add (&surface->events.associate, &self->associate);
 
-  self->unmap.notify = handle_unmap;
-  wl_signal_add(&surface->events.unmap, &self->unmap);
+  self->dissociate.notify = handle_dissociate;
+  wl_signal_add (&surface->events.dissociate, &self->dissociate);
 
   self->set_title.notify = handle_set_title;
   wl_signal_add(&surface->events.set_title, &self->set_title);
@@ -530,6 +556,9 @@ phoc_xwayland_surface_constructed (GObject *object)
 
   self->set_startup_id.notify = handle_set_startup_id;
   wl_signal_add(&surface->events.set_startup_id, &self->set_startup_id);
+
+  wl_list_init (&self->map.link);
+  wl_list_init (&self->unmap.link);
 }
 
 
@@ -544,8 +573,8 @@ phoc_xwayland_surface_finalize (GObject *object)
   wl_list_remove(&self->request_resize.link);
   wl_list_remove(&self->request_maximize.link);
   wl_list_remove(&self->request_fullscreen.link);
-  wl_list_remove(&self->map.link);
-  wl_list_remove(&self->unmap.link);
+  wl_list_remove(&self->associate.link);
+  wl_list_remove(&self->dissociate.link);
   wl_list_remove(&self->set_title.link);
   wl_list_remove(&self->set_class.link);
   wl_list_remove(&self->set_startup_id.link);
