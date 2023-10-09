@@ -1924,12 +1924,11 @@ void
 phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
 {
   if (phoc_seat_has_pointer (self) == FALSE) {
-    wlr_cursor_set_image (self->cursor->cursor, NULL, 0, 0, 0, 0, 0, 0);
+    wlr_cursor_set_buffer (self->cursor->cursor, NULL, 0, 0, 0);
   } else {
     if (!name)
       name = self->cursor->default_xcursor;
-    wlr_xcursor_manager_set_cursor_image (self->cursor->xcursor_manager,
-                                          name, self->cursor->cursor);
+    wlr_cursor_set_xcursor (self->cursor->cursor, self->cursor->xcursor_manager, name);
   }
 }
 
