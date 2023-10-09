@@ -757,8 +757,8 @@ handle_new_subsurface (struct wl_listener *listener, void *data)
 static void
 handle_map (struct wl_listener *listener, void *data)
 {
-  struct wlr_layer_surface_v1 *wlr_layer_surface = data;
-  PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
+  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, map);
+  struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
   PhocOutput *output = phoc_layer_surface_get_output (layer_surface);
 
   if (!output) {
