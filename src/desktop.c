@@ -13,7 +13,6 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -747,9 +746,8 @@ phoc_desktop_constructed (GObject *object)
   self->input_method = wlr_input_method_manager_v2_create (server->wl_display);
   self->text_input = wlr_text_input_manager_v3_create (server->wl_display);
 
-  self->idle = wlr_idle_create (server->wl_display);
   priv->idle_notifier_v1 = wlr_idle_notifier_v1_create (server->wl_display);
-  priv->idle_inhibit = phoc_idle_inhibit_create (self->idle);
+  priv->idle_inhibit = phoc_idle_inhibit_create ();
 
   priv->gtk_shell = phoc_gtk_shell_create (self, server->wl_display);
   priv->phosh = phoc_phosh_private_new ();
@@ -1208,6 +1206,5 @@ phoc_desktop_notify_activity (PhocDesktop *self, PhocSeat *seat)
   g_assert (PHOC_IS_DESKTOP (self));
   priv = phoc_desktop_get_instance_private (self);
 
-  wlr_idle_notify_activity (self->idle, seat->seat);
   wlr_idle_notifier_v1_notify_activity (priv->idle_notifier_v1, seat->seat);
 }

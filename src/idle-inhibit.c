@@ -11,7 +11,6 @@
 #include "idle-inhibit.h"
 #include "server.h"
 
-#include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 
 #include <gio/gio.h>
@@ -247,12 +246,11 @@ on_proxy_new_for_bus_finish (GObject *object, GAsyncResult *res, gpointer data)
 
 
 PhocIdleInhibit *
-phoc_idle_inhibit_create (struct wlr_idle   *idle)
+phoc_idle_inhibit_create (void)
 {
   PhocIdleInhibit *self = g_new0 (PhocIdleInhibit, 1);
 
   g_info ("Initializing idle inhibit interface");
-  self->wlr_idle = idle;
   wl_list_init (&self->new_idle_inhibitor_v1.link);
 
   self->cancellable = g_cancellable_new ();

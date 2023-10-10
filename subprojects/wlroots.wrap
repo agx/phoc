@@ -1,7 +1,7 @@
 [wrap-git]
 directory=wlroots
 url=https://gitlab.freedesktop.org/wlroots/wlroots.git
-revision=67447d6cb407ac5b6405b4dbae01a38567feb111
+revision=a289f812d62059d5aac92cbd374dcb7b03bb08a6
 # For release builds
 # depth=1
 
