@@ -267,7 +267,7 @@ void
 handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
-  PhocXdgSurface *xdg_surface = wlr_decoration->surface->data;
+  PhocXdgSurface *xdg_surface = PHOC_XDG_SURFACE (wlr_decoration->toplevel->base->data);
   g_assert (xdg_surface != NULL);
   struct wlr_xdg_surface *wlr_xdg_surface = phoc_xdg_surface_get_wlr_xdg_surface (xdg_surface);
   PhocXdgToplevelDecoration *decoration = g_new0 (PhocXdgToplevelDecoration, 1);
