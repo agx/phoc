@@ -1924,7 +1924,7 @@ void
 phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
 {
   if (phoc_seat_has_pointer (self) == FALSE) {
-    wlr_cursor_set_buffer (self->cursor->cursor, NULL, 0, 0, 0);
+    wlr_cursor_unset_image (self->cursor->cursor);
   } else {
     if (!name)
       name = self->cursor->default_xcursor;
