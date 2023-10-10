@@ -543,6 +543,7 @@ phoc_output_initable_init (GInitable    *initable,
       else
         wlr_output_state_set_scale (&pending, output_config->scale);
 
+      wlr_output_state_set_enabled (&pending, true);
       wlr_output_state_set_transform (&pending, output_config->transform);
       wlr_output_layout_add (self->desktop->layout, self->wlr_output, output_config->x, output_config->y);
     } else {
