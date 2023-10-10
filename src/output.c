@@ -390,19 +390,22 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
   PhocOutput *self = wl_container_of (listener, self, commit);
   struct wlr_output_event_commit *event = data;
 
-  if (event->committed & (WLR_OUTPUT_STATE_TRANSFORM |
-                          WLR_OUTPUT_STATE_SCALE |
-                          WLR_OUTPUT_STATE_MODE)) {
-    int width, height;
+  if (event->state->committed & (WLR_OUTPUT_STATE_TRANSFORM |
+                                 WLR_OUTPUT_STATE_SCALE |
+                                 WLR_OUTPUT_STATE_MODE)) {
     phoc_layer_shell_arrange (self);
   }
 
-  if (event->committed & (WLR_OUTPUT_STATE_ENABLED |
-                          WLR_OUTPUT_STATE_TRANSFORM |
-                          WLR_OUTPUT_STATE_SCALE |
-                          WLR_OUTPUT_STATE_MODE)) {
+  if (event->state->committed & (WLR_OUTPUT_STATE_ENABLED |
+                                 WLR_OUTPUT_STATE_TRANSFORM |
+                                 WLR_OUTPUT_STATE_SCALE |
+                                 WLR_OUTPUT_STATE_MODE)) {
     update_output_manager_config (self->desktop);
+  }
 
+  if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
+                                 WLR_OUTPUT_STATE_TRANSFORM)) {
+    int width, height;
     wlr_output_transformed_resolution (self->wlr_output, &width, &height);
     wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
     wlr_output_schedule_frame (self->wlr_output);
