@@ -295,8 +295,9 @@ render_surface_iterator (PhocOutput         *output,
   render_texture (wlr_output, output_damage,
                   texture, &src_box, &dst_box, matrix, rotation, alpha);
 
-  wlr_presentation_surface_sampled_on_output (output->desktop->presentation,
-                                              surface, wlr_output);
+  wlr_presentation_surface_scanned_out_on_output (output->desktop->presentation,
+                                                  surface,
+                                                  wlr_output);
 
   collect_touch_points(output, surface, dst_box, scale);
 }
@@ -494,7 +495,9 @@ scan_out_fullscreen_view (PhocOutput *output)
     return false;
   }
 
-  wlr_presentation_surface_sampled_on_output (output->desktop->presentation, surface, output->wlr_output);
+  wlr_presentation_surface_scanned_out_on_output (output->desktop->presentation,
+                                                  surface,
+                                                  output->wlr_output);
 
   return wlr_output_commit (wlr_output);
 }
