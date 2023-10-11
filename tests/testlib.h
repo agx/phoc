@@ -145,6 +145,7 @@ void phoc_test_buffer_free (PhocTestBuffer *buffer);
     PhocTestClientGlobals *__g = (g);                                    \
     gchar *__f = g_test_build_filename (G_TEST_DIST, "screenshots", f, NULL); \
     PhocTestBuffer *__s = phoc_test_client_capture_output (__g, &__g->output); \
+    g_test_message ("Snapshotting %s", f);                               \
     if (phoc_test_buffer_matches_screenshot (__s, __f)) ; else {         \
       g_autofree gchar *__name = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 0); \
       phoc_test_buffer_save (&__g->output.screenshot.buffer, __name);            \
