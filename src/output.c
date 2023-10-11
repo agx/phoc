@@ -411,6 +411,17 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
 }
 
 
+static void
+handle_request_state (struct wl_listener *listener, void *data)
+{
+  PhocOutputPrivate *priv = wl_container_of (listener, priv, request_state);
+  PhocOutput *self = PHOC_OUTPUT_SELF (priv);
+  const struct wlr_output_event_request_state *event = data;
+
+  wlr_output_commit_state (self->wlr_output, event->state);
+}
+
+
 static float
 phoc_output_compute_scale (PhocOutput *self, struct wlr_output_state *pending)
 {
@@ -540,6 +551,9 @@ phoc_output_initable_init (GInitable    *initable,
   priv->needs_frame.notify = phoc_output_handle_needs_frame;
   wl_signal_add (&self->wlr_output->events.needs_frame, &priv->needs_frame);
 
+  priv->request_state.notify = handle_request_state;
+  wl_signal_add (&self->wlr_output->events.request_state, &priv->request_state);
+
   PhocOutputConfig *output_config = phoc_config_get_output (config, self);
   struct wlr_output_state pending = { 0 };
   struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode (self->wlr_output);
@@ -644,9 +658,11 @@ phoc_output_finalize (GObject *object)
 
   wl_list_remove (&self->link);
   wl_list_remove (&self->enable.link);
+
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);
 
+  wl_list_remove (&priv->request_state.link);
   wl_list_remove (&priv->damage.link);
   wl_list_remove (&priv->frame.link);
   wl_list_remove (&priv->needs_frame.link);
