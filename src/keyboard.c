@@ -226,28 +226,6 @@ keyboard_execute_super_key (PhocKeyboard              *self,
   return false;
 }
 
-static bool
-keyboard_execute_power_key (PhocKeyboard              *self,
-                            const xkb_keysym_t        *keysyms,
-                            size_t                     keysyms_len,
-                            enum wl_keyboard_key_state state)
-{
-  PhocServer *server = phoc_server_get_default ();
-
-  if (state != WL_KEYBOARD_KEY_STATE_PRESSED)
-      return false;
-
-  for (size_t i = 0; i < keysyms_len; ++i) {
-    if (keysyms[i] == XKB_KEY_XF86PowerDown || keysyms[i] == XKB_KEY_XF86PowerOff) {
-      g_debug ("Power button pressed");
-      phoc_desktop_toggle_output_blank (server->desktop);
-      return true;
-    }
-  }
-
-  return false;
-}
-
 /*
  * Execute keyboard bindings. These include compositor bindings and user-defined
  * bindings.
@@ -426,11 +404,6 @@ phoc_keyboard_handle_key(PhocKeyboard *self, struct wlr_keyboard_key_event *even
                                                    self->pressed_keysyms_raw, modifiers,
                                                    keysyms, keysyms_len, event->time_msec,
                                                    event->state);
-  }
-
-  // Check for the power button after the susbscribed bindings so clients can override it
-  if (!handled) {
-    handled = keyboard_execute_power_key (self, keysyms, keysyms_len, event->state);
   }
 
   if (!handled) {
