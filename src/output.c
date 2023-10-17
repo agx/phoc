@@ -457,7 +457,7 @@ phoc_output_compute_scale (PhocOutput *self, struct wlr_output_state *pending)
 }
 
 static void
-phoc_output_set_mode (PhocOutput *self, struct wlr_output_state *pending, PhocOutputConfig *oc)
+phoc_output_state_set_mode (PhocOutput *self, struct wlr_output_state *pending, PhocOutputConfig *oc)
 {
   int mhz = (int)(oc->mode.refresh_rate * 1000);
 
@@ -560,7 +560,7 @@ phoc_output_initable_init (GInitable    *initable,
       }
 
       if (output_config->mode.width) {
-        phoc_output_set_mode (self, &pending, output_config);
+        phoc_output_state_set_mode (self, &pending, output_config);
       } else if (preferred_mode != NULL) {
         wlr_output_state_set_mode (&pending, preferred_mode);
       }
