@@ -265,9 +265,7 @@ phoc_output_new (PhocDesktop *desktop, struct wlr_output *wlr_output, GError **e
 static void
 update_output_manager_config (PhocDesktop *desktop)
 {
-  struct wlr_output_configuration_v1 *config =
-    wlr_output_configuration_v1_create ();
-
+  struct wlr_output_configuration_v1 *config = wlr_output_configuration_v1_create ();
   PhocOutput *output;
 
   wl_list_for_each (output, &desktop->outputs, link) {
@@ -276,8 +274,7 @@ update_output_manager_config (PhocDesktop *desktop)
     struct wlr_box output_box;
 
     config_head->state.enabled = output->wlr_output->enabled;
-    config_head->state.mode = output->pending ? output->pending->mode :
-      output->wlr_output->current_mode;
+    config_head->state.mode = output->wlr_output->current_mode;
 
     wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
     if (!wlr_box_empty (&output_box)) {
@@ -601,9 +598,7 @@ phoc_output_initable_init (GInitable    *initable,
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
 
-  self->pending = &pending;
   wlr_output_commit_state (self->wlr_output, &pending);
-  self->pending = NULL;
   wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
   self->lx = output_box.x;
   self->ly = output_box.y;
