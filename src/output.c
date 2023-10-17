@@ -1256,13 +1256,13 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
-
-  bool ok = true;
   struct wlr_output_configuration_head_v1 *config_head;
+  bool ok = true;
 
   // First disable outputs we need to disable
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
+    struct wlr_output_state pending = { 0 };
 
     if (config_head->state.enabled)
       continue;
@@ -1270,37 +1270,36 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     if (!wlr_output->enabled)
       continue;
 
-    wlr_output_enable (wlr_output, false);
+    wlr_output_state_set_enabled (&pending, false);
     wlr_output_layout_remove (desktop->layout, wlr_output);
-    ok &= wlr_output_commit (wlr_output);
+    ok &= wlr_output_commit_state(wlr_output, &pending);
   }
 
   // Then enable outputs that need to
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
+    struct wlr_output_state pending = { 0 };
     struct wlr_box output_box;
 
     if (!config_head->state.enabled)
       continue;
 
-    wlr_output_enable (wlr_output, true);
+    wlr_output_state_set_enabled (&pending, true);
     if (config_head->state.mode != NULL) {
-      wlr_output_set_mode (wlr_output, config_head->state.mode);
+      wlr_output_state_set_mode (&pending, config_head->state.mode);
     } else {
-      wlr_output_set_custom_mode (wlr_output,
-                                  config_head->state.custom_mode.width,
-                                  config_head->state.custom_mode.height,
-                                  config_head->state.custom_mode.refresh);
+      wlr_output_state_set_custom_mode (&pending,
+                                        config_head->state.custom_mode.width,
+                                        config_head->state.custom_mode.height,
+                                        config_head->state.custom_mode.refresh);
     }
-    wlr_output_layout_add (desktop->layout, wlr_output,
-                           config_head->state.x, config_head->state.y);
-    wlr_output_set_transform (wlr_output, config_head->state.transform);
-    wlr_output_set_scale (wlr_output, config_head->state.scale);
-    ok &= wlr_output_commit (wlr_output);
-    if (output->fullscreen_view) {
+    wlr_output_layout_add (desktop->layout, wlr_output, config_head->state.x, config_head->state.y);
+    wlr_output_state_set_transform (&pending, config_head->state.transform);
+    wlr_output_state_set_scale (&pending, config_head->state.scale);
+    ok &= wlr_output_commit_state (wlr_output, &pending);
+    if (output->fullscreen_view)
       phoc_view_set_fullscreen (output->fullscreen_view, true, output);
-    }
 
     wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
     output->lx = output_box.x;
