@@ -1330,6 +1330,7 @@ void
 phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, void *data)
 {
   struct wlr_output_power_v1_set_mode_event *event = data;
+  struct wlr_output_state pending = { 0 };
   PhocOutput *self;
   bool enable = true;
   bool current;
@@ -1350,14 +1351,11 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
   }
 
   current = self->wlr_output->enabled;
-  if (self->wlr_output->pending.committed & WLR_OUTPUT_STATE_ENABLED)
-    current = self->wlr_output->pending.enabled;
-
   if (enable == current)
     return;
 
-  wlr_output_enable (self->wlr_output, enable);
-  if (!wlr_output_commit (self->wlr_output)) {
+  wlr_output_state_set_enabled (&pending, enable);
+  if (!wlr_output_commit_state(self->wlr_output, &pending)) {
     g_warning ("Failed to commit power mode change to %d for %p", enable, self);
     return;
   }
