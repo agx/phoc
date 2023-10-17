@@ -560,10 +560,10 @@ phoc_output_initable_init (GInitable    *initable,
   wlr_output_state_init (&pending);
   struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode (self->wlr_output);
 
+  wlr_output_state_set_enabled (&pending, false);
   if (output_config) {
     if (output_config->enable) {
       if (wlr_output_is_drm (self->wlr_output)) {
-
         for (GSList *l = output_config->modes; l; l = l->next) {
           PhocOutputModeConfig *mode_config = l->data;
           wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
@@ -572,11 +572,10 @@ phoc_output_initable_init (GInitable    *initable,
         g_warning ("Can only add modes for DRM backend");
       }
 
-      if (output_config->mode.width) {
+      if (output_config->mode.width)
         phoc_output_state_set_mode (self, &pending, output_config);
-      } else if (preferred_mode != NULL) {
+      else if (preferred_mode != NULL)
         wlr_output_state_set_mode (&pending, preferred_mode);
-      }
 
       if (!output_config->scale)
         wlr_output_state_set_scale (&pending, phoc_output_compute_scale (self, &pending));
@@ -586,8 +585,6 @@ phoc_output_initable_init (GInitable    *initable,
       wlr_output_state_set_enabled (&pending, true);
       wlr_output_state_set_transform (&pending, output_config->transform);
       wlr_output_layout_add (self->desktop->layout, self->wlr_output, output_config->x, output_config->y);
-    } else {
-      wlr_output_state_set_enabled (&pending, false);
     }
   } else {
     wlr_output_state_set_enabled (&pending, true);
