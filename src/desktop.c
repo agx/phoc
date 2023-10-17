@@ -928,42 +928,6 @@ phoc_desktop_new (PhocConfig *config)
 
 
 /**
- * phoc_desktop_toggle_output_blank:
- *
- * Blank or unblank all outputs depending on the current state.
- * Brings all outputs into consistent state (either all blanked
- * or all enabled).
- */
-void
-phoc_desktop_toggle_output_blank (PhocDesktop *self)
-{
-  PhocOutput *output;
-
-  gboolean enable = true;
-  wl_list_for_each(output, &self->outputs, link) {
-    if (output->wlr_output->enabled) {
-      enable = false;
-      break;
-    }
-  }
-
-  wl_list_for_each(output, &self->outputs, link) {
-    if (!wlr_output_layout_get (self->layout, output->wlr_output))
-      continue;
-    bool prior = output->wlr_output->enabled;
-    wlr_output_enable (output->wlr_output, enable);
-    if (!wlr_output_commit (output->wlr_output)) {
-      /* Reset the enabled state if committing failed. */
-      g_warning ("Could not set output enabled state to %d", enable);
-      wlr_output_enable (output->wlr_output, prior);
-      continue;
-    }
-    if (enable)
-      phoc_output_damage_whole(output);
-  }
-}
-
-/**
  * phoc_desktop_set_auto_maximize:
  *
  * Turn auto maximization of toplevels on (%TRUE) or off (%FALSE)

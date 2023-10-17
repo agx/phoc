@@ -103,7 +103,6 @@ struct _PhocDesktop {
 };
 
 PhocDesktop *phoc_desktop_new (PhocConfig *config);
-void         phoc_desktop_toggle_output_blank (PhocDesktop *self);
 void         phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean on);
 gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);
 void         phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean on);
