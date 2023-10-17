@@ -1263,15 +1263,15 @@ phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_surface
                                         damage_surface_iterator, &whole);
 }
 
-void
-handle_output_manager_apply (struct wl_listener *listener, void *data)
-{
-  PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
-  struct wlr_output_configuration_v1 *config = data;
-  struct wlr_output_configuration_head_v1 *config_head;
-  bool ok = true;
+static void
+output_manager_apply_config (PhocDesktop                        *desktop,
+                             struct wlr_output_configuration_v1 *config)
 
-  // First disable outputs we need to disable
+{
+  struct wlr_output_configuration_head_v1 *config_head;
+  gboolean ok = TRUE;
+
+  /* First disable outputs we need to disable */
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     struct wlr_output_state pending;
@@ -1288,7 +1288,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     ok &= wlr_output_commit_state(wlr_output, &pending);
   }
 
-  // Then enable outputs that need to
+  /* Then enable outputs that need to */
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
@@ -1320,15 +1320,26 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     output->ly = output_box.y;
   }
 
-  if (ok) {
+  if (ok)
     wlr_output_configuration_v1_send_succeeded (config);
-  } else {
+  else
     wlr_output_configuration_v1_send_failed (config);
-  }
+
   wlr_output_configuration_v1_destroy (config);
 
   update_output_manager_config (desktop);
 }
+
+
+void
+handle_output_manager_apply (struct wl_listener *listener, void *data)
+{
+  PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
+  struct wlr_output_configuration_v1 *config = data;
+
+  output_manager_apply_config (desktop, config);
+}
+
 
 void
 handle_output_manager_test (struct wl_listener *listener, void *data)
