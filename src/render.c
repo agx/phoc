@@ -807,7 +807,8 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
     needs_frame |= pixman_region32_not_empty (&output->damage_ring.previous[output->damage_ring.previous_idx]);
   }
 
-  if (!needs_frame && !pixman_region32_not_empty (&output->damage_ring.current)) {
+  needs_frame |= pixman_region32_not_empty (&output->damage_ring.current);
+  if (!needs_frame) {
     // Output doesn't need swap and isn't damaged, skip rendering completely
     wlr_output_rollback (wlr_output);
     goto buffer_damage_finish;
