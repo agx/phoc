@@ -1263,9 +1263,11 @@ phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_surface
                                         damage_surface_iterator, &whole);
 }
 
+
 static void
 output_manager_apply_config (PhocDesktop                        *desktop,
-                             struct wlr_output_configuration_v1 *config)
+                             struct wlr_output_configuration_v1 *config,
+                             gboolean                            test_only)
 
 {
   struct wlr_output_configuration_head_v1 *config_head;
@@ -1284,8 +1286,12 @@ output_manager_apply_config (PhocDesktop                        *desktop,
       continue;
 
     wlr_output_state_set_enabled (&pending, false);
-    wlr_output_layout_remove (desktop->layout, wlr_output);
-    ok &= wlr_output_commit_state(wlr_output, &pending);
+    if (test_only) {
+      ok &= wlr_output_test_state (wlr_output, &pending);
+    } else {
+      wlr_output_layout_remove (desktop->layout, wlr_output);
+      ok &= wlr_output_commit_state (wlr_output, &pending);
+    }
   }
 
   /* Then enable outputs that need to */
@@ -1308,16 +1314,25 @@ output_manager_apply_config (PhocDesktop                        *desktop,
                                         config_head->state.custom_mode.height,
                                         config_head->state.custom_mode.refresh);
     }
-    wlr_output_layout_add (desktop->layout, wlr_output, config_head->state.x, config_head->state.y);
     wlr_output_state_set_transform (&pending, config_head->state.transform);
     wlr_output_state_set_scale (&pending, config_head->state.scale);
-    ok &= wlr_output_commit_state (wlr_output, &pending);
-    if (output->fullscreen_view)
-      phoc_view_set_fullscreen (output->fullscreen_view, true, output);
 
-    wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
-    output->lx = output_box.x;
-    output->ly = output_box.y;
+    if (test_only) {
+      ok &= wlr_output_test_state (wlr_output, &pending);
+    } else {
+      wlr_output_layout_add (desktop->layout,
+                             wlr_output,
+                             config_head->state.x,
+                             config_head->state.y);
+      ok &= wlr_output_commit_state (wlr_output, &pending);
+
+      if (output->fullscreen_view)
+        phoc_view_set_fullscreen (output->fullscreen_view, true, output);
+
+      wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
+      output->lx = output_box.x;
+      output->ly = output_box.y;
+    }
   }
 
   if (ok)
@@ -1327,7 +1342,8 @@ output_manager_apply_config (PhocDesktop                        *desktop,
 
   wlr_output_configuration_v1_destroy (config);
 
-  update_output_manager_config (desktop);
+  if (!test_only)
+    update_output_manager_config (desktop);
 }
 
 
@@ -1337,18 +1353,17 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
 
-  output_manager_apply_config (desktop, config);
+  output_manager_apply_config (desktop, config, FALSE);
 }
 
 
 void
 handle_output_manager_test (struct wl_listener *listener, void *data)
 {
+  PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
 
-  // TODO: implement test-only mode
-  wlr_output_configuration_v1_send_succeeded (config);
-  wlr_output_configuration_v1_destroy (config);
+  output_manager_apply_config (desktop, config, TRUE);
 }
 
 void
