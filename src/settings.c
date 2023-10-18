@@ -2,15 +2,9 @@
 
 #include "phoc-config.h"
 
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
-#endif
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 #include <strings.h>
 #include <sys/param.h>
-#include <unistd.h>
 
 #include "settings.h"
 #include "utils.h"
