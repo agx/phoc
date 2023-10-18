@@ -69,6 +69,8 @@ phoc_output_config_new (const char *name)
   oc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
   oc->scale = 0;
   oc->enable = true;
+  oc->x = -1;
+  oc->y = -1;
 
   return oc;
 }
