@@ -342,10 +342,12 @@ output_is_match (PhocOutputConfig *oc, PhocOutput *output)
 /**
  * phoc_config_get_output:
  * config: The #PhocConfig
- * output: The wlr output to get the configuration for
+ * output: The output to get the configuration for
  *
- * Get configuration for the output. If the output is not configured, returns
- * NULL.
+ * Get intended configuration for the given output.
+ *
+ * Returns: The intended output configuration or %NULL or not
+ *     configuration is found.
  */
 PhocOutputConfig *
 phoc_config_get_output (PhocConfig *config, PhocOutput *output)
