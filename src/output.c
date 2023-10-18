@@ -497,6 +497,67 @@ phoc_output_state_set_mode (PhocOutput *self, struct wlr_output_state *pending, 
 }
 
 
+static void
+phoc_output_fill_state (PhocOutput              *self,
+                        PhocOutputConfig        *output_config,
+                        struct wlr_output_state *pending)
+{
+  struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode (self->wlr_output);
+
+  wlr_output_state_init (pending);
+  wlr_output_state_set_enabled (pending, false);
+  if (output_config) {
+    if (output_config->enable) {
+      if (wlr_output_is_drm (self->wlr_output)) {
+        for (GSList *l = output_config->modes; l; l = l->next) {
+          PhocOutputModeConfig *mode_config = l->data;
+          wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
+        }
+      } else if (output_config->modes != NULL) {
+        g_warning ("Can only add modes for DRM backend");
+      }
+
+      if (output_config->mode.width)
+        phoc_output_state_set_mode (self, pending, output_config);
+      else if (preferred_mode != NULL)
+        wlr_output_state_set_mode (pending, preferred_mode);
+
+      if (!output_config->scale)
+        wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
+      else
+        wlr_output_state_set_scale (pending, output_config->scale);
+
+      wlr_output_state_set_enabled (pending, true);
+      wlr_output_state_set_transform (pending, output_config->transform);
+      wlr_output_layout_add (self->desktop->layout, self->wlr_output, output_config->x, output_config->y);
+    }
+  } else {
+    wlr_output_state_set_enabled (pending, true);
+    if (preferred_mode != NULL) {
+      g_debug ("Using preferred mode for %s", self->wlr_output->name);
+      wlr_output_state_set_mode (pending, preferred_mode);
+    }
+
+    if (!wlr_output_test_state (self->wlr_output, pending)) {
+      g_debug ("Preferred mode rejected for %s falling back to another mode",
+               self->wlr_output->name);
+      struct wlr_output_mode *mode;
+      wl_list_for_each (mode, &self->wlr_output->modes, link) {
+        if (mode == preferred_mode)
+          continue;
+
+        wlr_output_state_set_mode (pending, mode);
+        if (wlr_output_test_state (self->wlr_output, pending))
+          break;
+      }
+    }
+
+    wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
+    wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
+  }
+}
+
+
 static gboolean
 phoc_output_initable_init (GInitable    *initable,
                            GCancellable *cancellable,
@@ -557,59 +618,7 @@ phoc_output_initable_init (GInitable    *initable,
 
   PhocOutputConfig *output_config = phoc_config_get_output (config, self);
   struct wlr_output_state pending;
-  wlr_output_state_init (&pending);
-  struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode (self->wlr_output);
-
-  wlr_output_state_set_enabled (&pending, false);
-  if (output_config) {
-    if (output_config->enable) {
-      if (wlr_output_is_drm (self->wlr_output)) {
-        for (GSList *l = output_config->modes; l; l = l->next) {
-          PhocOutputModeConfig *mode_config = l->data;
-          wlr_drm_connector_add_mode (self->wlr_output, &mode_config->info);
-        }
-      } else if (output_config->modes != NULL) {
-        g_warning ("Can only add modes for DRM backend");
-      }
-
-      if (output_config->mode.width)
-        phoc_output_state_set_mode (self, &pending, output_config);
-      else if (preferred_mode != NULL)
-        wlr_output_state_set_mode (&pending, preferred_mode);
-
-      if (!output_config->scale)
-        wlr_output_state_set_scale (&pending, phoc_output_compute_scale (self, &pending));
-      else
-        wlr_output_state_set_scale (&pending, output_config->scale);
-
-      wlr_output_state_set_enabled (&pending, true);
-      wlr_output_state_set_transform (&pending, output_config->transform);
-      wlr_output_layout_add (self->desktop->layout, self->wlr_output, output_config->x, output_config->y);
-    }
-  } else {
-    wlr_output_state_set_enabled (&pending, true);
-    if (preferred_mode != NULL) {
-      g_debug ("Using preferred mode for %s", self->wlr_output->name);
-      wlr_output_state_set_mode (&pending, preferred_mode);
-    }
-
-    if (!wlr_output_test_state (self->wlr_output, &pending)) {
-      g_debug ("Preferred mode rejected for %s falling back to another mode",
-               self->wlr_output->name);
-      struct wlr_output_mode *mode;
-      wl_list_for_each (mode, &self->wlr_output->modes, link) {
-        if (mode == preferred_mode)
-          continue;
-
-        wlr_output_state_set_mode (&pending, mode);
-        if (wlr_output_test_state (self->wlr_output, &pending))
-          break;
-      }
-    }
-
-    wlr_output_state_set_scale (&pending, phoc_output_compute_scale (self, &pending));
-    wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
-  }
+  phoc_output_fill_state (self, output_config, &pending);
 
   wlr_output_commit_state (self->wlr_output, &pending);
   wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
