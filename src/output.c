@@ -556,7 +556,8 @@ phoc_output_initable_init (GInitable    *initable,
   wl_signal_add (&self->wlr_output->events.request_state, &priv->request_state);
 
   PhocOutputConfig *output_config = phoc_config_get_output (config, self);
-  struct wlr_output_state pending = { 0 };
+  struct wlr_output_state pending;
+  wlr_output_state_init (&pending);
   struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode (self->wlr_output);
 
   if (output_config) {
@@ -1273,8 +1274,9 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   // First disable outputs we need to disable
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
-    struct wlr_output_state pending = { 0 };
+    struct wlr_output_state pending;
 
+    wlr_output_state_init (&pending);
     if (config_head->state.enabled)
       continue;
 
@@ -1290,9 +1292,10 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
-    struct wlr_output_state pending = { 0 };
+    struct wlr_output_state pending;
     struct wlr_box output_box;
 
+    wlr_output_state_init (&pending);
     if (!config_head->state.enabled)
       continue;
 
@@ -1341,12 +1344,14 @@ void
 phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, void *data)
 {
   struct wlr_output_power_v1_set_mode_event *event = data;
-  struct wlr_output_state pending = { 0 };
+  struct wlr_output_state pending;
   PhocOutput *self;
   bool enable = true;
   bool current;
 
   g_return_if_fail (event && event->output && event->output->data);
+
+  wlr_output_state_init (&pending);
   self = event->output->data;
   g_debug ("Request to set output power mode of %p to %d", self->wlr_output->name, event->mode);
   switch (event->mode) {
