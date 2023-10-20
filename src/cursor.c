@@ -1202,7 +1202,7 @@ handle_pointer_motion (struct wl_listener *listener, void *data)
   double dx_unaccel = event->unaccel_dx;
   double dy_unaccel = event->unaccel_dy;
 
-  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
+  phoc_desktop_notify_activity (desktop, self->seat);
 
   wlr_relative_pointer_manager_v1_send_relative_motion (
     server->desktop->relative_pointer_manager,
@@ -1249,7 +1249,7 @@ handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = server->desktop;
   double lx, ly;
 
-  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
+  phoc_desktop_notify_activity (desktop, self->seat);
   wlr_cursor_absolute_to_layout_coords (self->cursor, &event->pointer->base, event->x,
                                         event->y, &lx, &ly);
 
@@ -1286,7 +1286,7 @@ handle_pointer_button (struct wl_listener *listener, void *data)
   PhocEventType type;
   bool is_touch = event->pointer->base.type == WLR_INPUT_DEVICE_TOUCH;
 
-  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
+  phoc_desktop_notify_activity (desktop, self->seat);
   g_debug ("%s %d is_touch: %d", __func__, __LINE__, is_touch);
   if (!is_touch) {
     type = event->state ? PHOC_EVENT_BUTTON_PRESS : PHOC_EVENT_BUTTON_RELEASE;
@@ -1325,7 +1325,7 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
 
-  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
+  phoc_desktop_notify_activity (desktop, self->seat);
   send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event->time_msec,
                      event->orientation, event->delta, event->delta_discrete, event->source);
 }
@@ -1337,7 +1337,7 @@ handle_pointer_frame (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = server->desktop;
 
-  wlr_idle_notify_activity (desktop->idle, self->seat->seat);
+  phoc_desktop_notify_activity (desktop, self->seat);
   wlr_seat_pointer_notify_frame (self->seat->seat);
 
   // make sure to always send frame events when necessary even when bypassing seat grabs
