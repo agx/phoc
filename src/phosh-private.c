@@ -418,7 +418,7 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
     return;
   }
 
-  frame->buffer = wlr_buffer_from_resource (buffer_resource);
+  frame->buffer = wlr_buffer_try_from_resource (buffer_resource);
   if (frame->buffer == NULL) {
     wl_resource_post_error (frame->resource,
                             ZWLR_SCREENCOPY_FRAME_V1_ERROR_INVALID_BUFFER,
