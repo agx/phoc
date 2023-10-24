@@ -450,12 +450,6 @@ scan_out_fullscreen_view (PhocOutput *output)
   if (phoc_output_has_layer (output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
     return false;
 
-  struct wlr_output_cursor *cursor;
-  wl_list_for_each (cursor, &wlr_output->cursors, link) {
-    if (cursor->enabled && cursor->visible && wlr_output->hardware_cursor != cursor)
-      return false;
-  }
-
   PhocView *view = output->fullscreen_view;
   g_assert (view != NULL);
   if (!phoc_view_is_mapped (view)) {
@@ -489,6 +483,9 @@ scan_out_fullscreen_view (PhocOutput *output)
       surface->current.transform != wlr_output->transform) {
     return false;
   }
+
+  if (!wlr_output_is_direct_scanout_allowed (wlr_output))
+    return false;
 
   wlr_output_attach_buffer (wlr_output, &surface->buffer->base);
   if (!wlr_output_test (wlr_output)) {
