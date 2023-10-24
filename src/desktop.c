@@ -1210,3 +1210,33 @@ phoc_desktop_notify_activity (PhocDesktop *self, PhocSeat *seat)
 
   wlr_idle_notifier_v1_notify_activity (priv->idle_notifier_v1, seat->seat);
 }
+
+gboolean
+phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *global)
+{
+  gboolean is_priv;
+  PhocDesktopPrivate *priv;
+
+  g_return_val_if_fail (PHOC_IS_DESKTOP (self), TRUE);
+  priv = phoc_desktop_get_instance_private (self);
+
+  is_priv = (
+    global == phoc_phosh_private_get_global (priv->phosh) ||
+    global == phoc_layer_shell_effects_get_global (priv->layer_shell_effects) ||
+    global == priv->data_control_manager_v1->global ||
+    global == priv->screencopy_manager_v1->global ||
+    global == self->export_dmabuf_manager_v1->global ||
+    global == self->foreign_toplevel_manager_v1->global ||
+    global == self->gamma_control_manager_v1->global ||
+    global == self->input_inhibit->global ||
+    global == self->input_method->global ||
+    global == self->layer_shell->global ||
+    global == self->output_manager_v1->global ||
+    global == self->output_power_manager_v1->global ||
+    global == self->security_context_manager_v1->global ||
+    global == self->virtual_keyboard->global ||
+    global == self->virtual_pointer->global
+    );
+
+  return is_priv;
+}
