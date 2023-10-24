@@ -16,6 +16,7 @@
 #define GMOBILE_USE_UNSTABLE_API
 #include <gmobile.h>
 
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/xwayland.h>
 #include <wlr/xwayland/shell.h>
 
@@ -191,20 +192,38 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
 }
 
 
+static gboolean
+phoc_server_client_has_security_context (PhocServer *self, const struct wl_client *client)
+{
+  const struct wlr_security_context_v1_state *context;
+  PhocDesktop *desktop = self->desktop;
+
+  context = wlr_security_context_manager_v1_lookup_client (desktop->security_context_manager_v1,
+                                                           (struct wl_client *)client);
+  return context != NULL;
+}
+
+
 static bool
 phoc_server_filter_globals (const struct wl_client *client,
                             const struct wl_global *global,
                             void                   *data)
 {
-#ifdef PHOC_XWAYLAND
   PhocServer *self = PHOC_SERVER (data);
 
+#ifdef PHOC_XWAYLAND
   struct wlr_xwayland *xwayland = self->desktop->xwayland;
   if (xwayland && global == xwayland->shell_v1->global)
     return xwayland->server && client == xwayland->server->client;
 #endif
 
-  return true;
+  /* Clients with a security context can request privileged protocols */
+  if (phoc_desktop_is_privileged_protocol (self->desktop, global) &&
+      phoc_server_client_has_security_context (self, client)) {
+    return false;
+  }
+
+ return true;
 }
 
 
