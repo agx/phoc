@@ -650,42 +650,39 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
   PhocConfig *config = self->config;
   PhocServer *server = phoc_server_get_default ();
 
-  self->xcursor_manager = wlr_xcursor_manager_create(NULL, PHOC_XCURSOR_SIZE);
+  self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
   g_return_if_fail (self->xcursor_manager);
 
   if (config->xwayland) {
-    self->xwayland = wlr_xwayland_create(server->wl_display,
-                                         server->compositor, config->xwayland_lazy);
+    self->xwayland = wlr_xwayland_create (server->wl_display, server->compositor, config->xwayland_lazy);
     if (!self->xwayland) {
       g_critical ("Failed to initialize Xwayland");
       g_unsetenv ("DISPLAY");
       return;
     }
 
-    wl_signal_add(&self->xwayland->events.new_surface,
-                  &self->xwayland_surface);
+    wl_signal_add (&self->xwayland->events.new_surface, &self->xwayland_surface);
     self->xwayland_surface.notify = handle_xwayland_surface;
 
-    wl_signal_add(&self->xwayland->events.ready,
-                  &self->xwayland_ready);
+    wl_signal_add (&self->xwayland->events.ready, &self->xwayland_ready);
     self->xwayland_ready.notify = handle_xwayland_ready;
 
-    wl_signal_add(&self->xwayland->events.remove_startup_info,
-                  &self->xwayland_remove_startup_id);
+    wl_signal_add (&self->xwayland->events.remove_startup_info, &self->xwayland_remove_startup_id);
     self->xwayland_remove_startup_id.notify = handle_xwayland_remove_startup_id;
 
     g_setenv ("DISPLAY", self->xwayland->display_name, true);
 
-    if (!wlr_xcursor_manager_load(self->xcursor_manager, 1))
+    if (!wlr_xcursor_manager_load (self->xcursor_manager, 1))
       g_critical ("Cannot load XWayland XCursor theme");
 
-    struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor(
-                                                                  self->xcursor_manager, cursor_default, 1);
+    struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor (self->xcursor_manager,
+                                                                   cursor_default,
+                                                                   1);
     if (xcursor != NULL) {
       struct wlr_xcursor_image *image = xcursor->images[0];
-      wlr_xwayland_set_cursor(self->xwayland, image->buffer,
-                              image->width * 4, image->width, image->height, image->hotspot_x,
-                              image->hotspot_y);
+      wlr_xwayland_set_cursor (self->xwayland, image->buffer,
+                               image->width * 4, image->width, image->height, image->hotspot_x,
+                               image->hotspot_y);
     }
   }
 #endif
