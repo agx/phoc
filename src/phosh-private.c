@@ -889,3 +889,12 @@ phoc_phosh_private_get_shell_state (PhocPhoshPrivate *self)
 
   return self->state;
 }
+
+
+struct wl_global *
+phoc_phosh_private_get_global (PhocPhoshPrivate *self)
+{
+  g_assert (PHOC_IS_PHOSH_PRIVATE (self));
+
+  return self->global;
+}
