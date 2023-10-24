@@ -715,6 +715,15 @@ phoc_layer_shell_effects_new (void)
 }
 
 
+struct wl_global *
+phoc_layer_shell_effects_get_global (PhocLayerShellEffects *self)
+{
+  g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (self));
+
+  return self->global;
+}
+
+
 static void
 apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
 {
