@@ -20,6 +20,7 @@
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
+#include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_tablet_v2.h>
@@ -80,7 +81,9 @@ typedef struct _PhocDesktopPrivate {
   GSettings             *interface_settings;
 
   /* Protocols from wlroots */
+  struct wlr_data_control_manager_v1 *data_control_manager_v1;
   struct wlr_idle_notifier_v1 *idle_notifier_v1;
+  struct wlr_screencopy_manager_v1 *screencopy_manager_v1;
 
   /* Protocols without upstreamable implementations */
   PhocPhoshPrivate      *phosh;
@@ -763,7 +766,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->virtual_pointer->events.new_virtual_pointer, &self->virtual_pointer_new);
   self->virtual_pointer_new.notify = phoc_handle_virtual_pointer;
 
-  self->screencopy = wlr_screencopy_manager_v1_create (server->wl_display);
+  priv->screencopy_manager_v1 = wlr_screencopy_manager_v1_create (server->wl_display);
 
   self->xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create (server->wl_display);
   wl_signal_add (&self->xdg_decoration_manager->events.new_toplevel_decoration,
@@ -798,7 +801,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->output_power_manager_v1->events.set_mode,
                  &self->output_power_manager_set_mode);
 
-  wlr_data_control_manager_v1_create (server->wl_display);
+  priv->data_control_manager_v1 = wlr_data_control_manager_v1_create (server->wl_display);
 
   /* sm.puri.phosh settings */
   priv->settings = g_settings_new ("sm.puri.phoc");
