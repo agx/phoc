@@ -15,7 +15,9 @@
 
 #define GMOBILE_USE_UNSTABLE_API
 #include <gmobile.h>
+
 #include <wlr/xwayland.h>
+#include <wlr/xwayland/shell.h>
 
 #include <errno.h>
 
@@ -189,6 +191,23 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
 }
 
 
+static bool
+phoc_server_filter_globals (const struct wl_client *client,
+                            const struct wl_global *global,
+                            void                   *data)
+{
+#ifdef PHOC_XWAYLAND
+  PhocServer *self = PHOC_SERVER (data);
+
+  struct wlr_xwayland *xwayland = self->desktop->xwayland;
+  if (xwayland && global == xwayland->shell_v1->global)
+    return xwayland->server && client == xwayland->server->client;
+#endif
+
+  return true;
+}
+
+
 static gboolean
 phoc_server_initable_init (GInitable    *initable,
                            GCancellable *cancellable,
@@ -205,6 +224,7 @@ phoc_server_initable_init (GInitable    *initable,
                  "Could not create wayland display");
     return FALSE;
   }
+  wl_display_set_global_filter (self->wl_display, phoc_server_filter_globals, self);
 
   self->backend = wlr_backend_autocreate (self->wl_display, &priv->session);
   if (self->backend == NULL) {
