@@ -729,6 +729,8 @@ phoc_desktop_constructed (GObject *object)
 
   phoc_desktop_setup_xwayland (self);
 
+  self->security_context_manager_v1 = wlr_security_context_manager_v1_create (server->wl_display);
+
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create (server->wl_display);
   self->export_dmabuf_manager_v1 = wlr_export_dmabuf_manager_v1_create (server->wl_display);
   self->server_decoration_manager = wlr_server_decoration_manager_create (server->wl_display);

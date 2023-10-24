@@ -22,6 +22,7 @@
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/types/wlr_text_input_v3.h>
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
 #include <wlr/types/wlr_virtual_pointer_v1.h>
@@ -70,6 +71,7 @@ struct _PhocDesktop {
   struct wlr_output_manager_v1 *output_manager_v1;
   struct wlr_output_power_manager_v1 *output_power_manager_v1;
   struct wlr_xdg_activation_v1 *xdg_activation_v1;
+  struct wlr_security_context_manager_v1 *security_context_manager_v1;
 
   struct wl_listener new_output;
   struct wl_listener layout_change;
