@@ -1,3 +1,12 @@
+phoc 0.33.0
+-----------
+Released October 2023
+* Add support for ext-idle-notify-v1
+* Issues fixed:
+  https://gitlab.gnome.org/World/Phosh/phoc/-/issues/339
+* Contributors:
+    * Guido Günther
+
 phoc 0.32.0
 -----------
 Released October 2023
@@ -5,7 +14,7 @@ Released October 2023
 * Fix keyboard elevation corner case
 * Handle move window to output above/below keybinding
 * More internal cleanups
-* Issued fixed:
+* Issues fixed:
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/303
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/334
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/336
@@ -22,7 +31,7 @@ Released September 2023
 * Better handle xdg-activation tokens
 * Unbreak copy/paste for X11 apps
 * More internal cleanups
-* Issued fixed:
+* Issues fixed:
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/203
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/309
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/326
@@ -38,7 +47,7 @@ Released August 2023
   Patches are now in subprojects/packagefiles/ 
 * Switch to xdg-shell 5
 * More internal cleanups
-* Issued fixed:
+* Issues fixed:
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/324
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/325
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/272
