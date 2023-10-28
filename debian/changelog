@@ -1,3 +1,20 @@
+phoc (0.33.0) experimental; urgency=medium
+
+  * seat: Use phoc_desktop_notify_activity to notify idle activity.
+    This will allow us to notify idle via different protocols
+  * cursor: Use phoc_desktop_notify_activity to notify idle activity.
+    This will allow us to notify idle via different protocols
+  * desktop: Notify via idle-ext-notify-v1 too.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/339
+  * protocols: Rename server_protocols to wayland_protocols.
+    We build them for servers and clients
+  * protocols: Allow to build protocols for client use only.
+    Less targets, faster build. Initial one is ext-idle-notify-v1.
+  * examples: Add example idle client.
+    Based in the idle example in wlroots
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 25 Oct 2023 10:57:10 +0200
+
 phoc (0.32.0) experimental; urgency=medium
 
   * device-state: Assert on invalid values in switch statement.
