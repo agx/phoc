@@ -1402,7 +1402,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
           .width = 1,
           .height = 1
         };
-        wlr_output_damage_add_box (output->damage, &box);
+        wlr_damage_ring_add_box (&output->damage_ring, &box);
       }
     }
   }

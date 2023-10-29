@@ -7,8 +7,8 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <wayland-server-core.h>
+#include <wlr/types/wlr_damage_ring.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
-#include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
 
@@ -42,7 +42,6 @@ struct _PhocOutput {
   struct wl_list            layer_surfaces; // PhocLayerSurface::link
 
   struct wlr_output_state  *pending;
-  struct wlr_output_damage *damage;
   GList                    *debug_touch_points;
 
   struct wlr_box            usable_area;
@@ -50,9 +49,10 @@ struct _PhocOutput {
 
   struct wl_listener        enable;
   struct wl_listener        commit;
-  struct wl_listener        damage_frame;
-  struct wl_listener        damage_destroy;
   struct wl_listener        output_destroy;
+
+  /* TODO: Should be private, move bits out of renderer */
+  struct wlr_damage_ring    damage_ring;
 };
 
 PhocOutput *phoc_output_new (PhocDesktop       *desktop,
@@ -148,6 +148,5 @@ void       phoc_output_lower_shield          (PhocOutput *self);
 void       phoc_output_raise_shield          (PhocOutput *self);
 float      phoc_output_get_scale             (PhocOutput *self);
 const char *phoc_output_get_name             (PhocOutput *self);
-void       phoc_output_damage_add_box        (PhocOutput *self, struct wlr_box *box);
 
 G_END_DECLS
