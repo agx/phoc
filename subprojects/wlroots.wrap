@@ -5,4 +5,4 @@ revision=0.16.2
 depth=1
 
 # Phoc specific patches
-diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch
+diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch,wlroots/Output-modes-state-before-enable.diff

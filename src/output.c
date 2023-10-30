@@ -265,9 +265,7 @@ phoc_output_new (PhocDesktop *desktop, struct wlr_output *wlr_output, GError **e
 static void
 update_output_manager_config (PhocDesktop *desktop)
 {
-  struct wlr_output_configuration_v1 *config =
-    wlr_output_configuration_v1_create ();
-
+  struct wlr_output_configuration_v1 *config = wlr_output_configuration_v1_create ();
   PhocOutput *output;
 
   wl_list_for_each (output, &desktop->outputs, link) {
@@ -276,8 +274,7 @@ update_output_manager_config (PhocDesktop *desktop)
     struct wlr_box output_box;
 
     config_head->state.enabled = output->wlr_output->enabled;
-    config_head->state.mode = output->pending ? output->pending->mode :
-      output->wlr_output->current_mode;
+    config_head->state.mode = output->wlr_output->current_mode;
 
     wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
     if (!wlr_box_empty (&output_box)) {
@@ -457,7 +454,7 @@ phoc_output_compute_scale (PhocOutput *self, struct wlr_output_state *pending)
 }
 
 static void
-phoc_output_set_mode (PhocOutput *self, struct wlr_output_state *pending, PhocOutputConfig *oc)
+phoc_output_state_set_mode (PhocOutput *self, struct wlr_output_state *pending, PhocOutputConfig *oc)
 {
   int mhz = (int)(oc->mode.refresh_rate * 1000);
 
@@ -560,7 +557,7 @@ phoc_output_initable_init (GInitable    *initable,
       }
 
       if (output_config->mode.width) {
-        phoc_output_set_mode (self, &pending, output_config);
+        phoc_output_state_set_mode (self, &pending, output_config);
       } else if (preferred_mode != NULL) {
         wlr_output_state_set_mode (&pending, preferred_mode);
       }
@@ -601,9 +598,7 @@ phoc_output_initable_init (GInitable    *initable,
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
 
-  self->pending = &pending;
   wlr_output_commit_state (self->wlr_output, &pending);
-  self->pending = NULL;
   wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
   self->lx = output_box.x;
   self->ly = output_box.y;
@@ -1256,13 +1251,13 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
-
-  bool ok = true;
   struct wlr_output_configuration_head_v1 *config_head;
+  bool ok = true;
 
   // First disable outputs we need to disable
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
+    struct wlr_output_state pending = { 0 };
 
     if (config_head->state.enabled)
       continue;
@@ -1270,37 +1265,36 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
     if (!wlr_output->enabled)
       continue;
 
-    wlr_output_enable (wlr_output, false);
+    wlr_output_state_set_enabled (&pending, false);
     wlr_output_layout_remove (desktop->layout, wlr_output);
-    ok &= wlr_output_commit (wlr_output);
+    ok &= wlr_output_commit_state(wlr_output, &pending);
   }
 
   // Then enable outputs that need to
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
+    struct wlr_output_state pending = { 0 };
     struct wlr_box output_box;
 
     if (!config_head->state.enabled)
       continue;
 
-    wlr_output_enable (wlr_output, true);
+    wlr_output_state_set_enabled (&pending, true);
     if (config_head->state.mode != NULL) {
-      wlr_output_set_mode (wlr_output, config_head->state.mode);
+      wlr_output_state_set_mode (&pending, config_head->state.mode);
     } else {
-      wlr_output_set_custom_mode (wlr_output,
-                                  config_head->state.custom_mode.width,
-                                  config_head->state.custom_mode.height,
-                                  config_head->state.custom_mode.refresh);
+      wlr_output_state_set_custom_mode (&pending,
+                                        config_head->state.custom_mode.width,
+                                        config_head->state.custom_mode.height,
+                                        config_head->state.custom_mode.refresh);
     }
-    wlr_output_layout_add (desktop->layout, wlr_output,
-                           config_head->state.x, config_head->state.y);
-    wlr_output_set_transform (wlr_output, config_head->state.transform);
-    wlr_output_set_scale (wlr_output, config_head->state.scale);
-    ok &= wlr_output_commit (wlr_output);
-    if (output->fullscreen_view) {
+    wlr_output_layout_add (desktop->layout, wlr_output, config_head->state.x, config_head->state.y);
+    wlr_output_state_set_transform (&pending, config_head->state.transform);
+    wlr_output_state_set_scale (&pending, config_head->state.scale);
+    ok &= wlr_output_commit_state (wlr_output, &pending);
+    if (output->fullscreen_view)
       phoc_view_set_fullscreen (output->fullscreen_view, true, output);
-    }
 
     wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
     output->lx = output_box.x;
@@ -1331,6 +1325,7 @@ void
 phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, void *data)
 {
   struct wlr_output_power_v1_set_mode_event *event = data;
+  struct wlr_output_state pending = { 0 };
   PhocOutput *self;
   bool enable = true;
   bool current;
@@ -1351,14 +1346,11 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
   }
 
   current = self->wlr_output->enabled;
-  if (self->wlr_output->pending.committed & WLR_OUTPUT_STATE_ENABLED)
-    current = self->wlr_output->pending.enabled;
-
   if (enable == current)
     return;
 
-  wlr_output_enable (self->wlr_output, enable);
-  if (!wlr_output_commit (self->wlr_output)) {
+  wlr_output_state_set_enabled (&pending, enable);
+  if (!wlr_output_commit_state(self->wlr_output, &pending)) {
     g_warning ("Failed to commit power mode change to %d for %p", enable, self);
     return;
   }
