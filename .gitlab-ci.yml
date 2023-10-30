@@ -157,16 +157,13 @@ build-gtkdoc:
     variables:
       - $PKG_ONLY == "1"
 
-package-debian-bookworm:arm64:
+package-debian-trixie:arm64:
   variables:
-    L5_DOCKER_IMAGE: debian:bookworm
+    L5_DOCKER_IMAGE: debian:trixie
+    DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots'
   tags:
     - aarch64
   extends: .l5-build-debian-package
-  before_script:
-    - echo "deb http://deb.debian.org/debian/ sid main" > /etc/apt/sources.list.d/sid.list
-    - apt-get -y update
-    - apt-get -y -t sid build-dep .
 
 package-pureos-byzantium:sanitizers:arm64:
   variables:
