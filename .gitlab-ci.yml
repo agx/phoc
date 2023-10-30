@@ -33,7 +33,7 @@ variables:
         wayland-dev wayland-protocols xcb-util-image-dev xcb-util-renderutil-dev
         xcb-util-wm-dev libseat-dev hwdata-dev
   XVFB_RUN: xvfb-run -s -noreset
-  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.20230722
+  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2023-10-30
 
 .build: &build
   script:
@@ -62,7 +62,7 @@ variables:
   - apt-get -y update
   - apt-get -y install -t octarine libwlroots-dev
 
-build-with-xwayland-debian-bookworm:
+build-with-xwayland-debian-trixie:
   stage: build
   image: ${DEBIAN_IMAGE}
   before_script: *before_script_debian
@@ -101,11 +101,11 @@ build-without-xwayland-alpinelinux-edge:
       - $PKG_ONLY == "1"
 
 
-unit-test-with-xwayland-debian-bookworm:
+unit-test-with-xwayland-debian-trixie:
   stage: test+docs
   image: ${DEBIAN_IMAGE}
   needs:
-    - build-with-xwayland-debian-bookworm
+    - build-with-xwayland-debian-trixie
   before_script: *before_script_debian
   script:
     - WLR_RENDERER=pixman ${XVFB_RUN} meson test --print-errorlogs -C _build
@@ -122,7 +122,7 @@ unit-test-with-xwayland-debian-bookworm:
     variables:
       - $PKG_ONLY == "1"
 
-asan-test-native-debian-bookworm:
+asan-test-native-debian-trixie:
   stage: test+docs
   image: ${DEBIAN_IMAGE}
   tags: [ asan ]
