@@ -56,7 +56,7 @@ enum {
   ACTIVITY,
   N_SIGNALS
 };
-static guint signals [N_SIGNALS];
+static guint signals[N_SIGNALS];
 
 
 static ssize_t
