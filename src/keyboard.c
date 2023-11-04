@@ -71,8 +71,11 @@ pressed_keysyms_index(const xkb_keysym_t *pressed_keysyms,
   return -1;
 }
 
-static size_t pressed_keysyms_length(const xkb_keysym_t *pressed_keysyms) {
+static size_t
+pressed_keysyms_length (const xkb_keysym_t *pressed_keysyms)
+{
   size_t n = 0;
+
   for (size_t i = 0; i < PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP; ++i) {
     if (pressed_keysyms[i] != XKB_KEY_NoSymbol) {
       ++n;

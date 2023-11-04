@@ -297,7 +297,8 @@ send_pointer_enter (PhocSeat           *seat,
 
 static void
 send_pointer_clear_focus (PhocSeat           *seat,
-                          struct wlr_surface *surface) {
+                          struct wlr_surface *surface)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_clear_focus (seat->seat);
     return;
@@ -312,7 +313,8 @@ send_pointer_motion (PhocSeat           *seat,
                      struct wlr_surface *surface,
                      uint32_t            time,
                      double              sx,
-                     double              sy) {
+                     double              sy)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_send_motion (seat->seat, time, sx, sy);
     return;
@@ -326,7 +328,8 @@ send_pointer_button (PhocSeat             *seat,
                      struct wlr_surface   *surface,
                      uint32_t              time,
                      uint32_t              button,
-                     enum wlr_button_state state) {
+                     enum wlr_button_state state)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_send_button (seat->seat, time, button, state);
     return;
@@ -343,7 +346,8 @@ send_pointer_axis (PhocSeat                 *seat,
                    enum wlr_axis_orientation orientation,
                    double                    value,
                    int32_t                   value_discrete,
-                   enum wlr_axis_source      source) {
+                   enum wlr_axis_source      source)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_send_axis (seat->seat, time, orientation, value, value_discrete, source);
     return;

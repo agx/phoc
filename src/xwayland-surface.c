@@ -188,7 +188,8 @@ move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height
 }
 
 static void
-_close(PhocView *view) {
+_close (PhocView *view)
+{
   struct wlr_xwayland_surface *xwayland_surface;
 
   g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
@@ -197,7 +198,8 @@ _close(PhocView *view) {
 }
 
 static bool
-want_scaling (PhocView *view) {
+want_scaling (PhocView *view)
+{
   return false;
 }
 
@@ -220,7 +222,8 @@ want_auto_maximize (PhocView *view)
 }
 
 static void
-set_maximized (PhocView *view, bool maximized) {
+set_maximized (PhocView *view, bool maximized)
+{
   struct wlr_xwayland_surface *xwayland_surface;
 
   g_assert (PHOC_IS_XWAYLAND_SURFACE (view));

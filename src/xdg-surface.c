@@ -185,7 +185,8 @@ want_scaling(PhocView *view)
 }
 
 static bool
-want_auto_maximize(PhocView *view) {
+want_auto_maximize (PhocView *view)
+{
   struct wlr_xdg_surface *surface = PHOC_XDG_SURFACE (view)->xdg_surface;
 
   return surface->toplevel && !surface->toplevel->parent;
