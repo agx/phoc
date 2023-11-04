@@ -1107,9 +1107,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
       } else if (self->resize_edges & WLR_EDGE_RIGHT) {
         width += dx;
       }
-      phoc_view_move_resize (view, x, y,
-                             width < 1 ? 1 : width,
-                             height < 1 ? 1 : height);
+      phoc_view_move_resize (view, x, y, MAX (1, width), MAX (1, height));
     }
     break;
   default:
