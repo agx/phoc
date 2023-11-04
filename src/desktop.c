@@ -464,8 +464,8 @@ handle_constraint_destroy (struct wl_listener *listener, void *data)
   free(constraint);
 }
 
-static
-void handle_pointer_constraint (struct wl_listener *listener, void *data)
+static void
+handle_pointer_constraint (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   struct wlr_pointer_constraint_v1 *wlr_constraint = data;
@@ -1059,8 +1059,8 @@ phoc_desktop_find_output (PhocDesktop *self,
  *
  * Returns: (transfer none) (nullable): The `PhocLayerSurface`
  */
-PhocLayerSurface
-*phoc_desktop_layer_surface_at(PhocDesktop *self, double lx, double ly, double *sx, double *sy)
+PhocLayerSurface *
+phoc_desktop_layer_surface_at (PhocDesktop *self, double lx, double ly, double *sx, double *sy)
 {
   struct wlr_surface *wlr_surface;
   struct wlr_layer_surface_v1 *wlr_layer_surface;

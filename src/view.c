@@ -173,7 +173,8 @@ view_get_box (PhocView *view, struct wlr_box *box)
 }
 
 /* TODO: Use PhocBling for decorations too */
-void view_get_deco_box (PhocView *view, struct wlr_box *box)
+void
+view_get_deco_box (PhocView *view, struct wlr_box *box)
 {
   PhocViewPrivate *priv;
 
@@ -242,7 +243,8 @@ surface_send_enter_iterator (struct wlr_surface *surface, int x, int y, void *da
   wlr_surface_send_enter(surface, wlr_output);
 }
 
-static void surface_send_leave_iterator (struct wlr_surface *surface, int x, int y, void *data)
+static void
+surface_send_leave_iterator (struct wlr_surface *surface, int x, int y, void *data)
 {
   struct wlr_output *wlr_output = data;
   wlr_surface_send_leave(surface, wlr_output);
@@ -1172,7 +1174,8 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_IS_MAPPED]);
 }
 
-void view_unmap (PhocView *view)
+void
+view_unmap (PhocView *view)
 {
   PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
@@ -1390,7 +1393,8 @@ view_set_title (PhocView *view, const char *title)
     wlr_foreign_toplevel_handle_v1_set_title(priv->toplevel_handle, title ?: "");
 }
 
-void view_set_parent (PhocView *view, PhocView *parent)
+void
+view_set_parent (PhocView *view, PhocView *parent)
 {
   // setting a new parent may cause a cycle
   PhocView *node = parent;
