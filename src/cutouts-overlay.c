@@ -202,7 +202,7 @@ phoc_cutouts_overlay_get_cutouts_texture (PhocCutoutsOverlay *self, PhocOutput *
 
   /* bottom right */
   cairo_move_to (cr, width, height);
-  cairo_arc (cr, width - radius, height - radius, radius, 0 , 0.5 * M_PI);
+  cairo_arc (cr, width - radius, height - radius, radius, 0, 0.5 * M_PI);
   cairo_close_path (cr);
   cairo_fill (cr);
 

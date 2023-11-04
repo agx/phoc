@@ -781,7 +781,7 @@ phoc_passthrough_cursor (PhocCursor *self,
 
   if (surface) {
     send_pointer_enter (seat, surface, sx, sy);
-    send_pointer_motion (seat, surface, time, sx ,sy);
+    send_pointer_motion (seat, surface, time, sx,sy);
   } else {
     send_pointer_clear_focus (seat, seat->seat->pointer_state.focused_surface);
   }
