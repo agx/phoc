@@ -471,7 +471,7 @@ phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
  */
 bool
 phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay,
-                                   struct wlr_surface *surface)
+                                    struct wlr_surface   *surface)
 {
   PhocTextInput *text_input;
   g_return_val_if_fail (surface, false);

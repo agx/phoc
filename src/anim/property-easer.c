@@ -202,9 +202,9 @@ phoc_property_easer_set_property (GObject      *object,
 
 static void
 phoc_property_easer_get_property (GObject    *object,
-                     guint       property_id,
-                     GValue     *value,
-                     GParamSpec *pspec)
+                                  guint       property_id,
+                                  GValue     *value,
+                                  GParamSpec *pspec)
 {
   PhocPropertyEaser *self = PHOC_PROPERTY_EASER (object);
 

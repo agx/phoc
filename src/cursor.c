@@ -735,7 +735,7 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
 
 static void
 phoc_passthrough_cursor (PhocCursor *self,
-                          uint32_t    time)
+                         uint32_t    time)
 {
   PhocServer *server = phoc_server_get_default ();
   double sx, sy;

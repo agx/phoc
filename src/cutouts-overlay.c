@@ -72,9 +72,9 @@ cutouts_overlay_set_compatibles (PhocCutoutsOverlay *self, const char *const *co
 
 static void
 phoc_cutouts_overlay_set_property (GObject      *object,
-                     guint         property_id,
-                     const GValue *value,
-                     GParamSpec   *pspec)
+                                   guint         property_id,
+                                   const GValue *value,
+                                   GParamSpec   *pspec)
 {
   PhocCutoutsOverlay *self = PHOC_CUTOUTS_OVERLAY (object);
 
@@ -91,9 +91,9 @@ phoc_cutouts_overlay_set_property (GObject      *object,
 
 static void
 phoc_cutouts_overlay_get_property (GObject    *object,
-                     guint       property_id,
-                     GValue     *value,
-                     GParamSpec *pspec)
+                                   guint       property_id,
+                                   GValue     *value,
+                                   GParamSpec *pspec)
 {
   PhocCutoutsOverlay *self = PHOC_CUTOUTS_OVERLAY (object);
 
