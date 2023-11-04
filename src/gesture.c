@@ -154,7 +154,7 @@ phoc_gesture_get_n_touchpad_points (PhocGesture *gesture,
       (data->state == PHOC_EVENT_SEQUENCE_DENIED ||
        data->event->type == PHOC_EVENT_TOUCHPAD_SWIPE_END ||
        data->event->type == PHOC_EVENT_TOUCHPAD_PINCH_END))
-      return 0;
+    return 0;
 
   switch (data->event->type) {
   case PHOC_EVENT_TOUCHPAD_SWIPE_BEGIN:

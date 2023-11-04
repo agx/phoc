@@ -457,7 +457,7 @@ set_fallback_keymap (PhocKeyboard *self)
 
   context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
   if (context == NULL) {
-       return;
+    return;
   }
 
   xkb_keymap_unref (self->keymap);

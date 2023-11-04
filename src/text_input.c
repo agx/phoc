@@ -483,7 +483,7 @@ phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay,
       continue;
 
     struct wlr_surface *focused =
-        wlr_surface_get_root_surface (text_input->input->focused_surface);
+      wlr_surface_get_root_surface (text_input->input->focused_surface);
 
     if (focused == surface && text_input->input->current_enabled)
       return true;

@@ -350,10 +350,10 @@ handle_get_keyboard_event (struct wl_client   *client,
                                                             g_int64_equal,
                                                             g_free, NULL);
   if (kbevent->subscribed_accelerators == NULL) {
-      wl_resource_destroy (kbevent->resource);
-      g_free (kbevent);
-      wl_client_post_no_memory (client);
-      return;
+    wl_resource_destroy (kbevent->resource);
+    g_free (kbevent);
+    wl_client_post_no_memory (client);
+    return;
   }
 
   PhocPhoshPrivate *phosh_private = phoc_phosh_private_from_resource (phosh_private_resource);
@@ -408,8 +408,8 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
 
   if (frame->buffer != NULL) {
     wl_resource_post_error (frame->resource,
-                           ZWLR_SCREENCOPY_FRAME_V1_ERROR_ALREADY_USED,
-                           "frame already used");
+                            ZWLR_SCREENCOPY_FRAME_V1_ERROR_ALREADY_USED,
+                            "frame already used");
     return;
   }
 
@@ -819,21 +819,21 @@ phoc_phosh_private_forward_keysym (PhocKeyCombo *combo,
     g_debug("addr of kbevent and res kbev %p res %p", kbevent, kbevent->resource);
     /*  forward the keysym if it is has been subscribed to */
     if (phoc_phosh_private_keyboard_event_accelerator_is_registered (combo, kbevent)) {
-        gint64 key = ((gint64)combo->modifiers << 32) | combo->keysym;
-        guint action_id = GPOINTER_TO_UINT (g_hash_table_lookup (kbevent->subscribed_accelerators, &key));
+      gint64 key = ((gint64)combo->modifiers << 32) | combo->keysym;
+      guint action_id = GPOINTER_TO_UINT (g_hash_table_lookup (kbevent->subscribed_accelerators, &key));
 
-        if (pressed) {
-          phosh_private_keyboard_event_send_accelerator_activated_event (kbevent->resource,
-                                                                         action_id,
-                                                                         timestamp);
-          forwarded = true;
-        } else if (version >= PHOSH_PRIVATE_KEYBOARD_EVENT_ACCELERATOR_RELEASED_EVENT_SINCE_VERSION) {
-          phosh_private_keyboard_event_send_accelerator_released_event (kbevent->resource,
-                                                                        action_id,
-                                                                        timestamp);
-          forwarded = true;
-        }
+      if (pressed) {
+        phosh_private_keyboard_event_send_accelerator_activated_event (kbevent->resource,
+                                                                       action_id,
+                                                                       timestamp);
+        forwarded = true;
+      } else if (version >= PHOSH_PRIVATE_KEYBOARD_EVENT_ACCELERATOR_RELEASED_EVENT_SINCE_VERSION) {
+        phosh_private_keyboard_event_send_accelerator_released_event (kbevent->resource,
+                                                                      action_id,
+                                                                      timestamp);
+        forwarded = true;
       }
+    }
   }
 
   return forwarded;

@@ -216,14 +216,14 @@ set_tiled (PhocView *view, bool tiled)
   }
 
   switch (phoc_view_get_tile_direction (view)) {
-    case PHOC_VIEW_TILE_LEFT:
-      wlr_xdg_toplevel_set_tiled (xdg_surface->toplevel, WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT);
-      break;
-    case PHOC_VIEW_TILE_RIGHT:
-      wlr_xdg_toplevel_set_tiled (xdg_surface->toplevel, WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_RIGHT);
-      break;
-    default:
-      g_warn_if_reached ();
+  case PHOC_VIEW_TILE_LEFT:
+    wlr_xdg_toplevel_set_tiled (xdg_surface->toplevel, WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT);
+    break;
+  case PHOC_VIEW_TILE_RIGHT:
+    wlr_xdg_toplevel_set_tiled (xdg_surface->toplevel, WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_RIGHT);
+    break;
+  default:
+    g_warn_if_reached ();
   }
 }
 

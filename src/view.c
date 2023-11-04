@@ -512,7 +512,7 @@ view_arrange_tiled (PhocView *self, PhocOutput *output)
   priv = phoc_view_get_instance_private (self);
 
   if (!phoc_view_get_tiled_box (self, priv->tile_direction, output, &box))
-      return;
+    return;
 
   phoc_view_get_geometry (self, &geom);
   box.x -= geom.x / priv->scale;
@@ -1662,14 +1662,14 @@ phoc_view_for_each_surface_default (PhocView                    *self,
 static void
 phoc_view_get_geometry_default (PhocView *self, struct wlr_box *geom)
 {
-   PhocViewPrivate *priv;
+  PhocViewPrivate *priv;
 
-   priv = phoc_view_get_instance_private (self);
+  priv = phoc_view_get_instance_private (self);
 
-   geom->x = 0;
-   geom->y = 0;
-   geom->width = self->box.width * priv->scale;
-   geom->height = self->box.height * priv->scale;
+  geom->x = 0;
+  geom->y = 0;
+  geom->width = self->box.width * priv->scale;
+  geom->height = self->box.height * priv->scale;
 }
 
 

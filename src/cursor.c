@@ -453,13 +453,13 @@ phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_touch_down_event *even
   touch_point->lx = lx;
   touch_point->ly = ly;
 
- if (!g_hash_table_insert (priv->touch_points,
-                           GINT_TO_POINTER (event->touch_id),
-                           touch_point)) {
-   g_critical ("Touch point %d already tracked, ignoring", event->touch_id);
- }
+  if (!g_hash_table_insert (priv->touch_points,
+                            GINT_TO_POINTER (event->touch_id),
+                            touch_point)) {
+    g_critical ("Touch point %d already tracked, ignoring", event->touch_id);
+  }
 
- return touch_point;
+  return touch_point;
 }
 
 
@@ -1390,7 +1390,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
     if (wlr_layer) {
       /* TODO: Use press gesture */
       if (wlr_layer->current.keyboard_interactive) {
-          phoc_seat_set_focus_layer (seat, wlr_layer);
+        phoc_seat_set_focus_layer (seat, wlr_layer);
       }
     }
   }

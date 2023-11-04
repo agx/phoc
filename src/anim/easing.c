@@ -262,9 +262,7 @@ phoc_ease_in_out_elastic (double t, double d)
   } else {
     q -= 1;
 
-    return pow (2, -10 * q)
-      * sin ((q * d - s) * (2 * G_PI) / p)
-      * .5 + 1.0;
+    return (pow (2, -10 * q) * sin ((q * d - s) * (2 * G_PI) / p) * .5 + 1.0);
   }
 }
 

@@ -56,7 +56,7 @@ cutouts_overlay_set_compatibles (PhocCutoutsOverlay *self, const char *const *co
   }
 
   if (self->compatibles && g_strv_equal ((const char *const *)self->compatibles, compatibles))
-      return;
+    return;
 
   self->compatibles = g_strdupv ((GStrv)compatibles);
   info = gm_device_info_new ((const char * const *)self->compatibles);
