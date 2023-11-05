@@ -57,11 +57,6 @@ variables:
   - apk -q add alpine-sdk
   - apk -q add $ALPINE_EDGE_DEPS $ALPINE_EDGE_WLROOTS_DEPS
 
-.before_script_pureos: &before_script_pureos
-  - echo "deb http://repo.pureos.net/pureos octarine main" > /etc/apt/sources.list.d/octarine.list
-  - apt-get -y update
-  - apt-get -y install -t octarine libwlroots-dev
-
 build-with-xwayland-debian-trixie:
   stage: build
   image: ${DEBIAN_IMAGE}
@@ -165,11 +160,10 @@ package-debian-trixie:arm64:
     - aarch64
   extends: .l5-build-debian-package
 
-package-pureos-byzantium:sanitizers:arm64:
+package-debian-trixie:sanitizers:arm64:
   variables:
-    L5_DOCKER_IMAGE: pureos/byzantium
+    L5_DOCKER_IMAGE: debian:trixie
     DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots pkg.phoc.sanitizers'
-  before_script: *before_script_pureos
   tags:
     - aarch64
   when: manual
