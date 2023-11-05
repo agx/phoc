@@ -44,10 +44,7 @@ variables:
 
 .before_script_debian: &before_script_debian
   - rm -f ../* || true
-  - echo "deb http://deb.debian.org/debian/ sid main" > /etc/apt/sources.list.d/sid.list
   - eatmydata apt-get -y update
-  - eatmydata apt-get -y install libwayland-dev wayland-protocols
-  - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots eatmydata apt-get -y build-dep .
   - eatmydata apt-get -y install $DEPS
   # Don't accidentally pull in system headers
   - eatmydata apt-get -y remove --purge libwlroots-dev

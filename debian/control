@@ -43,6 +43,11 @@ Build-Depends:
  libxcb-res0-dev <pkg.phoc.embedwlroots>,
  libxcb-xfixes0-dev <pkg.phoc.embedwlroots>,
  libxcb-xinput-dev <pkg.phoc.embedwlroots>,
+ libxcb-dri3-dev <pkg.phoc.embedwlroots>,
+ libxcb-present-dev <pkg.phoc.embedwlroots>,
+ libxcb-render0-dev <pkg.phoc.embedwlroots>,
+ libxcb-render-util0-dev <pkg.phoc.embedwlroots>,
+ libxcb-shm0-dev <pkg.phoc.embedwlroots>,
 # Needed to build the doc
  libgirepository1.0-dev:native <!nodoc>,
  python3-docutils <!nodoc>,
