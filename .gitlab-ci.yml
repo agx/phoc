@@ -22,7 +22,6 @@ default:
       - 'stuck_or_timeout_failure'
 
 variables:
-  DEPS: git gcovr
   ALPINE_EDGE_DEPS: |
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev
@@ -44,8 +43,6 @@ variables:
 
 .before_script_debian: &before_script_debian
   - rm -f ../* || true
-  - eatmydata apt-get -y update
-  - eatmydata apt-get -y install $DEPS
   # Don't accidentally pull in system headers
   - eatmydata apt-get -y remove --purge libwlroots-dev
   - dpkg -l
