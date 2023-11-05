@@ -48,7 +48,7 @@ variables:
   - eatmydata apt-get -y update
   - eatmydata apt-get -y install libwayland-dev wayland-protocols
   - DEB_BUILD_PROFILES=pkg.phoc.embedwlroots eatmydata apt-get -y build-dep .
-  - eatmydata apt-get -y install $DEPS xwayland python3-docutils
+  - eatmydata apt-get -y install $DEPS
   # Don't accidentally pull in system headers
   - eatmydata apt-get -y remove --purge libwlroots-dev
   - dpkg -l
