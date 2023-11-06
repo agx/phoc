@@ -13,7 +13,6 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -21,6 +20,7 @@
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
+#include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_tablet_v2.h>
@@ -53,6 +53,10 @@
 #include "xdg-surface.h"
 #include "xwayland-surface.h"
 
+/* Maximum protocol versions we support */
+#define PHOC_XDG_SHELL_VERSION 5
+#define PHOC_LAYER_SHELL_VERSION 2
+
 /**
  * PhocDesktop:
  *
@@ -77,7 +81,9 @@ typedef struct _PhocDesktopPrivate {
   GSettings             *interface_settings;
 
   /* Protocols from wlroots */
+  struct wlr_data_control_manager_v1 *data_control_manager_v1;
   struct wlr_idle_notifier_v1 *idle_notifier_v1;
+  struct wlr_screencopy_manager_v1 *screencopy_manager_v1;
 
   /* Protocols without upstreamable implementations */
   PhocPhoshPrivate      *phosh;
@@ -647,42 +653,39 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
   PhocConfig *config = self->config;
   PhocServer *server = phoc_server_get_default ();
 
-  self->xcursor_manager = wlr_xcursor_manager_create(NULL, PHOC_XCURSOR_SIZE);
+  self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
   g_return_if_fail (self->xcursor_manager);
 
   if (config->xwayland) {
-    self->xwayland = wlr_xwayland_create(server->wl_display,
-                                         server->compositor, config->xwayland_lazy);
+    self->xwayland = wlr_xwayland_create (server->wl_display, server->compositor, config->xwayland_lazy);
     if (!self->xwayland) {
       g_critical ("Failed to initialize Xwayland");
       g_unsetenv ("DISPLAY");
       return;
     }
 
-    wl_signal_add(&self->xwayland->events.new_surface,
-                  &self->xwayland_surface);
+    wl_signal_add (&self->xwayland->events.new_surface, &self->xwayland_surface);
     self->xwayland_surface.notify = handle_xwayland_surface;
 
-    wl_signal_add(&self->xwayland->events.ready,
-                  &self->xwayland_ready);
+    wl_signal_add (&self->xwayland->events.ready, &self->xwayland_ready);
     self->xwayland_ready.notify = handle_xwayland_ready;
 
-    wl_signal_add(&self->xwayland->events.remove_startup_info,
-                  &self->xwayland_remove_startup_id);
+    wl_signal_add (&self->xwayland->events.remove_startup_info, &self->xwayland_remove_startup_id);
     self->xwayland_remove_startup_id.notify = handle_xwayland_remove_startup_id;
 
     g_setenv ("DISPLAY", self->xwayland->display_name, true);
 
-    if (!wlr_xcursor_manager_load(self->xcursor_manager, 1))
+    if (!wlr_xcursor_manager_load (self->xcursor_manager, 1))
       g_critical ("Cannot load XWayland XCursor theme");
 
-    struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor(
-                                                                  self->xcursor_manager, cursor_default, 1);
+    struct wlr_xcursor *xcursor = wlr_xcursor_manager_get_xcursor (self->xcursor_manager,
+                                                                   cursor_default,
+                                                                   1);
     if (xcursor != NULL) {
       struct wlr_xcursor_image *image = xcursor->images[0];
-      wlr_xwayland_set_cursor(self->xwayland, image->buffer,
-                              image->width * 4, image->width, image->height, image->hotspot_x,
-                              image->hotspot_y);
+      wlr_xwayland_set_cursor (self->xwayland, image->buffer,
+                               image->width * 4, image->width, image->height, image->hotspot_x,
+                               image->hotspot_y);
     }
   }
 #endif
@@ -709,12 +712,12 @@ phoc_desktop_constructed (GObject *object)
   self->layout_change.notify = handle_layout_change;
   wl_signal_add (&self->layout->events.change, &self->layout_change);
 
-  self->xdg_shell = wlr_xdg_shell_create (server->wl_display, 5);
-  wl_signal_add (&self->xdg_shell->events.new_surface, &self->xdg_shell_surface);
+  self->xdg_shell = wlr_xdg_shell_create(server->wl_display, PHOC_XDG_SHELL_VERSION);
+  wl_signal_add(&self->xdg_shell->events.new_surface, &self->xdg_shell_surface);
   self->xdg_shell_surface.notify = handle_xdg_shell_surface;
 
-  self->layer_shell = wlr_layer_shell_v1_create (server->wl_display);
-  wl_signal_add (&self->layer_shell->events.new_surface, &self->layer_shell_surface);
+  self->layer_shell = wlr_layer_shell_v1_create (server->wl_display, PHOC_LAYER_SHELL_VERSION);
+  wl_signal_add(&self->layer_shell->events.new_surface, &self->layer_shell_surface);
   self->layer_shell_surface.notify = handle_layer_shell_surface;
   priv->layer_shell_effects = phoc_layer_shell_effects_new ();
 
@@ -725,6 +728,8 @@ phoc_desktop_constructed (GObject *object)
   g_setenv ("XCURSOR_SIZE", cursor_size_fmt, 1);
 
   phoc_desktop_setup_xwayland (self);
+
+  self->security_context_manager_v1 = wlr_security_context_manager_v1_create (server->wl_display);
 
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create (server->wl_display);
   self->export_dmabuf_manager_v1 = wlr_export_dmabuf_manager_v1_create (server->wl_display);
@@ -743,9 +748,8 @@ phoc_desktop_constructed (GObject *object)
   self->input_method = wlr_input_method_manager_v2_create (server->wl_display);
   self->text_input = wlr_text_input_manager_v3_create (server->wl_display);
 
-  self->idle = wlr_idle_create (server->wl_display);
   priv->idle_notifier_v1 = wlr_idle_notifier_v1_create (server->wl_display);
-  priv->idle_inhibit = phoc_idle_inhibit_create (self->idle);
+  priv->idle_inhibit = phoc_idle_inhibit_create ();
 
   priv->gtk_shell = phoc_gtk_shell_create (self, server->wl_display);
   priv->phosh = phoc_phosh_private_new ();
@@ -764,7 +768,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->virtual_pointer->events.new_virtual_pointer, &self->virtual_pointer_new);
   self->virtual_pointer_new.notify = phoc_handle_virtual_pointer;
 
-  self->screencopy = wlr_screencopy_manager_v1_create (server->wl_display);
+  priv->screencopy_manager_v1 = wlr_screencopy_manager_v1_create (server->wl_display);
 
   self->xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create (server->wl_display);
   wl_signal_add (&self->xdg_decoration_manager->events.new_toplevel_decoration,
@@ -799,7 +803,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->output_power_manager_v1->events.set_mode,
                  &self->output_power_manager_set_mode);
 
-  wlr_data_control_manager_v1_create (server->wl_display);
+  priv->data_control_manager_v1 = wlr_data_control_manager_v1_create (server->wl_display);
 
   /* sm.puri.phosh settings */
   priv->settings = g_settings_new ("sm.puri.phoc");
@@ -1070,12 +1074,11 @@ PhocLayerSurface
   if (!wlr_surface)
     return NULL;
 
-  if (!wlr_surface_is_layer_surface (wlr_surface))
+  wlr_layer_surface = wlr_layer_surface_v1_try_from_wlr_surface (wlr_surface);
+  if (wlr_layer_surface == NULL)
     return NULL;
 
-  wlr_layer_surface = wlr_layer_surface_v1_from_wlr_surface (wlr_surface);
-  layer_surface = wlr_layer_surface->data;
-
+  layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
   if (sx)
     *sx = sx_;
 
@@ -1205,6 +1208,35 @@ phoc_desktop_notify_activity (PhocDesktop *self, PhocSeat *seat)
   g_assert (PHOC_IS_DESKTOP (self));
   priv = phoc_desktop_get_instance_private (self);
 
-  wlr_idle_notify_activity (self->idle, seat->seat);
   wlr_idle_notifier_v1_notify_activity (priv->idle_notifier_v1, seat->seat);
+}
+
+gboolean
+phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *global)
+{
+  gboolean is_priv;
+  PhocDesktopPrivate *priv;
+
+  g_return_val_if_fail (PHOC_IS_DESKTOP (self), TRUE);
+  priv = phoc_desktop_get_instance_private (self);
+
+  is_priv = (
+    global == phoc_phosh_private_get_global (priv->phosh) ||
+    global == phoc_layer_shell_effects_get_global (priv->layer_shell_effects) ||
+    global == priv->data_control_manager_v1->global ||
+    global == priv->screencopy_manager_v1->global ||
+    global == self->export_dmabuf_manager_v1->global ||
+    global == self->foreign_toplevel_manager_v1->global ||
+    global == self->gamma_control_manager_v1->global ||
+    global == self->input_inhibit->global ||
+    global == self->input_method->global ||
+    global == self->layer_shell->global ||
+    global == self->output_manager_v1->global ||
+    global == self->output_power_manager_v1->global ||
+    global == self->security_context_manager_v1->global ||
+    global == self->virtual_keyboard->global ||
+    global == self->virtual_pointer->global
+    );
+
+  return is_priv;
 }

@@ -46,7 +46,6 @@ struct _PhocOutput {
   struct wlr_box            usable_area;
   int                       lx, ly;
 
-  struct wl_listener        enable;
   struct wl_listener        commit;
   struct wl_listener        output_destroy;
 

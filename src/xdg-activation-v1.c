@@ -31,14 +31,12 @@ phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
   }
 
   g_debug ("%s: %s", __func__, token->token);
-  if (!wlr_surface_is_xdg_surface (event->surface)) {
+  xdg_surface = wlr_xdg_surface_try_from_wlr_surface (event->surface);
+  if (xdg_surface == NULL) {
     return;
   }
 
-  xdg_surface = wlr_xdg_surface_from_wlr_surface (event->surface);
-  g_assert (xdg_surface);
-  view = xdg_surface->data;
-
+  view = PHOC_VIEW (xdg_surface->data);
   if (view == NULL)
     return;
 

@@ -157,20 +157,24 @@ phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
 {
   PhocXdgPopup *popup = calloc (1, sizeof(PhocXdgPopup));
 
-  if (popup == NULL) {
+  if (popup == NULL)
     return NULL;
-  }
+
   popup->wlr_popup = wlr_popup;
-  phoc_view_child_init (&popup->child, &popup_impl,
-                        view, wlr_popup->base->surface);
+  phoc_view_child_init (&popup->child, &popup_impl, view, wlr_popup->base->surface);
+
   popup->destroy.notify = popup_handle_destroy;
   wl_signal_add (&wlr_popup->base->events.destroy, &popup->destroy);
+
   popup->map.notify = popup_handle_map;
-  wl_signal_add (&wlr_popup->base->events.map, &popup->map);
+  wl_signal_add (&wlr_popup->base->surface->events.map, &popup->map);
+
   popup->unmap.notify = popup_handle_unmap;
-  wl_signal_add (&wlr_popup->base->events.unmap, &popup->unmap);
+  wl_signal_add (&wlr_popup->base->surface->events.unmap, &popup->unmap);
+
   popup->new_popup.notify = popup_handle_new_popup;
   wl_signal_add (&wlr_popup->base->events.new_popup, &popup->new_popup);
+
   popup->reposition.notify = popup_handle_reposition;
   wl_signal_add (&wlr_popup->events.reposition, &popup->reposition);
 
@@ -267,7 +271,7 @@ void
 handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
-  PhocXdgSurface *xdg_surface = wlr_decoration->surface->data;
+  PhocXdgSurface *xdg_surface = PHOC_XDG_SURFACE (wlr_decoration->toplevel->base->data);
   g_assert (xdg_surface != NULL);
   struct wlr_xdg_surface *wlr_xdg_surface = phoc_xdg_surface_get_wlr_xdg_surface (xdg_surface);
   PhocXdgToplevelDecoration *decoration = g_new0 (PhocXdgToplevelDecoration, 1);

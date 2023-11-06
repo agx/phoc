@@ -125,8 +125,8 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
   int sw = surface->current.width;
   int sh = surface->current.height;
 
-  double _sx = sx + surface->sx;
-  double _sy = sy + surface->sy;
+  double _sx = sx;
+  double _sy = sy;
 
   phoc_utils_rotate_child_position (&_sx, &_sy, sw, sh, data->width,
                                     data->height, data->rotation);
@@ -299,14 +299,6 @@ phoc_output_handle_destroy (struct wl_listener *listener, void *data)
   g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
-static void
-phoc_output_handle_enable (struct wl_listener *listener, void *data)
-{
-  PhocOutput *self = wl_container_of (listener, self, enable);
-
-  update_output_manager_config (self->desktop);
-}
-
 
 static void
 render_cutouts (PhocRenderer *renderer, PhocOutput *self)
@@ -398,16 +390,37 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
   PhocOutput *self = wl_container_of (listener, self, commit);
   struct wlr_output_event_commit *event = data;
 
-  if (event->committed & (WLR_OUTPUT_STATE_TRANSFORM | WLR_OUTPUT_STATE_SCALE |
-                          WLR_OUTPUT_STATE_MODE)) {
-    int width, height;
+  if (event->state->committed & (WLR_OUTPUT_STATE_TRANSFORM |
+                                 WLR_OUTPUT_STATE_SCALE |
+                                 WLR_OUTPUT_STATE_MODE)) {
     phoc_layer_shell_arrange (self);
-    update_output_manager_config (self->desktop);
+  }
 
+  if (event->state->committed & (WLR_OUTPUT_STATE_ENABLED |
+                                 WLR_OUTPUT_STATE_TRANSFORM |
+                                 WLR_OUTPUT_STATE_SCALE |
+                                 WLR_OUTPUT_STATE_MODE)) {
+    update_output_manager_config (self->desktop);
+  }
+
+  if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
+                                 WLR_OUTPUT_STATE_TRANSFORM)) {
+    int width, height;
     wlr_output_transformed_resolution (self->wlr_output, &width, &height);
     wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
     wlr_output_schedule_frame (self->wlr_output);
   }
+}
+
+
+static void
+handle_request_state (struct wl_listener *listener, void *data)
+{
+  PhocOutputPrivate *priv = wl_container_of (listener, priv, request_state);
+  PhocOutput *self = PHOC_OUTPUT_SELF (priv);
+  const struct wlr_output_event_request_state *event = data;
+
+  wlr_output_commit_state (self->wlr_output, event->state);
 }
 
 
@@ -526,8 +539,7 @@ phoc_output_initable_init (GInitable    *initable,
 
   self->output_destroy.notify = phoc_output_handle_destroy;
   wl_signal_add (&self->wlr_output->events.destroy, &self->output_destroy);
-  self->enable.notify = phoc_output_handle_enable;
-  wl_signal_add (&self->wlr_output->events.enable, &self->enable);
+
   self->commit.notify = phoc_output_handle_commit;
   wl_signal_add (&self->wlr_output->events.commit, &self->commit);
 
@@ -540,8 +552,12 @@ phoc_output_initable_init (GInitable    *initable,
   priv->needs_frame.notify = phoc_output_handle_needs_frame;
   wl_signal_add (&self->wlr_output->events.needs_frame, &priv->needs_frame);
 
+  priv->request_state.notify = handle_request_state;
+  wl_signal_add (&self->wlr_output->events.request_state, &priv->request_state);
+
   PhocOutputConfig *output_config = phoc_config_get_output (config, self);
-  struct wlr_output_state pending = { 0 };
+  struct wlr_output_state pending;
+  wlr_output_state_init (&pending);
   struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode (self->wlr_output);
 
   if (output_config) {
@@ -643,10 +659,11 @@ phoc_output_finalize (GObject *object)
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
 
   wl_list_remove (&self->link);
-  wl_list_remove (&self->enable.link);
+
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);
 
+  wl_list_remove (&priv->request_state.link);
   wl_list_remove (&priv->damage.link);
   wl_list_remove (&priv->frame.link);
   wl_list_remove (&priv->needs_frame.link);
@@ -857,7 +874,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
   struct wlr_xwayland_surface *child;
 
   wl_list_for_each (child, &surface->children, parent_link) {
-    if (child->mapped) {
+    if (child->surface->mapped) {
       double ox = child->x - output_box.x;
       double oy = child->y - output_box.y;
       phoc_output_surface_for_each_surface (self, child->surface, ox, oy, iterator,
@@ -1005,7 +1022,7 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
 
     g_assert (PHOC_IS_SEAT (seat));
     PhocDragIcon *drag_icon = seat->drag_icon;
-    if (!drag_icon || !drag_icon->wlr_drag_icon->mapped)
+    if (!drag_icon || !drag_icon->wlr_drag_icon->surface->mapped)
       continue;
 
     double ox = drag_icon->x - output_box.x;
@@ -1257,8 +1274,9 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   // First disable outputs we need to disable
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
-    struct wlr_output_state pending = { 0 };
+    struct wlr_output_state pending;
 
+    wlr_output_state_init (&pending);
     if (config_head->state.enabled)
       continue;
 
@@ -1274,9 +1292,10 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
   wl_list_for_each (config_head, &config->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
-    struct wlr_output_state pending = { 0 };
+    struct wlr_output_state pending;
     struct wlr_box output_box;
 
+    wlr_output_state_init (&pending);
     if (!config_head->state.enabled)
       continue;
 
@@ -1325,12 +1344,14 @@ void
 phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, void *data)
 {
   struct wlr_output_power_v1_set_mode_event *event = data;
-  struct wlr_output_state pending = { 0 };
+  struct wlr_output_state pending;
   PhocOutput *self;
   bool enable = true;
   bool current;
 
   g_return_if_fail (event && event->output && event->output->data);
+
+  wlr_output_state_init (&pending);
   self = event->output->data;
   g_debug ("Request to set output power mode of %p to %d", self->wlr_output->name, event->mode);
   switch (event->mode) {

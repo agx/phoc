@@ -66,7 +66,7 @@ endif
 if not embed_wlroots.disabled() and wlroots_proj.found()
         wlroots = wlroots_proj.get_variable('wlroots')
 else
-        wlroots = dependency('wlroots', version: '>= 0.16.0')
+        wlroots = dependency('wlroots', version: ['>= 0.17.0-dev', '< 0.18.0'])
 endif
 wlroots_has_xwayland = wlroots.get_variable(pkgconfig: 'have_xwayland',
                                             internal: 'have_xwayland') == 'true'
@@ -141,11 +141,6 @@ phoc_config_h = configure_file(
   configuration: config_h,
 )
 
-meson.add_install_script(
-  join_paths('build-aux', 'post_install.py'),
-  join_paths(get_option('prefix'), get_option('datadir'))
-)
-
 subdir('po')
 subdir('protocols')
 subdir('src')
@@ -173,3 +168,12 @@ summary({
   bool_yn: true,
   section: 'Build',
 )
+
+# gnome.post_install() is available since meson 0.59.0
+# Distributions use their own tooling (e.g. postinst, triggers, etc)
+# so it is okay if the post_install() is not run on distro builds
+if meson.version().version_compare('>=0.59.0')
+  gnome.post_install(
+    glib_compile_schemas: true,
+  )
+endif

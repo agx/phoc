@@ -12,7 +12,6 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_input_method_v2.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -23,7 +22,7 @@
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
-#include <wlr/types/wlr_screencopy_v1.h>
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/types/wlr_text_input_v3.h>
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
 #include <wlr/types/wlr_virtual_pointer_v1.h>
@@ -63,7 +62,6 @@ struct _PhocDesktop {
   struct wlr_text_input_manager_v3 *text_input;
   struct wlr_virtual_keyboard_manager_v1 *virtual_keyboard;
   struct wlr_virtual_pointer_manager_v1 *virtual_pointer;
-  struct wlr_screencopy_manager_v1 *screencopy;
   struct wlr_tablet_manager_v2 *tablet_v2;
   struct wlr_pointer_constraints_v1 *pointer_constraints;
   struct wlr_presentation *presentation;
@@ -73,6 +71,7 @@ struct _PhocDesktop {
   struct wlr_output_manager_v1 *output_manager_v1;
   struct wlr_output_power_manager_v1 *output_power_manager_v1;
   struct wlr_xdg_activation_v1 *xdg_activation_v1;
+  struct wlr_security_context_manager_v1 *security_context_manager_v1;
 
   struct wl_listener new_output;
   struct wl_listener layout_change;
@@ -135,3 +134,6 @@ void                 phoc_desktop_notify_activity                (PhocDesktop *s
 void handle_xdg_shell_surface(struct wl_listener *listener, void *data);
 void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data);
 void handle_layer_shell_surface(struct wl_listener *listener, void *data);
+
+gboolean phoc_desktop_is_privileged_protocol (PhocDesktop            *self,
+                                              const struct wl_global *global);

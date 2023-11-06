@@ -15,12 +15,18 @@
 
 #define GMOBILE_USE_UNSTABLE_API
 #include <gmobile.h>
+
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/xwayland.h>
+#include <wlr/xwayland/shell.h>
 
 #include <errno.h>
 
+#define PHOC_WL_DISPLAY_VERSION 5
+
 typedef struct _PhocServerPrivate {
   GStrv dt_compatibles;
+  struct wlr_session *session;
 } PhocServerPrivate;
 
 static void phoc_server_initable_iface_init (GInitableIface *iface);
@@ -187,11 +193,47 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
 
 
 static gboolean
+phoc_server_client_has_security_context (PhocServer *self, const struct wl_client *client)
+{
+  const struct wlr_security_context_v1_state *context;
+  PhocDesktop *desktop = self->desktop;
+
+  context = wlr_security_context_manager_v1_lookup_client (desktop->security_context_manager_v1,
+                                                           (struct wl_client *)client);
+  return context != NULL;
+}
+
+
+static bool
+phoc_server_filter_globals (const struct wl_client *client,
+                            const struct wl_global *global,
+                            void                   *data)
+{
+  PhocServer *self = PHOC_SERVER (data);
+
+#ifdef PHOC_XWAYLAND
+  struct wlr_xwayland *xwayland = self->desktop->xwayland;
+  if (xwayland && global == xwayland->shell_v1->global)
+    return xwayland->server && client == xwayland->server->client;
+#endif
+
+  /* Clients with a security context can request privileged protocols */
+  if (phoc_desktop_is_privileged_protocol (self->desktop, global) &&
+      phoc_server_client_has_security_context (self, client)) {
+    return false;
+  }
+
+ return true;
+}
+
+
+static gboolean
 phoc_server_initable_init (GInitable    *initable,
                            GCancellable *cancellable,
                            GError      **error)
 {
   PhocServer *self = PHOC_SERVER (initable);
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   struct wlr_renderer *wlr_renderer;
 
   self->wl_display = wl_display_create();
@@ -201,8 +243,9 @@ phoc_server_initable_init (GInitable    *initable,
                  "Could not create wayland display");
     return FALSE;
   }
+  wl_display_set_global_filter (self->wl_display, phoc_server_filter_globals, self);
 
-  self->backend = wlr_backend_autocreate(self->wl_display);
+  self->backend = wlr_backend_autocreate (self->wl_display, &priv->session);
   if (self->backend == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
@@ -219,8 +262,7 @@ phoc_server_initable_init (GInitable    *initable,
   self->data_device_manager = wlr_data_device_manager_create(self->wl_display);
   wlr_renderer_init_wl_display(wlr_renderer, self->wl_display);
 
-  self->compositor = wlr_compositor_create(self->wl_display,
-                                           wlr_renderer);
+  self->compositor = wlr_compositor_create (self->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
   self->subcompositor = wlr_subcompositor_create (self->wl_display);
 
   return TRUE;
@@ -451,4 +493,16 @@ phoc_server_get_compatibles (PhocServer *self)
   priv = phoc_server_get_instance_private (self);
 
   return (const char * const *)priv->dt_compatibles;
+}
+
+
+struct wlr_session *
+phoc_server_get_session (PhocServer *self)
+{
+  PhocServerPrivate *priv;
+
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->session;
 }

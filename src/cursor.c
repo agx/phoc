@@ -256,9 +256,10 @@ should_ignore_touch_grab (PhocSeat           *seat,
     return false;
 
   struct wlr_surface *root = wlr_surface_get_root_surface (surface);
+  struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_try_from_wlr_surface (root);
 
   // FIXME: return false if the grab comes from a xdg-popup that belongs to a layer-surface
-  return wlr_seat_touch_has_grab (seat->seat) && wlr_surface_is_layer_surface (root);
+  return layer_surface && wlr_seat_touch_has_grab (seat->seat);
 }
 
 
@@ -272,9 +273,10 @@ should_ignore_pointer_grab (PhocSeat           *seat,
     return false;
 
   struct wlr_surface *root = wlr_surface_get_root_surface (surface);
+  struct wlr_layer_surface_v1 *layer_surface = wlr_layer_surface_v1_try_from_wlr_surface (root);
 
   // FIXME: return false if the grab comes from a xdg-popup that belongs to a layer-surface
-  return wlr_seat_pointer_has_grab (seat->seat) && wlr_surface_is_layer_surface (root);
+  return layer_surface && wlr_seat_pointer_has_grab (seat->seat);
 }
 
 
@@ -658,20 +660,24 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
   PhocDesktop *desktop = server->desktop;
 
   if (surface) {
-    struct wlr_surface *root = wlr_surface_get_root_surface (surface), *iter = root;
+    struct wlr_surface *iter = wlr_surface_get_root_surface (surface);
 
-    while (wlr_surface_is_xdg_surface (iter)) {
-      struct wlr_xdg_surface *xdg_surface = wlr_xdg_surface_from_wlr_surface (iter);
-      if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-        iter = xdg_surface->popup->parent;
+    struct wlr_xdg_surface *wlr_xdg_surface = wlr_xdg_surface_try_from_wlr_surface (iter);
+    while (wlr_xdg_surface) {
+
+      if (wlr_xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
+        iter = wlr_xdg_surface->popup->parent;
+        wlr_xdg_surface = wlr_xdg_surface_try_from_wlr_surface (iter);
       } else {
         break;
       }
     }
 
-    if (wlr_surface_is_layer_surface (iter)) {
+    if (wlr_layer_surface_v1_try_from_wlr_surface (iter)) {
       return false;
     }
+
+    wlr_xdg_surface = wlr_xdg_surface_try_from_wlr_surface (iter);
   }
 
   PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
@@ -1173,10 +1179,10 @@ phoc_cursor_press_button (PhocCursor *self,
       if (view) {
         phoc_seat_set_focus_view (seat, view);
       }
-      if (surface && wlr_surface_is_layer_surface (surface)) {
-        struct wlr_layer_surface_v1 *layer =
-          wlr_layer_surface_v1_from_wlr_surface (surface);
-        if (layer->current.keyboard_interactive) {
+
+      if (surface) {
+        struct wlr_layer_surface_v1 *layer = wlr_layer_surface_v1_try_from_wlr_surface (surface);
+        if (layer && layer->current.keyboard_interactive) {
           phoc_seat_set_focus_layer (seat, layer);
         }
       }
@@ -1380,9 +1386,8 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
     if (view)
       phoc_seat_set_focus_view (seat, view);
 
-    if (wlr_surface_is_layer_surface (root)) {
-      struct wlr_layer_surface_v1 *wlr_layer = wlr_layer_surface_v1_from_wlr_surface (root);
-
+    struct wlr_layer_surface_v1 *wlr_layer = wlr_layer_surface_v1_try_from_wlr_surface (root);
+    if (wlr_layer) {
       /* TODO: Use press gesture */
       if (wlr_layer->current.keyboard_interactive) {
           phoc_seat_set_focus_layer (seat, wlr_layer);
@@ -1484,8 +1489,9 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
     float scale = 1.0;
 
     struct wlr_surface *root = wlr_surface_get_root_surface (surface);
-    if (wlr_surface_is_layer_surface (root)) {
-      struct wlr_layer_surface_v1 *wlr_layer_surface = wlr_layer_surface_v1_from_wlr_surface (root);
+    struct wlr_layer_surface_v1 *wlr_layer_surface = wlr_layer_surface_v1_try_from_wlr_surface (root);
+    if (wlr_layer_surface) {
+
       struct wlr_box output_box;
       wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
 
@@ -1530,8 +1536,11 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
 
     if (found) {
       struct wlr_surface *sub = surface;
-      while (sub && wlr_surface_is_subsurface (sub)) {
-        struct wlr_subsurface *subsurface = wlr_subsurface_from_wlr_surface (sub);
+      while (sub) {
+        struct wlr_subsurface *subsurface = wlr_subsurface_try_from_wlr_surface (sub);
+        if (subsurface == NULL)
+          break;
+
         sx -= subsurface->current.x;
         sy -= subsurface->current.y;
         sub = subsurface->parent;

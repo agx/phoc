@@ -32,5 +32,6 @@ void              phoc_phosh_private_notify_launch (PhocPhoshPrivate            
                                                     const char                                 *startup_id,
                                                     enum phosh_private_startup_tracker_protocol proto);
 PhocPhoshPrivateShellState phoc_phosh_private_get_shell_state (PhocPhoshPrivate *self);
+struct wl_global *phoc_phosh_private_get_global     (PhocPhoshPrivate *self);
 
 G_END_DECLS

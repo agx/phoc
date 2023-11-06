@@ -35,10 +35,13 @@ elevate_osk (struct wlr_surface *surface)
 {
   struct wlr_layer_surface_v1 *layer;
 
-  if (!surface || !wlr_surface_is_layer_surface (surface))
+  if (!surface)
     return;
 
-  layer = wlr_layer_surface_v1_from_wlr_surface (surface);
+  layer = wlr_layer_surface_v1_try_from_wlr_surface (surface);
+  if (!layer)
+    return;
+
   phoc_layer_shell_update_osk (PHOC_OUTPUT (layer->output->data), TRUE);
 }
 

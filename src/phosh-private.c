@@ -25,6 +25,8 @@
 #include "render.h"
 #include "utils.h"
 
+#include <drm_fourcc.h>
+
 /* help older (0.8.2) libxkbcommon */
 #ifndef XKB_KEY_XF86RotationLockToggle
 # define XKB_KEY_XF86RotationLockToggle 0x1008FFB7
@@ -71,7 +73,8 @@ typedef struct {
   uint32_t height;
   uint32_t stride;
 
-  struct wl_shm_buffer *buffer;
+  struct wlr_buffer *buffer;
+
   PhocView *view;
 } PhocPhoshPrivateScreencopyFrame;
 
@@ -397,7 +400,10 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
 {
   PhocServer *server = phoc_server_get_default ();
   PhocRenderer *self = phoc_server_get_renderer (server);
-  PhocPhoshPrivateScreencopyFrame *frame = phoc_phosh_private_screencopy_frame_from_resource (frame_resource);
+  PhocPhoshPrivateScreencopyFrame *frame;
+  struct wlr_shm_attributes attribs;
+
+  frame = phoc_phosh_private_screencopy_frame_from_resource (frame_resource);
   g_return_if_fail (frame);
 
   if (frame->buffer != NULL) {
@@ -412,8 +418,7 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
     return;
   }
 
-  frame->buffer = wl_shm_buffer_get (buffer_resource);
-
+  frame->buffer = wlr_buffer_try_from_resource (buffer_resource);
   if (frame->buffer == NULL) {
     wl_resource_post_error (frame->resource,
                             ZWLR_SCREENCOPY_FRAME_V1_ERROR_INVALID_BUFFER,
@@ -421,26 +426,28 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
     return;
   }
 
-  enum wl_shm_format fmt = wl_shm_buffer_get_format (frame->buffer);
-  int32_t width = wl_shm_buffer_get_width (frame->buffer);
-  int32_t height = wl_shm_buffer_get_height (frame->buffer);
-  int32_t stride = wl_shm_buffer_get_stride (frame->buffer);
-  if (fmt != frame->format || width != frame->width ||
-      height != frame->height || stride != frame->stride) {
+  if (!wlr_buffer_get_shm (frame->buffer, &attribs)) {
+    wl_resource_post_error (frame->resource,
+                            ZWLR_SCREENCOPY_FRAME_V1_ERROR_INVALID_BUFFER,
+                            "unsupported buffer type");
+    goto unlock_buffer;
+  }
+
+  if (attribs.format != DRM_FORMAT_ARGB8888 || attribs.width != frame->width ||
+      attribs.height != frame->height || attribs.stride != frame->stride) {
     wl_resource_post_error (frame->resource,
                             ZWLR_SCREENCOPY_FRAME_V1_ERROR_INVALID_BUFFER,
                             "invalid buffer attributes");
-    return;
+    goto unlock_buffer;
   }
 
   PhocView *view = frame->view;
   g_signal_handlers_disconnect_by_data (frame->view, frame);
   frame->view = NULL;
 
-  uint32_t renderer_flags = 0;
-  if (!phoc_renderer_render_view_to_buffer (self, view, frame->buffer, &renderer_flags)) {
+  if (!phoc_renderer_render_view_to_buffer (self, view, frame->buffer)) {
     zwlr_screencopy_frame_v1_send_failed (frame->resource);
-    return;
+    goto unlock_buffer;
   }
 
   zwlr_screencopy_frame_v1_send_flags (frame->resource, 0);
@@ -450,6 +457,9 @@ thumbnail_frame_handle_copy (struct wl_client   *wl_client,
   uint32_t tv_sec_hi = (sizeof(now.tv_sec) > 4) ? now.tv_sec >> 32 : 0;
   uint32_t tv_sec_lo = now.tv_sec & 0xFFFFFFFF;
   zwlr_screencopy_frame_v1_send_ready (frame->resource, tv_sec_hi, tv_sec_lo, now.tv_nsec);
+
+unlock_buffer:
+  wlr_buffer_unlock (frame->buffer);
 }
 
 static void
@@ -878,4 +888,13 @@ phoc_phosh_private_get_shell_state (PhocPhoshPrivate *self)
   g_assert (PHOC_IS_PHOSH_PRIVATE (self));
 
   return self->state;
+}
+
+
+struct wl_global *
+phoc_phosh_private_get_global (PhocPhoshPrivate *self)
+{
+  g_assert (PHOC_IS_PHOSH_PRIVATE (self));
+
+  return self->global;
 }

@@ -306,9 +306,8 @@ handle_get_gtk_surface(struct wl_client *client,
   gtk_surface->wlr_surface_handle_destroy.notify = handle_wlr_surface_handle_destroy;
   wl_signal_add(&wlr_surface->events.destroy, &gtk_surface->wlr_surface_handle_destroy);
 
-  if (wlr_surface_is_xdg_surface (wlr_surface)) {
-    gtk_surface->xdg_surface = wlr_xdg_surface_from_wlr_surface (gtk_surface->wlr_surface);
-
+  gtk_surface->xdg_surface = wlr_xdg_surface_try_from_wlr_surface (wlr_surface);
+  if (gtk_surface->xdg_surface) {
     gtk_surface->xdg_surface_handle_destroy.notify = handle_xdg_surface_handle_destroy;
     wl_signal_add(&gtk_surface->xdg_surface->events.destroy, &gtk_surface->xdg_surface_handle_destroy);
 

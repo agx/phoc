@@ -53,6 +53,7 @@ void                   phoc_layer_shell_effects_send_drag_start (PhocLayerShellE
 void                   phoc_layer_shell_effects_send_drag_end   (PhocLayerShellEffects *self,
                                                                  PhocLayerSurface      *surface,
                                                                  int                    state);
+struct wl_global      *phoc_layer_shell_effects_get_global      (PhocLayerShellEffects *self);
 
 
 PhocDraggableLayerSurface *phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (

@@ -911,7 +911,8 @@ subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
   else
     *sx = *sy = 0;
 
-  wlr_subsurface = wlr_subsurface_from_wlr_surface (wlr_surface);
+  wlr_subsurface = wlr_subsurface_try_from_wlr_surface (wlr_surface);
+  g_assert (wlr_subsurface);
   *sx += wlr_subsurface->current.x;
   *sy += wlr_subsurface->current.y;
 }
@@ -947,7 +948,7 @@ static void
 subsurface_handle_map (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocSubsurface *subsurface = wl_container_of(listener, subsurface, map);
+  PhocSubsurface *subsurface = wl_container_of (listener, subsurface, map);
   PhocView *view = subsurface->child.view;
 
   subsurface->child.mapped = true;
@@ -970,7 +971,7 @@ static void
 subsurface_handle_unmap (struct wl_listener *listener,void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocSubsurface *subsurface = wl_container_of(listener, subsurface, unmap);
+  PhocSubsurface *subsurface = wl_container_of (listener, subsurface, unmap);
 
   phoc_view_child_damage_whole (&subsurface->child);
   phoc_input_update_cursor_focus(server->input);
@@ -986,16 +987,16 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
   subsurface->wlr_subsurface = wlr_subsurface;
   phoc_view_child_init (&subsurface->child, &subsurface_impl,
                         view, wlr_subsurface->surface);
-  subsurface->child.mapped = wlr_subsurface->mapped;
+  subsurface->child.mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
   wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
 
   subsurface->map.notify = subsurface_handle_map;
-  wl_signal_add (&wlr_subsurface->events.map, &subsurface->map);
+  wl_signal_add (&wlr_subsurface->surface->events.map, &subsurface->map);
 
   subsurface->unmap.notify = subsurface_handle_unmap;
-  wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
+  wl_signal_add (&wlr_subsurface->surface->events.unmap, &subsurface->unmap);
 }
 
 static void
@@ -1008,16 +1009,16 @@ phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *
   subsurface->wlr_subsurface = wlr_subsurface;
   phoc_view_child_init (&subsurface->child, &subsurface_impl, child->view,
                         wlr_subsurface->surface);
-  subsurface->child.mapped = wlr_subsurface->mapped;
+  subsurface->child.mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
   wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
 
   subsurface->map.notify = subsurface_handle_map;
-  wl_signal_add (&wlr_subsurface->events.map, &subsurface->map);
+  wl_signal_add (&wlr_subsurface->surface->events.map, &subsurface->map);
 
   subsurface->unmap.notify = subsurface_handle_unmap;
-  wl_signal_add (&wlr_subsurface->events.unmap, &subsurface->unmap);
+  wl_signal_add (&wlr_subsurface->surface->events.unmap, &subsurface->unmap);
 
   phoc_view_child_damage_whole (&subsurface->child);
 }
