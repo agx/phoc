@@ -147,10 +147,10 @@ void phoc_test_buffer_free (PhocTestBuffer *buffer);
     PhocTestBuffer *__s = phoc_test_client_capture_output (__g, &__g->output); \
     g_test_message ("Snapshotting %s", f);                               \
     if (phoc_test_buffer_matches_screenshot (__s, __f)) ; else {         \
-      g_autofree gchar *__name = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 0); \
+      g_autofree char *__name = _phoc_test_screenshot_name(__LINE__, G_STRFUNC, 0); \
+      g_autofree char *__msg = g_strdup_printf ("Output content in '%s' does not match " #f, __name); \
       phoc_test_buffer_save (&__g->output.screenshot.buffer, __name);            \
-      g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC,  \
-                           "Output content does not match " #f);         \
+      g_assertion_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, __msg); \
     }                                                                    \
     phoc_test_buffer_free (__s);                                         \
     g_free (__f);                                                        \
