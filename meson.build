@@ -26,10 +26,14 @@ desktopdir = join_paths(datadir, 'applications')
 
 cc = meson.get_compiler('c')
 
-gio            = dependency('gio-2.0', version: '>=2.64.0')
+glib_ver = '2.64'
+glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
+glib_ver_cmp = '>=@0@'.format(glib_ver)
+
+gio            = dependency('gio-2.0', version: glib_ver_cmp)
+glib           = dependency('glib-2.0', version: glib_ver_cmp)
+gobject        = dependency('gobject-2.0', version: glib_ver_cmp)
 glesv2         = dependency('glesv2')
-glib           = dependency('glib-2.0', version: '>=2.64.0')
-gobject        = dependency('gobject-2.0', version: '>=2.64.0')
 gnome_desktop  = dependency('gnome-desktop-3.0', version: '>=3.26')
 gsettings_desktop_schemas_dep = dependency('gsettings-desktop-schemas')
 input          = dependency('libinput')
