@@ -1645,7 +1645,7 @@ should_reveal_shell (PhocOutput *self)
   /* is some draggable surface unfolded, being dragged or animated? */
   wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
     PhocDraggableLayerSurface *draggable =
-        phoc_desktop_get_draggable_layer_surface (server->desktop, layer_surface);
+      phoc_desktop_get_draggable_layer_surface (server->desktop, layer_surface);
     if (draggable &&
         (phoc_draggable_layer_surface_get_state (draggable) != PHOC_DRAGGABLE_SURFACE_STATE_NONE ||
          phoc_draggable_layer_surface_is_unfolded (draggable))) {

@@ -297,7 +297,8 @@ send_pointer_enter (PhocSeat           *seat,
 
 static void
 send_pointer_clear_focus (PhocSeat           *seat,
-                          struct wlr_surface *surface) {
+                          struct wlr_surface *surface)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_clear_focus (seat->seat);
     return;
@@ -312,7 +313,8 @@ send_pointer_motion (PhocSeat           *seat,
                      struct wlr_surface *surface,
                      uint32_t            time,
                      double              sx,
-                     double              sy) {
+                     double              sy)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_send_motion (seat->seat, time, sx, sy);
     return;
@@ -326,7 +328,8 @@ send_pointer_button (PhocSeat             *seat,
                      struct wlr_surface   *surface,
                      uint32_t              time,
                      uint32_t              button,
-                     enum wlr_button_state state) {
+                     enum wlr_button_state state)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_send_button (seat->seat, time, button, state);
     return;
@@ -343,7 +346,8 @@ send_pointer_axis (PhocSeat                 *seat,
                    enum wlr_axis_orientation orientation,
                    double                    value,
                    int32_t                   value_discrete,
-                   enum wlr_axis_source      source) {
+                   enum wlr_axis_source      source)
+{
   if (should_ignore_pointer_grab (seat, surface)) {
     wlr_seat_pointer_send_axis (seat->seat, time, orientation, value, value_discrete, source);
     return;
@@ -453,13 +457,13 @@ phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_touch_down_event *even
   touch_point->lx = lx;
   touch_point->ly = ly;
 
- if (!g_hash_table_insert (priv->touch_points,
-                           GINT_TO_POINTER (event->touch_id),
-                           touch_point)) {
-   g_critical ("Touch point %d already tracked, ignoring", event->touch_id);
- }
+  if (!g_hash_table_insert (priv->touch_points,
+                            GINT_TO_POINTER (event->touch_id),
+                            touch_point)) {
+    g_critical ("Touch point %d already tracked, ignoring", event->touch_id);
+  }
 
- return touch_point;
+  return touch_point;
 }
 
 
@@ -731,7 +735,7 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
 
 static void
 phoc_passthrough_cursor (PhocCursor *self,
-                          uint32_t    time)
+                         uint32_t    time)
 {
   PhocServer *server = phoc_server_get_default ();
   double sx, sy;
@@ -777,7 +781,7 @@ phoc_passthrough_cursor (PhocCursor *self,
 
   if (surface) {
     send_pointer_enter (seat, surface, sx, sy);
-    send_pointer_motion (seat, surface, time, sx ,sy);
+    send_pointer_motion (seat, surface, time, sx,sy);
   } else {
     send_pointer_clear_focus (seat, seat->seat->pointer_state.focused_surface);
   }
@@ -1390,7 +1394,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
     if (wlr_layer) {
       /* TODO: Use press gesture */
       if (wlr_layer->current.keyboard_interactive) {
-          phoc_seat_set_focus_layer (seat, wlr_layer);
+        phoc_seat_set_focus_layer (seat, wlr_layer);
       }
     }
   }

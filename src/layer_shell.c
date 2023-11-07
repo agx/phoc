@@ -546,7 +546,8 @@ popup_handle_map (struct wl_listener *listener, void *data)
   phoc_input_update_cursor_focus(server->input);
 }
 
-static void popup_handle_unmap (struct wl_listener *listener, void *data)
+static void
+popup_handle_unmap (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   struct phoc_layer_popup *popup = wl_container_of(listener, popup, unmap);

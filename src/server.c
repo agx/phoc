@@ -144,8 +144,8 @@ phoc_startup_session_in_idle(PhocServer *self)
   gchar *cmd[] = { "/bin/sh", "-c", self->session, NULL };
 
   if (g_spawn_async (NULL, cmd, NULL,
-                      G_SPAWN_DO_NOT_REAP_CHILD,
-                      on_child_setup, self, &pid, &err)) {
+                     G_SPAWN_DO_NOT_REAP_CHILD,
+                     on_child_setup, self, &pid, &err)) {
     g_child_watch_add (pid, (GChildWatchFunc)on_session_exit, self);
   } else {
     g_warning ("Failed to launch session: %s", err->message);
@@ -223,7 +223,7 @@ phoc_server_filter_globals (const struct wl_client *client,
     return false;
   }
 
- return true;
+  return true;
 }
 
 

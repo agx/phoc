@@ -7,6 +7,15 @@ stages:
  - package
  - deploy
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    # Don't trigger a branch pipeline if there is an open MR
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH
+
 default:
   # Protect CI infra from rogue jobs
   timeout: 15 minutes
@@ -145,6 +154,30 @@ build-gtkdoc:
   except:
     variables:
       - $PKG_ONLY == "1"
+
+format-check:
+  stage: test+docs
+  image: ${DEBIAN_IMAGE}
+  needs: []
+  before_script: *before_script_debian
+  script:
+    - |
+      if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
+        git remote add target $CI_MERGE_REQUEST_PROJECT_URL.git
+        echo "Fetching MR target branch $CI_MERGE_REQUEST_TARGET_BRANCH_NAME from $CI_MERGE_REQUEST_PROJECT_URL"
+        git fetch target "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        git fetch --deepen=100 origin HEAD
+        merge_base=$(git merge-base "target/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" HEAD)
+        if [ -z "$merge_base" ]; then
+          echo "Could't determine merge base"
+          exit 1
+        fi
+        echo "Merge base: $merge_base"
+        ./.gitlab-ci/check-style.py --dry-run --sha $merge_base
+      else
+        echo "Not a merge request"
+      fi
+  allow_failure: true
 
 package-debian-trixie:arm64:
   variables:

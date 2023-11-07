@@ -464,8 +464,8 @@ handle_constraint_destroy (struct wl_listener *listener, void *data)
   free(constraint);
 }
 
-static
-void handle_pointer_constraint (struct wl_listener *listener, void *data)
+static void
+handle_pointer_constraint (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
   struct wlr_pointer_constraint_v1 *wlr_constraint = data;
@@ -550,7 +550,7 @@ handle_xwayland_ready (struct wl_listener *listener,
 
     if (error) {
       g_warning ("could not resolve atom %s, X11 error code %d",
-        atom_map[i], error->error_code);
+                 atom_map[i], error->error_code);
       free (error);
     }
 
@@ -994,7 +994,7 @@ phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean enable)
 gboolean
 phoc_desktop_get_scale_to_fit (PhocDesktop *self)
 {
-    return self->scale_to_fit;
+  return self->scale_to_fit;
 }
 
 /**
@@ -1040,7 +1040,7 @@ phoc_desktop_find_output (PhocDesktop *self,
 
   wl_list_for_each (output, &self->outputs, link) {
     if (phoc_output_is_match (output, make, model, serial))
-        return output;
+      return output;
   }
 
   return NULL;
@@ -1059,8 +1059,8 @@ phoc_desktop_find_output (PhocDesktop *self,
  *
  * Returns: (transfer none) (nullable): The `PhocLayerSurface`
  */
-PhocLayerSurface
-*phoc_desktop_layer_surface_at(PhocDesktop *self, double lx, double ly, double *sx, double *sy)
+PhocLayerSurface *
+phoc_desktop_layer_surface_at (PhocDesktop *self, double lx, double ly, double *sx, double *sy)
 {
   struct wlr_surface *wlr_surface;
   struct wlr_layer_surface_v1 *wlr_layer_surface;
@@ -1107,7 +1107,7 @@ phoc_desktop_get_builtin_output (PhocDesktop *self)
 
   wl_list_for_each (output, &self->outputs, link) {
     if (phoc_output_is_builtin (output))
-        return output;
+      return output;
   }
 
   return NULL;

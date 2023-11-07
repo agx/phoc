@@ -63,7 +63,7 @@ static void
 phoc_seat_set_property (GObject      *object,
                         guint         property_id,
                         const GValue *value,
-                         GParamSpec   *pspec)
+                        GParamSpec   *pspec)
 {
   PhocSeat *self = PHOC_SEAT (object);
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
@@ -699,7 +699,7 @@ phoc_drag_icon_handle_unmap (struct wl_listener *listener,
 
 static void
 phoc_drag_icon_handle_destroy (struct wl_listener *listener,
-                                void               *data)
+                               void               *data)
 {
   PhocDragIcon *icon =
     wl_container_of (listener, icon, destroy);

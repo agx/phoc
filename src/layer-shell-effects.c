@@ -462,8 +462,8 @@ surface_handle_commit (struct wl_listener *listener, void *data)
 
   /* Update animation end in case it's ongoing to compensate for size changes */
   if (changed && drag_surface->drag.anim_dir == ANIM_DIR_IN) {
-      drag_surface->drag.anim_end = drag_surface->current.folded;
-      phoc_draggable_layer_surface_slide (drag_surface, ANIM_DIR_IN);
+    drag_surface->drag.anim_end = drag_surface->current.folded;
+    phoc_draggable_layer_surface_slide (drag_surface, ANIM_DIR_IN);
   }
 
   /* TODO: cancel related gestures on drag mode changes */
@@ -904,7 +904,7 @@ phoc_draggable_layer_surface_slide (PhocDraggableLayerSurface *drag_surface, Pho
   apply_state (drag_surface, PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING);
 
   g_debug ("%s: start: %d, end: %d dir: %d", __func__,
-          drag_surface->drag.anim_start, drag_surface->drag.anim_end, drag_surface->drag.anim_dir);
+           drag_surface->drag.anim_start, drag_surface->drag.anim_end, drag_surface->drag.anim_dir);
 
 
   if (drag_surface->drag.anim_id) {

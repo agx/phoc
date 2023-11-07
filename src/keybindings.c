@@ -112,19 +112,22 @@ handle_toggle_fullscreen (PhocSeat *seat)
 }
 
 
-static void handle_cycle_windows (PhocSeat *seat)
+static void
+handle_cycle_windows (PhocSeat *seat)
 {
   phoc_seat_cycle_focus(seat, TRUE);
 }
 
 
-static void handle_cycle_windows_backwards (PhocSeat *seat)
+static void
+handle_cycle_windows_backwards (PhocSeat *seat)
 {
   phoc_seat_cycle_focus(seat, FALSE);
 }
 
 
-static void handle_close (PhocSeat *seat)
+static void
+handle_close (PhocSeat *seat)
 {
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
@@ -169,11 +172,12 @@ handle_move_to_monitor_left (PhocSeat *seat)
   PhocView *view = phoc_seat_get_focus_view (seat);
 
   if (view)
-    view_move_to_next_output(view, WLR_DIRECTION_LEFT);
+    view_move_to_next_output (view, WLR_DIRECTION_LEFT);
 }
 
 
-static void handle_switch_input_source (PhocSeat *seat)
+static void
+handle_switch_input_source (PhocSeat *seat)
 {
   struct wlr_keyboard *wlr_keyboard = wlr_seat_get_keyboard (seat->seat);
   PhocKeyboard *keyboard;

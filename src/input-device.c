@@ -31,7 +31,7 @@ enum {
   DEVICE_DESTROY,
   N_SIGNALS
 };
-static guint signals [N_SIGNALS];
+static guint signals[N_SIGNALS];
 
 /**
  * PhocInputDevice:

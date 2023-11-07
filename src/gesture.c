@@ -73,9 +73,9 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (PhocGesture, phoc_gesture, G_TYPE_OBJECT)
 
 static void
 phoc_gesture_get_property (GObject    *object,
-                          guint       prop_id,
-                          GValue     *value,
-                          GParamSpec *pspec)
+                           guint       prop_id,
+                           GValue     *value,
+                           GParamSpec *pspec)
 {
   PhocGesturePrivate *priv = phoc_gesture_get_instance_private (PHOC_GESTURE (object));
 
@@ -90,9 +90,9 @@ phoc_gesture_get_property (GObject    *object,
 
 static void
 phoc_gesture_set_property (GObject      *object,
-                          guint         prop_id,
-                          const GValue *value,
-                          GParamSpec   *pspec)
+                           guint         prop_id,
+                           const GValue *value,
+                           GParamSpec   *pspec)
 {
   PhocGesturePrivate *priv = phoc_gesture_get_instance_private (PHOC_GESTURE (object));
 
@@ -154,7 +154,7 @@ phoc_gesture_get_n_touchpad_points (PhocGesture *gesture,
       (data->state == PHOC_EVENT_SEQUENCE_DENIED ||
        data->event->type == PHOC_EVENT_TOUCHPAD_SWIPE_END ||
        data->event->type == PHOC_EVENT_TOUCHPAD_PINCH_END))
-      return 0;
+    return 0;
 
   switch (data->event->type) {
   case PHOC_EVENT_TOUCHPAD_SWIPE_BEGIN:

@@ -526,14 +526,15 @@ color_hsv_to_rgb (float* color)
   float a = v * (1 - s);
   float b = v * (1 - e * s);
   float c = v * (1 - (1 - e) * s);
+
   switch (d) {
-    default:
-    case 0: color[0] = v, color[1] = c, color[2] = a; return;
-    case 1: color[0] = b, color[1] = v, color[2] = a; return;
-    case 2: color[0] = a, color[1] = v, color[2] = c; return;
-    case 3: color[0] = a, color[1] = b, color[2] = v; return;
-    case 4: color[0] = c, color[1] = a, color[2] = v; return;
-    case 5: color[0] = v, color[1] = a, color[2] = b; return;
+  default:
+  case 0: color[0] = v, color[1] = c, color[2] = a; return;
+  case 1: color[0] = b, color[1] = v, color[2] = a; return;
+  case 2: color[0] = a, color[1] = v, color[2] = c; return;
+  case 3: color[0] = a, color[1] = b, color[2] = v; return;
+  case 4: color[0] = c, color[1] = a, color[2] = v; return;
+  case 5: color[0] = v, color[1] = a, color[2] = b; return;
   }
 }
 

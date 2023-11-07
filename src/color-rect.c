@@ -257,12 +257,12 @@ phoc_color_rect_class_init (PhocColorRectClass *klass)
   props[PROP_WIDTH] =
     g_param_spec_uint ("width", "", "",
                        0, G_MAXUINT, 0,
-                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   props[PROP_HEIGHT] =
     g_param_spec_uint ("height", "", "",
                        0, G_MAXUINT, 0,
-                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   /**
    * PhocColorRect:box:
    *

@@ -94,10 +94,10 @@ phoc_event_copy (const PhocEvent *event)
   *new_event = *event;
 
   switch (event->type) {
-    /* Nothing todo here atm */
+  /* Nothing todo here atm */
   default:
-      break;
-    }
+    break;
+  }
 
   return new_event;
 }
@@ -113,7 +113,7 @@ phoc_event_free (PhocEvent *event)
 {
   if (G_LIKELY (event != NULL)) {
     switch (event->type) {
-      /* Nothing to do here atm */
+    /* Nothing to do here atm */
     default:
       break;
     }
