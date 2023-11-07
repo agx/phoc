@@ -26,7 +26,7 @@ desktopdir = join_paths(datadir, 'applications')
 
 cc = meson.get_compiler('c')
 
-glib_ver = '2.64'
+glib_ver = '2.70'
 glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
 glib_ver_cmp = '>=@0@'.format(glib_ver)
 
