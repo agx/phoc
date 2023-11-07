@@ -156,7 +156,7 @@ def main(argv):
         print(f"""
 Issue the following commands in your local tree to apply the suggested changes:
 
-    $ git rebase {sha} --exec "./check-style.py -r"
+    $ git rebase {sha} --exec "./.gitlab-ci/check-style.py -r"
     $ git rebase --autosquash {sha}
 
 Don't trust uncrustify unconditionally.
