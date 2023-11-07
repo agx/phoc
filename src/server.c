@@ -106,11 +106,7 @@ on_session_exit (GPid pid, gint status, PhocServer *self)
 
   g_return_if_fail (PHOC_IS_SERVER (self));
   g_spawn_close_pid (pid);
-#if GLIB_CHECK_VERSION (2, 70, 0)
   if (g_spawn_check_wait_status (status, &err)) {
-#else
-  if (g_spawn_check_exit_status (status, &err)) {
-#endif
     self->exit_status = 0;
   } else {
     if (err->domain ==  G_SPAWN_EXIT_ERROR)
