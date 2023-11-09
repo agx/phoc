@@ -976,13 +976,22 @@ static void
 seat_add_pointer (PhocSeat *seat, struct wlr_input_device *device)
 {
   PhocPointer *pointer = phoc_pointer_new (device, seat);
+  PhocDesktop *desktop = phoc_server_get_default ()->desktop;
+  PhocOutput *output;
+  struct wlr_pointer *wlr_pointer;
 
   seat->pointers = g_slist_prepend (seat->pointers, pointer);
   g_signal_connect (pointer, "device-destroy",
                     G_CALLBACK (on_pointer_destroy),
                     NULL);
 
+  wlr_pointer = wlr_pointer_from_input_device (device);
+  g_debug ("Adding pointer: %s (%s)", device->name, wlr_pointer->output_name);
+
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
+  output = phoc_desktop_find_output_by_name (desktop, wlr_pointer->output_name);
+  if (output)
+    wlr_cursor_map_input_to_output (seat->cursor->cursor, device, output->wlr_output);
 }
 
 static void
