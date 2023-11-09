@@ -1046,6 +1046,35 @@ phoc_desktop_find_output (PhocDesktop *self,
 }
 
 /**
+ * phoc_desktop_find_output_by_name:
+ * @self: The desktop
+ * @name: The output's name
+
+ * Find an output by it's name.
+ *
+ * Returns: (transfer none) (nullable): The matching output or
+ *  %NULL if no output matches.
+ */
+PhocOutput *
+phoc_desktop_find_output_by_name (PhocDesktop *self, const char *name)
+{
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  if (!name)
+    return NULL;
+
+  wl_list_for_each (output, &self->outputs, link) {
+    if (g_strcmp0 (phoc_output_get_name (output), name) == 0)
+      return output;
+  }
+
+  return NULL;
+}
+
+
+/**
  * phoc_desktop_layer_surface_at:
  * @self: The `PhocDesktop` to look the surface up for
  * @lx: X coordinate the layer surface to look up at in layout coordinates
