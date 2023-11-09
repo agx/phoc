@@ -13,8 +13,8 @@
 #include <inttypes.h>
 #include <math.h>
 #include <wlr/util/box.h>
-#include <wlr/version.h>
 #include "utils.h"
+
 
 void
 phoc_utils_fix_transform (enum wl_output_transform *transform)

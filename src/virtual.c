@@ -2,9 +2,7 @@
 
 #include "phoc-config.h"
 
-#define _POSIX_C_SOURCE 199309L
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
-#include <wlr/version.h>
 #include "cursor.h"
 #include "virtual.h"
 #include "seat.h"
@@ -21,6 +19,7 @@ phoc_handle_virtual_keyboard (struct wl_listener *listener, void *data)
 
   phoc_seat_add_device (seat, &keyboard->keyboard.base);
 }
+
 
 void
 phoc_handle_virtual_pointer (struct wl_listener *listener, void *data)

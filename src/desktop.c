@@ -33,7 +33,6 @@
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
-#include <wlr/version.h>
 #include "cursor.h"
 #include "device-state.h"
 #include "idle-inhibit.h"
