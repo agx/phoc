@@ -61,7 +61,7 @@ typedef struct _PhocCursorPrivate {
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocCursor, phoc_cursor, G_TYPE_OBJECT)
 
-static void handle_pointer_motion (struct wl_listener *listener, void *data);
+static void handle_pointer_motion_relative (struct wl_listener *listener, void *data);
 static void handle_pointer_motion_absolute (struct wl_listener *listener, void *data);
 static void handle_pointer_button (struct wl_listener *listener, void *data);
 static void handle_pointer_axis (struct wl_listener *listener, void *data);
@@ -804,7 +804,7 @@ phoc_cursor_constructed (GObject *object)
   g_assert (self->xcursor_manager);
 
   wl_signal_add (&wlr_cursor->events.motion, &self->motion);
-  self->motion.notify = handle_pointer_motion;
+  self->motion.notify = handle_pointer_motion_relative;
 
   wl_signal_add (&wlr_cursor->events.motion_absolute, &self->motion_absolute);
   self->motion_absolute.notify = handle_pointer_motion_absolute;
@@ -1192,7 +1192,7 @@ phoc_cursor_press_button (PhocCursor              *self,
 
 
 static void
-handle_pointer_motion (struct wl_listener *listener, void *data)
+handle_pointer_motion_relative (struct wl_listener *listener, void *data)
 {
   PhocCursor *self = wl_container_of (listener, self, motion);
   struct wlr_pointer_motion_event *event = data;
