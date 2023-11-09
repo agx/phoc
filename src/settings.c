@@ -327,8 +327,8 @@ output_is_match (PhocOutputConfig *oc, PhocOutput *output)
   if (g_strcmp0 (oc->name, phoc_output_get_name (output)) == 0)
     return TRUE;
 
-  /* "vendor make model" match */
-  vmm = g_strsplit (oc->name, " ", 4);
+  /* "make%model%serial" match */
+  vmm = g_strsplit (oc->name, "%", 4);
   if (g_strv_length (vmm) != 3)
     return FALSE;
 
