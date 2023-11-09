@@ -733,27 +733,24 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
   return false;
 }
 
+
 static void
-phoc_passthrough_cursor (PhocCursor *self,
-                         uint32_t    time)
+phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
 {
   PhocServer *server = phoc_server_get_default ();
   double sx, sy;
   PhocView *view = NULL;
   PhocSeat *seat = self->seat;
   PhocDesktop *desktop = server->desktop;
-  struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
-                                                         self->cursor->x, self->cursor->y, &sx, &sy, &view);
-
   struct wl_client *client = NULL;
+  struct wlr_surface *surface;
 
-  if (surface) {
+  surface = phoc_desktop_surface_at (desktop, self->cursor->x, self->cursor->y, &sx, &sy, &view);
+  if (surface)
     client = wl_resource_get_client (surface->resource);
-  }
 
-  if (surface && !phoc_seat_allow_input (seat, surface->resource)) {
+  if (surface && !phoc_seat_allow_input (seat, surface->resource))
     return;
-  }
 
   if (self->cursor_client != client || !client) {
     phoc_seat_maybe_set_cursor (seat, NULL);
@@ -763,16 +760,14 @@ phoc_passthrough_cursor (PhocCursor *self,
   if (view) {
     PhocSeatView *seat_view = phoc_seat_view_from_view (seat, view);
 
-    if (self->pointer_view &&
-        !self->wlr_surface && (surface || seat_view != self->pointer_view)) {
+    if (self->pointer_view && !self->wlr_surface && (surface || seat_view != self->pointer_view))
       seat_view_deco_leave (self->pointer_view);
-    }
 
     self->pointer_view = seat_view;
 
-    if (!surface) {
+    if (!surface)
       seat_view_deco_motion (seat_view, sx, sy);
-    }
+
   } else {
     self->pointer_view = NULL;
   }
@@ -786,10 +781,10 @@ phoc_passthrough_cursor (PhocCursor *self,
     send_pointer_clear_focus (seat, seat->seat->pointer_state.focused_surface);
   }
 
-  if (seat->drag_icon != NULL) {
+  if (seat->drag_icon != NULL)
     phoc_drag_icon_update_position (seat->drag_icon);
-  }
 }
+
 
 static inline int64_t
 timespec_to_msec (const struct timespec *a)
