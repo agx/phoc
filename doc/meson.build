@@ -48,6 +48,7 @@ endif
 if get_option('man')
   manpages = [
     ['phoc', 1],
+    ['phoc.ini', 5],
   ]
 
   rst2man = find_program('rst2man', 'rst2man.py', required: false)
