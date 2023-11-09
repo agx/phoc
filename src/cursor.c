@@ -1118,54 +1118,54 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
 }
 
 static void
-phoc_cursor_press_button (PhocCursor *self,
-                          struct wlr_input_device *device, uint32_t time, uint32_t button,
-                          uint32_t state, double lx, double ly)
+phoc_cursor_press_button (PhocCursor              *self,
+                          struct wlr_input_device *device,
+                          uint32_t                 time,
+                          uint32_t                 button,
+                          uint32_t                 state,
+                          double                   lx,
+                          double                   ly)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   PhocSeat *seat = self->seat;
   PhocDesktop *desktop = server->desktop;
-
   bool is_touch = device->type == WLR_INPUT_DEVICE_TOUCH;
-
   double sx, sy;
   PhocView *view;
-  struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
-                                                         lx, ly, &sx, &sy, &view);
+  struct wlr_surface *surface;
 
-  if (state == WLR_BUTTON_PRESSED && view &&
-      phoc_seat_has_meta_pressed (seat)) {
+  surface = phoc_desktop_surface_at (desktop, lx, ly, &sx, &sy, &view);
+  if (state == WLR_BUTTON_PRESSED && view && phoc_seat_has_meta_pressed (seat)) {
     phoc_seat_set_focus_view (seat, view);
 
-    uint32_t edges;
     switch (button) {
     case BTN_LEFT:
       phoc_seat_begin_move (seat, view);
       break;
-    case BTN_RIGHT:
-      edges = 0;
-      if (sx < view->wlr_surface->current.width/2) {
+    case BTN_RIGHT: {
+      uint32_t edges = 0;
+
+      if (sx < view->wlr_surface->current.width/2)
         edges |= WLR_EDGE_LEFT;
-      } else {
+      else
         edges |= WLR_EDGE_RIGHT;
-      }
-      if (sy < view->wlr_surface->current.height/2) {
+
+      if (sy < view->wlr_surface->current.height/2)
         edges |= WLR_EDGE_TOP;
-      } else {
+      else
         edges |= WLR_EDGE_BOTTOM;
-      }
+
       phoc_seat_begin_resize (seat, view, edges);
       break;
+    }
     default:
       /* don't care */
       break;
     }
   } else {
-    if (view && !surface && self->pointer_view) {
-      seat_view_deco_button (self->pointer_view,
-                             sx, sy, button, state);
-    }
+    if (view && !surface && self->pointer_view)
+      seat_view_deco_button (self->pointer_view, sx, sy, button, state);
 
     if (state == WLR_BUTTON_RELEASED && self->mode != PHOC_CURSOR_PASSTHROUGH) {
       if (priv->view_state.view)
@@ -1175,22 +1175,19 @@ phoc_cursor_press_button (PhocCursor *self,
     }
 
     if (state == WLR_BUTTON_PRESSED) {
-      if (view) {
+      if (view)
         phoc_seat_set_focus_view (seat, view);
-      }
 
       if (surface) {
         struct wlr_layer_surface_v1 *layer = wlr_layer_surface_v1_try_from_wlr_surface (surface);
-        if (layer && layer->current.keyboard_interactive) {
+        if (layer && layer->current.keyboard_interactive)
           phoc_seat_set_focus_layer (seat, layer);
-        }
       }
     }
   }
 
-  if (!phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch) {
+  if (!phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch)
     send_pointer_button (seat, surface, time, button, state);
-  }
 }
 
 
