@@ -2,15 +2,9 @@
 
 #include "phoc-config.h"
 
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
-#endif
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 #include <strings.h>
 #include <sys/param.h>
-#include <unistd.h>
 
 #include "settings.h"
 #include "utils.h"
@@ -75,6 +69,8 @@ phoc_output_config_new (const char *name)
   oc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
   oc->scale = 0;
   oc->enable = true;
+  oc->x = -1;
+  oc->y = -1;
 
   return oc;
 }
@@ -342,10 +338,12 @@ output_is_match (PhocOutputConfig *oc, PhocOutput *output)
 /**
  * phoc_config_get_output:
  * config: The #PhocConfig
- * output: The wlr output to get the configuration for
+ * output: The output to get the configuration for
  *
- * Get configuration for the output. If the output is not configured, returns
- * NULL.
+ * Get intended configuration for the given output.
+ *
+ * Returns: The intended output configuration or %NULL or not
+ *     configuration is found.
  */
 PhocOutputConfig *
 phoc_config_get_output (PhocConfig *config, PhocOutput *output)
