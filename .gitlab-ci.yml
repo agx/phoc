@@ -4,6 +4,7 @@ include:
 stages:
  - build
  - test+docs
+ - style-checks
  - package
  - deploy
 
@@ -156,7 +157,7 @@ build-gtkdoc:
       - $PKG_ONLY == "1"
 
 format-check:
-  stage: test+docs
+  stage: style-checks
   image: ${DEBIAN_IMAGE}
   needs: []
   before_script: *before_script_debian
