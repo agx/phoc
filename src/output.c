@@ -661,6 +661,7 @@ phoc_output_initable_init (GInitable    *initable,
     }
   }
 
+  wlr_output_state_finish (&pending);
   return TRUE;
 }
 
@@ -1304,6 +1305,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
       wlr_output_layout_remove (desktop->layout, wlr_output);
       ok &= wlr_output_commit_state (wlr_output, &pending);
     }
+    wlr_output_state_finish (&pending);
   }
 
   /* Then enable outputs that need to */
@@ -1313,10 +1315,10 @@ output_manager_apply_config (PhocDesktop                        *desktop,
     struct wlr_output_state pending;
     struct wlr_box output_box;
 
-    wlr_output_state_init (&pending);
     if (!config_head->state.enabled)
       continue;
 
+    wlr_output_state_init (&pending);
     wlr_output_state_set_enabled (&pending, true);
     if (config_head->state.mode != NULL) {
       wlr_output_state_set_mode (&pending, config_head->state.mode);
@@ -1345,6 +1347,8 @@ output_manager_apply_config (PhocDesktop                        *desktop,
       output->lx = output_box.x;
       output->ly = output_box.y;
     }
+
+    wlr_output_state_finish (&pending);
   }
 
   if (ok)
@@ -1389,7 +1393,6 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
 
   g_return_if_fail (event && event->output && event->output->data);
 
-  wlr_output_state_init (&pending);
   self = event->output->data;
   g_debug ("Request to set output power mode of %p to %d", self->wlr_output->name, event->mode);
   switch (event->mode) {
@@ -1408,12 +1411,16 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
   if (enable == current)
     return;
 
+  wlr_output_state_init (&pending);
   wlr_output_state_set_enabled (&pending, enable);
-  if (!wlr_output_commit_state(self->wlr_output, &pending)) {
+
+  if (!wlr_output_commit_state (self->wlr_output, &pending)) {
     g_warning ("Failed to commit power mode change to %d for %p", enable, self);
+    wlr_output_state_finish (&pending);
     return;
   }
 
+  wlr_output_state_finish (&pending);
   if (enable)
     phoc_output_damage_whole (self);
 }
