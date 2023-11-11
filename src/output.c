@@ -390,16 +390,16 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
   PhocOutput *self = wl_container_of (listener, self, commit);
   struct wlr_output_event_commit *event = data;
 
-  if (event->state->committed & (WLR_OUTPUT_STATE_TRANSFORM |
+  if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
                                  WLR_OUTPUT_STATE_SCALE |
-                                 WLR_OUTPUT_STATE_MODE)) {
+                                 WLR_OUTPUT_STATE_TRANSFORM)) {
     phoc_layer_shell_arrange (self);
   }
 
   if (event->state->committed & (WLR_OUTPUT_STATE_ENABLED |
-                                 WLR_OUTPUT_STATE_TRANSFORM |
+                                 WLR_OUTPUT_STATE_MODE |
                                  WLR_OUTPUT_STATE_SCALE |
-                                 WLR_OUTPUT_STATE_MODE)) {
+                                 WLR_OUTPUT_STATE_TRANSFORM)) {
     update_output_manager_config (self->desktop);
   }
 
