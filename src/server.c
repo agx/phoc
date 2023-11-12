@@ -25,7 +25,7 @@
 #include <errno.h>
 
 /* Maximum protocol versions we support */
-#define PHOC_WL_DISPLAY_VERSION 5
+#define PHOC_WL_DISPLAY_VERSION 6
 #define PHOC_LINUX_DMABUF_VERSION 4
 
 
