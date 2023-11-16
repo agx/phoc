@@ -1779,8 +1779,8 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
     // and make it stay the same after restoring saved size
     double x = (cursor->cursor->x - view->box.x) / view->box.width;
     double y = (cursor->cursor->y - view->box.y) / view->box.height;
-    cursor->view_x = cursor->cursor->x - x * view->saved.width;
-    cursor->view_y = cursor->cursor->y - y * view->saved.height;
+    cursor->view_x = cursor->cursor->x - x * (view->saved.width ?: view->box.width);
+    cursor->view_y = cursor->cursor->y - y * (view->saved.height ?: view->box.height);
     view->saved.x = cursor->view_x;
     view->saved.y = cursor->view_y;
     view_restore (view);
