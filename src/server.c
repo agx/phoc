@@ -16,17 +16,24 @@
 #define GMOBILE_USE_UNSTABLE_API
 #include <gmobile.h>
 
+#include <wlr/types/wlr_drm.h>
+#include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/xwayland.h>
 #include <wlr/xwayland/shell.h>
 
 #include <errno.h>
 
+/* Maximum protocol versions we support */
 #define PHOC_WL_DISPLAY_VERSION 5
+#define PHOC_LINUX_DMABUF_VERSION 4
+
 
 typedef struct _PhocServerPrivate {
   GStrv dt_compatibles;
   struct wlr_session *session;
+
+  struct wlr_linux_dmabuf_v1 *linux_dmabuf_v1;
 } PhocServerPrivate;
 
 static void phoc_server_initable_iface_init (GInitableIface *iface);
@@ -254,9 +261,18 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
   wlr_renderer = phoc_renderer_get_wlr_renderer (self->renderer);
+  wlr_renderer_init_wl_shm (wlr_renderer, self->wl_display);
+
+  if (wlr_renderer_get_dmabuf_texture_formats (wlr_renderer)) {
+    wlr_drm_create (self->wl_display, wlr_renderer);
+    priv->linux_dmabuf_v1 = wlr_linux_dmabuf_v1_create_with_renderer (self->wl_display,
+                                                                      PHOC_LINUX_DMABUF_VERSION,
+                                                                      wlr_renderer);
+  } else {
+    g_message ("Linux dmabuf support unavailale");
+  }
 
   self->data_device_manager = wlr_data_device_manager_create(self->wl_display);
-  wlr_renderer_init_wl_display(wlr_renderer, self->wl_display);
 
   self->compositor = wlr_compositor_create (self->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
   self->subcompositor = wlr_subcompositor_create (self->wl_display);
