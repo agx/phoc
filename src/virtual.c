@@ -2,9 +2,7 @@
 
 #include "phoc-config.h"
 
-#define _POSIX_C_SOURCE 199309L
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
-#include <wlr/version.h>
 #include "cursor.h"
 #include "virtual.h"
 #include "seat.h"
@@ -22,11 +20,11 @@ phoc_handle_virtual_keyboard (struct wl_listener *listener, void *data)
   phoc_seat_add_device (seat, &keyboard->keyboard.base);
 }
 
+
 void
-phoc_handle_virtual_pointer(struct wl_listener *listener, void *data)
+phoc_handle_virtual_pointer (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop =
-    wl_container_of(listener, desktop, virtual_pointer_new);
+  PhocDesktop *desktop = wl_container_of (listener, desktop, virtual_pointer_new);
   struct wlr_virtual_pointer_v1_new_pointer_event *event = data;
   struct wlr_virtual_pointer_v1 *pointer = event->new_pointer;
   struct wlr_input_device *device = &pointer->pointer.base;
@@ -41,12 +39,10 @@ phoc_handle_virtual_pointer(struct wl_listener *listener, void *data)
 
   g_debug ("New virtual input device: %s (%d:%d) %s seat:%s", device->name,
            device->vendor, device->product,
-           phoc_input_get_device_type(device->type), seat_name);
+           phoc_input_get_device_type (device->type), seat_name);
 
   phoc_seat_add_device (seat, device);
 
-  if (event->suggested_output) {
-    wlr_cursor_map_input_to_output(seat->cursor->cursor, device,
-                                   event->suggested_output);
-  }
+  if (event->suggested_output)
+    wlr_cursor_map_input_to_output (seat->cursor->cursor, device, event->suggested_output);
 }
