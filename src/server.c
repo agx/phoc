@@ -519,3 +519,37 @@ phoc_server_get_session (PhocServer *self)
 
   return priv->session;
 }
+
+
+void
+phoc_server_set_linux_dmabuf_surface_feedback (PhocServer *self,
+                                               PhocView   *view,
+                                               PhocOutput *output,
+                                               bool        enable)
+{
+  PhocServerPrivate *priv;
+
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  if (!priv->linux_dmabuf_v1 || !view->wlr_surface)
+    return;
+
+  g_assert ((enable && output && output->wlr_output) || (!enable && !output));
+
+  if (enable) {
+    struct wlr_linux_dmabuf_feedback_v1 feedback = { 0 };
+    const struct wlr_linux_dmabuf_feedback_v1_init_options options = {
+      .main_renderer = phoc_renderer_get_wlr_renderer (self->renderer),
+      .scanout_primary_output = output->wlr_output,
+    };
+
+    if (!wlr_linux_dmabuf_feedback_v1_init_with_options (&feedback, &options))
+      return;
+
+    wlr_linux_dmabuf_v1_set_surface_feedback (priv->linux_dmabuf_v1, view->wlr_surface, &feedback);
+    wlr_linux_dmabuf_feedback_v1_finish (&feedback);
+  } else {
+    wlr_linux_dmabuf_v1_set_surface_feedback (priv->linux_dmabuf_v1, view->wlr_surface, NULL);
+  }
+}
