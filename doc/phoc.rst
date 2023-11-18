@@ -59,4 +59,4 @@ ENVIRONMENT VARIABLES
 See also
 --------
 
-``phosh(1)``
+``phoc.ini(5)`` ``phosh(1)``

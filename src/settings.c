@@ -319,6 +319,7 @@ phoc_config_destroy (PhocConfig *config)
   g_free (config);
 }
 
+
 static gboolean
 output_is_match (PhocOutputConfig *oc, PhocOutput *output)
 {
@@ -327,12 +328,21 @@ output_is_match (PhocOutputConfig *oc, PhocOutput *output)
   if (g_strcmp0 (oc->name, phoc_output_get_name (output)) == 0)
     return TRUE;
 
-  /* "vendor make model" match */
-  vmm = g_strsplit (oc->name, " ", 4);
+  /* "make%model%serial" match */
+  vmm = g_strsplit (oc->name, "%", 4);
   if (g_strv_length (vmm) != 3)
     return FALSE;
 
-  return phoc_output_is_match (output, vmm[0], vmm[1], vmm[2]);
+  if (!(g_strcmp0 (vmm[0], "*") == 0 || g_strcmp0 (vmm[0], output->wlr_output->make) == 0))
+    return FALSE;
+
+  if (!(g_strcmp0 (vmm[1], "*") == 0 || g_strcmp0 (vmm[1], output->wlr_output->model) == 0))
+    return FALSE;
+
+  if (!(g_strcmp0 (vmm[2], "*") == 0 || g_strcmp0 (vmm[2], output->wlr_output->serial) == 0))
+    return FALSE;
+
+  return TRUE;
 }
 
 /**
