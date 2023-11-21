@@ -805,10 +805,11 @@ view_center (PhocView *view, PhocOutput *output)
     return true;
   }
 
-  if (view->box.width > output->usable_area.width || view->box.height > output->usable_area.height) {
+  if (view->box.width > output->usable_area.width ||
+      view->box.height > output->usable_area.height) {
     phoc_view_resize (view,
-                      (view->box.width > output->usable_area.width) ? output->usable_area.width : view->box.width,
-                      (view->box.height > output->usable_area.height) ? output->usable_area.height : view->box.height);
+                      MIN (view->box.width, output->usable_area.width),
+                      MIN (view->box.height, output->usable_area.height));
   }
 
   return true;

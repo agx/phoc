@@ -199,8 +199,8 @@ handle_draggable_layer_surface_set_threshold (struct wl_client   *client,
   if (drag_surface->layer_surface == NULL)
     return;
 
-  threshold = (threshold < 1.0) ? threshold : 1.0;
-  threshold = (threshold > 0.0) ? threshold : 0.0;
+  threshold = MIN (threshold, 1.0);
+  threshold = MAX (threshold, 0.0);
 
   drag_surface->pending.threshold = threshold;
 }
