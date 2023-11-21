@@ -675,6 +675,10 @@ static void
 phoc_drag_icon_handle_surface_commit (struct wl_listener *listener, void *data)
 {
   PhocDragIcon *icon = wl_container_of (listener, icon, surface_commit);
+  struct wlr_drag_icon *wlr_icon = icon->wlr_drag_icon;
+
+  icon->dx += wlr_icon->surface->current.dx;
+  icon->dy += wlr_icon->surface->current.dy;
 
   phoc_drag_icon_update_position (icon);
 }
@@ -795,8 +799,8 @@ phoc_drag_icon_update_position (PhocDragIcon *icon)
   switch (seat->seat->drag->grab_type) {
   case WLR_DRAG_GRAB_KEYBOARD_POINTER:;
     struct wlr_cursor *cursor = seat->cursor->cursor;
-    icon->x = cursor->x;
-    icon->y = cursor->y;
+    icon->x = cursor->x + icon->dx;
+    icon->y = cursor->y + icon->dy;
     break;
   case WLR_DRAG_GRAB_KEYBOARD_TOUCH:;
     struct wlr_touch_point *point =
@@ -804,8 +808,8 @@ phoc_drag_icon_update_position (PhocDragIcon *icon)
     if (point == NULL) {
       return;
     }
-    icon->x = seat->touch_x;
-    icon->y = seat->touch_y;
+    icon->x = seat->touch_x + icon->dx;
+    icon->y = seat->touch_y + icon->dy;
     break;
   case WLR_DRAG_GRAB_KEYBOARD:
   default:
