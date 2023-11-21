@@ -2,8 +2,7 @@
 directory=wlroots
 url=https://gitlab.freedesktop.org/wlroots/wlroots.git
 revision=47bf87ade2bd32395615a385ebde1fefbcdf79a2
-# For release builds
-# depth=1
+depth=1
 
 # Phoc specific patches
 diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch
