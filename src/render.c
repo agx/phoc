@@ -59,7 +59,6 @@
  */
 
 enum {
-  RENDER_START,
   RENDER_END,
   N_SIGNALS
 };
@@ -778,8 +777,6 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
 
   float clear_color[] = COLOR_BLACK;
 
-  g_signal_emit (self, signals[RENDER_START], 0, output);
-
   // Check if we can delegate the fullscreen surface to the output
   if (phoc_output_has_fullscreen_view (output)) {
     bool scanned_out = scan_out_fullscreen_view (output);
@@ -985,18 +982,6 @@ phoc_renderer_class_init (PhocRendererClass *klass)
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
-  /**
-   * PhocRenderer::render-start
-   * @self: The renderer emitting the signal
-   * @output: The output being rendered on
-   *
-   * This signal is emitted at the start of a render pass
-   */
-  signals[RENDER_START] = g_signal_new ("render-start",
-                                        G_TYPE_FROM_CLASS (klass),
-                                        G_SIGNAL_RUN_LAST,
-                                        0, NULL, NULL, NULL,
-                                        G_TYPE_NONE, 1, PHOC_TYPE_OUTPUT);
   /**
    * PhocRenderer::render-end
    * @self: The renderer emitting the signal
