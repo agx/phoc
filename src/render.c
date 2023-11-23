@@ -707,20 +707,6 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
 
 
 static void
-surface_send_frame_done_iterator (PhocOutput         *output,
-                                  struct wlr_surface *surface,
-                                  struct wlr_box     *box,
-                                  float               rotation,
-                                  float               scale,
-                                  void               *data)
-{
-  struct timespec *when = data;
-
-  wlr_surface_send_frame_done (surface, when);
-}
-
-
-static void
 render_damage (PhocRenderer *self, PhocOutput *output)
 {
   int nrects;
@@ -772,9 +758,6 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
   if (!wlr_output->enabled)
     return;
 
-  struct timespec now;
-  clock_gettime (CLOCK_MONOTONIC, &now);
-
   float clear_color[] = COLOR_BLACK;
 
   // Check if we can delegate the fullscreen surface to the output
@@ -782,7 +765,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
     bool scanned_out = scan_out_fullscreen_view (output);
 
     if (scanned_out)
-      goto send_frame_done;
+      return;
   }
 
   if (!wlr_output_attach_render (output->wlr_output, &buffer_age))
@@ -903,10 +886,6 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
 
  buffer_damage_finish:
   pixman_region32_fini (&buffer_damage);
-
- send_frame_done:
-  // Send frame done events to all visible surfaces
-  phoc_output_for_each_surface (output, surface_send_frame_done_iterator, &now, true);
 
   damage_touch_points (output);
   g_clear_list (&output->debug_touch_points, g_free);

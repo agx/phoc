@@ -367,6 +367,20 @@ phoc_output_set_gamma_lut (PhocOutput *self)
 
 
 static void
+surface_send_frame_done_iterator (PhocOutput         *output,
+                                  struct wlr_surface *surface,
+                                  struct wlr_box     *box,
+                                  float               rotation,
+                                  float               scale,
+                                  void               *data)
+{
+  struct timespec *when = data;
+
+  wlr_surface_send_frame_done (surface, when);
+}
+
+
+static void
 phoc_output_draw (PhocOutput *self)
 {
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
@@ -380,6 +394,7 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
 {
   PhocOutputPrivate *priv = wl_container_of (listener, priv, frame);
   PhocOutput *self = PHOC_OUTPUT_SELF (priv);
+  struct timespec now;
 
   /* Process all registered frame callbacks */
   GSList *l = priv->frame_callbacks;
@@ -409,6 +424,10 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
 
   /* Repaint the output */
   phoc_output_draw (self);
+
+  /* Send frame done events to all visible surfaces */
+  clock_gettime (CLOCK_MONOTONIC, &now);
+  phoc_output_for_each_surface (self, surface_send_frame_done_iterator, &now, true);
 
   /* Want frame clock ticking as long as we have frame callbacks */
   if (priv->frame_callbacks)
