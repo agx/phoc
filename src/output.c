@@ -367,11 +367,21 @@ phoc_output_set_gamma_lut (PhocOutput *self)
 
 
 static void
+phoc_output_draw (PhocOutput *self)
+{
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+
+  phoc_renderer_render_output (priv->renderer, self);
+}
+
+
+static void
 phoc_output_handle_frame (struct wl_listener *listener, void *data)
 {
   PhocOutputPrivate *priv = wl_container_of (listener, priv, frame);
   PhocOutput *self = PHOC_OUTPUT_SELF (priv);
 
+  /* Process all registered frame callbacks */
   GSList *l = priv->frame_callbacks;
   while (l != NULL) {
     GSList *next = l->next;
@@ -387,6 +397,7 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
   }
   priv->last_frame_us = g_get_monotonic_time ();
 
+  /* Ensure the cutouts are drawn */
   if (G_UNLIKELY (priv->cutouts_texture)) {
     struct wlr_box box = { 0, 0, priv->cutouts_texture->width, priv->cutouts_texture->height };
     if (wlr_damage_ring_add_box (&self->damage_ring, &box))
@@ -396,7 +407,8 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
   if (G_UNLIKELY (priv->gamma_lut_changed))
     phoc_output_set_gamma_lut (self);
 
-  phoc_renderer_render_output (priv->renderer, self);
+  /* Repaint the output */
+  phoc_output_draw (self);
 
   /* Want frame clock ticking as long as we have frame callbacks */
   if (priv->frame_callbacks)
