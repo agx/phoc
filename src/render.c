@@ -85,11 +85,6 @@ G_DEFINE_TYPE_WITH_CODE (PhocRenderer, phoc_renderer, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_renderer_initable_iface_init));
 
 
-struct render_data {
-  pixman_region32_t *damage;
-  float alpha;
-};
-
 struct view_render_data {
   PhocView *view;
   int width;
@@ -269,7 +264,7 @@ render_surface_iterator (PhocOutput         *output,
                          float               scale,
                          void               *_data)
 {
-  struct render_data *data = _data;
+  PhocRenderContext *data = _data;
   struct wlr_output *wlr_output = output->wlr_output;
   pixman_region32_t *output_damage = data->damage;
   float alpha = data->alpha;
@@ -302,9 +297,9 @@ render_surface_iterator (PhocOutput         *output,
 
 
 static void
-render_decorations (PhocOutput         *output,
-                    PhocView           *view,
-                    struct render_data *data)
+render_decorations (PhocOutput        *output,
+                    PhocView          *view,
+                    PhocRenderContext *data)
 {
   if (!phoc_view_is_decorated (view) || !phoc_view_is_mapped (view))
     return;
@@ -334,7 +329,7 @@ render_decorations (PhocOutput         *output,
 
 
 static void
-render_blings (PhocOutput *output, PhocView *view, struct render_data *data)
+render_blings (PhocOutput *output, PhocView *view, PhocRenderContext *data)
 {
   GSList *blings;
 
@@ -374,7 +369,7 @@ render_blings (PhocOutput *output, PhocView *view, struct render_data *data)
 
 
 static void
-render_view (PhocOutput *output, PhocView *view, struct render_data *data)
+render_view (PhocOutput *output, PhocView *view, PhocRenderContext *data)
 {
   // Do not render views fullscreened on other outputs
   if (view_is_fullscreen (view) && phoc_view_get_fullscreen_output (view) != output)
@@ -398,7 +393,7 @@ render_layer (PhocOutput                     *output,
 {
   g_autoptr (GList) layer_surfaces = NULL;
 
-  struct render_data data = {
+  PhocRenderContext data = {
     .damage = damage,
   };
 
@@ -418,7 +413,7 @@ render_layer (PhocOutput                     *output,
 static void
 render_drag_icons (PhocOutput *output, pixman_region32_t *damage, PhocInput *input)
 {
-  struct render_data data = {
+  PhocRenderContext data = {
     .damage = damage,
     .alpha = 1.0f,
   };
@@ -657,63 +652,33 @@ render_damage (PhocRenderer *self, PhocOutput *output)
  * phoc_renderer_render_output:
  * @self: The renderer
  * @output: The output to render
+ * @context: The render context provided by the output
  *
  * Render a given output.
  */
 void
-phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
+phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderContext *context)
 {
+  PhocServer *server = phoc_server_get_default ();
   struct wlr_output *wlr_output = output->wlr_output;
   PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
-  PhocServer *server = phoc_server_get_default ();
   struct wlr_renderer *wlr_renderer;
-  int buffer_age;
+  pixman_region32_t *damage = context->damage;
 
   g_assert (PHOC_IS_RENDERER (self));
   wlr_renderer = self->wlr_renderer;
 
   float clear_color[] = COLOR_BLACK;
 
-  if (!wlr_output_attach_render (output->wlr_output, &buffer_age))
-    return;
-
-  bool needs_frame = output->wlr_output->needs_frame;
-  pixman_region32_t buffer_damage;
-  pixman_region32_init (&buffer_damage);
-
-  wlr_damage_ring_get_buffer_damage (&output->damage_ring, buffer_age, &buffer_damage);
-  struct render_data data = {
-    .damage = &buffer_damage,
-    .alpha = 1.0,
-  };
-
-  enum wl_output_transform transform = wlr_output_transform_invert (wlr_output->transform);
-
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
-    pixman_region32_union_rect (&buffer_damage, &buffer_damage,
-                                0, 0, wlr_output->width, wlr_output->height);
-    wlr_region_transform (&buffer_damage, &buffer_damage,
-                          transform, wlr_output->width, wlr_output->height);
-    needs_frame |= pixman_region32_not_empty (&output->damage_ring.current);
-    needs_frame |= pixman_region32_not_empty (&output->damage_ring.previous[output->damage_ring.previous_idx]);
-  }
-
-  needs_frame |= pixman_region32_not_empty (&output->damage_ring.current);
-  if (!needs_frame) {
-    // Output doesn't need swap and isn't damaged, skip rendering completely
-    wlr_output_rollback (wlr_output);
-    goto buffer_damage_finish;
-  }
-
   wlr_renderer_begin (wlr_renderer, wlr_output->width, wlr_output->height);
 
-  if (!pixman_region32_not_empty (&buffer_damage)) {
+  if (!pixman_region32_not_empty (damage)) {
     // Output isn't damaged but needs buffer swap
     goto renderer_end;
   }
 
   int nrects;
-  pixman_box32_t *rects = pixman_region32_rectangles (&buffer_damage, &nrects);
+  pixman_box32_t *rects = pixman_region32_rectangles (damage, &nrects);
   for (int i = 0; i < nrects; ++i) {
     scissor_output (output->wlr_output, &rects[i]);
     wlr_renderer_clear (wlr_renderer, clear_color);
@@ -723,7 +688,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
   if (output->fullscreen_view != NULL) {
     PhocView *view = output->fullscreen_view;
 
-    render_view (output, view, &data);
+    render_view (output, view, context);
 
     // During normal rendering the xwayland window tree isn't traversed
     // because all windows are rendered. Here we only want to render
@@ -735,36 +700,36 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
       phoc_output_xwayland_children_for_each_surface (output,
                                                       xsurface,
                                                       render_surface_iterator,
-                                                      &data);
+                                                      context);
     }
 #endif
 
     if (phoc_output_has_shell_revealed (output)) {
       // Render top layer above fullscreen view when requested
-      render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
+      render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
     }
   } else {
     // Render background and bottom layers under views
-    render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND);
-    render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM);
+    render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND);
+    render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM);
 
     PhocView *view;
     // Render all views
     wl_list_for_each_reverse(view, &desktop->views, link) {
       if (phoc_desktop_view_is_visible (desktop, view))
-        render_view (output, view, &data);
+        render_view (output, view, context);
     }
 
     // Render top layer above views
-    render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
+    render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
   }
 
-  render_drag_icons (output, &buffer_damage, server->input);
+  render_drag_icons (output, damage, server->input);
 
-  render_layer (output, &buffer_damage, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
+  render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
 
  renderer_end:
-  wlr_output_render_software_cursors (wlr_output, &buffer_damage);
+  wlr_output_render_software_cursors (wlr_output, damage);
   wlr_renderer_scissor (wlr_renderer, NULL);
 
   render_touch_points (output);
@@ -780,18 +745,11 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output)
   pixman_region32_t frame_damage;
   pixman_region32_init (&frame_damage);
 
+  enum wl_output_transform transform = wlr_output_transform_invert (wlr_output->transform);
   wlr_region_transform (&frame_damage, &output->damage_ring.current, transform, width, height);
 
   wlr_output_set_damage (wlr_output, &frame_damage);
   pixman_region32_fini (&frame_damage);
-
-  if (!wlr_output_commit (wlr_output))
-    goto buffer_damage_finish;
-
-  wlr_damage_ring_rotate (&output->damage_ring);
-
- buffer_damage_finish:
-  pixman_region32_fini (&buffer_damage);
 
   damage_touch_points (output);
   g_clear_list (&output->debug_touch_points, g_free);

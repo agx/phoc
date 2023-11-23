@@ -462,9 +462,14 @@ scan_out_fullscreen_view (PhocOutput *self)
 static void
 phoc_output_draw (PhocOutput *self)
 {
+  PhocServer *server = phoc_server_get_default ();
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   struct wlr_output *wlr_output = self->wlr_output;
-  bool scanned_out = false;
+  bool needs_frame, scanned_out = false;
+  pixman_region32_t buffer_damage;
+  int buffer_age;
+  PhocRenderContext render_context;
+  enum wl_output_transform transform;
 
   if (!wlr_output->enabled)
     return;
@@ -476,7 +481,44 @@ phoc_output_draw (PhocOutput *self)
   if (scanned_out)
     return;
 
-  phoc_renderer_render_output (priv->renderer, self);
+  if (!wlr_output_attach_render (wlr_output, &buffer_age))
+    return;
+
+  pixman_region32_init (&buffer_damage);
+  wlr_damage_ring_get_buffer_damage (&self->damage_ring, buffer_age, &buffer_damage);
+
+  transform = wlr_output_transform_invert (wlr_output->transform);
+  needs_frame = self->wlr_output->needs_frame;
+
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
+    pixman_region32_union_rect (&buffer_damage, &buffer_damage,
+                                0, 0, wlr_output->width, wlr_output->height);
+    wlr_region_transform (&buffer_damage, &buffer_damage,
+                          transform, wlr_output->width, wlr_output->height);
+    needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
+    needs_frame |=
+      pixman_region32_not_empty (&self->damage_ring.previous[self->damage_ring.previous_idx]);
+  }
+
+  needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
+  if (!needs_frame) {
+    /* Output isn't damaged, skip rendering completely */
+    wlr_output_rollback (wlr_output);
+    return;
+  }
+
+  render_context = (PhocRenderContext){
+    .damage = &buffer_damage,
+    .alpha = 1.0,
+  };
+  phoc_renderer_render_output (priv->renderer, self, &render_context);
+
+  pixman_region32_fini (&buffer_damage);
+
+  if (!wlr_output_commit (wlr_output))
+    return;
+
+  wlr_damage_ring_rotate (&self->damage_ring);
 }
 
 
