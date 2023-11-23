@@ -381,9 +381,100 @@ surface_send_frame_done_iterator (PhocOutput         *output,
 
 
 static void
+count_surface_iterator (PhocOutput         *output,
+                        struct wlr_surface *surface,
+                        struct wlr_box     *box,
+                        float               rotation,
+                        float               scale,
+                        void               *data)
+{
+  size_t *n = data;
+
+  (*n)++;
+}
+
+
+static bool
+scan_out_fullscreen_view (PhocOutput *self)
+{
+  struct wlr_output *wlr_output = self->wlr_output;
+  PhocServer *server = phoc_server_get_default ();
+  size_t n_surfaces = 0;
+  struct wlr_surface *wlr_surface;
+  PhocView *view;
+
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+    PhocDragIcon *drag_icon;
+
+    g_assert (PHOC_IS_SEAT (seat));
+    drag_icon = seat->drag_icon;
+    if (drag_icon && drag_icon->wlr_drag_icon->surface->mapped)
+      return false;
+  }
+
+  if (phoc_output_has_layer (self, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
+    return false;
+
+  view = self->fullscreen_view;
+  g_assert (view != NULL);
+  if (!phoc_view_is_mapped (view))
+    return false;
+
+  phoc_output_view_for_each_surface (self, view, count_surface_iterator, &n_surfaces);
+  if (n_surfaces > 1)
+    return false;
+
+#ifdef PHOC_XWAYLAND
+  if (PHOC_IS_XWAYLAND_SURFACE (view)) {
+    struct wlr_xwayland_surface *xsurface =
+      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
+    if (!wl_list_empty (&xsurface->children)) {
+      return false;
+    }
+  }
+#endif
+
+  wlr_surface = view->wlr_surface;
+  if (wlr_surface->buffer == NULL)
+    return false;
+
+  if ((float)wlr_surface->current.scale != wlr_output->scale ||
+      wlr_surface->current.transform != wlr_output->transform) {
+    return false;
+  }
+
+  if (!wlr_output_is_direct_scanout_allowed (wlr_output))
+    return false;
+
+  wlr_output_attach_buffer (wlr_output, &wlr_surface->buffer->base);
+  if (!wlr_output_test (wlr_output))
+    return false;
+
+  wlr_presentation_surface_scanned_out_on_output (self->desktop->presentation,
+                                                  wlr_surface,
+                                                  wlr_output);
+
+  return wlr_output_commit (wlr_output);
+}
+
+
+static void
 phoc_output_draw (PhocOutput *self)
 {
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+  struct wlr_output *wlr_output = self->wlr_output;
+  bool scanned_out = false;
+
+  if (!wlr_output->enabled)
+    return;
+
+  /* Check if we can delegate the fullscreen surface to the output */
+  if (phoc_output_has_fullscreen_view (self))
+    scanned_out = scan_out_fullscreen_view (self);
+
+  if (scanned_out)
+    return;
 
   phoc_renderer_render_output (priv->renderer, self);
 }
