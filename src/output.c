@@ -460,13 +460,28 @@ scan_out_fullscreen_view (PhocOutput *self)
 
 
 static void
+get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
+{
+  int width, height;
+  enum wl_output_transform transform;
+
+  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+
+  pixman_region32_init (frame_damage);
+
+  transform = wlr_output_transform_invert (self->wlr_output->transform);
+  wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
+}
+
+
+static void
 phoc_output_draw (PhocOutput *self)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   struct wlr_output *wlr_output = self->wlr_output;
   bool needs_frame, scanned_out = false;
-  pixman_region32_t buffer_damage;
+  pixman_region32_t buffer_damage, frame_damage;
   int buffer_age;
   PhocRenderContext render_context;
   enum wl_output_transform transform;
@@ -514,6 +529,10 @@ phoc_output_draw (PhocOutput *self)
   phoc_renderer_render_output (priv->renderer, self, &render_context);
 
   pixman_region32_fini (&buffer_damage);
+
+  get_frame_damage (self, &frame_damage);
+  wlr_output_set_damage (wlr_output, &frame_damage);
+  pixman_region32_fini (&frame_damage);
 
   if (!wlr_output_commit (wlr_output))
     return;

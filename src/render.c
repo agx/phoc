@@ -739,18 +739,6 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
 
   wlr_renderer_end (wlr_renderer);
 
-  int width, height;
-  wlr_output_transformed_resolution (wlr_output, &width, &height);
-
-  pixman_region32_t frame_damage;
-  pixman_region32_init (&frame_damage);
-
-  enum wl_output_transform transform = wlr_output_transform_invert (wlr_output->transform);
-  wlr_region_transform (&frame_damage, &output->damage_ring.current, transform, width, height);
-
-  wlr_output_set_damage (wlr_output, &frame_damage);
-  pixman_region32_fini (&frame_damage);
-
   damage_touch_points (output);
   g_clear_list (&output->debug_touch_points, g_free);
 }
