@@ -89,5 +89,9 @@ PhocDesktop       *phoc_server_get_desktop (PhocServer *self);
 const char *const *phoc_server_get_compatibles (PhocServer *self);
 PhocSeat          *phoc_server_get_last_active_seat (PhocServer *self);
 struct wlr_session *phoc_server_get_session (PhocServer *self);
+void               phoc_server_set_linux_dmabuf_surface_feedback (PhocServer  *self,
+                                                                  PhocView    *view,
+                                                                  PhocOutput  *output,
+                                                                  bool         enable);
 
 G_END_DECLS

@@ -678,6 +678,9 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
 
     view_auto_maximize (view);
   }
+
+  phoc_server_set_linux_dmabuf_surface_feedback (phoc_server_get_default (),
+                                                 view, priv->fullscreen_output, fullscreen);
 }
 
 
