@@ -1430,6 +1430,9 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
     if (wlr_damage_ring_add_box (&self->damage_ring, &box))
       wlr_output_schedule_frame (self->wlr_output);
   }
+
+  if (!wl_list_empty (&surface->current.frame_callback_list))
+    wlr_output_schedule_frame (self->wlr_output);
 }
 
 
