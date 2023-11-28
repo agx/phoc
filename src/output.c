@@ -9,6 +9,7 @@
 #include <wlr/backend/drm.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_matrix.h>
@@ -64,6 +65,8 @@ typedef struct _PhocOutputPrivate {
   struct wl_listener     frame;
   struct wl_listener     needs_frame;
   struct wl_listener     request_state;
+
+  gboolean               gamma_lut_changed;
 } PhocOutputPrivate;
 
 static void phoc_output_initable_iface_init (GInitableIface *iface);
@@ -340,6 +343,30 @@ phoc_output_handle_damage (struct wl_listener *listener, void *user_data)
 
 
 static void
+phoc_output_set_gamma_lut (PhocOutput *self)
+{
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+  struct wlr_gamma_control_v1 *gamma_control;
+
+  gamma_control = wlr_gamma_control_manager_v1_get_control(
+    phoc_server_get_default ()->desktop->gamma_control_manager_v1, self->wlr_output);
+
+  priv->gamma_lut_changed = FALSE;
+  /*
+   * TODO: Use wlr_output_state
+   * once https://gitlab.gnome.org/World/Phosh/phoc/-/issues/344 is done
+   */
+  if (!wlr_gamma_control_v1_apply (gamma_control, &self->wlr_output->pending))
+    return;
+
+  if (!wlr_output_test (self->wlr_output)) {
+    wlr_output_rollback (self->wlr_output);
+    wlr_gamma_control_v1_send_failed_and_destroy (gamma_control);
+  }
+}
+
+
+static void
 phoc_output_handle_frame (struct wl_listener *listener, void *data)
 {
   PhocOutputPrivate *priv = wl_container_of (listener, priv, frame);
@@ -366,6 +393,9 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
       wlr_output_schedule_frame (self->wlr_output);
   }
 
+  if (G_UNLIKELY (priv->gamma_lut_changed))
+    phoc_output_set_gamma_lut (self);
+
   phoc_renderer_render_output (priv->renderer, self);
 
   /* Want frame clock ticking as long as we have frame callbacks */
@@ -388,18 +418,19 @@ static void
 phoc_output_handle_commit (struct wl_listener *listener, void *data)
 {
   PhocOutput *self = wl_container_of (listener, self, commit);
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   struct wlr_output_event_commit *event = data;
 
-  if (event->state->committed & (WLR_OUTPUT_STATE_TRANSFORM |
+  if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
                                  WLR_OUTPUT_STATE_SCALE |
-                                 WLR_OUTPUT_STATE_MODE)) {
+                                 WLR_OUTPUT_STATE_TRANSFORM)) {
     phoc_layer_shell_arrange (self);
   }
 
   if (event->state->committed & (WLR_OUTPUT_STATE_ENABLED |
-                                 WLR_OUTPUT_STATE_TRANSFORM |
+                                 WLR_OUTPUT_STATE_MODE |
                                  WLR_OUTPUT_STATE_SCALE |
-                                 WLR_OUTPUT_STATE_MODE)) {
+                                 WLR_OUTPUT_STATE_TRANSFORM)) {
     update_output_manager_config (self->desktop);
   }
 
@@ -408,6 +439,11 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
     int width, height;
     wlr_output_transformed_resolution (self->wlr_output, &width, &height);
     wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
+    wlr_output_schedule_frame (self->wlr_output);
+  }
+
+  if (event->state->committed & WLR_OUTPUT_STATE_ENABLED && self->wlr_output->enabled) {
+    priv->gamma_lut_changed = TRUE;
     wlr_output_schedule_frame (self->wlr_output);
   }
 }
@@ -661,6 +697,7 @@ phoc_output_initable_init (GInitable    *initable,
     }
   }
 
+  wlr_output_state_finish (&pending);
   return TRUE;
 }
 
@@ -1304,6 +1341,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
       wlr_output_layout_remove (desktop->layout, wlr_output);
       ok &= wlr_output_commit_state (wlr_output, &pending);
     }
+    wlr_output_state_finish (&pending);
   }
 
   /* Then enable outputs that need to */
@@ -1313,10 +1351,10 @@ output_manager_apply_config (PhocDesktop                        *desktop,
     struct wlr_output_state pending;
     struct wlr_box output_box;
 
-    wlr_output_state_init (&pending);
     if (!config_head->state.enabled)
       continue;
 
+    wlr_output_state_init (&pending);
     wlr_output_state_set_enabled (&pending, true);
     if (config_head->state.mode != NULL) {
       wlr_output_state_set_mode (&pending, config_head->state.mode);
@@ -1345,6 +1383,8 @@ output_manager_apply_config (PhocDesktop                        *desktop,
       output->lx = output_box.x;
       output->ly = output_box.y;
     }
+
+    wlr_output_state_finish (&pending);
   }
 
   if (ok)
@@ -1378,6 +1418,7 @@ handle_output_manager_test (struct wl_listener *listener, void *data)
   output_manager_apply_config (desktop, config, TRUE);
 }
 
+
 void
 phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, void *data)
 {
@@ -1389,7 +1430,6 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
 
   g_return_if_fail (event && event->output && event->output->data);
 
-  wlr_output_state_init (&pending);
   self = event->output->data;
   g_debug ("Request to set output power mode of %p to %d", self->wlr_output->name, event->mode);
   switch (event->mode) {
@@ -1408,12 +1448,16 @@ phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener, 
   if (enable == current)
     return;
 
+  wlr_output_state_init (&pending);
   wlr_output_state_set_enabled (&pending, enable);
-  if (!wlr_output_commit_state(self->wlr_output, &pending)) {
+
+  if (!wlr_output_commit_state (self->wlr_output, &pending)) {
     g_warning ("Failed to commit power mode change to %d for %p", enable, self);
+    wlr_output_state_finish (&pending);
     return;
   }
 
+  wlr_output_state_finish (&pending);
   if (enable)
     phoc_output_damage_whole (self);
 }
@@ -1771,4 +1815,19 @@ phoc_output_get_name (PhocOutput *self)
   g_assert (self->wlr_output);
 
   return self->wlr_output->name;
+}
+
+
+void
+phoc_output_handle_gamma_control_set_gamma (struct wl_listener *listener, void *data)
+{
+  const struct wlr_gamma_control_manager_v1_set_gamma_event *event = data;
+  PhocOutput *self = PHOC_OUTPUT (event->output->data);
+  PhocOutputPrivate *priv = phoc_output_get_instance_private(self);
+
+  if (!self)
+    return;
+
+  priv->gamma_lut_changed = TRUE;
+  wlr_output_schedule_frame (self->wlr_output);
 }

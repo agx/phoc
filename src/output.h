@@ -107,6 +107,8 @@ void        handle_output_manager_apply (struct wl_listener *listener, void *dat
 void        handle_output_manager_test (struct wl_listener *listener, void *data);
 void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener,
                                                               void *data);
+void        phoc_output_handle_gamma_control_set_gamma (struct wl_listener *listener, void *data);
+
 /* methods */
 typedef struct _PhocDragIcon PhocDragIcon;
 void        phoc_output_damage_whole (PhocOutput *output);

@@ -83,6 +83,7 @@ typedef struct _PhocDesktopPrivate {
   struct wlr_data_control_manager_v1 *data_control_manager_v1;
   struct wlr_idle_notifier_v1 *idle_notifier_v1;
   struct wlr_screencopy_manager_v1 *screencopy_manager_v1;
+  struct wl_listener gamma_control_set_gamma;
 
   /* Protocols without upstreamable implementations */
   PhocPhoshPrivate      *phosh;
@@ -731,6 +732,9 @@ phoc_desktop_constructed (GObject *object)
   self->security_context_manager_v1 = wlr_security_context_manager_v1_create (server->wl_display);
 
   self->gamma_control_manager_v1 = wlr_gamma_control_manager_v1_create (server->wl_display);
+  priv->gamma_control_set_gamma.notify = phoc_output_handle_gamma_control_set_gamma;
+  wl_signal_add (&self->gamma_control_manager_v1->events.set_gamma, &priv->gamma_control_set_gamma);
+
   self->export_dmabuf_manager_v1 = wlr_export_dmabuf_manager_v1_create (server->wl_display);
   self->server_decoration_manager = wlr_server_decoration_manager_create (server->wl_display);
   wlr_server_decoration_manager_set_default_mode (self->server_decoration_manager,
