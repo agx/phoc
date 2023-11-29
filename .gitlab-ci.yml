@@ -141,7 +141,7 @@ build-gtkdoc:
   image: ${DEBIAN_IMAGE}
   before_script: *before_script_debian
   variables:
-    BUILD_ARGS: -Dgtk_doc=true -Dembed-wlroots=disabled
+    BUILD_ARGS: -Dgtk_doc=true -Dembed-wlroots=enabled
   script:
     - git clean -dfx
     - 'echo "Build opts: ${BUILD_ARGS}"'
