@@ -85,6 +85,7 @@ struct _PhocDragIcon {
   struct wlr_drag_icon *wlr_drag_icon;
 
   double                x, y;
+  double                dx, dy;
 
   struct wl_listener    surface_commit;
   struct wl_listener    map;

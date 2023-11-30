@@ -1553,6 +1553,9 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
       wlr_cursor_warp (self->cursor, NULL, lx, ly);
       phoc_cursor_update_position (self, event->time_msec);
     }
+
+    if (self->seat->drag_icon != NULL)
+      phoc_drag_icon_update_position (self->seat->drag_icon);
   }
 }
 
