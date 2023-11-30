@@ -1,3 +1,261 @@
+phoc (0.34.0~beta1) experimental; urgency=medium
+
+  * testlib: Print name of taken screenshot. This allows to trace test cases easier
+  * output: Don't forget to enable output when config is in use
+  * output: Migrate to damage ring.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/3530
+    See sway commit 7862fa670e208b4871c868f9b0e2a19b46a30e63
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/327
+  * output: Remove now unused phoc_output_damage_add_box
+  * render: Simplify rendering condition.
+    This avoids the double negation:
+       !pixman_region32_not_empty()
+  * output: Use wlr_output_state when handling config changes.
+    This ensures we don't accidentally commit pending state.
+  * output: Use wlr_output_state when handling power mode changes.
+    This ensures we don't accidentally commit pending state.
+  * output: Rename phoc_output_set_mode to phoc_output_state_set_mode.
+    We set the mode on the pending output state,  not the output.
+  * keyboard: Don't ever blank output on power button press.
+    The shell can do this nowadays.
+  * desktop: Drop phoc_desktop_toggle_output_blank.
+    Now unused. This removes another place where we manipulate output
+    state directly
+  * output: Drop pending state tracking.
+    We use wlr_output_state everywhere except for
+    phoc_renderer_render_output() which we'll switch over when moving to
+    render_pass.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/328
+  * wlroots: Avoid crash when plugging in new output.
+    This is exposed now that we don't commit an enabled state early
+    anymore. This only triggers when there's a listener for output state
+    configuration changes like phosh.
+  * build: Bump wlroots dependency to >= 0.17.0-dev.
+    This makes sure we don't build against an older system lib accidentally
+  * d/control: Add libewmh-dev build-dependency for embedded wlroots build
+  * d/control: Add libdisplay-info-dev
+  * render: Drop surface->{sx,sy}
+    See sway commit 7ec9d07fc597c739760df5223469e9f15340db78
+  * desktop: Add layer-shell version
+  * server: Pass wl_display version
+  * desktop: Use variable for maximum supported version
+  * output: Listen to the output's request-state event.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/2693
+  * server: Adapt to new wlr_backend_autocreate API.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/3814
+    See sway commit 7623292734d6ba48bbfef1c32da28d02118dac38
+  * desktop: Convert to try_from
+  * cursor: Convert to try_from
+  * gtk-shell: Convert to try_from
+  * xdg-activation: Convert to try_from
+  * output: Adjust to removed events.{enable,mode}
+    See wlroots commit c8eb24d30e18c165728b8788a10716611c3b633d
+  * phosh-private: Switch from wl_shm_buffer to wlr_buffer
+    zwlr_screencopy_frame changed so we need to adjust
+    See wlroots commit c153ae3c5d0e330d5fe90d4db0114e2e5d792bf2
+  * d/control: Sort embedded wlroots build-deps alphabetically
+  * d/control: Build-dep on libliftoff and hwdata for embedded wlroots build
+  * ci: Use wlroots subproject build.
+    This allows us to build against git more easily. For that we pull in
+    recent wayland-protocols and wayland.
+  * ci: Use embedded wlroots for packaging test.
+    For that we also want to switch to trixie as it has the needed
+    dependencies.
+  * ci: Use trixie by default.
+    We were upgrading to sid but can now use trixie as it has the necessary
+    deps.
+  * subprojects: Rediff wlroots patch.
+    This makes it apply without fuzz. Otherwise meson might complain.
+  * wlroots: Update to 2023-05-04
+  * build: Drop custom post_install.
+    Just use the gnome module
+    See wlroots commit 8af00d5534998dbb53a60c2b0a1ab59a51d5cdf5
+  * view: Convert to try_from
+  * text_input: Convert to try_from
+  * layer_shell: Use wl_container_of to get layer surface.
+    This makes us independent from the `data` passed.
+    Needed when switching to the new map logic but useful on its own.
+  * xwayland-surface: Get wlr_xwayland_surface from self.
+    This makes us independent of the data passed
+    Needed when switching to the new map logic but useful on its own.
+  * treewide: Adjust to map logic changes.
+    See sway commit c9e1dab3187d22ada0232d699e759a628e0ed185
+    Forwards to wlroots-git 2023-06-05
+  * seat: Switch to wlr_cursor_set_buffer and wlr_cursor_set_xcursor.
+    Forwards to wlroots-git 2023-07-05
+  * xdg-shell: Use toplevel instead of surface.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/4316
+    See sway commit 363c57984d08ff54bbf31f567ffcd4addad98753
+  * render: Use wlr_presentation_surface_scanned_out_on_output.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/4081
+  * treewide: Drop support for wlr-idle.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/3778
+  * output: Use actual state struct in handle_comitted.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/4331
+    See sway commit 4326a26ad6fb64b8f8de7d32c1e7b6423e1f84f3
+  * wlroots.wrap: Forward to 2023-10-10
+  * seat: Use simpler wlr_cursor_unset_image
+  * Revert "wlroots: Avoid crash when plugging in new output"
+    This reverts commit 5772172f679400676daa3fc5de883879b73d54aa.
+    Not needed with 0.17
+  * output: Use wlr_output_state_init.
+    See wlroots commit be050979684ae8779a56e4b0166cfb21d1935d35
+  * cursor: Remove unused variable
+  * phosh-private: Use wlr_buffer_try_from_resource.
+    See wlroots commit 8ccbe45143eff1705c0516bcdb02376d7d627198
+  * render: Use wlr_output_is_direct_scanout_allowed.
+    This obsoletes the cursor check.
+  * desktop: Modernize indent in phoc_desktop_setup_xwayland
+  * server: Filter out xwayland-shell-v1. This is only meant for XWayland.
+  * phosh-private: Allow to get global
+  * layer-shell-effects: Allow to get global
+  * desktop: Assign more protocols.
+    We want these for security context checks
+  * desktop: Create security_context_manager_v1
+  * desktop: Add check for privileged protocols.
+    Allow to easily check if a global belongs to a privileged protocol
+    that shouldn't be exported to untrusted clients.
+  * server: Don't expose globals of privileged protocols to untrusted clients.
+    Clients that have a security-context-v1 attached shouldn't see those
+    globals so filter them out.
+    This is inspired by sway's MR https://github.com/swaywm/sway/pull/7648
+  * ci: Modernize sanitizer build. It won't build on such old versions
+  * ci: Use image with updated dependencies. This will allow us to recurring
+    package installations from CI
+  * ci: Simplify image update
+  * ci: Install dependencies for doc build and XWayland into image.
+    Speeds up CI. We also add uncrustify as this will become useful
+    for formatting checks soon.
+  * ci: Install build-deps for embedded wlroots build into the image.
+    This speeds up ci. Since we install with --no-install-recommends we need
+    to add more build-deps to ensure the x11 backends stays buildable.
+  * ci: Install ci deps into the image. Speeds up CI.
+  * treewide: Fix indent start columns in function bodies.
+    Several places either didn't indent by two spaces or misaligned under
+    opening braces or in switch statements. Fix that.
+  * treewide: Fix function definition opening brace.
+    We want it on a separate line. Fix places where that is off.
+  * treewide: Fix initial column of function parameters.
+    We want their types vertically aligned. Fix places where that's not the
+    case.  We don't bother alligning the parameter names yet.
+  * treewide: Fix function definition return types indent.
+    Make sure they're on a separte line
+  * treewide: Fix function call argument indent.
+    Function call parameters are separated by ", ".
+  * treewide: Avoid space before array brackets
+  * ci: Run merge requests in merge request pipelines.
+    This gives us access to more varibles so we can e.g. diff against
+    the base branch.
+  * ci: Check style in merge requests
+  * testlib: Print filename of failed screenshot
+  * output: Move output configuration handling to separate function
+  * output: Allow to test output config changes.
+    Another TODO done.
+  * output: Simplify
+  * settings: Drop unused includes
+  * output: Move output state configuration to separate function.
+    This makes phoc_output_initable_init() easier to read and will allow us
+    to reapply output config from other places too.
+  * output: Simplify enable during output setup.
+    Do this upfront which saves us one indentation level
+  * output: Use wlr_output_layout_add_auto if position isn't specified.
+    This gives a better automatic layout if multiple outputs are specified
+    in the configuration file but not all of them have a position.
+    So far they would all be put at 0,0.
+  * ci: Move style checks to separate stage.
+    Style checks often fail due to minor nits. When looking at the pipeline
+    state we want to see at a single glance if this is just a style check or
+    maybe an asan failure.
+    So make sure these aren't in the same stage.
+  * treewide: Drop unused version.h include
+  * desktop: Add phoc_desktop_find_output_by_name
+  * cursor: Identify relative pointer motion
+  * seat: Don't forget to map pointers.
+    This unbreaks running nested phoc with multiple outputs
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/347
+  * settings: Split output name on '%'
+    Space is too common in EDID names. An alternative would be to reverse
+    the matching by constructing the string from the output information but
+    that's again fragile.
+  * settings: Allow for wildcards in output matches
+  * doc: Add manpage for phoc.ini
+  * build: Make it simple to switch glib versions
+  * build: Assume glib 2.74 as baseline.
+    It's in Debian stable
+  * server: Use g_spawn_check_wait_status. No need to care about older glib.
+  * gmobile: Switch to 0.0.4
+  * view: Use MIN() MIN() is easier to read than open coding it
+  * layer-shell-effects: Use MIN() and MAX(). Easier to read
+  * cursor: Use MAX(). Easier to read
+  * seat: Avoid misplacing when dragging maximized views.
+    If a toplevel is maximized initially there's no saved width or height.
+    Use the maximized width/height in this case. Otherwise the toplevel's top
+    left corner suddenly jumps to the cursor position when dragging this
+    toplevel via mouse pointer from it's maximized state.
+    This can be reproduced with firefox. Use
+       WLR_BACKENDS=wayland   _build/src/phoc -E firefox
+    and maximize firefox. Then close firefox. This will make it restore
+    the maximized state on next startup:
+       WLR_BACKENDS=wayland   _build/src/phoc -E firefox
+    Now drag the window on the titlebar and notice the top left corner
+    jumping to the cursor position. With this patch this will no longer
+    happen.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/349
+  * server: Don't crash when wl-display was never inited.
+    This can happen when we hit another failure early.
+  * server: Enable linux dmabuf.
+    This was so far inited implicitly via wlr_renderer_init_wl_display.
+    See https://gitlab.gnome.org/World/Phosh/phoc/-/issues/350
+  * view: Send linux_dmabuf_feedback_v1 for fullscreen views.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/350
+  * output: Don't forget to free output pending state struct.
+    This wasn't much of a problem as we don't set LUT or damage via this yet
+    but it's good to have it cleaned up.
+  * output: Wire up gamma-control handler.
+    See wlroots commit 36376e2ddf0d16baae37e6b733f0baf53f82ebb7
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/348
+  * packaging: Drop unneeded build-deps.
+    The clients have been dropped from wlroots source tree.
+  * subprojects: Use depth=1 for wlroots too.
+    We can depthen the shallow clone if needed for development.
+  * subprojects: Update wlroots to 0.17.0
+  * ci: Don't enforce non-embedded wlroots for doc build.
+    Not needed and can break the build.
+  * ci: Improve uncrustify config
+    - Automatically drop braces on single line statements
+    - Remove duplicate semicolons
+    - Remove superfluous braces in case statements
+  * cursor: Don't forget to update the drag icons position.
+    We also need to move the icon when using touch.
+  * seat: Handle drag icon hotspot position.
+    The position is sent via wl_surface.offset requests.
+  * render: Remove unused render-start signal.
+    It wasn't a great idea as we'd better handle it per output
+  * output: Move render invocation to separate function
+  * render: Move sending frame-done events to output.
+    It's not related to any rendering. No functional change.
+  * render: Move scan_out_fullscreen_view to output.
+    There's no rendering going on.
+  * output: Mostly move damage ring handling to output.
+    Even after moving the full screen view scan out and the frame-done
+    event handling the current render pass is a mixed bag of rendering,
+    adding additional damage for debug options (touch-points, damage) and
+    committing the new output state.
+    As a next step move the rotation of the damage ring and the output
+    commit out of the render_output call.
+    This makes the render flow easier to track. We pass the render context
+    around for that and hence make it public. Context is a slightly better
+    fit than the generic data.
+  * render: Move adding the frame damage to the output.
+    The renderer isn't involved.
+  * output: Don't forget to submit the frame callback list.
+    This fixes some clients only making progress e.g. on cursor movement
+    (when there's actual damage submitted)
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/354
+  * d/control: Add Breaks: for known clients using kde_kwin_idle
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 30 Nov 2023 11:29:01 +0100
+
 phoc (0.33.0) experimental; urgency=medium
 
   * seat: Use phoc_desktop_notify_activity to notify idle activity.

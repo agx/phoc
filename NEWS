@@ -1,3 +1,31 @@
+phoc 0.34.0~beta1
+-----------------
+Released November 2023
+* Switch to wlroots 0.17.0 prompting lots of internal modernization
+* New protocols:
+  - xwayland-shell-v1 (needed for XWayland only)
+  - security-context-v1 (to limit protocol access for e.g. flatpaks)
+* Dropped protocols:
+  - org_kde_kwin_idle
+* Support wlr_output_config's tests request
+  (wlr-randr --dryrun …)
+* Send dmabuf feedback for fullscreen views
+* Improve and document output configuration via phoc.ini
+* Drag and drop on touchscreen fixes
+* Fix nested phoc with multiple outputs
+* Switch to gmobile 0.0.4
+* Switch to glib 2.74
+* Issues fixed:
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/327
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/328
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/347
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/348
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/349
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/350
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/354
+* Contributors:
+    * Guido Günther
+
 phoc 0.33.0
 -----------
 Released October 2023
@@ -44,7 +72,7 @@ phoc 0.30.0
 Released August 2023
 * Switch to wlroots 0.16.2
 * Drop git submodules in favour of meson subprojects
-  Patches are now in subprojects/packagefiles/ 
+  Patches are now in subprojects/packagefiles/
 * Switch to xdg-shell 5
 * More internal cleanups
 * Issues fixed:
