@@ -18,6 +18,10 @@ option('man',
        type: 'boolean', value: false,
        description: 'generate man pages (requires rst2man)')
 
+option('dtrace',
+       type: 'feature', value: 'disabled',
+       description: 'Wether to enable systemtap tracing')
+
 option('dev-uid',
        type: 'integer', value: 1000,
        description: 'User id for phoc development')

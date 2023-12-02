@@ -80,6 +80,17 @@ if get_option('xwayland').enabled() and not wlroots_has_xwayland
 endif
 have_xwayland = get_option('xwayland').enabled()
 
+use_dtrace = false
+if not get_option('dtrace').disabled()
+  has_sdt = cc.has_header('sys/sdt.h')
+
+  if get_option('dtrace').enabled() and not has_sdt
+    error('Cannot enable tracing, sys/sdt.h not found')
+  endif
+
+  use_dtrace = has_sdt
+endif
+
 global_c_args = []
 test_c_args = [
   '-Wcast-align',
@@ -139,6 +150,8 @@ config_h.set_quoted('PHOC_APP_ID', 'sm.puri.Phoc')
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland,
 	     description: 'Whether xwayland is enabled')
+config_h.set('PHOC_USE_DTRACE', use_dtrace,
+	     description: 'Whether tracing via dtrace/stp is enabled')
 
 phoc_config_h = configure_file(
   output: 'phoc-config.h',
@@ -168,6 +181,7 @@ summary({
      'Xwayland': have_xwayland,
      'Documentation': get_option('gtk_doc'),
      'Manual pages': get_option('man'),
+     'Tracing': use_dtrace,
   },
   bool_yn: true,
   section: 'Build',
