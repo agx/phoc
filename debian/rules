@@ -16,6 +16,10 @@ ifneq ($(filter pkg.phoc.sanitizers,$(DEB_BUILD_PROFILES)),)
     CFLAGS += -Wno-stringop-overflow -Wno-array-bounds -Wno-restrict
 endif
 
+ifneq ($(filter pkg.phoc.trace,$(DEB_BUILD_PROFILES)),)
+    MESON_OPTS += -Ddtrace=enabled
+endif
+
 %:
 	dh $@
 
