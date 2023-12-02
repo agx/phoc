@@ -415,6 +415,30 @@ phoc_output_handle_needs_frame (struct wl_listener *listener, void *user_data)
 
 
 static void
+update_output_scale_iterator (PhocOutput         *self,
+                              struct wlr_surface *surface,
+                              struct wlr_box     *box,
+                              float               rotation,
+                              float               scale,
+                              void               *user_data)
+
+
+{
+  struct wlr_surface_output *surface_output;
+
+  wl_list_for_each (surface_output, &surface->current_outputs, link) {
+    if (surface_output->output->scale > scale) {
+      scale = surface_output->output->scale;
+    }
+  }
+
+  /* TODO: once we implement wlr_fractional_scale_v1_notify_scale */
+  //wlr_fractional_scale_v1_notify_scale(surface, scale);
+  wlr_surface_set_preferred_buffer_scale (surface, ceil(scale));
+}
+
+
+static void
 phoc_output_handle_commit (struct wl_listener *listener, void *data)
 {
   PhocOutput *self = wl_container_of (listener, self, commit);
@@ -446,6 +470,9 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
     priv->gamma_lut_changed = TRUE;
     wlr_output_schedule_frame (self->wlr_output);
   }
+
+  if (event->state->committed & WLR_OUTPUT_STATE_SCALE)
+    phoc_output_for_each_surface (self, update_output_scale_iterator, NULL, FALSE);
 }
 
 
