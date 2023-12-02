@@ -165,7 +165,7 @@ configure_file(
 summary({
      'wlroots version': wlroots.version(),
      'wlroots as submodule': not embed_wlroots.disabled() and wlroots_proj.found(),
-     'XWayland': have_xwayland,
+     'Xwayland': have_xwayland,
      'Documentation': get_option('gtk_doc'),
      'Manual pages': get_option('man'),
   },
