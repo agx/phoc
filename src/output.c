@@ -1,6 +1,7 @@
 #define G_LOG_DOMAIN "phoc-output"
 
 #include "phoc-config.h"
+#include "phoc-tracing.h"
 
 #define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
@@ -394,7 +395,7 @@ count_surface_iterator (PhocOutput         *output,
 }
 
 
-static bool
+PHOC_TRACE_NO_INLINE static bool
 scan_out_fullscreen_view (PhocOutput *self)
 {
   struct wlr_output *wlr_output = self->wlr_output;
@@ -474,7 +475,7 @@ get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
 }
 
 
-static void
+PHOC_TRACE_NO_INLINE static void
 phoc_output_draw (PhocOutput *self)
 {
   PhocServer *server = phoc_server_get_default ();
