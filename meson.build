@@ -23,6 +23,7 @@ bindir = prefix / get_option('bindir')
 datadir = prefix / get_option('datadir')
 localedir = prefix / get_option('localedir')
 desktopdir = prefix / datadir / 'applications'
+pkgdatadir = prefix / datadir / meson.project_name()
 
 cc = meson.get_compiler('c')
 
