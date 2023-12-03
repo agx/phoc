@@ -367,11 +367,188 @@ phoc_output_set_gamma_lut (PhocOutput *self)
 
 
 static void
+surface_send_frame_done_iterator (PhocOutput         *output,
+                                  struct wlr_surface *surface,
+                                  struct wlr_box     *box,
+                                  float               rotation,
+                                  float               scale,
+                                  void               *data)
+{
+  struct timespec *when = data;
+
+  wlr_surface_send_frame_done (surface, when);
+}
+
+
+static void
+count_surface_iterator (PhocOutput         *output,
+                        struct wlr_surface *surface,
+                        struct wlr_box     *box,
+                        float               rotation,
+                        float               scale,
+                        void               *data)
+{
+  size_t *n = data;
+
+  (*n)++;
+}
+
+
+static bool
+scan_out_fullscreen_view (PhocOutput *self)
+{
+  struct wlr_output *wlr_output = self->wlr_output;
+  PhocServer *server = phoc_server_get_default ();
+  size_t n_surfaces = 0;
+  struct wlr_surface *wlr_surface;
+  PhocView *view;
+
+  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+    PhocSeat *seat = PHOC_SEAT (elem->data);
+    PhocDragIcon *drag_icon;
+
+    g_assert (PHOC_IS_SEAT (seat));
+    drag_icon = seat->drag_icon;
+    if (drag_icon && drag_icon->wlr_drag_icon->surface->mapped)
+      return false;
+  }
+
+  if (phoc_output_has_layer (self, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
+    return false;
+
+  view = self->fullscreen_view;
+  g_assert (view != NULL);
+  if (!phoc_view_is_mapped (view))
+    return false;
+
+  phoc_output_view_for_each_surface (self, view, count_surface_iterator, &n_surfaces);
+  if (n_surfaces > 1)
+    return false;
+
+#ifdef PHOC_XWAYLAND
+  if (PHOC_IS_XWAYLAND_SURFACE (view)) {
+    struct wlr_xwayland_surface *xsurface =
+      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
+    if (!wl_list_empty (&xsurface->children)) {
+      return false;
+    }
+  }
+#endif
+
+  wlr_surface = view->wlr_surface;
+  if (wlr_surface->buffer == NULL)
+    return false;
+
+  if ((float)wlr_surface->current.scale != wlr_output->scale ||
+      wlr_surface->current.transform != wlr_output->transform) {
+    return false;
+  }
+
+  if (!wlr_output_is_direct_scanout_allowed (wlr_output))
+    return false;
+
+  wlr_output_attach_buffer (wlr_output, &wlr_surface->buffer->base);
+  if (!wlr_output_test (wlr_output))
+    return false;
+
+  wlr_presentation_surface_scanned_out_on_output (self->desktop->presentation,
+                                                  wlr_surface,
+                                                  wlr_output);
+
+  return wlr_output_commit (wlr_output);
+}
+
+
+static void
+get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
+{
+  int width, height;
+  enum wl_output_transform transform;
+
+  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+
+  pixman_region32_init (frame_damage);
+
+  transform = wlr_output_transform_invert (self->wlr_output->transform);
+  wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
+}
+
+
+static void
+phoc_output_draw (PhocOutput *self)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+  struct wlr_output *wlr_output = self->wlr_output;
+  bool needs_frame, scanned_out = false;
+  pixman_region32_t buffer_damage, frame_damage;
+  int buffer_age;
+  PhocRenderContext render_context;
+  enum wl_output_transform transform;
+
+  if (!wlr_output->enabled)
+    return;
+
+  /* Check if we can delegate the fullscreen surface to the output */
+  if (phoc_output_has_fullscreen_view (self))
+    scanned_out = scan_out_fullscreen_view (self);
+
+  if (scanned_out)
+    return;
+
+  if (!wlr_output_attach_render (wlr_output, &buffer_age))
+    return;
+
+  pixman_region32_init (&buffer_damage);
+  wlr_damage_ring_get_buffer_damage (&self->damage_ring, buffer_age, &buffer_damage);
+
+  transform = wlr_output_transform_invert (wlr_output->transform);
+  needs_frame = self->wlr_output->needs_frame;
+
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
+    pixman_region32_union_rect (&buffer_damage, &buffer_damage,
+                                0, 0, wlr_output->width, wlr_output->height);
+    wlr_region_transform (&buffer_damage, &buffer_damage,
+                          transform, wlr_output->width, wlr_output->height);
+    needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
+    needs_frame |=
+      pixman_region32_not_empty (&self->damage_ring.previous[self->damage_ring.previous_idx]);
+  }
+
+  needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
+  if (!needs_frame) {
+    /* Output isn't damaged, skip rendering completely */
+    wlr_output_rollback (wlr_output);
+    return;
+  }
+
+  render_context = (PhocRenderContext){
+    .damage = &buffer_damage,
+    .alpha = 1.0,
+  };
+  phoc_renderer_render_output (priv->renderer, self, &render_context);
+
+  pixman_region32_fini (&buffer_damage);
+
+  get_frame_damage (self, &frame_damage);
+  wlr_output_set_damage (wlr_output, &frame_damage);
+  pixman_region32_fini (&frame_damage);
+
+  if (!wlr_output_commit (wlr_output))
+    return;
+
+  wlr_damage_ring_rotate (&self->damage_ring);
+}
+
+
+static void
 phoc_output_handle_frame (struct wl_listener *listener, void *data)
 {
   PhocOutputPrivate *priv = wl_container_of (listener, priv, frame);
   PhocOutput *self = PHOC_OUTPUT_SELF (priv);
+  struct timespec now;
 
+  /* Process all registered frame callbacks */
   GSList *l = priv->frame_callbacks;
   while (l != NULL) {
     GSList *next = l->next;
@@ -387,6 +564,7 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
   }
   priv->last_frame_us = g_get_monotonic_time ();
 
+  /* Ensure the cutouts are drawn */
   if (G_UNLIKELY (priv->cutouts_texture)) {
     struct wlr_box box = { 0, 0, priv->cutouts_texture->width, priv->cutouts_texture->height };
     if (wlr_damage_ring_add_box (&self->damage_ring, &box))
@@ -396,7 +574,12 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
   if (G_UNLIKELY (priv->gamma_lut_changed))
     phoc_output_set_gamma_lut (self);
 
-  phoc_renderer_render_output (priv->renderer, self);
+  /* Repaint the output */
+  phoc_output_draw (self);
+
+  /* Send frame done events to all visible surfaces */
+  clock_gettime (CLOCK_MONOTONIC, &now);
+  phoc_output_for_each_surface (self, surface_send_frame_done_iterator, &now, true);
 
   /* Want frame clock ticking as long as we have frame callbacks */
   if (priv->frame_callbacks)
@@ -1247,6 +1430,9 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
     if (wlr_damage_ring_add_box (&self->damage_ring, &box))
       wlr_output_schedule_frame (self->wlr_output);
   }
+
+  if (!wl_list_empty (&surface->current.frame_callback_list))
+    wlr_output_schedule_frame (self->wlr_output);
 }
 
 

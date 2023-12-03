@@ -18,9 +18,18 @@ G_DECLARE_FINAL_TYPE (PhocRenderer, phoc_renderer, PHOC, RENDERER, GObject)
 typedef struct _PhocOutput PhocOutput;
 typedef struct _PhocView PhocView;
 
+
+typedef struct _PhocRenderContext {
+  pixman_region32_t *damage;
+  float alpha;
+} PhocRenderContext;
+
+
 PhocRenderer *phoc_renderer_new (struct wlr_backend *wlr_backend, GError **error);
 
-void          phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output);
+void          phoc_renderer_render_output (PhocRenderer      *self,
+                                           PhocOutput        *output,
+                                           PhocRenderContext *context);
 gboolean      phoc_renderer_render_view_to_buffer (PhocRenderer           *self,
                                                    PhocView               *view,
                                                    struct wlr_buffer      *data);
