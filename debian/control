@@ -73,7 +73,7 @@ Depends:
 Recommends: phosh
 Breaks:
  phog (<< 0.1.6~),
- phosh (<< 0.33.0~),
+ phosh (<< 0.34.0~),
 Description: Wayland compositor for mobile phones
  Tiny wayland compositor based on wlroots for use on mobile phones like the
  Librem 5.
