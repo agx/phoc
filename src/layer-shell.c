@@ -264,6 +264,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
   PhocInput *input = phoc_server_get_input (server);
   struct wlr_box usable_area = { 0 };
   GSList *seats = phoc_input_get_seats (input);
+  gboolean usable_area_changed;
   enum zwlr_layer_shell_v1_layer layers[] = {
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
@@ -281,12 +282,17 @@ phoc_layer_shell_arrange (PhocOutput *output)
   /* Arrange exclusive surfaces from top->bottom */
   for (size_t i = 0; i < G_N_ELEMENTS (layers); ++i)
     arrange_layer (output, seats, layers[i], &usable_area, true);
-  output->usable_area = usable_area;
 
-  for (GList *l = phoc_desktop_get_views (desktop)->head; l; l = l->next) {
-    PhocView *view = PHOC_VIEW (l->data);
+  usable_area_changed = memcmp (&output->usable_area, &usable_area, sizeof (output->usable_area));
+  if (usable_area_changed) {
+    g_debug ("Usable area changed, rearranging views");
+    output->usable_area = usable_area;
 
-    phoc_view_arrange (view, NULL, output->desktop->maximize);
+    for (GList *l = phoc_desktop_get_views (desktop)->head; l; l = l->next) {
+      PhocView *view = PHOC_VIEW (l->data);
+
+      phoc_view_arrange (view, NULL, output->desktop->maximize);
+    }
   }
 
   /* Arrange non-exlusive surfaces from top->bottom */
