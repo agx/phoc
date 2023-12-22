@@ -98,7 +98,7 @@ typedef struct {
   PhocOutput          *output;
   double               ox, oy;
   int                  width, height;
-  float                rotation, scale;
+  float                scale;
 } PhocOutputSurfaceIteratorData;
 
 
@@ -122,41 +122,24 @@ get_surface_box (PhocOutputSurfaceIteratorData *data,
 {
   PhocOutput *self = data->output;
 
-  if (!wlr_surface_has_buffer (surface)) {
+  if (!wlr_surface_has_buffer (surface))
     return false;
-  }
-
-  int sw = surface->current.width;
-  int sh = surface->current.height;
-
-  double _sx = sx;
-  double _sy = sy;
-
-  phoc_utils_rotate_child_position (&_sx, &_sy, sw, sh, data->width,
-                                    data->height, data->rotation);
 
   struct wlr_box box = {
-    .x = data->ox + _sx,
-    .y = data->oy + _sy,
-    .width = sw,
-    .height = sh,
+    .x = floor (data->ox + sx),
+    .y = floor (data->oy + sy),
+    .width = surface->current.width,
+    .height = surface->current.height,
   };
 
-  if (surface_box != NULL) {
+  if (surface_box != NULL)
     *surface_box = box;
-  }
-
-  struct wlr_box rotated_box;
-
-  phoc_utils_rotated_bounds (&rotated_box, &box, data->rotation);
 
   struct wlr_box output_box = {0};
-
   wlr_output_effective_resolution (self->wlr_output, &output_box.width, &output_box.height);
   phoc_utils_scale_box (&output_box, 1 / data->scale);
 
   struct wlr_box intersection;
-
   return wlr_box_intersection (&intersection, &output_box, &box);
 }
 
@@ -371,7 +354,6 @@ static void
 surface_send_frame_done_iterator (PhocOutput         *output,
                                   struct wlr_surface *surface,
                                   struct wlr_box     *box,
-                                  float               rotation,
                                   float               scale,
                                   void               *data)
 {
@@ -385,7 +367,6 @@ static void
 count_surface_iterator (PhocOutput         *output,
                         struct wlr_surface *surface,
                         struct wlr_box     *box,
-                        float               rotation,
                         float               scale,
                         void               *data)
 {
@@ -602,7 +583,6 @@ static void
 update_output_scale_iterator (PhocOutput         *self,
                               struct wlr_surface *surface,
                               struct wlr_box     *box,
-                              float               rotation,
                               float               scale,
                               void               *user_data)
 
@@ -999,8 +979,7 @@ phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
     return;
   }
 
-  data->user_iterator (data->output, surface, &box, data->rotation,
-                       data->scale, data->user_data);
+  data->user_iterator (data->output, surface, &box, data->scale, data->user_data);
 }
 
 /**
@@ -1030,7 +1009,6 @@ phoc_output_surface_for_each_surface (PhocOutput          *self,
     .oy = oy,
     .width = surface->current.width,
     .height = surface->current.height,
-    .rotation = 0,
     .scale = 1.0
   };
 
@@ -1065,7 +1043,6 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput             *self,
     .oy = oy,
     .width = xdg_surface->surface->current.width,
     .height = xdg_surface->surface->current.height,
-    .rotation = 0,
     .scale = 1.0
   };
 
@@ -1102,7 +1079,6 @@ phoc_output_view_for_each_surface (PhocOutput          *self,
     .oy = view->box.y - output_box.y,
     .width = view->box.width,
     .height = view->box.height,
-    .rotation = 0,
     .scale = phoc_view_get_scale (view)
   };
 
@@ -1395,8 +1371,8 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
 }
 
 static void
-damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
-                         wlr_box *_box, float rotation, float scale, void *data)
+damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct wlr_box *_box,
+                         float scale, void *data)
 {
   bool *whole = data;
 
@@ -1404,9 +1380,6 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
 
   phoc_utils_scale_box (&box, scale);
   phoc_utils_scale_box (&box, self->wlr_output->scale);
-
-  int center_x = box.x + box.width/2;
-  int center_y = box.y + box.height/2;
 
   pixman_region32_t damage;
   pixman_region32_init (&damage);
@@ -1418,16 +1391,13 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct
     // expand the damage region
     wlr_region_expand (&damage, &damage, ceil (self->wlr_output->scale) - surface->current.scale);
   }
+
   pixman_region32_translate (&damage, box.x, box.y);
-  wlr_region_rotated_bounds (&damage, &damage, rotation,
-                             center_x, center_y);
   if (wlr_damage_ring_add (&self->damage_ring, &damage))
     wlr_output_schedule_frame (self->wlr_output);
-
   pixman_region32_fini (&damage);
 
   if (*whole) {
-    phoc_utils_rotated_bounds (&box, &box, rotation);
     if (wlr_damage_ring_add_box (&self->damage_ring, &box))
       wlr_output_schedule_frame (self->wlr_output);
   }

@@ -205,12 +205,8 @@ render_texture (struct wlr_output     *wlr_output,
                 const struct wlr_fbox *src_box,
                 const struct wlr_box  *dst_box,
                 const float            matrix[static 9],
-                float                  rotation,
                 float                  alpha)
 {
-  struct wlr_box rotated;
-  phoc_utils_rotated_bounds (&rotated, dst_box, rotation);
-
   pixman_region32_t damage;
   if (!is_damaged (dst_box->x, dst_box->y, dst_box->width, dst_box->height, output_damage, &damage))
     goto buffer_damage_finish;
@@ -260,7 +256,6 @@ static void
 render_surface_iterator (PhocOutput         *output,
                          struct wlr_surface *surface,
                          struct wlr_box     *box,
-                         float               rotation,
                          float               scale,
                          void               *_data)
 {
@@ -283,10 +278,9 @@ render_surface_iterator (PhocOutput         *output,
 
   float matrix[9];
   enum wl_output_transform transform = wlr_output_transform_invert (surface->current.transform);
-  wlr_matrix_project_box (matrix, &dst_box, transform, rotation, wlr_output->transform_matrix);
+  wlr_matrix_project_box (matrix, &dst_box, transform, 0.0, wlr_output->transform_matrix);
 
-  render_texture (wlr_output, output_damage,
-                  texture, &src_box, &dst_box, matrix, rotation, alpha);
+  render_texture (wlr_output, output_damage, texture, &src_box, &dst_box, matrix, alpha);
 
   wlr_presentation_surface_scanned_out_on_output (output->desktop->presentation,
                                                   surface,

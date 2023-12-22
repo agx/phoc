@@ -60,7 +60,6 @@ PhocOutput *phoc_output_new (PhocDesktop       *desktop,
 typedef void (*PhocSurfaceIterator)(PhocOutput         *self,
                                     struct wlr_surface *surface,
                                     struct wlr_box     *box,
-                                    float               rotation,
                                     float               scale,
                                     void               *user_data);
 void        phoc_output_xdg_surface_for_each_surface (PhocOutput *self,
