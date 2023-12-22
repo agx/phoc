@@ -26,10 +26,7 @@ G_BEGIN_DECLS
  */
 #define PHOC_PRIV_CONTAINER(c, t, p)  (c)(PHOC_PRIV_CONTAINER_P(t,p))
 
-void phoc_utils_fix_transform (enum wl_output_transform *transform);
-void phoc_utils_rotate_child_position (double *sx, double *sy, double sw, double sh,
-                                       double pw, double ph, float rotation);
-void phoc_utils_rotated_bounds (struct wlr_box *dest, const struct wlr_box *box, float rotation);
+void       phoc_utils_fix_transform         (enum wl_output_transform *transform);
 float      phoc_utils_compute_scale         (int32_t phys_width, int32_t phys_height,
                                              int32_t width, int32_t height);
 void       phoc_utils_scale_box             (struct wlr_box *box, float scale);
