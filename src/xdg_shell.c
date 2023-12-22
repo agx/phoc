@@ -148,6 +148,10 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
 {
   PhocXdgPopup *popup = wl_container_of (listener, popup, reposition);
 
+  /* clear the old popup positon */
+  /* TODO: this is too much damage */
+  phoc_view_damage_whole (popup->child.view);
+
   popup_unconstrain (popup);
 }
 
