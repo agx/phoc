@@ -1994,12 +1994,12 @@ phoc_view_child_apply_damage (PhocViewChild *child)
 void
 phoc_view_child_damage_whole (PhocViewChild *child)
 {
-  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
-    return;
-
   PhocOutput *output;
   int sx, sy;
   struct wlr_box view_box;
+
+  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
+    return;
 
   view_get_box (child->view, &view_box);
   child->impl->get_pos (child, &sx, &sy);

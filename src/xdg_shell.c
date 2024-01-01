@@ -116,9 +116,9 @@ popup_handle_map (struct wl_listener *listener, void *data)
   PhocServer *server = phoc_server_get_default ();
   PhocXdgPopup *popup = wl_container_of (listener, popup, map);
 
+  popup->child.mapped = true;
   phoc_view_child_damage_whole (&popup->child);
   phoc_input_update_cursor_focus (server->input);
-  popup->child.mapped = true;
 }
 
 static void
@@ -147,6 +147,10 @@ static void
 popup_handle_reposition (struct wl_listener *listener, void *data)
 {
   PhocXdgPopup *popup = wl_container_of (listener, popup, reposition);
+
+  /* clear the old popup positon */
+  /* TODO: this is too much damage */
+  phoc_view_damage_whole (popup->child.view);
 
   popup_unconstrain (popup);
 }
