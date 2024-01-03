@@ -643,8 +643,8 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
     struct wlr_box output_box;
     wlr_output_layout_get_box (view->desktop->layout, output->wlr_output, &output_box);
     phoc_view_move_resize (view,
-                           output_box.x,
-                           output_box.y,
+                           output_box.x - view_geom.x * priv->scale,
+                           output_box.y - view_geom.y * priv->scale,
                            output_box.width,
                            output_box.height);
 
