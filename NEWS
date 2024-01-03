@@ -1,3 +1,17 @@
+phoc 0.35.0
+-----------
+Released Januar 2024
+* Make using dtrace probes easy and add some useful tracing scripts
+* Fix more popup and fullscreen related issues
+* Update to wlroots 0.17.1
+* Issues fixed:
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/355
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/356
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/357
+* Contributors:
+    * Guido Günther
+    * Paul Cercueil
+
 phoc 0.34.0~beta1
 -----------------
 Released November 2023

@@ -1,3 +1,66 @@
+phoc (0.35.0) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * build: Allow to build with released wlroots 0.17.0.
+    0.17.0-dev is greater than 0.17.0
+  * packging: Fix phosh relationship
+    phosh 0.34.0 switched to ext-idle-notify
+  * packaging: Drop default -Dembed-wlroots=disabled.
+    Otherwise we end up with
+      -Dembed-wlroots=disabled -Dembed-wlroots=enabled
+    which works but looks confusing.
+  * packaging: Install NEWS and manpages.
+    Doesn't hurt to have them in the development builds too.
+  * build: Spell Xwayland like on wayland.fdo
+  * build: Make paths a bit simpler to read.
+    Avoid join_path and prefer '/'.
+  * build: Format meson options consistently
+  * tracing: Add support for systemtap probes.
+    We don't add any actual static trace points yet.
+  * helpers: Add tracing scripts.
+    Add example scripts that help tracing the render loop and with
+    activation.
+  * tracing: Allow to exempt functions from inlining.
+    Allow to exempt functions from inlining when tracing is enabled.
+  * output: Don't inline frame submission.
+    Don't inline frame submission when tracing is enabled
+  * packaging: Allow to enable tracing via a build profile
+  * d/control: Bump wlroots dependency to 0.17.0 too.
+    As we're building with the embeded variant only in CI noone noticed yet.
+  * wlroots: Bump to 0.17.1
+  * xdg-shell: Set mapped before damaging popup.
+    Otherwise the following phoc_view_child_damage_whole() will
+    always return early as the view isn't mapped yet.
+  * output: Drop support for surface rotation.
+    We're not using it, it complicates the code and it was broken
+    as we generated rotated boxes (e.g. in render_texture() and
+    get_surface_box() but never used them.
+  * utils: Remove now unused rotated bounds helpers.
+    We do this in a separate commit so they can be brought back
+    easily if needed.
+  * xdg-shell: Fix popup reposition damage.
+    Since 40fa76e34f1b4c33c09c377095e7ff9b4897aa55 we don't damage the whole
+    view containing a popup but only the popup itself reducing the damage
+    submitted. This worked well until we switched to xdg-shell >= 3 where
+    popups can be repositioned leaving traces of the old popup behind.
+    This can clearly be seen with GTK's magnifier when selecting text.
+    Damage the parent view on reposition to avoid this.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/355
+  * view: Take geometry into accout for fullscreen views.
+    If we hit the direct scanout path geometry doesn't matter for the
+    rendered surface but when the user e.g. opens a popup we hit the
+    rendering path and we need to take geometry into account as otherwise the
+    surface is shifted towards the bottom right edge.
+    This also fixes UI elements not being responsive in fullscreen.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/356
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/357
+
+  [ Paul Cercueil ]
+  * output: Detect DPI screens as built-in.
+    Some phones (e.g. Galaxy S2) use a DPI screen. Detect them as built-in.
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 03 Jan 2024 19:49:46 +0100
+
 phoc (0.34.0~beta1) experimental; urgency=medium
 
   * testlib: Print name of taken screenshot. This allows to trace test cases easier
