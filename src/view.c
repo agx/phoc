@@ -176,7 +176,7 @@ phoc_view_get_box (PhocView *view, struct wlr_box *box)
 
 /* TODO: Use PhocBling for decorations too */
 void
-view_get_deco_box (PhocView *view, struct wlr_box *box)
+phoc_view_get_deco_box (PhocView *view, struct wlr_box *box)
 {
   PhocViewPrivate *priv;
 
@@ -195,7 +195,7 @@ view_get_deco_box (PhocView *view, struct wlr_box *box)
 }
 
 PhocViewDecoPart
-view_get_deco_part (PhocView *view, double sx, double sy)
+phoc_view_get_deco_part (PhocView *view, double sx, double sy)
 {
   PhocViewPrivate *priv;
 
@@ -1357,7 +1357,7 @@ view_update_size (PhocView *view, int width, int height)
 }
 
 void
-view_update_decorated (PhocView *view, bool decorated)
+phoc_view_update_decorated (PhocView *view, bool decorated)
 {
   PhocViewPrivate *priv;
 

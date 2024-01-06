@@ -164,7 +164,7 @@ view_at (PhocView *view, double lx, double ly, struct wlr_surface **surface, dou
     return true;
   }
 
-  if (view_get_deco_part (view, view_sx, view_sy)) {
+  if (phoc_view_get_deco_part (view, view_sx, view_sy)) {
     if (sx)
       *sx = view_sx;
     if (sy)

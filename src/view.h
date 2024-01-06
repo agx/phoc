@@ -165,7 +165,7 @@ gboolean phoc_view_is_floating (PhocView *view);
 gboolean phoc_view_is_maximized (PhocView *view);
 gboolean phoc_view_is_tiled (PhocView *view);
 gboolean phoc_view_is_fullscreen (PhocView *self);
-void view_update_decorated(PhocView *view, bool decorated);
+void phoc_view_update_decorated(PhocView *view, bool decorated);
 void phoc_view_arrange (PhocView *self, PhocOutput *output);
 void phoc_view_get_box (PhocView *view, struct wlr_box *box);
 void phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
@@ -183,7 +183,7 @@ void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, PhocOutput *outpu
 void phoc_view_close (PhocView *self);
 void phoc_view_set_app_id (PhocView *view, const char *app_id);
 const char *phoc_view_get_app_id (PhocView *self);
-void view_get_deco_box(PhocView *view, struct wlr_box *box);
+void phoc_view_get_deco_box(PhocView *view, struct wlr_box *box);
 void phoc_view_for_each_surface (PhocView                    *self,
                                  wlr_surface_iterator_func_t  iterator,
                                  gpointer                     user_data);
@@ -198,7 +198,7 @@ PhocOutput *phoc_view_get_output (PhocView *view);
 
 pid_t                phoc_view_get_pid                           (PhocView *self);
 bool                 phoc_view_is_mapped (PhocView *view);
-PhocViewDecoPart     view_get_deco_part(PhocView *view, double sx, double sy);
+PhocViewDecoPart     phoc_view_get_deco_part (PhocView *view, double sx, double sy);
 void                 phoc_view_set_scale_to_fit (PhocView *self, gboolean enable);
 gboolean             phoc_view_get_scale_to_fit (PhocView *self);
 void                 phoc_view_set_activation_token (PhocView *self, const char *token, int type);

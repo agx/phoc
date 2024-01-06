@@ -597,7 +597,7 @@ seat_view_deco_motion (PhocSeatView *view, double deco_sx, double deco_sy)
     sy = view->grab_sy;
   }
 
-  PhocViewDecoPart parts = view_get_deco_part (view->view, sx, sy);
+  PhocViewDecoPart parts = phoc_view_get_deco_part (view->view, sx, sy);
 
   bool is_titlebar = (parts & PHOC_VIEW_DECO_PART_TITLEBAR);
   uint32_t edges = 0;
@@ -650,7 +650,7 @@ seat_view_deco_button (PhocSeatView *view, double sx,
     view->has_button_grab = false;
   }
 
-  PhocViewDecoPart parts = view_get_deco_part (view->view, sx, sy);
+  PhocViewDecoPart parts = phoc_view_get_deco_part (view->view, sx, sy);
 
   if (state == WLR_BUTTON_RELEASED && (parts & PHOC_VIEW_DECO_PART_TITLEBAR)) {
     phoc_seat_maybe_set_cursor (view->seat, NULL);
