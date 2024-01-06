@@ -721,14 +721,7 @@ view_move_to_next_output (PhocView *view, enum wlr_direction direction)
     return true;
   }
 
-  if (phoc_view_is_maximized (view)) {
-    view_arrange_maximized (view, output);
-  } else if (phoc_view_is_tiled (view)) {
-    view_arrange_tiled (view, output);
-  } else {
-    view_center (view, output);
-  }
-
+  phoc_view_arrange (view, output);
   return true;
 }
 
