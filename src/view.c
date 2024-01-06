@@ -75,6 +75,8 @@ G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
 
 #define PHOC_VIEW_SELF(p) PHOC_PRIV_CONTAINER(PHOC_VIEW, PhocView, (p))
 
+static bool view_center (PhocView *view, PhocOutput *output);
+
 typedef struct _PhocSubsurface {
   PhocViewChild child;
   struct wlr_subsurface *wlr_subsurface;
@@ -748,7 +750,7 @@ view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)
 }
 
 
-bool
+static bool
 view_center (PhocView *view, PhocOutput *output)
 {
   PhocServer *server = phoc_server_get_default ();

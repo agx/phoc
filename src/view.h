@@ -181,7 +181,6 @@ void phoc_view_maximize (PhocView *view, PhocOutput *output);
 void phoc_view_restore (PhocView *view);
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, PhocOutput *output);
 void phoc_view_close (PhocView *self);
-bool view_center(PhocView *view, PhocOutput *output);
 void phoc_view_set_app_id (PhocView *view, const char *app_id);
 const char *phoc_view_get_app_id (PhocView *self);
 void view_get_deco_box(PhocView *view, struct wlr_box *box);
