@@ -48,6 +48,11 @@ struct _PhocGtkSurface {
   } events;
 };
 
+
+static PhocGtkShell *phoc_gtk_shell_from_resource (struct wl_resource *resource);
+static PhocGtkSurface *phoc_gtk_surface_from_resource (struct wl_resource *resource);
+
+
 static void
 handle_set_dbus_properties(struct wl_client *client,
                            struct wl_resource *resource,
@@ -436,7 +441,7 @@ phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell *self, struct wlr_
   return NULL;
 }
 
-PhocGtkShell *
+static PhocGtkShell *
 phoc_gtk_shell_from_resource (struct wl_resource *resource)
 {
   g_assert(wl_resource_instance_of(resource, &gtk_shell1_interface,
@@ -444,7 +449,7 @@ phoc_gtk_shell_from_resource (struct wl_resource *resource)
   return wl_resource_get_user_data(resource);
 }
 
-PhocGtkSurface *
+static PhocGtkSurface *
 phoc_gtk_surface_from_resource (struct wl_resource *resource)
 {
   g_assert(wl_resource_instance_of (resource, &gtk_surface1_interface,
