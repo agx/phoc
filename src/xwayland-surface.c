@@ -353,7 +353,7 @@ handle_request_maximize (struct wl_listener *listener, void *data)
   if (maximized)
     phoc_view_maximize (view, NULL);
   else
-    view_restore (view);
+    phoc_view_restore (view);
 }
 
 static void

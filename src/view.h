@@ -178,7 +178,7 @@ void view_tile(PhocView *view, PhocViewTileDirection direction, PhocOutput *outp
 PhocViewTileDirection
      phoc_view_get_tile_direction (PhocView *view);
 void phoc_view_maximize (PhocView *view, PhocOutput *output);
-void view_restore(PhocView *view);
+void phoc_view_restore (PhocView *view);
 void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, PhocOutput *output);
 void phoc_view_close (PhocView *self);
 bool view_center(PhocView *view, PhocOutput *output);

@@ -561,7 +561,7 @@ view_auto_maximize(PhocView *view)
 }
 
 void
-view_restore(PhocView *view)
+phoc_view_restore (PhocView *view)
 {
   PhocViewPrivate *priv;
 
@@ -1464,7 +1464,7 @@ handle_toplevel_handle_request_maximize (struct wl_listener *listener,void *data
   if (event->maximized)
     phoc_view_maximize (self, NULL);
   else
-    view_restore (self);
+    phoc_view_restore (self);
 }
 
 static void

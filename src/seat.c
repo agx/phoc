@@ -1787,7 +1787,7 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
     cursor->view_y = cursor->cursor->y - y * (view->saved.height ?: view->box.height);
     view->saved.x = cursor->view_x;
     view->saved.y = cursor->view_y;
-    view_restore (view);
+    phoc_view_restore (view);
   } else {
     cursor->view_x = view->box.x + geom.x * phoc_view_get_scale (view);
     cursor->view_y = view->box.y + geom.y * phoc_view_get_scale (view);
@@ -1819,7 +1819,7 @@ phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
     view->saved.y = view->box.y + geom.y * phoc_view_get_scale (view);
     view->saved.width = view->box.width;
     view->saved.height = view->box.height;
-    view_restore (view);
+    phoc_view_restore (view);
   }
 
   cursor->view_x = view->box.x + geom.x * phoc_view_get_scale (view);

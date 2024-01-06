@@ -1072,7 +1072,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
                                                PHOC_VIEW_TILE_RIGHT);
       } else {
         phoc_cursor_clear_view_state_change (self);
-        view_restore (view);
+        phoc_view_restore (view);
         phoc_view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
                         self->view_y + dy - geom.y * phoc_view_get_scale (view));
       }

@@ -56,7 +56,7 @@ handle_unmaximize (PhocSeat *seat, GVariant *param)
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus != NULL)
-    view_restore(focus);
+    phoc_view_restore (focus);
 }
 
 
@@ -71,7 +71,7 @@ handle_tile (PhocSeat *seat, GVariant *param)
 
   dir = g_variant_get_int32 (param);
   if (phoc_view_is_tiled (view) && phoc_view_get_tile_direction (view) == dir)
-    view_restore (view);
+    phoc_view_restore (view);
   else
     view_tile (view, dir, NULL);
 }
@@ -84,7 +84,7 @@ handle_toggle_maximized (PhocSeat *seat, GVariant *param)
 
   if (focus != NULL) {
     if (phoc_view_is_maximized (focus))
-      view_restore(focus);
+      phoc_view_restore (focus);
     else
       phoc_view_maximize (focus, NULL);
   }

@@ -434,7 +434,7 @@ handle_request_maximize (struct wl_listener *listener, void *data)
   if (surface->toplevel->requested.maximized)
     phoc_view_maximize (PHOC_VIEW (self), NULL);
   else
-    view_restore (PHOC_VIEW (self));
+    phoc_view_restore (PHOC_VIEW (self));
 }
 
 
