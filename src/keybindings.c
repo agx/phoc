@@ -145,7 +145,7 @@ handle_move_to_monitor (PhocSeat *seat, GVariant *param)
 
   dir = g_variant_get_int32 (param);
   if (view)
-    view_move_to_next_output (view, dir);
+    phoc_view_move_to_next_output (view, dir);
 }
 
 

@@ -685,7 +685,7 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
 
 
 bool
-view_move_to_next_output (PhocView *view, enum wlr_direction direction)
+phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction)
 {
   PhocDesktop *desktop = view->desktop;
   struct wlr_output_layout *layout = view->desktop->layout;
