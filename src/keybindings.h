@@ -36,5 +36,5 @@ gboolean         phoc_keybindings_handle_pressed (PhocKeybindings *self,
                                                   xkb_keysym_t *pressed_keysyms,
                                                   guint32 length,
                                                   PhocSeat *seat);
-PhocKeyCombo *parse_accelerator (const gchar * accelerator);
+PhocKeyCombo    *phoc_parse_accelerator (const gchar * accelerator);
 G_END_DECLS

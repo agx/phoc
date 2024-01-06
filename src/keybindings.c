@@ -292,7 +292,7 @@ is_keycode (const gchar *string)
 }
 
 PhocKeyCombo *
-parse_accelerator (const gchar *accelerator)
+phoc_parse_accelerator (const gchar *accelerator)
 {
   PhocKeyCombo *combo;
   xkb_keysym_t keyval;
@@ -468,7 +468,7 @@ on_keybinding_setting_changed (PhocKeybindings *self,
     PhocKeyCombo *combo;
 
     g_debug ("New keybinding %s for %s", key, accelerators[i]);
-    combo = parse_accelerator (accelerators[i]);
+    combo = phoc_parse_accelerator (accelerators[i]);
     if (combo)
       keybinding->combos = g_slist_append (keybinding->combos, combo);
   }
