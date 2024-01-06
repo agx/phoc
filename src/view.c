@@ -553,10 +553,13 @@ phoc_view_maximize (PhocView *view, PhocOutput *output)
 }
 
 /*
- * Maximize view if in auto-maximize mode otherwise do nothing.
+ * phoc_view_auto_maximize:
+ * @view: a view
+ *
+ * Maximize `view` if in auto-maximize mode otherwise do nothing.
  */
 void
-view_auto_maximize(PhocView *view)
+phoc_view_auto_maximize (PhocView *view)
 {
   if (phoc_view_want_auto_maximize (view))
     phoc_view_maximize (view, NULL);
@@ -678,7 +681,7 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
       view->pending_centering = true;
     }
 
-    view_auto_maximize (view);
+    phoc_view_auto_maximize (view);
   }
 
   phoc_server_set_linux_dmabuf_surface_feedback (phoc_server_get_default (),

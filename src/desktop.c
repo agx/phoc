@@ -964,7 +964,7 @@ phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
   }
 
   wl_list_for_each (view, &self->views, link) {
-    view_auto_maximize (view);
+    phoc_view_auto_maximize (view);
     phoc_view_appear_activated (view, true);
   }
 }

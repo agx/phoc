@@ -540,7 +540,7 @@ phoc_xdg_surface_constructed (GObject *object)
   phoc_view_set_fullscreen (PHOC_VIEW (self),
                             self->xdg_surface->toplevel->requested.fullscreen,
                             output);
-  view_auto_maximize (PHOC_VIEW (self));
+  phoc_view_auto_maximize (PHOC_VIEW (self));
   view_set_title (PHOC_VIEW (self), self->xdg_surface->toplevel->title);
   /* We don't do window menus or minimize */
   phoc_xdg_surface_set_capabilities (self,

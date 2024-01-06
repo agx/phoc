@@ -458,7 +458,7 @@ handle_map (struct wl_listener *listener, void *data)
   if (surface->maximized_horz && surface->maximized_vert)
     phoc_view_maximize (view, NULL);
 
-  view_auto_maximize (view);
+  phoc_view_auto_maximize (view);
 
   phoc_view_map (view, surface->surface);
 
