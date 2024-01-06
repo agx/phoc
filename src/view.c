@@ -424,7 +424,7 @@ phoc_view_get_maximized_box (PhocView *self, PhocOutput *output, struct wlr_box 
 }
 
 
-void
+static void
 view_arrange_maximized (PhocView *self, PhocOutput *output)
 {
   PhocViewPrivate *priv;
@@ -504,7 +504,7 @@ phoc_view_get_tiled_box (PhocView               *self,
 }
 
 
-void
+static void
 view_arrange_tiled (PhocView *self, PhocOutput *output)
 {
   PhocViewPrivate *priv;
@@ -1092,15 +1092,8 @@ view_update_scale (PhocView *view)
     priv->scale = 1.0;
   }
 
-  if (priv->scale != oldscale) {
-    if (phoc_view_is_maximized(view)) {
-      view_arrange_maximized (view, NULL);
-    } else if (phoc_view_is_tiled (view)) {
-      view_arrange_tiled (view, NULL);
-    } else {
-      view_center (view, NULL);
-    }
-  }
+  if (priv->scale != oldscale)
+    phoc_view_arrange (view, NULL);
 }
 
 
@@ -2355,4 +2348,26 @@ phoc_view_get_blings (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->blings;
+}
+
+
+/**
+ * phoc_view_arrange:
+ * @self: a view
+ * @output:(nullable): the output to arrange the view on
+ *
+ * Arrange a view based on it's current state (floating, tiled or maximized)
+ */
+void
+phoc_view_arrange (PhocView *self, PhocOutput *output)
+{
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (output == NULL || PHOC_IS_OUTPUT (output));
+
+  if (phoc_view_is_maximized (self))
+    view_arrange_maximized (self, output);
+  else if (phoc_view_is_tiled (self))
+    view_arrange_tiled (self, output);
+  else
+    view_center (self, output);
 }
