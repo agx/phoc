@@ -59,33 +59,21 @@ handle_unmaximize (PhocSeat *seat, GVariant *param)
     view_restore(focus);
 }
 
+
 static void
-handle_tile_right (PhocSeat *seat, GVariant *param)
+handle_tile (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
+  PhocViewTileDirection dir;
 
   if (!view)
     return;
 
-  if (phoc_view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_RIGHT)
+  dir = g_variant_get_int32 (param);
+  if (phoc_view_is_tiled (view) && phoc_view_get_tile_direction (view) == dir)
     view_restore (view);
   else
-    view_tile (view, PHOC_VIEW_TILE_RIGHT, NULL);
-}
-
-
-static void
-handle_tile_left (PhocSeat *seat, GVariant *param)
-{
-  PhocView *view = phoc_seat_get_focus_view (seat);
-
-  if (!view)
-    return;
-
-  if (phoc_view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_LEFT)
-    view_restore (view);
-  else
-    view_tile (view, PHOC_VIEW_TILE_LEFT, NULL);
+    view_tile (view, dir, NULL);
 }
 
 
@@ -584,11 +572,11 @@ phoc_keybindings_constructed (GObject *object)
 
   self->mutter_settings = g_settings_new (MUTTER_KEYBINDINGS_SCHEMA_ID);
   phoc_add_keybinding (self, self->mutter_settings,
-                       "toggle-tiled-left", handle_tile_left,
-                       NULL);
+                       "toggle-tiled-left", handle_tile,
+                       g_variant_new_int32 (PHOC_VIEW_TILE_LEFT));
   phoc_add_keybinding (self, self->mutter_settings,
-                       "toggle-tiled-right", handle_tile_right,
-                       NULL);
+                       "toggle-tiled-right", handle_tile,
+                       g_variant_new_int32 (PHOC_VIEW_TILE_RIGHT));
 }
 
 
