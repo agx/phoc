@@ -366,12 +366,12 @@ static void
 render_view (PhocOutput *output, PhocView *view, PhocRenderContext *data)
 {
   // Do not render views fullscreened on other outputs
-  if (view_is_fullscreen (view) && phoc_view_get_fullscreen_output (view) != output)
+  if (phoc_view_is_fullscreen (view) && phoc_view_get_fullscreen_output (view) != output)
     return;
 
   data->alpha = phoc_view_get_alpha (view);
 
-  if (!view_is_fullscreen (view)) {
+  if (!phoc_view_is_fullscreen (view)) {
     render_decorations (output, view, data);
     render_blings (output, view, data);
   }

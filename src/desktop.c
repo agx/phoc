@@ -362,7 +362,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
     if (v == view) {
       return true;
     }
-    if (view_is_maximized (v)) {
+    if (phoc_view_is_maximized (v)) {
       return false;
     }
     v = v->parent;

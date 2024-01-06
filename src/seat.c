@@ -1778,7 +1778,7 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
   struct wlr_box geom;
 
   phoc_view_get_geometry (view, &geom);
-  if (view_is_maximized (view) || view_is_tiled (view)) {
+  if (phoc_view_is_maximized (view) || phoc_view_is_tiled (view)) {
     // calculate normalized (0..1) position of cursor in maximized window
     // and make it stay the same after restoring saved size
     double x = (cursor->cursor->x - view->box.x) / view->box.width;
@@ -1800,7 +1800,7 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
 void
 phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
 {
-  if (view->desktop->maximize || view_is_fullscreen (view))
+  if (view->desktop->maximize || phoc_view_is_fullscreen (view))
     return;
 
   PhocCursor *cursor = seat->cursor;
@@ -1814,7 +1814,7 @@ phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
   struct wlr_box geom;
 
   phoc_view_get_geometry (view, &geom);
-  if (view_is_maximized (view) || view_is_tiled (view)) {
+  if (phoc_view_is_maximized (view) || phoc_view_is_tiled (view)) {
     view->saved.x = view->box.x + geom.x * phoc_view_get_scale (view);
     view->saved.y = view->box.y + geom.y * phoc_view_get_scale (view);
     view->saved.width = view->box.width;
@@ -1848,7 +1848,7 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
 
   switch (cursor->mode) {
   case PHOC_CURSOR_MOVE:
-    if (!view_is_fullscreen (view))
+    if (!phoc_view_is_fullscreen (view))
       phoc_view_move (view, cursor->view_x, cursor->view_y);
     break;
   case PHOC_CURSOR_RESIZE:

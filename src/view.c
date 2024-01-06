@@ -95,40 +95,40 @@ phoc_view_get_toplevel_handle (PhocView *self)
 
 
 gboolean
-view_is_floating (PhocView *view)
+phoc_view_is_floating (PhocView *view)
 {
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  return priv->state == PHOC_VIEW_STATE_FLOATING && !view_is_fullscreen (view);
+  return priv->state == PHOC_VIEW_STATE_FLOATING && !phoc_view_is_fullscreen (view);
 }
 
 gboolean
-view_is_maximized (PhocView *view)
+phoc_view_is_maximized (PhocView *view)
 {
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  return priv->state == PHOC_VIEW_STATE_MAXIMIZED && !view_is_fullscreen (view);
+  return priv->state == PHOC_VIEW_STATE_MAXIMIZED && !phoc_view_is_fullscreen (view);
 }
 
 gboolean
-view_is_tiled (PhocView *view)
+phoc_view_is_tiled (PhocView *view)
 {
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  return priv->state == PHOC_VIEW_STATE_TILED && !view_is_fullscreen (view);
+  return priv->state == PHOC_VIEW_STATE_TILED && !phoc_view_is_fullscreen (view);
 }
 
 gboolean
-view_is_fullscreen (PhocView *self)
+phoc_view_is_fullscreen (PhocView *self)
 {
   PhocViewPrivate *priv;
 
@@ -292,7 +292,7 @@ view_save(PhocView *view)
 {
   PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
-  if (!view_is_floating (view))
+  if (!phoc_view_is_floating (view))
     return;
 
   /* backup window state */
@@ -344,7 +344,7 @@ phoc_view_activate (PhocView *self, bool activate)
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_activated (priv->toplevel_handle, activate);
 
-  if (activate && view_is_fullscreen (self)) {
+  if (activate && phoc_view_is_fullscreen (self)) {
     phoc_output_force_shell_reveal (priv->fullscreen_output, false);
   }
 }
@@ -400,7 +400,7 @@ phoc_view_get_maximized_box (PhocView *self, PhocOutput *output, struct wlr_box 
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  if (view_is_fullscreen (self))
+  if (phoc_view_is_fullscreen (self))
     return FALSE;
 
   if (!output)
@@ -467,7 +467,7 @@ phoc_view_get_tiled_box (PhocView               *self,
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  if (view_is_fullscreen (self))
+  if (phoc_view_is_fullscreen (self))
     return FALSE;
 
   if (!output)
@@ -532,10 +532,10 @@ phoc_view_maximize (PhocView *view, PhocOutput *output)
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  if (view_is_maximized (view) && phoc_view_get_output (view) == output)
+  if (phoc_view_is_maximized (view) && phoc_view_get_output (view) == output)
     return;
 
-  if (view_is_fullscreen (view))
+  if (phoc_view_is_fullscreen (view))
     return;
 
   PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
@@ -568,7 +568,7 @@ view_restore(PhocView *view)
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  if (!view_is_maximized (view) && !view_is_tiled (view))
+  if (!phoc_view_is_maximized (view) && !phoc_view_is_tiled (view))
     return;
 
   if (phoc_view_want_auto_maximize (view))
@@ -612,7 +612,7 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  bool was_fullscreen = view_is_fullscreen (view);
+  bool was_fullscreen = phoc_view_is_fullscreen (view);
 
   if (was_fullscreen != fullscreen) {
     /* don't allow unfocused surfaces to make themselves fullscreen */
@@ -716,14 +716,14 @@ view_move_to_next_output (PhocView *view, enum wlr_direction direction)
   view->saved.x = x;
   view->saved.y = y;
 
-  if (view_is_fullscreen (view)) {
+  if (phoc_view_is_fullscreen (view)) {
     phoc_view_set_fullscreen (view, true, PHOC_OUTPUT (new_output->data));
     return true;
   }
 
-  if (view_is_maximized (view)) {
+  if (phoc_view_is_maximized (view)) {
     view_arrange_maximized (view, output);
-  } else if (view_is_tiled (view)) {
+  } else if (phoc_view_is_tiled (view)) {
     view_arrange_tiled (view, output);
   } else {
     view_center (view, output);
@@ -740,7 +740,7 @@ view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  if (view_is_fullscreen (view))
+  if (phoc_view_is_fullscreen (view))
     return;
 
   view_save (view);
@@ -767,7 +767,7 @@ view_center (PhocView *view, PhocOutput *output)
   view_get_box (view, &box);
   phoc_view_get_geometry (view, &geom);
 
-  if (!view_is_floating (view))
+  if (!phoc_view_is_floating (view))
     return false;
 
   PhocDesktop *desktop = view->desktop;
@@ -1086,16 +1086,16 @@ view_update_scale (PhocView *view)
     if (priv->scale < 0.5f)
       priv->scale = 0.5f;
 
-    if (priv->scale > 1.0f || view_is_fullscreen (view))
+    if (priv->scale > 1.0f || phoc_view_is_fullscreen (view))
       priv->scale = 1.0f;
   } else {
     priv->scale = 1.0;
   }
 
   if (priv->scale != oldscale) {
-    if (view_is_maximized(view)) {
+    if (phoc_view_is_maximized(view)) {
       view_arrange_maximized (view, NULL);
-    } else if (view_is_tiled (view)) {
+    } else if (phoc_view_is_tiled (view)) {
       view_arrange_tiled (view, NULL);
     } else {
       view_center (view, NULL);
@@ -1196,7 +1196,7 @@ phoc_view_unmap (PhocView *view)
     phoc_view_child_destroy(child);
   }
 
-  if (view_is_fullscreen (view)) {
+  if (phoc_view_is_fullscreen (view)) {
     phoc_output_damage_whole (priv->fullscreen_output);
     priv->fullscreen_output->fullscreen_view = NULL;
     priv->fullscreen_output = NULL;
@@ -1281,9 +1281,9 @@ phoc_view_setup (PhocView *view)
   view_update_output(view, NULL);
 
   wlr_foreign_toplevel_handle_v1_set_fullscreen (priv->toplevel_handle,
-                                                 view_is_fullscreen (view));
+                                                 phoc_view_is_fullscreen (view));
   wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle,
-                                                view_is_maximized(view));
+                                                phoc_view_is_maximized (view));
   wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle,
                                             priv->title ?: "");
   wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle,
@@ -1356,7 +1356,7 @@ view_update_size (PhocView *view, int width, int height)
   view->box.width = width;
   view->box.height = height;
   if (view->pending_centering ||
-      (view_is_floating (view) && phoc_desktop_get_auto_maximize (view->desktop))) {
+      (phoc_view_is_floating (view) && phoc_desktop_get_auto_maximize (view->desktop))) {
     view_center (view, NULL);
     view->pending_centering = false;
   }
@@ -1640,7 +1640,7 @@ phoc_view_finalize (GObject *object)
     phoc_view_unmap (self);
 
   // Can happen if fullscreened while unmapped, and hasn't been mapped
-  if (view_is_fullscreen (self)) {
+  if (phoc_view_is_fullscreen (self)) {
     priv->fullscreen_output->fullscreen_view = NULL;
   }
 

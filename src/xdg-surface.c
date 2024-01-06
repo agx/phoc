@@ -326,13 +326,13 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     double y = view->box.y;
 
     if (view->pending_move_resize.update_x) {
-      if (view_is_floating (view))
+      if (phoc_view_is_floating (view))
         x = view->pending_move_resize.x + view->pending_move_resize.width - size.width;
       else
         x = view->pending_move_resize.x;
     }
     if (view->pending_move_resize.update_y) {
-      if (view_is_floating (view))
+      if (phoc_view_is_floating (view))
         y = view->pending_move_resize.y + view->pending_move_resize.height - size.height;
       else
         y = view->pending_move_resize.y;

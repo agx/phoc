@@ -66,7 +66,7 @@ handle_tile_right (PhocSeat *seat)
   if (!view)
     return;
 
-  if (view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_RIGHT)
+  if (phoc_view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_RIGHT)
     view_restore (view);
   else
     view_tile (view, PHOC_VIEW_TILE_RIGHT, NULL);
@@ -81,7 +81,7 @@ handle_tile_left (PhocSeat *seat)
   if (!view)
     return;
 
-  if (view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_LEFT)
+  if (phoc_view_is_tiled (view) && phoc_view_get_tile_direction (view) == PHOC_VIEW_TILE_LEFT)
     view_restore (view);
   else
     view_tile (view, PHOC_VIEW_TILE_LEFT, NULL);
@@ -94,7 +94,7 @@ handle_toggle_maximized (PhocSeat *seat)
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus != NULL) {
-    if (view_is_maximized(focus))
+    if (phoc_view_is_maximized (focus))
       view_restore(focus);
     else
       phoc_view_maximize (focus, NULL);
@@ -107,7 +107,7 @@ handle_toggle_fullscreen (PhocSeat *seat)
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
   if (focus) {
-    phoc_view_set_fullscreen(focus, !view_is_fullscreen (focus), NULL);
+    phoc_view_set_fullscreen(focus, !phoc_view_is_fullscreen (focus), NULL);
   }
 }
 

@@ -114,7 +114,7 @@ apply_size_constraints (PhocView                    *view,
   *dest_width = width;
   *dest_height = height;
 
-  if (view_is_maximized (view))
+  if (phoc_view_is_maximized (view))
     return;
 
   xcb_size_hints_t *size_hints = xwayland_surface->size_hints;
@@ -421,7 +421,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   double y = view->box.y;
 
   if (view->pending_move_resize.update_x) {
-    if (view_is_floating (view))
+    if (phoc_view_is_floating (view))
       x = view->pending_move_resize.x + view->pending_move_resize.width - width;
     else
       x = view->pending_move_resize.x;
@@ -430,7 +430,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   }
 
   if (view->pending_move_resize.update_y) {
-    if (view_is_floating (view))
+    if (phoc_view_is_floating (view))
       y = view->pending_move_resize.y + view->pending_move_resize.height - height;
     else
       y = view->pending_move_resize.y;

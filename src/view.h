@@ -161,10 +161,10 @@ typedef struct _PhocViewChild {
 void phoc_view_appear_activated (PhocView *view, bool activated);
 void phoc_view_activate (PhocView *self, bool activate);
 void phoc_view_damage_whole (PhocView *view);
-gboolean view_is_floating(PhocView *view);
-gboolean view_is_maximized(PhocView *view);
-gboolean view_is_tiled(PhocView *view);
-gboolean view_is_fullscreen (PhocView *self);
+gboolean phoc_view_is_floating (PhocView *view);
+gboolean phoc_view_is_maximized (PhocView *view);
+gboolean phoc_view_is_tiled (PhocView *view);
+gboolean phoc_view_is_fullscreen (PhocView *self);
 void view_update_decorated(PhocView *view, bool decorated);
 void view_arrange_maximized(PhocView *view, PhocOutput *output);
 void view_arrange_tiled(PhocView *view, PhocOutput *output);

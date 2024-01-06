@@ -273,9 +273,9 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   PhocView *view;
   wl_list_for_each (view, &output->desktop->views, link) {
-    if (view_is_maximized (view)) {
+    if (phoc_view_is_maximized (view)) {
       view_arrange_maximized (view, NULL);
-    } else if (view_is_tiled (view)) {
+    } else if (phoc_view_is_tiled (view)) {
       view_arrange_tiled (view, NULL);
     } else if (output->desktop->maximize) {
       view_center (view, NULL);

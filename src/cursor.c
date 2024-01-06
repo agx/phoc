@@ -1052,7 +1052,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
 
       bool output_is_landscape = output_box.width > output_box.height;
 
-      if (view_is_fullscreen (view)) {
+      if (phoc_view_is_fullscreen (view)) {
         phoc_view_set_fullscreen (view, true, output);
       } else if (self->cursor->y < output_box.y + PHOC_EDGE_SNAP_THRESHOLD) {
         phoc_cursor_suggest_view_state_change (self, view, output, PHOC_VIEW_STATE_MAXIMIZED, -1);

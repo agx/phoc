@@ -175,7 +175,7 @@ send_configure_edges (PhocGtkSurface *gtk_surface, PhocView *view)
 
   wl_array_init (&edge_states);
 
-  if (view_is_floating (view)) {
+  if (phoc_view_is_floating (view)) {
     val = wl_array_add (&edge_states, sizeof *val);
     *val = GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_TOP;
     val = wl_array_add (&edge_states, sizeof *val);
@@ -184,7 +184,7 @@ send_configure_edges (PhocGtkSurface *gtk_surface, PhocView *view)
     *val = GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_BOTTOM;
     val = wl_array_add (&edge_states, sizeof *val);
     *val = GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_LEFT;
-  } else if (view_is_tiled (view)) {
+  } else if (phoc_view_is_tiled (view)) {
     PhocViewTileDirection dirs = phoc_view_get_tile_direction (view);
 
     if (dirs & PHOC_VIEW_TILE_LEFT) {
@@ -223,7 +223,7 @@ send_configure (PhocGtkSurface *gtk_surface)
   wl_array_init (&states);
   version = wl_resource_get_version (gtk_surface->resource);
 
-  if (view_is_tiled (view)) {
+  if (phoc_view_is_tiled (view)) {
     uint32_t *val;
 
     if (version < GTK_SURFACE1_CONFIGURE_EDGES_SINCE_VERSION) {
