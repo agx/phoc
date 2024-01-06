@@ -436,11 +436,11 @@ parse_accelerator (const gchar *accelerator)
 
 
 static void
-phoc_keybinding_free (PhocKeybinding *self)
+phoc_keybinding_free (PhocKeybinding *keybinding)
 {
-  g_slist_free_full (self->combos, (GDestroyNotify)g_free);
-  g_free (self->name);
-  g_free (self);
+  g_slist_free_full (keybinding->combos, (GDestroyNotify)g_free);
+  g_free (keybinding->name);
+  g_free (keybinding);
 }
 
 
