@@ -728,7 +728,7 @@ phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction)
 }
 
 void
-view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)
+phoc_view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)
 {
   PhocViewPrivate *priv;
 

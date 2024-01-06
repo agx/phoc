@@ -174,7 +174,7 @@ bool phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction
 void phoc_view_move_resize (PhocView *view, double x, double y,
                             uint32_t width, uint32_t height);
 void view_auto_maximize(PhocView *view);
-void view_tile(PhocView *view, PhocViewTileDirection direction, PhocOutput *output);
+void phoc_view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output);
 PhocViewTileDirection
      phoc_view_get_tile_direction (PhocView *view);
 void phoc_view_maximize (PhocView *view, PhocOutput *output);

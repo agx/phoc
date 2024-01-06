@@ -73,7 +73,7 @@ handle_tile (PhocSeat *seat, GVariant *param)
   if (phoc_view_is_tiled (view) && phoc_view_get_tile_direction (view) == dir)
     phoc_view_restore (view);
   else
-    view_tile (view, dir, NULL);
+    phoc_view_tile (view, dir, NULL);
 }
 
 
