@@ -17,15 +17,16 @@
 #define KEYBINDINGS_SCHEMA_ID "org.gnome.desktop.wm.keybindings"
 #define MUTTER_KEYBINDINGS_SCHEMA_ID "org.gnome.mutter.keybindings"
 
-typedef void (*PhocKeyHandlerFunc) (PhocSeat *);
+typedef void (*PhocKeyHandlerFunc) (PhocSeat *seat, GVariant *param);
 
 
 typedef struct
 {
-  gchar *name;
-  PhocKeyHandlerFunc func;
+  gchar              *name;
+  PhocKeyHandlerFunc  func;
+  GVariant           *param;
 
-  GSList *combos;
+  GSList             *combos;
 } PhocKeybinding;
 
 
@@ -41,7 +42,7 @@ typedef struct _PhocKeybindings
 G_DEFINE_TYPE (PhocKeybindings, phoc_keybindings, G_TYPE_OBJECT);
 
 static void
-handle_maximize (PhocSeat *seat)
+handle_maximize (PhocSeat *seat, GVariant *param)
 {
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
@@ -50,7 +51,7 @@ handle_maximize (PhocSeat *seat)
 }
 
 static void
-handle_unmaximize (PhocSeat *seat)
+handle_unmaximize (PhocSeat *seat, GVariant *param)
 {
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
@@ -59,7 +60,7 @@ handle_unmaximize (PhocSeat *seat)
 }
 
 static void
-handle_tile_right (PhocSeat *seat)
+handle_tile_right (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
 
@@ -74,7 +75,7 @@ handle_tile_right (PhocSeat *seat)
 
 
 static void
-handle_tile_left (PhocSeat *seat)
+handle_tile_left (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
 
@@ -89,7 +90,7 @@ handle_tile_left (PhocSeat *seat)
 
 
 static void
-handle_toggle_maximized (PhocSeat *seat)
+handle_toggle_maximized (PhocSeat *seat, GVariant *param)
 {
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
@@ -102,7 +103,7 @@ handle_toggle_maximized (PhocSeat *seat)
 }
 
 static void
-handle_toggle_fullscreen (PhocSeat *seat)
+handle_toggle_fullscreen (PhocSeat *seat, GVariant *param)
 {
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
@@ -113,21 +114,21 @@ handle_toggle_fullscreen (PhocSeat *seat)
 
 
 static void
-handle_cycle_windows (PhocSeat *seat)
+handle_cycle_windows (PhocSeat *seat, GVariant *param)
 {
   phoc_seat_cycle_focus(seat, TRUE);
 }
 
 
 static void
-handle_cycle_windows_backwards (PhocSeat *seat)
+handle_cycle_windows_backwards (PhocSeat *seat, GVariant *param)
 {
   phoc_seat_cycle_focus(seat, FALSE);
 }
 
 
 static void
-handle_close (PhocSeat *seat)
+handle_close (PhocSeat *seat, GVariant *param)
 {
   PhocView *focus = phoc_seat_get_focus_view (seat);
 
@@ -137,7 +138,7 @@ handle_close (PhocSeat *seat)
 
 
 static void
-handle_move_to_monitor_up (PhocSeat *seat)
+handle_move_to_monitor_up (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
 
@@ -147,7 +148,7 @@ handle_move_to_monitor_up (PhocSeat *seat)
 
 
 static void
-handle_move_to_monitor_down (PhocSeat *seat)
+handle_move_to_monitor_down (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
 
@@ -157,7 +158,7 @@ handle_move_to_monitor_down (PhocSeat *seat)
 
 
 static void
-handle_move_to_monitor_right (PhocSeat *seat)
+handle_move_to_monitor_right (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
 
@@ -167,7 +168,7 @@ handle_move_to_monitor_right (PhocSeat *seat)
 
 
 static void
-handle_move_to_monitor_left (PhocSeat *seat)
+handle_move_to_monitor_left (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
 
@@ -177,7 +178,7 @@ handle_move_to_monitor_left (PhocSeat *seat)
 
 
 static void
-handle_switch_input_source (PhocSeat *seat)
+handle_switch_input_source (PhocSeat *seat, GVariant *param)
 {
   struct wlr_keyboard *wlr_keyboard = wlr_seat_get_keyboard (seat->seat);
   PhocKeyboard *keyboard;
@@ -440,6 +441,8 @@ phoc_keybinding_free (PhocKeybinding *keybinding)
 {
   g_slist_free_full (keybinding->combos, (GDestroyNotify)g_free);
   g_free (keybinding->name);
+  if (keybinding->param)
+    g_variant_unref (keybinding->param);
   g_free (keybinding);
 }
 
@@ -513,8 +516,11 @@ on_keybinding_setting_changed (PhocKeybindings *self,
 
 
 static gboolean
-phoc_add_keybinding (PhocKeybindings *self, GSettings *settings,
-                     const gchar *name, PhocKeyHandlerFunc func)
+phoc_add_keybinding (PhocKeybindings    *self,
+                     GSettings          *settings,
+                     const gchar        *name,
+                     PhocKeyHandlerFunc  func,
+                     GVariant           *param)
 {
   g_autofree gchar *signal_name = NULL;
   PhocKeybinding *binding;
@@ -527,6 +533,8 @@ phoc_add_keybinding (PhocKeybindings *self, GSettings *settings,
   binding = g_new0 (PhocKeybinding, 1);
   binding->name = g_strdup (name);
   binding->func = func;
+  if (param)
+    binding->param = g_variant_ref_sink (param);
 
   signal_name = g_strdup_printf ("changed::%s", name);
   g_signal_connect_swapped (settings, signal_name,
@@ -571,42 +579,44 @@ phoc_keybindings_constructed (GObject *object)
   G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
 
   self->settings = g_settings_new (KEYBINDINGS_SCHEMA_ID);
+  phoc_add_keybinding (self, self->settings, "close", handle_close, NULL);
+  phoc_add_keybinding (self, self->settings, "cycle-windows", handle_cycle_windows, NULL);
   phoc_add_keybinding (self, self->settings,
-                       "close", handle_close);
+                       "cycle-windows-backward", handle_cycle_windows_backwards,
+                       NULL);
+  phoc_add_keybinding (self, self->settings, "maximize", handle_maximize, NULL);
+  phoc_add_keybinding (self, self->settings, "toggle-fullscreen", handle_toggle_fullscreen, NULL);
+  phoc_add_keybinding (self, self->settings, "toggle-maximized", handle_toggle_maximized, NULL);
   phoc_add_keybinding (self, self->settings,
-                       "cycle-windows", handle_cycle_windows);
+                       "move-to-monitor-up", handle_move_to_monitor_up,
+                       NULL);
   phoc_add_keybinding (self, self->settings,
-                       "cycle-windows-backward", handle_cycle_windows_backwards);
+                       "move-to-monitor-down", handle_move_to_monitor_down,
+                       NULL);
   phoc_add_keybinding (self, self->settings,
-                       "maximize", handle_maximize);
+                       "move-to-monitor-right", handle_move_to_monitor_right,
+                       NULL);
   phoc_add_keybinding (self, self->settings,
-                       "toggle-fullscreen", handle_toggle_fullscreen);
-  phoc_add_keybinding (self, self->settings,
-                       "toggle-maximized", handle_toggle_maximized);
-  phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-up", handle_move_to_monitor_up);
-  phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-down", handle_move_to_monitor_down);
-  phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-right", handle_move_to_monitor_right);
-  phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-left", handle_move_to_monitor_left);
+                       "move-to-monitor-left", handle_move_to_monitor_left,
+                       NULL);
   /* TODO: we need a real switch-applications but ALT-TAB should do s.th.
    * useful */
+  phoc_add_keybinding (self, self->settings, "switch-applications", handle_cycle_windows, NULL);
   phoc_add_keybinding (self, self->settings,
-                       "switch-applications", handle_cycle_windows);
+                       "switch-applications-backward", handle_cycle_windows_backwards,
+                       NULL);
+  phoc_add_keybinding (self, self->settings,"unmaximize", handle_unmaximize, NULL);
   phoc_add_keybinding (self, self->settings,
-                       "switch-applications-backward", handle_cycle_windows_backwards);
-  phoc_add_keybinding (self, self->settings,
-                       "unmaximize", handle_unmaximize);
-  phoc_add_keybinding (self, self->settings,
-                       "switch-input-source", handle_switch_input_source);
+                       "switch-input-source", handle_switch_input_source,
+                       NULL);
 
   self->mutter_settings = g_settings_new (MUTTER_KEYBINDINGS_SCHEMA_ID);
   phoc_add_keybinding (self, self->mutter_settings,
-                       "toggle-tiled-left", handle_tile_left);
+                       "toggle-tiled-left", handle_tile_left,
+                       NULL);
   phoc_add_keybinding (self, self->mutter_settings,
-                       "toggle-tiled-right", handle_tile_right);
+                       "toggle-tiled-right", handle_tile_right,
+                       NULL);
 }
 
 
@@ -667,6 +677,6 @@ phoc_keybindings_handle_pressed (PhocKeybindings *self,
   g_return_val_if_fail (elem->data, FALSE);
   keybinding = elem->data;
 
-  (*keybinding->func) (seat);
+  (*keybinding->func) (seat, keybinding->param);
   return TRUE;
 }
