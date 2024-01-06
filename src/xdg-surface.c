@@ -387,7 +387,7 @@ static void
 handle_unmap (struct wl_listener *listener, void *data)
 {
   PhocXdgSurface *self = wl_container_of (listener, self, unmap);
-  view_unmap (PHOC_VIEW (self));
+  phoc_view_unmap (PHOC_VIEW (self));
 }
 
 

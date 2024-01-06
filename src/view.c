@@ -1179,7 +1179,7 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
 }
 
 void
-view_unmap (PhocView *view)
+phoc_view_unmap (PhocView *view)
 {
   PhocViewPrivate *priv = phoc_view_get_instance_private (view);
 
@@ -1636,9 +1636,8 @@ phoc_view_finalize (GObject *object)
     }
   }
 
-  if (self->wlr_surface != NULL) {
-    view_unmap(self);
-  }
+  if (self->wlr_surface)
+    phoc_view_unmap (self);
 
   // Can happen if fullscreened while unmapped, and hasn't been mapped
   if (view_is_fullscreen (self)) {

@@ -478,7 +478,7 @@ handle_unmap (struct wl_listener *listener, void *data)
   PhocView *view = PHOC_VIEW (self);
 
   wl_list_remove (&self->surface_commit.link);
-  view_unmap (view);
+  phoc_view_unmap (view);
 }
 
 
