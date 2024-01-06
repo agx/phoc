@@ -393,7 +393,7 @@ handle_layout_change (struct wl_listener *listener, void *data)
   /* Make sure all views are on an existing output */
   wl_list_for_each (view, &self->views, link) {
     struct wlr_box box;
-    view_get_box (view, &box);
+    phoc_view_get_box (view, &box);
 
     if (wlr_output_layout_intersects (self->layout, NULL, &box))
       continue;

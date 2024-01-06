@@ -537,7 +537,7 @@ handle_get_thumbnail (struct wl_client *client,
   // case is a rescaled thumbnail with wrong aspect ratio we take the liberty
   // to ignore it, at least for now.
   struct wlr_box box;
-  view_get_box (view, &box);
+  phoc_view_get_box (view, &box);
 
   frame->format = WL_SHM_FORMAT_ARGB8888;
   frame->width = box.width * view->wlr_surface->current.scale;

@@ -1533,7 +1533,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     PhocDesktop *desktop = view->desktop;
     PhocOutput *output;
     struct wlr_box box;
-    view_get_box (view, &box);
+    phoc_view_get_box (view, &box);
     wl_list_for_each (output, &desktop->outputs, link) {
       if (output->fullscreen_view &&
           output->fullscreen_view != view &&
@@ -1826,7 +1826,7 @@ phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
   cursor->view_y = view->box.y + geom.y * phoc_view_get_scale (view);
   struct wlr_box box;
 
-  view_get_box (view, &box);
+  phoc_view_get_box (view, &box);
   cursor->view_width = box.width;
   cursor->view_height = box.height;
   cursor->resize_edges = edges;

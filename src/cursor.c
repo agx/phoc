@@ -149,7 +149,7 @@ phoc_cursor_suggest_view_state_change (PhocCursor            *self,
 
   phoc_cursor_view_state_set_view (self, view);
   phoc_cursor_view_state_set_output (self, output);
-  view_get_box (view, &view_box);
+  phoc_view_get_box (view, &view_box);
   priv->view_state.rect = phoc_color_rect_new ((PhocBox *)&view_box,
                                                &PHOC_ANIM_SUGGEST_STATE_CHANGE_COLOR);
   phoc_view_add_bling (view, PHOC_BLING (priv->view_state.rect));

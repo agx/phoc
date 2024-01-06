@@ -161,7 +161,7 @@ phoc_view_get_fullscreen_output (PhocView *self)
 }
 
 void
-view_get_box (PhocView *view, struct wlr_box *box)
+phoc_view_get_box (PhocView *view, struct wlr_box *box)
 {
   PhocViewPrivate *priv;
 
@@ -183,7 +183,7 @@ view_get_deco_box (PhocView *view, struct wlr_box *box)
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
 
-  view_get_box(view, box);
+  phoc_view_get_box(view, box);
   if (!priv->decorated) {
     return;
   }
@@ -262,7 +262,7 @@ view_update_output (PhocView *view, const struct wlr_box *before)
     return;
 
   struct wlr_box box;
-  view_get_box(view, &box);
+  phoc_view_get_box (view, &box);
 
   PhocOutput *output;
   wl_list_for_each (output, &desktop->outputs, link) {
@@ -641,7 +641,7 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
       priv->fullscreen_output->fullscreen_view = NULL;
 
     struct wlr_box view_box;
-    view_get_box(view, &view_box);
+    phoc_view_get_box (view, &view_box);
 
     view_save (view);
 
@@ -762,7 +762,7 @@ view_center (PhocView *view, PhocOutput *output)
 
   g_assert (PHOC_IS_VIEW (view));
   priv = phoc_view_get_instance_private (view);
-  view_get_box (view, &box);
+  phoc_view_get_box (view, &box);
   phoc_view_get_geometry (view, &geom);
 
   if (!phoc_view_is_floating (view))
@@ -960,7 +960,7 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
   phoc_input_update_cursor_focus(server->input);
 
   struct wlr_box box;
-  view_get_box(view, &box);
+  phoc_view_get_box (view, &box);
   PhocOutput *output;
   wl_list_for_each(output, &view->desktop->outputs, link) {
     bool intersects = wlr_output_layout_intersects(view->desktop->layout,
@@ -1326,7 +1326,7 @@ view_update_position (PhocView *view, int x, int y)
     return;
 
   struct wlr_box before;
-  view_get_box(view, &before);
+  phoc_view_get_box (view, &before);
   phoc_view_damage_whole (view);
   view->box.x = x;
   view->box.y = y;
@@ -1342,7 +1342,7 @@ view_update_size (PhocView *view, int width, int height)
   if (view->box.width == width && view->box.height == height)
     return;
 
-  view_get_box(view, &before);
+  phoc_view_get_box (view, &before);
   phoc_view_damage_whole (view);
   view->box.width = width;
   view->box.height = height;
@@ -1907,7 +1907,7 @@ phoc_view_get_output (PhocView *view)
   struct wlr_box view_box;
   double output_x, output_y;
 
-  view_get_box(view, &view_box);
+  phoc_view_get_box (view, &view_box);
 
   wlr_output_layout_closest_point (view->desktop->layout, NULL,
                                    view->box.x + (double)view_box.width/2,
@@ -1991,7 +1991,7 @@ phoc_view_child_damage_whole (PhocViewChild *child)
   if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
     return;
 
-  view_get_box (child->view, &view_box);
+  phoc_view_get_box (child->view, &view_box);
   child->impl->get_pos (child, &sx, &sy);
 
   wl_list_for_each (output, &child->view->desktop->outputs, link) {
