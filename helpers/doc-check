@@ -9,7 +9,7 @@ meson compile -C "${DIR}" doc/phoc-doc |& tee "${LOG}"
 
 if grep -vE  '('\
 'register as boxed type or \(skip\)'\
-'|Unknown namespace for symbol'\
+'|symbol=.handle_.*Unknown namespace for symbol'\
 '|wayland-server-core.h:.* syntax error, unexpected'\
 '|argument pressed_keysyms: Unresolved type:'\
 '|argument iterator: Unresolved type: .wlr_surface_iterator_func_t.'\
