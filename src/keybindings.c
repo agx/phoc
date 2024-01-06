@@ -138,42 +138,14 @@ handle_close (PhocSeat *seat, GVariant *param)
 
 
 static void
-handle_move_to_monitor_up (PhocSeat *seat, GVariant *param)
+handle_move_to_monitor (PhocSeat *seat, GVariant *param)
 {
   PhocView *view = phoc_seat_get_focus_view (seat);
+  enum wlr_direction dir;
 
+  dir = g_variant_get_int32 (param);
   if (view)
-    view_move_to_next_output (view, WLR_DIRECTION_UP);
-}
-
-
-static void
-handle_move_to_monitor_down (PhocSeat *seat, GVariant *param)
-{
-  PhocView *view = phoc_seat_get_focus_view (seat);
-
-  if (view)
-    view_move_to_next_output (view, WLR_DIRECTION_DOWN);
-}
-
-
-static void
-handle_move_to_monitor_right (PhocSeat *seat, GVariant *param)
-{
-  PhocView *view = phoc_seat_get_focus_view (seat);
-
-  if (view)
-    view_move_to_next_output(view, WLR_DIRECTION_RIGHT);
-}
-
-
-static void
-handle_move_to_monitor_left (PhocSeat *seat, GVariant *param)
-{
-  PhocView *view = phoc_seat_get_focus_view (seat);
-
-  if (view)
-    view_move_to_next_output (view, WLR_DIRECTION_LEFT);
+    view_move_to_next_output (view, dir);
 }
 
 
@@ -588,17 +560,17 @@ phoc_keybindings_constructed (GObject *object)
   phoc_add_keybinding (self, self->settings, "toggle-fullscreen", handle_toggle_fullscreen, NULL);
   phoc_add_keybinding (self, self->settings, "toggle-maximized", handle_toggle_maximized, NULL);
   phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-up", handle_move_to_monitor_up,
-                       NULL);
+                       "move-to-monitor-up", handle_move_to_monitor,
+                       g_variant_new_int32 (WLR_DIRECTION_UP));
   phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-down", handle_move_to_monitor_down,
-                       NULL);
+                       "move-to-monitor-down", handle_move_to_monitor,
+                       g_variant_new_int32 (WLR_DIRECTION_DOWN));
   phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-right", handle_move_to_monitor_right,
-                       NULL);
+                       "move-to-monitor-right", handle_move_to_monitor,
+                       g_variant_new_int32 (WLR_DIRECTION_RIGHT));
   phoc_add_keybinding (self, self->settings,
-                       "move-to-monitor-left", handle_move_to_monitor_left,
-                       NULL);
+                       "move-to-monitor-left", handle_move_to_monitor,
+                       g_variant_new_int32 (WLR_DIRECTION_LEFT));
   /* TODO: we need a real switch-applications but ALT-TAB should do s.th.
    * useful */
   phoc_add_keybinding (self, self->settings, "switch-applications", handle_cycle_windows, NULL);
