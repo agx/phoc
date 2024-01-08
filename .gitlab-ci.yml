@@ -1,5 +1,8 @@
 include:
- - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-definitions.yml'
+ - project: 'guidog/meta-phosh'
+   ref: '04a85df2f3311f3012b6c49bf353b376ae0f32b2'
+   file: '/ci/phosh-common-jobs.yml'
+ - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/d03cddbcff35f26861429fc816c00323f48e99af/templates/ci-fairy.yml'
 
 stages:
  - build
@@ -32,6 +35,8 @@ default:
       - 'stuck_or_timeout_failure'
 
 variables:
+  # For ci-fairy
+  FDO_UPSTREAM_REPO: World/Phosh/phoc
   ALPINE_EDGE_DEPS: |
         git meson ninja gnome-desktop-dev gobject-introspection-dev
         libinput-dev wayland-dev wayland-protocols libxkbcommon-dev
@@ -156,6 +161,13 @@ build-gtkdoc:
     variables:
       - $PKG_ONLY == "1"
 
+check-po:
+  stage: test+docs
+  extends: .phosh-check-po
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
 format-check:
   stage: style-checks
   image: ${DEBIAN_IMAGE}
@@ -180,22 +192,40 @@ format-check:
       fi
   allow_failure: true
 
-package-debian-trixie:arm64:
+# Sanity checks of MR settings and commit logs
+commit-log-check:
+  extends:
+    - .fdo.ci-fairy
+  stage: style-checks
   variables:
-    L5_DOCKER_IMAGE: debian:trixie
+    GIT_DEPTH: "100"
+  needs: []
+  script: |
+    ci-fairy check-commits --junit-xml=commit-message-junit-report.xml
+  artifacts:
+    reports:
+      junit: commit-message-junit-report.xml
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
+
+package-deb-debian-trixie:arm64:
+  stage: package
+  variables:
+    PHOSH_DOCKER_IMAGE: debian:trixie
     DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots'
+  extends: .phosh-build-debian-package
   tags:
     - aarch64
-  extends: .l5-build-debian-package
 
-package-debian-trixie:sanitizers:arm64:
+package-deb-debian-trixie:sanitizers:arm64:
+  stage: package
   variables:
-    L5_DOCKER_IMAGE: debian:trixie
+    PHOSH_DOCKER_IMAGE: debian:trixie
     DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots pkg.phoc.sanitizers'
+  extends: .phosh-build-debian-package
   tags:
     - aarch64
   when: manual
-  extends: .l5-build-debian-package
 
 pages:
   stage: deploy
