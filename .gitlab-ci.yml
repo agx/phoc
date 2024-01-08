@@ -1,5 +1,7 @@
 include:
- - 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-definitions.yml'
+ - project: 'guidog/meta-phosh'
+   ref: '04a85df2f3311f3012b6c49bf353b376ae0f32b2'
+   file: '/ci/phosh-common-jobs.yml'
 
 stages:
  - build
@@ -180,22 +182,24 @@ format-check:
       fi
   allow_failure: true
 
-package-debian-trixie:arm64:
+package-deb-debian-trixie:arm64:
+  stage: package
   variables:
-    L5_DOCKER_IMAGE: debian:trixie
+    PHOSH_DOCKER_IMAGE: debian:trixie
     DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots'
+  extends: .phosh-build-debian-package
   tags:
     - aarch64
-  extends: .l5-build-debian-package
 
-package-debian-trixie:sanitizers:arm64:
+package-deb-debian-trixie:sanitizers:arm64:
+  stage: package
   variables:
-    L5_DOCKER_IMAGE: debian:trixie
+    PHOSH_DOCKER_IMAGE: debian:trixie
     DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots pkg.phoc.sanitizers'
+  extends: .phosh-build-debian-package
   tags:
     - aarch64
   when: manual
-  extends: .l5-build-debian-package
 
 pages:
   stage: deploy
