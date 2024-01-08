@@ -158,6 +158,13 @@ build-gtkdoc:
     variables:
       - $PKG_ONLY == "1"
 
+check-po:
+  stage: test+docs
+  extends: .phosh-check-po
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
 format-check:
   stage: style-checks
   image: ${DEBIAN_IMAGE}
