@@ -2310,7 +2310,7 @@ phoc_view_add_bling (PhocView *self, PhocBling *bling)
 /**
  * phoc_view_remove_bling:
  * @self: The view
- * @bling: The bling to add
+ * @bling: The bling to remove
  *
  * Removes the given bling from the view.
  */
