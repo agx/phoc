@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
+ * Copyright (C) 2023-2024 Guido Günther
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -45,11 +46,11 @@
 #define TOUCH_POINT_SIZE 20
 #define TOUCH_POINT_BORDER 0.1
 
-#define COLOR_BLACK                {0.0f, 0.0f, 0.0f, 1.0f}
+#define COLOR_BLACK                ((struct wlr_render_color){0.0f, 0.0f, 0.0f, 1.0f})
 #define COLOR_TRANSPARENT          {0.0f, 0.0f, 0.0f, 0.0f}
-#define COLOR_TRANSPARENT_WHITE    {0.5f, 0.5f, 0.5f, 0.5f}
-#define COLOR_TRANSPARENT_YELLOW   {0.5f, 0.5f, 0.0f, 0.5f}
-#define COLOR_TRANSPARENT_MAGENTA  {0.5f, 0.0f, 0.5f, 0.5f}
+#define COLOR_TRANSPARENT_WHITE    ((struct wlr_render_color){0.5f, 0.5f, 0.5f, 0.5f})
+#define COLOR_TRANSPARENT_YELLOW   ((struct wlr_render_color){0.5f, 0.5f, 0.0f, 0.5f})
+#define COLOR_TRANSPARENT_MAGENTA  ((struct wlr_render_color){0.5f, 0.0f, 0.5f, 0.5f})
 
 
 /**
@@ -149,78 +150,38 @@ phoc_renderer_get_property (GObject    *object,
 
 
 static void
-scissor_output (struct wlr_output *wlr_output, pixman_box32_t *rect)
-{
-  struct wlr_box box = {
-    .x = rect->x1,
-    .y = rect->y1,
-    .width = rect->x2 - rect->x1,
-    .height = rect->y2 - rect->y1,
-  };
-
-  int ow, oh;
-  wlr_output_transformed_resolution (wlr_output, &ow, &oh);
-
-  enum wl_output_transform transform = wlr_output_transform_invert(wlr_output->transform);
-  wlr_box_transform (&box, &box, transform, ow, oh);
-
-  wlr_renderer_scissor (wlr_output->renderer, &box);
-}
-
-/**
- * is_damaged:
- * @x: The x coordinate of the rectangle to check
- * @y: The y coordinate of the rectangle to check
- * @width: The width of the rectangle to check
- * @height: The height of the rectangle to check
- * @whole_damage: The damaged area
- * @damage: (out): The overlap of the rectangle with the damaged area. Don't init the pixman region
- *   `is_damaged` does that for you.
- *
- * Checks if a given rectangle overlaps with a given damage area, if so returns
- * true and fills `damage` with the overlap.
- *
- * Returns: %TRUE on overlap otherwise %FALSE
- */
-static gboolean
-is_damaged (int                x,
-            int                y,
-            guint              width,
-            guint              height,
-            pixman_region32_t *whole_damage,
-            pixman_region32_t *damage)
-{
-  pixman_region32_init (damage);
-  pixman_region32_union_rect (damage, damage, x, y, width, height);
-  pixman_region32_intersect (damage, damage, whole_damage);
-
-  return !!pixman_region32_not_empty (damage);
-}
-
-
-static void
-render_texture (struct wlr_output     *wlr_output,
-                pixman_region32_t     *output_damage,
-                struct wlr_texture    *texture,
-                const struct wlr_fbox *src_box,
-                const struct wlr_box  *dst_box,
-                const float            matrix[static 9],
-                float                  alpha)
+render_texture (PhocOutput               *output,
+                struct wlr_texture       *texture,
+                const struct wlr_fbox    *_src_box,
+                const struct wlr_box     *dst_box,
+                const struct wlr_box     *clip_box,
+                enum wl_output_transform  surface_transform,
+                float                     alpha,
+                PhocRenderContext        *ctx)
 {
   pixman_region32_t damage;
-  if (!is_damaged (dst_box->x, dst_box->y, dst_box->width, dst_box->height, output_damage, &damage))
+  struct wlr_box proj_box = *dst_box;
+  struct wlr_fbox src_box = {0};
+  enum wl_output_transform transform;
+
+  if (!phoc_util_is_damaged (&proj_box, ctx->damage, clip_box, &damage))
     goto buffer_damage_finish;
 
-  int nrects;
-  pixman_box32_t *rects = pixman_region32_rectangles (&damage, &nrects);
-  for (int i = 0; i < nrects; ++i) {
-    scissor_output (wlr_output, &rects[i]);
+  if (_src_box)
+    src_box = *_src_box;
 
-    if (src_box != NULL)
-      wlr_render_subtexture_with_matrix (wlr_output->renderer, texture, src_box, matrix, alpha);
-    else
-      wlr_render_texture_with_matrix (wlr_output->renderer, texture, matrix, alpha);
-  }
+  phoc_output_transform_box (output, &proj_box);
+  phoc_output_transform_damage (output, &damage);
+  transform = wlr_output_transform_compose (surface_transform, output->wlr_output->transform);
+
+  wlr_render_pass_add_texture (ctx->render_pass, &(struct wlr_render_texture_options) {
+      .texture = texture,
+      .src_box = src_box,
+      .dst_box = proj_box,
+      .transform = transform,
+      .alpha = &alpha,
+      .clip = &damage,
+    });
 
  buffer_damage_finish:
   pixman_region32_fini (&damage);
@@ -260,30 +221,28 @@ render_surface_iterator (PhocOutput         *output,
                          struct wlr_surface *surface,
                          struct wlr_box     *box,
                          float               scale,
-                         void               *_data)
+                         void               *data)
 {
-  PhocRenderContext *data = _data;
+  PhocRenderContext *ctx = data;
   struct wlr_output *wlr_output = output->wlr_output;
-  pixman_region32_t *output_damage = data->damage;
-  float alpha = data->alpha;
+  float alpha = ctx->alpha;
 
   struct wlr_texture *texture = wlr_surface_get_texture (surface);
-  if (!texture) {
+  if (!texture)
     return;
-  }
 
   struct wlr_fbox src_box;
   wlr_surface_get_buffer_source_box (surface, &src_box);
 
   struct wlr_box dst_box = *box;
+  struct wlr_box clip_box = *box;
+
   phoc_utils_scale_box (&dst_box, scale);
   phoc_utils_scale_box (&dst_box, wlr_output->scale);
+  phoc_utils_scale_box (&clip_box, scale);
+  phoc_utils_scale_box (&clip_box, wlr_output->scale);
 
-  float matrix[9];
-  enum wl_output_transform transform = wlr_output_transform_invert (surface->current.transform);
-  wlr_matrix_project_box (matrix, &dst_box, transform, 0.0, wlr_output->transform_matrix);
-
-  render_texture (wlr_output, output_damage, texture, &src_box, &dst_box, matrix, alpha);
+  render_texture (output, texture, &src_box, &dst_box, &clip_box, surface->current.transform, alpha, ctx);
 
   wlr_presentation_surface_scanned_out_on_output (output->desktop->presentation,
                                                   surface,
@@ -294,7 +253,7 @@ render_surface_iterator (PhocOutput         *output,
 
 
 static void
-render_blings (PhocOutput *output, PhocView *view, PhocRenderContext *data)
+render_blings (PhocOutput *output, PhocView *view, PhocRenderContext *ctx)
 {
   GSList *blings;
 
@@ -307,93 +266,64 @@ render_blings (PhocOutput *output, PhocView *view, PhocRenderContext *data)
 
   for (GSList *l = blings; l; l = l->next) {
     PhocBling *bling = PHOC_BLING (l->data);
-    PhocBox box;
 
-    box = phoc_bling_get_box (bling);
-
-    box.x -= output->lx;
-    box.y -= output->ly;
-    phoc_utils_scale_box (&box, output->wlr_output->scale);
-
-    pixman_region32_t damage;
-    if (!is_damaged (box.x, box.y, box.width, box.height, data->damage, &damage)) {
-      pixman_region32_fini (&damage);
-      continue;
-    }
-
-    int nrects;
-    pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
-    for (int i = 0; i < nrects; ++i) {
-      scissor_output (output->wlr_output, &rects[i]);
-      phoc_bling_render (bling, output);
-    }
-
-    pixman_region32_fini (&damage);
+    phoc_bling_render (bling, ctx);
   }
 }
 
 
 static void
-render_view (PhocOutput *output, PhocView *view, PhocRenderContext *data)
+render_view (PhocOutput *output, PhocView *view, PhocRenderContext *ctx)
 {
   // Do not render views fullscreened on other outputs
   if (phoc_view_is_fullscreen (view) && phoc_view_get_fullscreen_output (view) != output)
     return;
 
-  data->alpha = phoc_view_get_alpha (view);
+  ctx->alpha = phoc_view_get_alpha (view);
 
   if (!phoc_view_is_fullscreen (view))
-    render_blings (output, view, data);
+    render_blings (output, view, ctx);
 
-  phoc_output_view_for_each_surface (output, view, render_surface_iterator, data);
+  phoc_output_view_for_each_surface (output, view, render_surface_iterator, ctx);
 }
 
 
 static void
-render_layer (PhocOutput                     *output,
-              pixman_region32_t              *damage,
-              enum zwlr_layer_shell_v1_layer  layer)
+render_layer (enum zwlr_layer_shell_v1_layer layer, PhocRenderContext *ctx)
 {
   g_autoptr (GList) layer_surfaces = NULL;
 
-  PhocRenderContext data = {
-    .damage = damage,
-  };
-
-  layer_surfaces = phoc_output_get_layer_surfaces_for_layer (output, layer);
+  layer_surfaces = phoc_output_get_layer_surfaces_for_layer (ctx->output, layer);
   for (GList *l = layer_surfaces; l; l = l->next) {
     PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);
 
-    data.alpha = phoc_layer_surface_get_alpha (layer_surface);
-    phoc_output_layer_surface_for_each_surface (output,
+    ctx->alpha = phoc_layer_surface_get_alpha (layer_surface);
+    phoc_output_layer_surface_for_each_surface (ctx->output,
                                                 layer_surface,
                                                 render_surface_iterator,
-                                                &data);
+                                                ctx);
   }
 }
 
 
 static void
-render_drag_icons (PhocOutput *output, pixman_region32_t *damage, PhocInput *input)
+render_drag_icons (PhocInput *input, PhocRenderContext *ctx)
 {
-  PhocRenderContext data = {
-    .damage = damage,
-    .alpha = 1.0f,
-  };
+  ctx->alpha = 1.0;
 
-  phoc_output_drag_icons_for_each_surface (output, input, render_surface_iterator, &data);
+  phoc_output_drag_icons_for_each_surface (ctx->output, input, render_surface_iterator, ctx);
 }
 
 
 static void
-color_hsv_to_rgb (float* color)
+color_hsv_to_rgb (struct wlr_render_color *color)
 {
-  float h = color[0], s = color[1], v = color[2];
+  float h = color->r, s = color->g, v = color->b;
 
   h = fmodf (h, 360);
-  if (h < 0) {
+  if (h < 0)
     h += 360;
-  }
+
   int d = h / 60;
   float e = h / 60 - d;
   float a = v * (1 - s);
@@ -402,14 +332,15 @@ color_hsv_to_rgb (float* color)
 
   switch (d) {
   default:
-  case 0: color[0] = v, color[1] = c, color[2] = a; return;
-  case 1: color[0] = b, color[1] = v, color[2] = a; return;
-  case 2: color[0] = a, color[1] = v, color[2] = c; return;
-  case 3: color[0] = a, color[1] = b, color[2] = v; return;
-  case 4: color[0] = c, color[1] = a, color[2] = v; return;
-  case 5: color[0] = v, color[1] = a, color[2] = b; return;
+  case 0: color->r = v, color->g = c, color->b = a; return;
+  case 1: color->r = b, color->g = v, color->b = a; return;
+  case 2: color->r = a, color->g = v, color->b = c; return;
+  case 3: color->r = a, color->g = b, color->b = v; return;
+  case 4: color->r = c, color->g = a, color->b = v; return;
+  case 5: color->r = v, color->g = a, color->b = b; return;
   }
 }
+
 
 static struct wlr_box
 phoc_box_from_touch_point (struct touch_point_data *touch_point, int width, int height)
@@ -426,37 +357,53 @@ static void
 render_touch_point_cb (gpointer data, gpointer user_data)
 {
   struct touch_point_data *touch_point = data;
-
-  PhocOutput *output = user_data;
-  struct wlr_output *wlr_output = output->wlr_output;
-  struct wlr_renderer *wlr_renderer = wlr_output->renderer;
-
+  PhocRenderContext *ctx = user_data;
+  struct wlr_output *wlr_output = ctx->output->wlr_output;
   int size = TOUCH_POINT_SIZE * wlr_output->scale;
-  struct wlr_box point_box = phoc_box_from_touch_point (touch_point, size, size);
+  struct wlr_render_color color = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
+  struct wlr_box point_box;
 
-  float color[4] = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
-  color_hsv_to_rgb (color);
-  wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
+  color_hsv_to_rgb (&color);
+
+  point_box = phoc_box_from_touch_point (touch_point, size, size);
+  phoc_output_transform_box (ctx->output, &point_box);
+  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = point_box,
+      .color = color,
+    });
 
   size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
   point_box = phoc_box_from_touch_point (touch_point, size, size);
-  wlr_render_rect (wlr_renderer, &point_box,
-                   (float[])COLOR_TRANSPARENT_WHITE, wlr_output->transform_matrix);
+  phoc_output_transform_box (ctx->output, &point_box);
+  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = point_box,
+      .color = COLOR_TRANSPARENT_WHITE,
+    });
 
   point_box = phoc_box_from_touch_point (touch_point, 8 * wlr_output->scale, 2 * wlr_output->scale);
-  wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
+  phoc_output_transform_box (ctx->output, &point_box);
+  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = point_box,
+      .color = color,
+    });
+
   point_box = phoc_box_from_touch_point (touch_point, 2 * wlr_output->scale, 8 * wlr_output->scale);
-  wlr_render_rect (wlr_renderer, &point_box, color, wlr_output->transform_matrix);
+  phoc_output_transform_box (ctx->output, &point_box);
+  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = point_box,
+      .color = color,
+    });
 }
 
 static void
-render_touch_points (PhocOutput *output)
+render_touch_points (PhocRenderContext *ctx)
 {
-  if (G_LIKELY (output->debug_touch_points == NULL))
+  if (G_LIKELY (ctx->output->debug_touch_points == NULL))
     return;
 
-  g_list_foreach (output->debug_touch_points, render_touch_point_cb, output);
+  g_list_foreach (ctx->output->debug_touch_points, render_touch_point_cb, ctx);
 }
+
 
 static void
 damage_touch_point_cb (gpointer data, gpointer user_data)
@@ -523,6 +470,7 @@ view_render_to_buffer_iterator (struct wlr_surface *surface, int sx, int sy, voi
 }
 
 
+/* FIXME: Rework when switching to wlroots 0.18.x git again */
 gboolean
 phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
                                      PhocView          *view,
@@ -582,34 +530,43 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
 
 
 static void
-render_damage (PhocRenderer *self, PhocOutput *output)
+render_damage (PhocRenderer *self, PhocRenderContext *ctx)
 {
   int nrects;
   pixman_box32_t *rects;
   struct wlr_box box;
+
   pixman_region32_t previous_damage;
 
-  pixman_region32_init(&previous_damage);
+  pixman_region32_init (&previous_damage);
   pixman_region32_subtract (&previous_damage,
-                            &output->damage_ring.previous[output->damage_ring.previous_idx],
-                            &output->damage_ring.current);
+                            &ctx->output->damage_ring.previous[ctx->output->damage_ring.previous_idx],
+                            &ctx->output->damage_ring.current);
 
   rects = pixman_region32_rectangles(&previous_damage, &nrects);
   for (int i = 0; i < nrects; ++i) {
-    wlr_box_from_pixman_box32(&box, rects[i]);
-    wlr_render_rect(self->wlr_renderer, &box, (float[])COLOR_TRANSPARENT_MAGENTA,
-                    output->wlr_output->transform_matrix);
-  }
+    wlr_box_from_pixman_box32 (&box, rects[i]);
 
-  rects = pixman_region32_rectangles (&output->damage_ring.current, &nrects);
-  for (int i = 0; i < nrects; ++i) {
-    wlr_box_from_pixman_box32(&box, rects[i]);
-    wlr_render_rect(self->wlr_renderer, &box, (float[])COLOR_TRANSPARENT_YELLOW,
-                    output->wlr_output->transform_matrix);
+    phoc_output_transform_box (ctx->output, &box);
+    wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = box,
+      .color = COLOR_TRANSPARENT_MAGENTA,
+      });
   }
-  wlr_output_schedule_frame (output->wlr_output);
   pixman_region32_fini(&previous_damage);
+
+  rects = pixman_region32_rectangles (&ctx->output->damage_ring.current, &nrects);
+  for (int i = 0; i < nrects; ++i) {
+    wlr_box_from_pixman_box32 (&box, rects[i]);
+
+    phoc_output_transform_box (ctx->output, &box);
+    wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = box,
+      .color = COLOR_TRANSPARENT_YELLOW,
+      });
+  }
 }
+
 
 /**
  * phoc_renderer_render_output:
@@ -620,38 +577,38 @@ render_damage (PhocRenderer *self, PhocOutput *output)
  * Render a given output.
  */
 void
-phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderContext *context)
+phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderContext *ctx)
 {
   PhocServer *server = phoc_server_get_default ();
   struct wlr_output *wlr_output = output->wlr_output;
   PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
-  struct wlr_renderer *wlr_renderer;
-  pixman_region32_t *damage = context->damage;
+  pixman_region32_t *damage = ctx->damage;
+  pixman_region32_t transformed_damage;
 
   g_assert (PHOC_IS_RENDERER (self));
-  wlr_renderer = self->wlr_renderer;
 
-  float clear_color[] = COLOR_BLACK;
-
-  wlr_renderer_begin (wlr_renderer, wlr_output->width, wlr_output->height);
+  pixman_region32_init (&transformed_damage);
 
   if (!pixman_region32_not_empty (damage)) {
     // Output isn't damaged but needs buffer swap
     goto renderer_end;
   }
 
-  int nrects;
-  pixman_box32_t *rects = pixman_region32_rectangles (damage, &nrects);
-  for (int i = 0; i < nrects; ++i) {
-    scissor_output (output->wlr_output, &rects[i]);
-    wlr_renderer_clear (wlr_renderer, clear_color);
-  }
+  pixman_region32_copy (&transformed_damage, damage);
+  phoc_output_transform_damage (output, &transformed_damage);
+
+  wlr_render_pass_add_rect (ctx->render_pass,
+                            &(struct wlr_render_rect_options){
+                              .box = { .width = wlr_output->width, .height = wlr_output->height },
+                              .color = COLOR_BLACK,
+                              .clip = &transformed_damage,
+                            });
 
   // If a view is fullscreen on this output, render it
   if (output->fullscreen_view != NULL) {
     PhocView *view = output->fullscreen_view;
 
-    render_view (output, view, context);
+    render_view (output, view, ctx);
 
     // During normal rendering the xwayland window tree isn't traversed
     // because all windows are rendered. Here we only want to render
@@ -663,44 +620,40 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
       phoc_output_xwayland_children_for_each_surface (output,
                                                       xsurface,
                                                       render_surface_iterator,
-                                                      context);
+                                                      ctx);
     }
 #endif
 
     if (phoc_output_has_shell_revealed (output)) {
       // Render top layer above fullscreen view when requested
-      render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
+      render_layer (ZWLR_LAYER_SHELL_V1_LAYER_TOP, ctx);
     }
   } else {
     // Render background and bottom layers under views
-    render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND);
-    render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM);
+    render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND, ctx);
+    render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM, ctx);
 
     PhocView *view;
     // Render all views
     wl_list_for_each_reverse(view, &desktop->views, link) {
       if (phoc_desktop_view_is_visible (desktop, view))
-        render_view (output, view, context);
+        render_view (output, view, ctx);
     }
-
     // Render top layer above views
-    render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_TOP);
+    render_layer (ZWLR_LAYER_SHELL_V1_LAYER_TOP, ctx);
   }
+  render_drag_icons (server->input, ctx);
 
-  render_drag_icons (output, damage, server->input);
-
-  render_layer (output, damage, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
+  render_layer (ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, ctx);
 
  renderer_end:
-  wlr_output_render_software_cursors (wlr_output, damage);
-  wlr_renderer_scissor (wlr_renderer, NULL);
+  pixman_region32_fini (&transformed_damage);
+  wlr_output_add_software_cursors_to_render_pass (wlr_output, ctx->render_pass, damage);
 
-  render_touch_points (output);
-  g_signal_emit (self, signals[RENDER_END], 0, output);
+  render_touch_points (ctx);
+  g_signal_emit (self, signals[RENDER_END], 0, ctx);
   if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
-    render_damage (self, output);
-
-  wlr_renderer_end (wlr_renderer);
+    render_damage (self, ctx);
 
   damage_touch_points (output);
   g_clear_list (&output->debug_touch_points, g_free);
@@ -787,7 +740,9 @@ phoc_renderer_class_init (PhocRendererClass *klass)
                                       G_TYPE_FROM_CLASS (klass),
                                       G_SIGNAL_RUN_LAST,
                                       0, NULL, NULL, NULL,
-                                      G_TYPE_NONE, 1, PHOC_TYPE_OUTPUT);
+                                      G_TYPE_NONE, 1,
+                                      /* PhocRenderContext: */
+                                      G_TYPE_POINTER);
 }
 
 

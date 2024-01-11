@@ -88,6 +88,9 @@ set_alpha (PhocOutputShield *self, float alpha)
   g_assert (alpha >= 0.0 && alpha <= 1.0);
 
   self->alpha = alpha;
+
+  /* Damage covers the whole output */
+  phoc_output_damage_whole (self->output);
 }
 
 
@@ -146,26 +149,20 @@ stop_render (PhocOutputShield *self)
 
 
 static void
-on_render (PhocOutputShield *self, PhocOutput *output, PhocRenderer *renderer)
+on_render (PhocOutputShield *self, PhocRenderContext *ctx)
 {
   struct wlr_output *wlr_output;
-  struct wlr_box box;
-  struct wlr_renderer *wlr_renderer;
-  float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
-  if (self->output == NULL)
+  if (self->output == NULL || self->output != ctx->output)
     return;
 
   g_debug ("%s: alpha: %f", __func__, self->alpha);
   wlr_output = self->output->wlr_output;
-  box = (struct wlr_box){ 0, 0, wlr_output->width, wlr_output->height };
-  wlr_renderer = phoc_renderer_get_wlr_renderer (renderer);
 
-  color[3] = self->alpha;
-  wlr_render_rect (wlr_renderer, &box, color, wlr_output->transform_matrix);
-
-  /* Damage covers the whole output */
-  phoc_output_damage_whole (self->output);
+  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = { .width = wlr_output->width, .height = wlr_output->height },
+      .color =  { .a = self->alpha },
+    });
 }
 
 

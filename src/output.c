@@ -9,6 +9,7 @@
 #include <time.h>
 #include <wlr/backend/drm.h>
 #include <wlr/config.h>
+#include <wlr/render/swapchain.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -288,28 +289,19 @@ phoc_output_handle_destroy (struct wl_listener *listener, void *data)
 
 
 static void
-render_cutouts (PhocRenderer *renderer, PhocOutput *self)
+render_cutouts (PhocOutput *self, PhocRenderContext *ctx)
 {
-  struct wlr_output *wlr_output = self->wlr_output;
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
 
   g_assert (PHOC_IS_OUTPUT (self));
-  g_assert (PHOC_IS_RENDERER (renderer));
 
   if (priv->cutouts_texture) {
-    float matrix[9];
-    struct wlr_box box;
-    struct wlr_renderer *wlr_renderer = phoc_renderer_get_wlr_renderer (renderer);
     struct wlr_texture *texture = priv->cutouts_texture;
-    enum wl_output_transform transform = wlr_output_transform_invert (self->wlr_output->transform);
 
-    if (transform % 2 == 0) /* 0, 180 */
-      box = (struct wlr_box){ 0, 0, texture->width, texture->height };
-    else /* 90, 270 */
-      box = (struct wlr_box){ 0, 0, texture->height, texture->width };
-
-    wlr_matrix_project_box (matrix, &box, transform, 0, wlr_output->transform_matrix);
-    wlr_render_texture_with_matrix (wlr_renderer, texture, matrix, 1.0);
+    wlr_render_pass_add_texture (ctx->render_pass, &(struct wlr_render_texture_options) {
+        .texture = texture,
+        .transform = WL_OUTPUT_TRANSFORM_NORMAL,
+    });
   }
 }
 
@@ -327,7 +319,7 @@ phoc_output_handle_damage (struct wl_listener *listener, void *user_data)
 
 
 static void
-phoc_output_set_gamma_lut (PhocOutput *self)
+phoc_output_set_gamma_lut (PhocOutput *self, struct wlr_output_state *pending)
 {
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   struct wlr_gamma_control_v1 *gamma_control;
@@ -336,16 +328,14 @@ phoc_output_set_gamma_lut (PhocOutput *self)
     phoc_server_get_default ()->desktop->gamma_control_manager_v1, self->wlr_output);
 
   priv->gamma_lut_changed = FALSE;
-  /*
-   * TODO: Use wlr_output_state
-   * once https://gitlab.gnome.org/World/Phosh/phoc/-/issues/344 is done
-   */
-  if (!wlr_gamma_control_v1_apply (gamma_control, &self->wlr_output->pending))
+
+  if (!wlr_gamma_control_v1_apply (gamma_control, pending))
     return;
 
-  if (!wlr_output_test (self->wlr_output)) {
-    wlr_output_rollback (self->wlr_output);
+  if (!wlr_output_test_state (self->wlr_output, pending)) {
+    wlr_output_state_finish (pending);
     wlr_gamma_control_v1_send_failed_and_destroy (gamma_control);
+    *pending = (struct wlr_output_state){0};
   }
 }
 
@@ -377,13 +367,14 @@ count_surface_iterator (PhocOutput         *output,
 
 
 PHOC_TRACE_NO_INLINE static bool
-scan_out_fullscreen_view (PhocOutput *self)
+scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_state *pending)
 {
   struct wlr_output *wlr_output = self->wlr_output;
   PhocServer *server = phoc_server_get_default ();
   size_t n_surfaces = 0;
   struct wlr_surface *wlr_surface;
-  PhocView *view;
+
+  g_assert (PHOC_IS_VIEW (view));
 
   for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
@@ -398,8 +389,6 @@ scan_out_fullscreen_view (PhocOutput *self)
   if (phoc_output_has_layer (self, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
     return false;
 
-  view = self->fullscreen_view;
-  g_assert (view != NULL);
   if (!phoc_view_is_mapped (view))
     return false;
 
@@ -429,21 +418,22 @@ scan_out_fullscreen_view (PhocOutput *self)
   if (!wlr_output_is_direct_scanout_allowed (wlr_output))
     return false;
 
-  wlr_output_attach_buffer (wlr_output, &wlr_surface->buffer->base);
-  if (!wlr_output_test (wlr_output))
+  wlr_output_state_set_buffer (pending, &wlr_surface->buffer->base);
+  if (!wlr_output_test_state (wlr_output, pending))
     return false;
 
   wlr_presentation_surface_scanned_out_on_output (self->desktop->presentation,
                                                   wlr_surface,
                                                   wlr_output);
 
-  return wlr_output_commit (wlr_output);
+  return wlr_output_commit_state (wlr_output, pending);
 }
 
 
 static void
 get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
 {
+  PhocServer *server = phoc_server_get_default ();
   int width, height;
   enum wl_output_transform transform;
 
@@ -453,73 +443,92 @@ get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
 
   transform = wlr_output_transform_invert (self->wlr_output->transform);
   wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
+
+  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
+    pixman_region32_union_rect (frame_damage, frame_damage,
+                                0, 0, self->wlr_output->width, self->wlr_output->height);
+
+  }
 }
 
 
 PHOC_TRACE_NO_INLINE static void
 phoc_output_draw (PhocOutput *self)
 {
-  PhocServer *server = phoc_server_get_default ();
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   struct wlr_output *wlr_output = self->wlr_output;
   bool needs_frame, scanned_out = false;
-  pixman_region32_t buffer_damage, frame_damage;
+  pixman_region32_t buffer_damage;
   int buffer_age;
   PhocRenderContext render_context;
-  enum wl_output_transform transform;
+  struct wlr_buffer *buffer;
+  struct wlr_render_pass *render_pass;
+  struct wlr_output_state pending = { 0 };
 
   if (!wlr_output->enabled)
     return;
 
+  needs_frame = wlr_output->needs_frame;
+  needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
+  needs_frame |= priv->gamma_lut_changed;
+
+  if (!needs_frame)
+    return;
+
+  if (G_UNLIKELY (priv->gamma_lut_changed))
+    phoc_output_set_gamma_lut (self, &pending);
+
+  pending.committed |= WLR_OUTPUT_STATE_DAMAGE;
+  get_frame_damage (self, &pending.damage);
+
   /* Check if we can delegate the fullscreen surface to the output */
   if (phoc_output_has_fullscreen_view (self))
-    scanned_out = scan_out_fullscreen_view (self);
+    scanned_out = scan_out_fullscreen_view (self, self->fullscreen_view, &pending);
 
   if (scanned_out)
-    return;
+    goto out;
 
-  if (!wlr_output_attach_render (wlr_output, &buffer_age))
-    return;
+  if (!wlr_output_configure_primary_swapchain (wlr_output, &pending, &wlr_output->swapchain))
+    goto  out;
+
+  buffer = wlr_swapchain_acquire (wlr_output->swapchain, &buffer_age);
+  if (!buffer)
+    goto out;
+
+  render_pass = wlr_renderer_begin_buffer_pass (wlr_output->renderer, buffer, NULL);
+  if (!render_pass) {
+    wlr_buffer_unlock (buffer);
+    goto out;
+  }
 
   pixman_region32_init (&buffer_damage);
   wlr_damage_ring_get_buffer_damage (&self->damage_ring, buffer_age, &buffer_damage);
 
-  transform = wlr_output_transform_invert (wlr_output->transform);
-  needs_frame = self->wlr_output->needs_frame;
-
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
-    pixman_region32_union_rect (&buffer_damage, &buffer_damage,
-                                0, 0, wlr_output->width, wlr_output->height);
-    wlr_region_transform (&buffer_damage, &buffer_damage,
-                          transform, wlr_output->width, wlr_output->height);
-    needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
-    needs_frame |=
-      pixman_region32_not_empty (&self->damage_ring.previous[self->damage_ring.previous_idx]);
-  }
-
-  needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
-  if (!needs_frame) {
-    /* Output isn't damaged, skip rendering completely */
-    wlr_output_rollback (wlr_output);
-    return;
-  }
-
   render_context = (PhocRenderContext){
+    .output = self,
     .damage = &buffer_damage,
     .alpha = 1.0,
+    .render_pass = render_pass,
   };
   phoc_renderer_render_output (priv->renderer, self, &render_context);
 
   pixman_region32_fini (&buffer_damage);
 
-  get_frame_damage (self, &frame_damage);
-  wlr_output_set_damage (wlr_output, &frame_damage);
-  pixman_region32_fini (&frame_damage);
+  if (!wlr_render_pass_submit (render_pass)) {
+    wlr_buffer_unlock (buffer);
+    goto out;
+  }
 
-  if (!wlr_output_commit (wlr_output))
-    return;
+  wlr_output_state_set_buffer (&pending, buffer);
+  wlr_buffer_unlock (buffer);
+
+  if (!wlr_output_commit_state (wlr_output, &pending))
+    goto out;
 
   wlr_damage_ring_rotate (&self->damage_ring);
+
+ out:
+  wlr_output_state_finish (&pending);
 }
 
 
@@ -552,9 +561,6 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
     if (wlr_damage_ring_add_box (&self->damage_ring, &box))
       wlr_output_schedule_frame (self->wlr_output);
   }
-
-  if (G_UNLIKELY (priv->gamma_lut_changed))
-    phoc_output_set_gamma_lut (self);
 
   /* Repaint the output */
   phoc_output_draw (self);
@@ -880,9 +886,9 @@ phoc_output_initable_init (GInitable    *initable,
     if (priv->cutouts) {
       g_message ("Adding cutouts overlay");
       priv->cutouts_texture = phoc_cutouts_overlay_get_cutouts_texture (priv->cutouts, self);
-      priv->render_cutouts_id =  g_signal_connect (renderer, "render-end",
-                                                   G_CALLBACK (render_cutouts),
-                                                   self);
+      priv->render_cutouts_id =  g_signal_connect_swapped (renderer, "render-end",
+                                                           G_CALLBACK (render_cutouts),
+                                                           self);
     } else {
       g_warning ("Could not create cutout overlay");
     }
