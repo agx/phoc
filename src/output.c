@@ -2002,3 +2002,44 @@ phoc_output_handle_gamma_control_set_gamma (struct wl_listener *listener, void *
   priv->gamma_lut_changed = TRUE;
   wlr_output_schedule_frame (self->wlr_output);
 }
+
+
+/**
+ * phoc_output_transform_damage:
+ * @self: The output to transform for
+ * @damage:(inout): The damaged area
+ *
+ * Transforms the given damage region according to the output's transform.
+ */
+void
+phoc_output_transform_damage (PhocOutput *self, pixman_region32_t *damage)
+{
+  int width, height;
+  enum wl_output_transform transform;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+  transform = wlr_output_transform_invert (self->wlr_output->transform);
+  wlr_region_transform (damage, damage, transform, width, height);
+}
+
+/**
+ * phoc_output_transform_box:
+ * @self: The output to transform for
+ * @box:(inout): The box to transform
+ *
+ * Transforms the given box according to the output's transform.
+ */
+void
+phoc_output_transform_box (PhocOutput *self, struct wlr_box *box)
+{
+  int ow, oh;
+  enum wl_output_transform transform;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  wlr_output_transformed_resolution(self->wlr_output, &ow, &oh);
+  transform = wlr_output_transform_invert (self->wlr_output->transform);
+  wlr_box_transform(box, box, transform, ow, oh);
+}

@@ -145,5 +145,8 @@ void       phoc_output_lower_shield          (PhocOutput *self);
 void       phoc_output_raise_shield          (PhocOutput *self);
 float      phoc_output_get_scale             (PhocOutput *self);
 const char *phoc_output_get_name             (PhocOutput *self);
+void       phoc_output_transform_damage      (PhocOutput *self, pixman_region32_t *damage);
+void       phoc_output_transform_box         (PhocOutput *self, struct wlr_box *box);
+
 
 G_END_DECLS
