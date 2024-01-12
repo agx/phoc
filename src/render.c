@@ -230,23 +230,26 @@ static void
 collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wlr_box box, float scale)
 {
   PhocServer *server = phoc_server_get_default ();
-  if (G_LIKELY (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))) {
+  if (G_LIKELY (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
     return;
-  }
 
   for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
+    struct wlr_touch_point *point;
 
     g_assert (PHOC_IS_SEAT (seat));
-    struct wlr_touch_point *point;
+
     wl_list_for_each(point, &seat->seat->touch_state.touch_points, link) {
+      struct touch_point_data *touch_point;
+
       if (point->surface != surface)
         continue;
-      struct touch_point_data *touch_point = g_malloc(sizeof(struct touch_point_data));
+
+      touch_point = g_new (struct touch_point_data, 1);
       touch_point->id = point->touch_id;
       touch_point->x = box.x + point->sx * output->wlr_output->scale * scale;
       touch_point->y = box.y + point->sy * output->wlr_output->scale * scale;
-      output->debug_touch_points = g_list_append(output->debug_touch_points, touch_point);
+      output->debug_touch_points = g_list_append (output->debug_touch_points, touch_point);
     }
   }
 }
