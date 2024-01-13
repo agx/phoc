@@ -483,7 +483,7 @@ damage_touch_points (PhocOutput *output)
 }
 
 static void
-view_render_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
+view_render_to_buffer_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 {
   if (!wlr_surface_has_buffer (surface)) {
     return;
@@ -560,7 +560,7 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
 
   wlr_renderer_begin_with_buffer (self->wlr_renderer, buffer);
   wlr_renderer_clear (self->wlr_renderer, (float[])COLOR_TRANSPARENT);
-  wlr_surface_for_each_surface (surface, view_render_iterator, &render_data);
+  wlr_surface_for_each_surface (surface, view_render_to_buffer_iterator, &render_data);
 
   if (!wlr_buffer_begin_data_ptr_access (shm_buffer,
                                          WLR_BUFFER_DATA_PTR_ACCESS_WRITE,
