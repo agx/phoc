@@ -421,11 +421,11 @@ subsurface_destroy (PhocLayerSubsurface *subsurface)
   free(subsurface);
 }
 
-static struct phoc_layer_popup *popup_create(struct wlr_xdg_popup *wlr_popup);
+static PhocLayerPopup *popup_create (struct wlr_xdg_popup *wlr_popup);
 static PhocLayerSubsurface *layer_subsurface_create (struct wlr_subsurface *wlr_subsurface);
 
 static PhocLayerSurface *
-popup_get_root_layer (struct phoc_layer_popup *popup)
+popup_get_root_layer (PhocLayerPopup *popup)
 {
   while (popup->parent_type == LAYER_PARENT_POPUP) {
     popup = popup->parent_popup;
@@ -434,7 +434,7 @@ popup_get_root_layer (struct phoc_layer_popup *popup)
 }
 
 static void
-popup_unconstrain (struct phoc_layer_popup *popup)
+popup_unconstrain (PhocLayerPopup *popup)
 {
   PhocLayerSurface *layer = popup_get_root_layer(popup);
   struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
@@ -454,7 +454,7 @@ popup_unconstrain (struct phoc_layer_popup *popup)
 }
 
 static void
-popup_damage (struct phoc_layer_popup *layer_popup, bool whole)
+popup_damage (PhocLayerPopup *layer_popup, bool whole)
 {
   struct wlr_xdg_popup *popup = layer_popup->wlr_popup;
   struct wlr_surface *surface = popup->base->surface;
@@ -486,10 +486,10 @@ popup_damage (struct phoc_layer_popup *layer_popup, bool whole)
 static void
 popup_new_popup (struct wl_listener *listener, void *data)
 {
-  struct phoc_layer_popup *popup =
-    wl_container_of(listener, popup, new_popup);
+  PhocLayerPopup *popup = wl_container_of (listener, popup, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
-  struct phoc_layer_popup *new_popup = popup_create(wlr_popup);
+  PhocLayerPopup *new_popup = popup_create(wlr_popup);
+
   new_popup->parent_type = LAYER_PARENT_POPUP;
   new_popup->parent_popup = popup;
   popup_unconstrain(new_popup);
@@ -498,8 +498,7 @@ popup_new_popup (struct wl_listener *listener, void *data)
 static void
 popup_new_subsurface (struct wl_listener *listener, void *data)
 {
-  struct phoc_layer_popup *popup =
-    wl_container_of(listener, popup, new_subsurface);
+  PhocLayerPopup *popup = wl_container_of (listener, popup, new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
   PhocLayerSubsurface *subsurface = layer_subsurface_create (wlr_subsurface);
 
@@ -512,9 +511,10 @@ static void
 popup_handle_map (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  struct phoc_layer_popup *popup = wl_container_of(listener, popup, map);
+  PhocLayerPopup *popup = wl_container_of (listener, popup, map);
   PhocLayerSurface *layer = popup_get_root_layer(popup);
   struct wlr_output *wlr_output = layer->layer_surface->output;
+
   if (!wlr_output) {
     return;
   }
@@ -546,7 +546,7 @@ static void
 popup_handle_unmap (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
-  struct phoc_layer_popup *popup = wl_container_of(listener, popup, unmap);
+  PhocLayerPopup *popup = wl_container_of (listener, popup, unmap);
   PhocLayerSubsurface *child, *tmp;
 
   wl_list_for_each_safe(child, tmp, &popup->subsurfaces, link) {
@@ -560,14 +560,15 @@ popup_handle_unmap (struct wl_listener *listener, void *data)
 static void
 popup_handle_commit (struct wl_listener *listener, void *data)
 {
-  struct phoc_layer_popup *popup = wl_container_of(listener, popup, commit);
+  PhocLayerPopup *popup = wl_container_of (listener, popup, commit);
+
   popup_damage(popup, false);
 }
 
 static void
 popup_handle_destroy (struct wl_listener *listener, void *data)
 {
-  struct phoc_layer_popup *popup = wl_container_of(listener, popup, destroy);
+  PhocLayerPopup *popup = wl_container_of (listener, popup, destroy);
 
   wl_list_remove(&popup->map.link);
   wl_list_remove(&popup->unmap.link);
@@ -577,11 +578,11 @@ popup_handle_destroy (struct wl_listener *listener, void *data)
   free(popup);
 }
 
-static struct phoc_layer_popup *
+static PhocLayerPopup *
 popup_create (struct wlr_xdg_popup *wlr_popup)
 {
-  struct phoc_layer_popup *popup =
-    calloc(1, sizeof(struct phoc_layer_popup));
+  PhocLayerPopup *popup = calloc (1, sizeof(PhocLayerPopup));
+
   if (popup == NULL) {
     return NULL;
   }
@@ -608,7 +609,8 @@ handle_new_popup (struct wl_listener *listener, void *data)
   PhocLayerSurface *phoc_layer_surface =
     wl_container_of(listener, phoc_layer_surface, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
-  struct phoc_layer_popup *popup = popup_create(wlr_popup);
+  PhocLayerPopup *popup = popup_create (wlr_popup);
+
   popup->parent_type = LAYER_PARENT_LAYER;
   popup->parent_layer = phoc_layer_surface;
   popup_unconstrain(popup);
