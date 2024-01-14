@@ -825,10 +825,10 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
 }
 
 void
-phoc_view_child_init (PhocViewChild *child,
-                      const struct phoc_view_child_interface *impl,
-                      PhocView *view,
-                      struct wlr_surface *wlr_surface)
+phoc_view_child_init (PhocViewChild                *child,
+                      const PhocViewChildInterface *impl,
+                      PhocView                     *view,
+                      struct wlr_surface           *wlr_surface)
 {
   PhocViewPrivate *priv;
 
@@ -850,7 +850,7 @@ phoc_view_child_init (PhocViewChild *child,
 }
 
 
-static const struct phoc_view_child_interface subsurface_impl;
+static const PhocViewChildInterface subsurface_impl;
 
 static void
 subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
@@ -886,7 +886,7 @@ subsurface_destroy (PhocViewChild *child)
 }
 
 
-static const struct phoc_view_child_interface subsurface_impl = {
+static const PhocViewChildInterface subsurface_impl = {
   .get_pos = subsurface_get_pos,
   .destroy = subsurface_destroy,
 };

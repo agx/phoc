@@ -34,7 +34,7 @@ typedef struct _PhocXdgPopup {
   struct wl_listener reposition;
 } PhocXdgPopup;
 
-static const struct phoc_view_child_interface popup_impl;
+static const PhocViewChildInterface popup_impl;
 
 static void
 popup_destroy (PhocViewChild *child)
@@ -65,7 +65,7 @@ popup_get_pos (PhocViewChild *child, int *sx, int *sy)
 }
 
 
-static const struct phoc_view_child_interface popup_impl = {
+static const PhocViewChildInterface popup_impl = {
   .get_pos = popup_get_pos,
   .destroy = popup_destroy,
 };
