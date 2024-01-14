@@ -33,12 +33,14 @@ typedef struct phoc_layer_popup {
   struct wl_list subsurfaces; // phoc_layer_subsurface::link
 } PhocLayerPopup;
 
-typedef struct phoc_layer_subsurface {
+
+typedef struct _PhocLayerSubsurface PhocLayerSubsurface;
+typedef struct _PhocLayerSubsurface {
   enum layer_parent parent_type;
   union {
     PhocLayerSurface *parent_layer;
     struct phoc_layer_popup *parent_popup;
-    struct phoc_layer_subsurface *parent_subsurface;
+    PhocLayerSubsurface *parent_subsurface;
   };
   struct wl_list link;
 
