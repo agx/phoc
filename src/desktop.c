@@ -164,7 +164,7 @@ view_at (PhocView *view, double lx, double ly, struct wlr_surface **surface, dou
     return true;
   }
 
-  if (view_get_deco_part (view, view_sx, view_sy)) {
+  if (phoc_view_get_deco_part (view, view_sx, view_sy)) {
     if (sx)
       *sx = view_sx;
     if (sy)
@@ -362,7 +362,7 @@ phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
     if (v == view) {
       return true;
     }
-    if (view_is_maximized (v)) {
+    if (phoc_view_is_maximized (v)) {
       return false;
     }
     v = v->parent;
@@ -393,7 +393,7 @@ handle_layout_change (struct wl_listener *listener, void *data)
   /* Make sure all views are on an existing output */
   wl_list_for_each (view, &self->views, link) {
     struct wlr_box box;
-    view_get_box (view, &box);
+    phoc_view_get_box (view, &box);
 
     if (wlr_output_layout_intersects (self->layout, NULL, &box))
       continue;
@@ -964,7 +964,7 @@ phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
   }
 
   wl_list_for_each (view, &self->views, link) {
-    view_auto_maximize (view);
+    phoc_view_auto_maximize (view);
     phoc_view_appear_activated (view, true);
   }
 }

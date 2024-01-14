@@ -19,8 +19,7 @@ void             view_update_position                (PhocView *view, int x, int
 void             view_update_size                    (PhocView *view, int width, int height);
 void             phoc_view_set_initial_focus         (PhocView *view);
 void             phoc_view_map                       (PhocView *view, struct wlr_surface *surface);
-void             view_unmap                          (PhocView *view);
+void             phoc_view_unmap                     (PhocView *view);
 void             phoc_view_apply_damage              (PhocView *view);
 
 G_END_DECLS
-

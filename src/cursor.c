@@ -149,7 +149,7 @@ phoc_cursor_suggest_view_state_change (PhocCursor            *self,
 
   phoc_cursor_view_state_set_view (self, view);
   phoc_cursor_view_state_set_output (self, output);
-  view_get_box (view, &view_box);
+  phoc_view_get_box (view, &view_box);
   priv->view_state.rect = phoc_color_rect_new ((PhocBox *)&view_box,
                                                &PHOC_ANIM_SUGGEST_STATE_CHANGE_COLOR);
   phoc_view_add_bling (view, PHOC_BLING (priv->view_state.rect));
@@ -232,7 +232,7 @@ phoc_cursor_submit_pending_view_state_change (PhocCursor *self)
     phoc_view_maximize (priv->view_state.view, priv->view_state.output);
     break;
   case PHOC_VIEW_STATE_TILED:
-    view_tile (priv->view_state.view, priv->view_state.tile_dir, priv->view_state.output);
+    phoc_view_tile (priv->view_state.view, priv->view_state.tile_dir, priv->view_state.output);
     break;
   case PHOC_VIEW_STATE_FLOATING:
     /* Nothing to do */
@@ -597,7 +597,7 @@ seat_view_deco_motion (PhocSeatView *view, double deco_sx, double deco_sy)
     sy = view->grab_sy;
   }
 
-  PhocViewDecoPart parts = view_get_deco_part (view->view, sx, sy);
+  PhocViewDecoPart parts = phoc_view_get_deco_part (view->view, sx, sy);
 
   bool is_titlebar = (parts & PHOC_VIEW_DECO_PART_TITLEBAR);
   uint32_t edges = 0;
@@ -650,7 +650,7 @@ seat_view_deco_button (PhocSeatView *view, double sx,
     view->has_button_grab = false;
   }
 
-  PhocViewDecoPart parts = view_get_deco_part (view->view, sx, sy);
+  PhocViewDecoPart parts = phoc_view_get_deco_part (view->view, sx, sy);
 
   if (state == WLR_BUTTON_RELEASED && (parts & PHOC_VIEW_DECO_PART_TITLEBAR)) {
     phoc_seat_maybe_set_cursor (view->seat, NULL);
@@ -1052,7 +1052,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
 
       bool output_is_landscape = output_box.width > output_box.height;
 
-      if (view_is_fullscreen (view)) {
+      if (phoc_view_is_fullscreen (view)) {
         phoc_view_set_fullscreen (view, true, output);
       } else if (self->cursor->y < output_box.y + PHOC_EDGE_SNAP_THRESHOLD) {
         phoc_cursor_suggest_view_state_change (self, view, output, PHOC_VIEW_STATE_MAXIMIZED, -1);
@@ -1072,7 +1072,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
                                                PHOC_VIEW_TILE_RIGHT);
       } else {
         phoc_cursor_clear_view_state_change (self);
-        view_restore (view);
+        phoc_view_restore (view);
         phoc_view_move (view, self->view_x + dx - geom.x * phoc_view_get_scale (view),
                         self->view_y + dy - geom.y * phoc_view_get_scale (view));
       }

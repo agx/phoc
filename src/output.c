@@ -1319,7 +1319,7 @@ phoc_output_for_each_surface (PhocOutput          *self,
 void
 phoc_output_get_decoration_box (PhocOutput *self, PhocView *view, struct wlr_box *box)
 {
-  view_get_deco_box (view, box);
+  phoc_view_get_deco_box (view, box);
 
   box->x -= self->lx;
   box->y -= self->ly;

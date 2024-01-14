@@ -60,9 +60,9 @@ Build-Depends:
  xauth <!nocheck>,
 # Tracing
  systemtap-sdt-dev <pkg.phoc.trace>,
-Standards-Version: 4.6.0
-Section: libs
-Homepage: https://source.puri.sm/librem5/phoc
+Standards-Version: 4.6.2
+Section: x11
+Homepage: https://gitlab.gnome.org/World/Phosh/phoc
 Rules-Requires-Root: no
 
 Package: phoc

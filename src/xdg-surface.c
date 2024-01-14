@@ -326,13 +326,13 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     double y = view->box.y;
 
     if (view->pending_move_resize.update_x) {
-      if (view_is_floating (view))
+      if (phoc_view_is_floating (view))
         x = view->pending_move_resize.x + view->pending_move_resize.width - size.width;
       else
         x = view->pending_move_resize.x;
     }
     if (view->pending_move_resize.update_y) {
-      if (view_is_floating (view))
+      if (phoc_view_is_floating (view))
         y = view->pending_move_resize.y + view->pending_move_resize.height - size.height;
       else
         y = view->pending_move_resize.y;
@@ -387,7 +387,7 @@ static void
 handle_unmap (struct wl_listener *listener, void *data)
 {
   PhocXdgSurface *self = wl_container_of (listener, self, unmap);
-  view_unmap (PHOC_VIEW (self));
+  phoc_view_unmap (PHOC_VIEW (self));
 }
 
 
@@ -434,7 +434,7 @@ handle_request_maximize (struct wl_listener *listener, void *data)
   if (surface->toplevel->requested.maximized)
     phoc_view_maximize (PHOC_VIEW (self), NULL);
   else
-    view_restore (PHOC_VIEW (self));
+    phoc_view_restore (PHOC_VIEW (self));
 }
 
 
@@ -540,7 +540,7 @@ phoc_xdg_surface_constructed (GObject *object)
   phoc_view_set_fullscreen (PHOC_VIEW (self),
                             self->xdg_surface->toplevel->requested.fullscreen,
                             output);
-  view_auto_maximize (PHOC_VIEW (self));
+  phoc_view_auto_maximize (PHOC_VIEW (self));
   view_set_title (PHOC_VIEW (self), self->xdg_surface->toplevel->title);
   /* We don't do window menus or minimize */
   phoc_xdg_surface_set_capabilities (self,

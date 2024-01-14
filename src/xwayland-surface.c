@@ -114,7 +114,7 @@ apply_size_constraints (PhocView                    *view,
   *dest_width = width;
   *dest_height = height;
 
-  if (view_is_maximized (view))
+  if (phoc_view_is_maximized (view))
     return;
 
   xcb_size_hints_t *size_hints = xwayland_surface->size_hints;
@@ -353,7 +353,7 @@ handle_request_maximize (struct wl_listener *listener, void *data)
   if (maximized)
     phoc_view_maximize (view, NULL);
   else
-    view_restore (view);
+    phoc_view_restore (view);
 }
 
 static void
@@ -421,7 +421,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   double y = view->box.y;
 
   if (view->pending_move_resize.update_x) {
-    if (view_is_floating (view))
+    if (phoc_view_is_floating (view))
       x = view->pending_move_resize.x + view->pending_move_resize.width - width;
     else
       x = view->pending_move_resize.x;
@@ -430,7 +430,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   }
 
   if (view->pending_move_resize.update_y) {
-    if (view_is_floating (view))
+    if (phoc_view_is_floating (view))
       y = view->pending_move_resize.y + view->pending_move_resize.height - height;
     else
       y = view->pending_move_resize.y;
@@ -458,7 +458,7 @@ handle_map (struct wl_listener *listener, void *data)
   if (surface->maximized_horz && surface->maximized_vert)
     phoc_view_maximize (view, NULL);
 
-  view_auto_maximize (view);
+  phoc_view_auto_maximize (view);
 
   phoc_view_map (view, surface->surface);
 
@@ -478,7 +478,7 @@ handle_unmap (struct wl_listener *listener, void *data)
   PhocView *view = PHOC_VIEW (self);
 
   wl_list_remove (&self->surface_commit.link);
-  view_unmap (view);
+  phoc_view_unmap (view);
 }
 
 

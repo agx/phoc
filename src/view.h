@@ -147,93 +147,94 @@ typedef struct phoc_view_child_interface {
 typedef struct _PhocViewChild {
   const struct phoc_view_child_interface *impl;
 
-  PhocView *view;
-  PhocViewChild *parent;
-  GSList *children;
-  struct wlr_surface *wlr_surface;
-  struct wl_list link;
-  bool mapped;
+  PhocView                               *view;
+  PhocViewChild                          *parent;
+  GSList                                 *children;
+  struct wlr_surface                     *wlr_surface;
+  struct wl_list                          link;
+  bool                                    mapped;
 
-  struct wl_listener commit;
-  struct wl_listener new_subsurface;
+  struct wl_listener                      commit;
+  struct wl_listener                      new_subsurface;
 } PhocViewChild;
 
-void phoc_view_appear_activated (PhocView *view, bool activated);
-void phoc_view_activate (PhocView *self, bool activate);
-void phoc_view_damage_whole (PhocView *view);
-gboolean view_is_floating(PhocView *view);
-gboolean view_is_maximized(PhocView *view);
-gboolean view_is_tiled(PhocView *view);
-gboolean view_is_fullscreen (PhocView *self);
-void view_update_decorated(PhocView *view, bool decorated);
-void view_arrange_maximized(PhocView *view, PhocOutput *output);
-void view_arrange_tiled(PhocView *view, PhocOutput *output);
-void view_get_box(PhocView *view, struct wlr_box *box);
-void phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
-void phoc_view_move (PhocView *self, double x, double y);
-bool view_move_to_next_output (PhocView *view, enum wlr_direction direction);
-void phoc_view_move_resize (PhocView *view, double x, double y,
-                            uint32_t width, uint32_t height);
-void view_auto_maximize(PhocView *view);
-void view_tile(PhocView *view, PhocViewTileDirection direction, PhocOutput *output);
-PhocViewTileDirection
-     phoc_view_get_tile_direction (PhocView *view);
-void phoc_view_maximize (PhocView *view, PhocOutput *output);
-void view_restore(PhocView *view);
-void phoc_view_set_fullscreen(PhocView *view, bool fullscreen, PhocOutput *output);
-void phoc_view_close (PhocView *self);
-bool view_center(PhocView *view, PhocOutput *output);
-void phoc_view_set_app_id (PhocView *view, const char *app_id);
-const char *phoc_view_get_app_id (PhocView *self);
-void view_get_deco_box(PhocView *view, struct wlr_box *box);
-void phoc_view_for_each_surface (PhocView                    *self,
-                                 wlr_surface_iterator_func_t  iterator,
-                                 gpointer                     user_data);
-struct wlr_surface *
-      phoc_view_get_wlr_surface_at (PhocView *self,
-                                    double    sx,
-                                    double    sy,
-                                    double   *sub_x,
-                                    double   *sub_y);
-PhocView *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
-PhocOutput *phoc_view_get_output (PhocView *view);
+void                  phoc_view_appear_activated (PhocView *view, bool activated);
+void                  phoc_view_activate (PhocView *self, bool activate);
+void                  phoc_view_damage_whole (PhocView *view);
+gboolean              phoc_view_is_floating (PhocView *view);
+gboolean              phoc_view_is_maximized (PhocView *view);
+gboolean              phoc_view_is_tiled (PhocView *view);
+gboolean              phoc_view_is_fullscreen (PhocView *self);
+void                  phoc_view_update_decorated (PhocView *view, bool decorated);
+void                  phoc_view_arrange (PhocView *self, PhocOutput *output);
+void                  phoc_view_get_box (PhocView *view, struct wlr_box *box);
+void                  phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
+void                  phoc_view_move (PhocView *self, double x, double y);
+bool                  phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction);
+void                  phoc_view_move_resize (PhocView *view,
+                                             double    x,
+                                             double    y,
+                                             uint32_t  width,
+                                             uint32_t  height);
+void                  phoc_view_auto_maximize (PhocView *view);
+void                  phoc_view_tile (PhocView             *view,
+                                      PhocViewTileDirection direction,
+                                      PhocOutput           *output);
+PhocViewTileDirection phoc_view_get_tile_direction (PhocView *view);
+void                  phoc_view_maximize (PhocView *view, PhocOutput *output);
+void                  phoc_view_restore (PhocView *view);
+void                  phoc_view_set_fullscreen (PhocView   *view,
+                                                bool        fullscreen,
+                                                PhocOutput *output);
+void                  phoc_view_close (PhocView *self);
+void                  phoc_view_set_app_id (PhocView *view, const char *app_id);
+const char           *phoc_view_get_app_id (PhocView *self);
+void                  phoc_view_get_deco_box (PhocView *view, struct wlr_box *box);
+void                  phoc_view_for_each_surface (PhocView                   *self,
+                                                  wlr_surface_iterator_func_t iterator,
+                                                  gpointer                    user_data);
+struct wlr_surface   *phoc_view_get_wlr_surface_at (PhocView *self,
+                                                    double    sx,
+                                                    double    sy,
+                                                    double   *sub_x,
+                                                    double   *sub_y);
+PhocView             *phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface);
+PhocOutput           *phoc_view_get_output (PhocView *view);
 
-pid_t                phoc_view_get_pid                           (PhocView *self);
-bool                 phoc_view_is_mapped (PhocView *view);
-PhocViewDecoPart     view_get_deco_part(PhocView *view, double sx, double sy);
-void                 phoc_view_set_scale_to_fit (PhocView *self, gboolean enable);
-gboolean             phoc_view_get_scale_to_fit (PhocView *self);
-void                 phoc_view_set_activation_token (PhocView *self, const char *token, int type);
-const char          *phoc_view_get_activation_token (PhocView *self);
-void                 phoc_view_flush_activation_token (PhocView *self);
-float                phoc_view_get_alpha (PhocView *self);
-float                phoc_view_get_scale (PhocView *self);
-void                 phoc_view_set_decoration (PhocView *self,
-                                               gboolean  decorated,
-                                               int       titlebar_height,
-                                               int       border_width);
-gboolean             phoc_view_is_decorated (PhocView *self);
-PhocOutput          *phoc_view_get_fullscreen_output (PhocView *self);
-bool                 phoc_view_want_auto_maximize (PhocView *self);
-gboolean             phoc_view_get_maximized_box                (PhocView              *self,
-                                                                 PhocOutput            *output,
-                                                                 struct wlr_box        *box);
-gboolean             phoc_view_get_tiled_box                    (PhocView              *self,
-                                                                 PhocViewTileDirection  dir,
-                                                                 PhocOutput            *output,
-                                                                 struct wlr_box        *box);
-void                 phoc_view_add_bling                        (PhocView              *self,
-                                                                 PhocBling             *bling);
-void                 phoc_view_remove_bling                     (PhocView              *self,
-                                                                 PhocBling             *bling);
-GSList              *phoc_view_get_blings                       (PhocView              *self);
+pid_t                 phoc_view_get_pid (PhocView *self);
+bool                  phoc_view_is_mapped (PhocView *view);
+PhocViewDecoPart      phoc_view_get_deco_part (PhocView *view, double sx, double sy);
+void                  phoc_view_set_scale_to_fit (PhocView *self, gboolean enable);
+gboolean              phoc_view_get_scale_to_fit (PhocView *self);
+void                  phoc_view_set_activation_token (PhocView *self, const char *token, int type);
+const char           *phoc_view_get_activation_token (PhocView *self);
+void                  phoc_view_flush_activation_token (PhocView *self);
+float                 phoc_view_get_alpha (PhocView *self);
+float                 phoc_view_get_scale (PhocView *self);
+void                  phoc_view_set_decoration (PhocView *self,
+                                                gboolean  decorated,
+                                                int       titlebar_height,
+                                                int       border_width);
+gboolean              phoc_view_is_decorated (PhocView *self);
+PhocOutput           *phoc_view_get_fullscreen_output (PhocView *self);
+bool                  phoc_view_want_auto_maximize (PhocView *self);
+gboolean              phoc_view_get_maximized_box (PhocView       *self,
+                                                   PhocOutput     *output,
+                                                   struct wlr_box *box);
+gboolean              phoc_view_get_tiled_box (PhocView             *self,
+                                               PhocViewTileDirection dir,
+                                               PhocOutput           *output,
+                                               struct wlr_box       *box);
+void                  phoc_view_add_bling (PhocView *self, PhocBling *bling);
+void                  phoc_view_remove_bling (PhocView *self, PhocBling *bling);
+GSList               *phoc_view_get_blings (PhocView *self);
 
-void phoc_view_child_init(PhocViewChild *child,
-                          const struct phoc_view_child_interface *impl,
-                          PhocView *view,
-                          struct wlr_surface *wlr_surface);
-void phoc_view_child_destroy (PhocViewChild *child);
-void phoc_view_child_apply_damage (PhocViewChild *child);
-void phoc_view_child_damage_whole (PhocViewChild *child);
+void                  phoc_view_child_init (PhocViewChild                          *child,
+                                            const struct phoc_view_child_interface *impl,
+                                            PhocView                               *view,
+                                            struct wlr_surface                     *wlr_surface);
+void                  phoc_view_child_destroy (PhocViewChild *child);
+void                  phoc_view_child_apply_damage (PhocViewChild *child);
+void                  phoc_view_child_damage_whole (PhocViewChild *child);
 
 G_END_DECLS

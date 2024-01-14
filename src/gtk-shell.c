@@ -48,6 +48,11 @@ struct _PhocGtkSurface {
   } events;
 };
 
+
+static PhocGtkShell *phoc_gtk_shell_from_resource (struct wl_resource *resource);
+static PhocGtkSurface *phoc_gtk_surface_from_resource (struct wl_resource *resource);
+
+
 static void
 handle_set_dbus_properties(struct wl_client *client,
                            struct wl_resource *resource,
@@ -175,7 +180,7 @@ send_configure_edges (PhocGtkSurface *gtk_surface, PhocView *view)
 
   wl_array_init (&edge_states);
 
-  if (view_is_floating (view)) {
+  if (phoc_view_is_floating (view)) {
     val = wl_array_add (&edge_states, sizeof *val);
     *val = GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_TOP;
     val = wl_array_add (&edge_states, sizeof *val);
@@ -184,7 +189,7 @@ send_configure_edges (PhocGtkSurface *gtk_surface, PhocView *view)
     *val = GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_BOTTOM;
     val = wl_array_add (&edge_states, sizeof *val);
     *val = GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_LEFT;
-  } else if (view_is_tiled (view)) {
+  } else if (phoc_view_is_tiled (view)) {
     PhocViewTileDirection dirs = phoc_view_get_tile_direction (view);
 
     if (dirs & PHOC_VIEW_TILE_LEFT) {
@@ -223,7 +228,7 @@ send_configure (PhocGtkSurface *gtk_surface)
   wl_array_init (&states);
   version = wl_resource_get_version (gtk_surface->resource);
 
-  if (view_is_tiled (view)) {
+  if (phoc_view_is_tiled (view)) {
     uint32_t *val;
 
     if (version < GTK_SURFACE1_CONFIGURE_EDGES_SINCE_VERSION) {
@@ -436,7 +441,7 @@ phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell *self, struct wlr_
   return NULL;
 }
 
-PhocGtkShell *
+static PhocGtkShell *
 phoc_gtk_shell_from_resource (struct wl_resource *resource)
 {
   g_assert(wl_resource_instance_of(resource, &gtk_shell1_interface,
@@ -444,7 +449,7 @@ phoc_gtk_shell_from_resource (struct wl_resource *resource)
   return wl_resource_get_user_data(resource);
 }
 
-PhocGtkSurface *
+static PhocGtkSurface *
 phoc_gtk_surface_from_resource (struct wl_resource *resource)
 {
   g_assert(wl_resource_instance_of (resource, &gtk_surface1_interface,
