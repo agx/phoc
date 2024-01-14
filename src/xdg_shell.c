@@ -23,7 +23,7 @@ typedef struct _PhocXdgToplevelDecoration {
   struct wl_listener surface_commit;
 } PhocXdgToplevelDecoration;
 
-typedef struct phoc_xdg_popup {
+typedef struct _PhocXdgPopup {
   PhocViewChild child;
   struct wlr_xdg_popup *wlr_popup;
 

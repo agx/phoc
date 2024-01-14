@@ -12,7 +12,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct phoc_xdg_popup PhocXdgPopup;
+typedef struct _PhocXdgPopup PhocXdgPopup;
 typedef struct _PhocXdgToplevelDecoration PhocXdgToplevelDecoration;
 
 PhocXdgPopup      *phoc_xdg_popup_create           (PhocView             *view,
