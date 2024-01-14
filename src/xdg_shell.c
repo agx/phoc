@@ -15,7 +15,7 @@
 #include "server.h"
 #include "view.h"
 
-typedef struct phoc_xdg_toplevel_decoration {
+typedef struct _PhocXdgToplevelDecoration {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
   PhocXdgSurface *surface;
   struct wl_listener destroy;
@@ -220,7 +220,7 @@ handle_xdg_shell_surface (struct wl_listener *listener, void *data)
 static void
 decoration_handle_destroy (struct wl_listener *listener, void *data)
 {
-  struct phoc_xdg_toplevel_decoration *decoration = wl_container_of (listener, decoration, destroy);
+  PhocXdgToplevelDecoration *decoration = wl_container_of (listener, decoration, destroy);
 
   g_debug ("Destroy xdg toplevel decoration %p", decoration);
 
@@ -239,8 +239,7 @@ decoration_handle_destroy (struct wl_listener *listener, void *data)
 static void
 decoration_handle_request_mode (struct wl_listener *listener, void *data)
 {
-  struct phoc_xdg_toplevel_decoration *decoration =
-    wl_container_of (listener, decoration, request_mode);
+  PhocXdgToplevelDecoration *decoration = wl_container_of (listener, decoration, request_mode);
 
   enum wlr_xdg_toplevel_decoration_v1_mode mode = decoration->wlr_decoration->requested_mode;
 
@@ -253,8 +252,7 @@ decoration_handle_request_mode (struct wl_listener *listener, void *data)
 static void
 decoration_handle_surface_commit (struct wl_listener *listener, void *data)
 {
-  struct phoc_xdg_toplevel_decoration *decoration =
-    wl_container_of (listener, decoration, surface_commit);
+  PhocXdgToplevelDecoration *decoration = wl_container_of (listener, decoration, surface_commit);
 
   bool decorated = decoration->wlr_decoration->current.mode ==
     WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
