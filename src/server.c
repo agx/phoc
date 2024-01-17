@@ -140,14 +140,21 @@ on_child_setup (gpointer unused)
 
 
 static gboolean
-phoc_startup_session_in_idle(PhocServer *self)
+phoc_startup_session_in_idle (PhocServer *self)
 {
   GPid pid;
-  g_autoptr(GError) err = NULL;
-  gchar *cmd[] = { "/bin/sh", "-c", self->session, NULL };
+  g_auto (GStrv) argv;
+  g_autoptr (GError) err = NULL;
+  gboolean success;
 
-  if (g_spawn_async (NULL, cmd, NULL,
-                     G_SPAWN_DO_NOT_REAP_CHILD,
+  success = g_shell_parse_argv (self->session, NULL, &argv, &err);
+  if (!success) {
+    g_critical ("Failed to parse session command: %s", err->message);
+    g_main_loop_quit (self->mainloop);
+  }
+
+  if (g_spawn_async (NULL, argv, NULL,
+                     G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,
                      on_child_setup, self, &pid, &err)) {
     g_child_watch_add (pid, (GChildWatchFunc)on_session_exit, self);
   } else {
@@ -156,6 +163,7 @@ phoc_startup_session_in_idle(PhocServer *self)
   }
   return FALSE;
 }
+
 
 static void
 phoc_startup_session (PhocServer *server)
