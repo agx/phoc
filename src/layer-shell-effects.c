@@ -762,8 +762,15 @@ apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
 static void
 apply_state (PhocDraggableLayerSurface *drag_surface, PhocDraggableSurfaceState state)
 {
+  struct wlr_output *wlr_output;
+
   drag_surface->state = state;
-  phoc_output_update_shell_reveal (PHOC_OUTPUT (drag_surface->layer_surface->layer_surface->output->data));
+
+  wlr_output = drag_surface->layer_surface->layer_surface->output;
+  if (wlr_output) {
+    PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
+    phoc_output_update_shell_reveal (output);
+  }
 }
 
 
