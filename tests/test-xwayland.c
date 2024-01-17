@@ -1,6 +1,6 @@
 /*
  * Copyright (C) Guido Günther <agx@sigxcpu.org>
- * SPDX-License-Identifier: GPL-3.0+
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 #include <xcb/xcb.h>

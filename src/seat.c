@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2021 Purism SPC
  *
- * SPDX-License-Identifier: GPL-3-or-later or MIT
+ * SPDX-License-Identifier: GPL-3.0-or-later or MIT
  */
 
 #define G_LOG_DOMAIN "phoc-seat"

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Guido Günther <agx@sigxcpu.org>
  *
- * SPDX-License-Identifier: GPL-3.0+
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 #include "testlib.h"
