@@ -1624,49 +1624,49 @@ phoc_view_get_wlr_surface_at_default (PhocView *self,
   return wlr_surface_surface_at (self->wlr_surface, sx, sy, sub_x, sub_y);
 }
 
-
+G_NORETURN
 static void
 phoc_view_resize_default (PhocView *self, uint32_t width, uint32_t height)
 {
   g_assert_not_reached ();
 }
 
-
+G_NORETURN
 static void
 phoc_view_move_resize_default (PhocView *self, double x, double y, uint32_t width, uint32_t height)
 {
   g_assert_not_reached ();
 }
 
-
+G_NORETURN
 static bool
 phoc_view_want_automaximize_default (PhocView *self)
 {
   g_assert_not_reached ();
 }
 
-
+G_NORETURN
 static void
 phoc_view_set_active_default (PhocView *self, bool active)
 {
   g_assert_not_reached ();
 }
 
-
+G_NORETURN
 static void
 phoc_view_set_fullscreen_default (PhocView *self, bool fullscreen)
 {
   g_assert_not_reached ();
 }
 
-
+G_NORETURN
 static void
 phoc_view_set_maximized_default (PhocView *self, bool maximized)
 {
   g_assert_not_reached ();
 }
 
-
+G_NORETURN
 static void
 phoc_view_set_close_default (PhocView *self)
 {
