@@ -472,10 +472,7 @@ handle_pointer_constraint (struct wl_listener *listener, void *data)
   PhocSeat *seat = wlr_constraint->seat->data;
   PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
-  PhocPointerConstraint *constraint =
-    calloc(1, sizeof(PhocPointerConstraint));
-  constraint->constraint = wlr_constraint;
-
+  PhocPointerConstraint *constraint = g_new0 (PhocPointerConstraint, 1);
   constraint->destroy.notify = handle_constraint_destroy;
   wl_signal_add(&wlr_constraint->events.destroy, &constraint->destroy);
 
