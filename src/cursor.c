@@ -664,9 +664,10 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
   PhocDesktop *desktop = server->desktop;
 
   if (surface) {
+    struct wlr_xdg_surface *wlr_xdg_surface;
     struct wlr_surface *iter = wlr_surface_get_root_surface (surface);
 
-    struct wlr_xdg_surface *wlr_xdg_surface = wlr_xdg_surface_try_from_wlr_surface (iter);
+    wlr_xdg_surface = wlr_xdg_surface_try_from_wlr_surface (iter);
     while (wlr_xdg_surface) {
 
       if (wlr_xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
@@ -677,11 +678,8 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
       }
     }
 
-    if (wlr_layer_surface_v1_try_from_wlr_surface (iter)) {
+    if (wlr_layer_surface_v1_try_from_wlr_surface (iter))
       return false;
-    }
-
-    wlr_xdg_surface = wlr_xdg_surface_try_from_wlr_surface (iter);
   }
 
   PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
