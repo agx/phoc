@@ -1694,7 +1694,7 @@ phoc_seat_set_exclusive_client (PhocSeat *seat, struct wl_client *client)
   }
   if (seat->has_focus) {
     PhocView *focus = phoc_seat_get_focus_view (seat);
-    if (wl_resource_get_client (focus->wlr_surface->resource) != client)
+    if (!focus || wl_resource_get_client (focus->wlr_surface->resource) != client)
       phoc_seat_set_focus_view (seat, NULL);
   }
   if (seat->seat->pointer_state.focused_client) {
