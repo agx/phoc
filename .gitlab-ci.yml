@@ -208,6 +208,22 @@ commit-log-check:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
 
+license-check:
+  stage: style-checks
+  image: ${DEBIAN_IMAGE}
+  needs: []
+  before_script:
+    - eatmydata apt-get update
+    - eatmydata apt-get -y install reuse
+  script:
+    reuse lint
+  artifacts:
+    paths:
+      - _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
 package-deb-debian-trixie:arm64:
   stage: package
   variables:
