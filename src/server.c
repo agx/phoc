@@ -151,7 +151,7 @@ phoc_startup_session_in_idle(PhocServer *self)
                      on_child_setup, self, &pid, &err)) {
     g_child_watch_add (pid, (GChildWatchFunc)on_session_exit, self);
   } else {
-    g_warning ("Failed to launch session: %s", err->message);
+    g_critical ("Failed to launch session: %s", err->message);
     g_main_loop_quit (self->mainloop);
   }
   return FALSE;
