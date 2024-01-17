@@ -276,20 +276,6 @@ is_hyper (const gchar *string)
 }
 
 static inline gboolean
-is_primary (const gchar *string)
-{
-  return ((string[0] == '<') &&
-          (string[1] == 'p' || string[1] == 'P') &&
-          (string[2] == 'r' || string[2] == 'R') &&
-          (string[3] == 'i' || string[3] == 'I') &&
-          (string[4] == 'm' || string[4] == 'M') &&
-          (string[5] == 'a' || string[5] == 'A') &&
-          (string[6] == 'r' || string[6] == 'R') &&
-          (string[7] == 'y' || string[7] == 'Y') &&
-          (string[8] == '>'));
-}
-
-static inline gboolean
 is_keycode (const gchar *string)
 {
   return (string[0] == '0' &&
