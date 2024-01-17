@@ -226,7 +226,7 @@ decoration_handle_destroy (struct wl_listener *listener, void *data)
 
   if (decoration->surface) {
     phoc_xdg_surface_set_decoration (decoration->surface, NULL);
-    phoc_view_update_decorated (PHOC_VIEW (decoration->surface), false);
+    phoc_view_set_decorated (PHOC_VIEW (decoration->surface), FALSE);
     g_signal_handlers_disconnect_by_data (decoration->surface, decoration);
   }
   wl_list_remove (&decoration->destroy.link);
@@ -258,7 +258,7 @@ decoration_handle_surface_commit (struct wl_listener *listener, void *data)
 
   bool decorated = decoration->wlr_decoration->current.mode ==
     WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
-  phoc_view_update_decorated (PHOC_VIEW (decoration->surface), decorated);
+  phoc_view_set_decorated (PHOC_VIEW (decoration->surface), decorated);
 }
 
 

@@ -119,8 +119,6 @@ void        phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_
 void        phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *surface,
                                                     double ox, double oy);
 
-void        phoc_output_get_decoration_box (PhocOutput *self, PhocView *view,
-                                            struct wlr_box *box);
 void        phoc_output_update_shell_reveal (PhocOutput *self);
 void        phoc_output_force_shell_reveal (PhocOutput *self, gboolean force);
 gboolean    phoc_output_is_builtin (PhocOutput *output);

@@ -291,38 +291,6 @@ render_surface_iterator (PhocOutput         *output,
 
 
 static void
-render_decorations (PhocOutput        *output,
-                    PhocView          *view,
-                    PhocRenderContext *data)
-{
-  if (!phoc_view_is_decorated (view) || !phoc_view_is_mapped (view))
-    return;
-
-  struct wlr_box box;
-  phoc_output_get_decoration_box(output, view, &box);
-
-  pixman_region32_t damage;
-  if (!is_damaged (box.x, box.y, box.width, box.height, data->damage, &damage))
-    goto buffer_damage_finish;
-
-  float matrix[9];
-  wlr_matrix_project_box (matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL,
-                          0, output->wlr_output->transform_matrix);
-  float color[] = { 0.2, 0.2, 0.2, phoc_view_get_alpha (view) };
-
-  int nrects;
-  pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
-  for (int i = 0; i < nrects; ++i) {
-    scissor_output (output->wlr_output, &rects[i]);
-    wlr_render_quad_with_matrix (output->wlr_output->renderer, color, matrix);
-  }
-
- buffer_damage_finish:
-  pixman_region32_fini(&damage);
-}
-
-
-static void
 render_blings (PhocOutput *output, PhocView *view, PhocRenderContext *data)
 {
   GSList *blings;
@@ -371,10 +339,8 @@ render_view (PhocOutput *output, PhocView *view, PhocRenderContext *data)
 
   data->alpha = phoc_view_get_alpha (view);
 
-  if (!phoc_view_is_fullscreen (view)) {
-    render_decorations (output, view, data);
+  if (!phoc_view_is_fullscreen (view))
     render_blings (output, view, data);
-  }
 
   phoc_output_view_for_each_surface (output, view, render_surface_iterator, data);
 }

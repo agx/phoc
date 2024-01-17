@@ -189,7 +189,6 @@ void                  phoc_view_set_fullscreen (PhocView   *view,
 void                  phoc_view_close (PhocView *self);
 void                  phoc_view_set_app_id (PhocView *view, const char *app_id);
 const char           *phoc_view_get_app_id (PhocView *self);
-void                  phoc_view_get_deco_box (PhocView *view, struct wlr_box *box);
 void                  phoc_view_for_each_surface (PhocView                   *self,
                                                   wlr_surface_iterator_func_t iterator,
                                                   gpointer                    user_data);
@@ -211,13 +210,11 @@ const char           *phoc_view_get_activation_token (PhocView *self);
 void                  phoc_view_flush_activation_token (PhocView *self);
 float                 phoc_view_get_alpha (PhocView *self);
 float                 phoc_view_get_scale (PhocView *self);
-void                  phoc_view_set_decoration (PhocView *self,
-                                                gboolean  decorated,
-                                                int       titlebar_height,
-                                                int       border_width);
 gboolean              phoc_view_is_decorated (PhocView *self);
 PhocOutput           *phoc_view_get_fullscreen_output (PhocView *self);
 bool                  phoc_view_want_auto_maximize (PhocView *self);
+void                  phoc_view_set_decorated (PhocView *self,
+                                               gboolean  decorated);
 gboolean              phoc_view_get_maximized_box (PhocView       *self,
                                                    PhocOutput     *output,
                                                    struct wlr_box *box);
