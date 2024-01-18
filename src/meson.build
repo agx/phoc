@@ -4,6 +4,7 @@ phoc_enum_headers = files(
   [
     'event.h',
     'layer-shell-effects.h',
+    'output.h',
     'phosh-private.h',
   ])
 phoc_enum_sources = gnome.mkenums_simple(

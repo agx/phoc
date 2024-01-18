@@ -68,6 +68,7 @@ typedef struct _PhocOutputPrivate {
   struct wl_listener     needs_frame;
   struct wl_listener     request_state;
 
+  PhocOutputScaleFilter  scale_filter;
   gboolean               gamma_lut_changed;
 } PhocOutputPrivate;
 
@@ -238,6 +239,8 @@ phoc_output_init (PhocOutput *self)
   self->debug_touch_points = NULL;
   wl_list_init (&self->layer_surfaces);
 
+  priv->scale_filter = PHOC_OUTPUT_SCALE_FILTER_AUTO;
+
   priv->renderer = g_object_ref (phoc_server_get_renderer (server));
 }
 
@@ -301,6 +304,7 @@ render_cutouts (PhocOutput *self, PhocRenderContext *ctx)
     wlr_render_pass_add_texture (ctx->render_pass, &(struct wlr_render_texture_options) {
         .texture = texture,
         .transform = WL_OUTPUT_TRANSFORM_NORMAL,
+        .filter_mode = phoc_output_get_texture_filter_mode (ctx->output),
     });
   }
 }
@@ -2048,4 +2052,30 @@ phoc_output_transform_box (PhocOutput *self, struct wlr_box *box)
   wlr_output_transformed_resolution(self->wlr_output, &ow, &oh);
   transform = wlr_output_transform_invert (self->wlr_output->transform);
   wlr_box_transform(box, box, transform, ow, oh);
+}
+
+
+enum wlr_scale_filter_mode
+phoc_output_get_texture_filter_mode (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  switch (priv->scale_filter) {
+  case PHOC_OUTPUT_SCALE_FILTER_BILINEAR:
+    return WLR_SCALE_FILTER_BILINEAR;
+  case PHOC_OUTPUT_SCALE_FILTER_NEAREST:
+    return WLR_SCALE_FILTER_NEAREST;
+  case PHOC_OUTPUT_SCALE_FILTER_AUTO:
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  if (ceilf(self->wlr_output->scale) == self->wlr_output->scale)
+    return WLR_SCALE_FILTER_NEAREST;
+
+  return WLR_SCALE_FILTER_BILINEAR;
 }

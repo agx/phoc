@@ -23,6 +23,15 @@ typedef struct _PhocInput PhocInput;
 typedef struct _PhocLayerSurface PhocLayerSurface;
 
 /**
+ * PhocOutputScaleFilter:
+ */
+typedef enum _PhocOutputScaleFilter {
+  PHOC_OUTPUT_SCALE_FILTER_AUTO = 1,
+  PHOC_OUTPUT_SCALE_FILTER_BILINEAR,
+  PHOC_OUTPUT_SCALE_FILTER_NEAREST,
+} PhocOutputScaleFilter;
+
+/**
  * PhocOutput:
  *
  * The output region of a compositor (typically a monitor).
@@ -148,5 +157,7 @@ const char *phoc_output_get_name             (PhocOutput *self);
 void       phoc_output_transform_damage      (PhocOutput *self, pixman_region32_t *damage);
 void       phoc_output_transform_box         (PhocOutput *self, struct wlr_box *box);
 
+enum wlr_scale_filter_mode
+           phoc_output_get_texture_filter_mode (PhocOutput *self);
 
 G_END_DECLS

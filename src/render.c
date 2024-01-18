@@ -181,6 +181,7 @@ render_texture (PhocOutput               *output,
       .transform = transform,
       .alpha = &alpha,
       .clip = &damage,
+      .filter_mode = phoc_output_get_texture_filter_mode (ctx->output),
     });
 
  buffer_damage_finish:
