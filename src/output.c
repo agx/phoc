@@ -739,6 +739,7 @@ phoc_output_fill_state (PhocOutput              *self,
                         PhocOutputConfig        *output_config,
                         struct wlr_output_state *pending)
 {
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode (self->wlr_output);
   gboolean enable = FALSE;
 
@@ -770,6 +771,7 @@ phoc_output_fill_state (PhocOutput              *self,
       wlr_output_state_set_scale (pending, output_config->scale);
 
     wlr_output_state_set_transform (pending, output_config->transform);
+    priv->scale_filter = output_config->scale_filter;
   } else if (enable) {
     if (preferred_mode != NULL) {
       g_debug ("Using preferred mode for %s", self->wlr_output->name);

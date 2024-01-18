@@ -21,6 +21,7 @@ typedef struct _PhocOutputConfig {
   enum wl_output_transform transform;
   int                      x, y;
   float                    scale;
+  PhocOutputScaleFilter    scale_filter;
 
   struct PhocMode {
     int   width, height;

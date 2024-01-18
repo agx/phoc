@@ -6,6 +6,7 @@
 #include <strings.h>
 #include <sys/param.h>
 
+#include "phoc-enums.h"
 #include "settings.h"
 #include "utils.h"
 
@@ -57,6 +58,24 @@ parse_modeline (const char *s, drmModeModeInfo *mode)
 }
 
 
+static
+PhocOutputScaleFilter
+parse_scale_filter (const char *value)
+{
+  GEnumValue *ev;
+  g_autoptr (GEnumClass) eclass = NULL;
+
+  eclass = G_ENUM_CLASS (g_type_class_ref (phoc_output_scale_filter_get_type ()));
+  ev = g_enum_get_value_by_nick (eclass, value);
+  if (!ev) {
+    g_critical ("Got invalid output scale-filter value: %s", value);
+    return PHOC_OUTPUT_SCALE_FILTER_AUTO;
+  }
+
+  return ev->value;
+}
+
+
 static const char *output_prefix = "output:";
 
 static PhocOutputConfig *
@@ -71,6 +90,7 @@ phoc_output_config_new (const char *name)
   oc->enable = true;
   oc->x = -1;
   oc->y = -1;
+  oc->scale_filter = PHOC_OUTPUT_SCALE_FILTER_AUTO;
 
   return oc;
 }
@@ -184,6 +204,8 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
         oc->modes = g_slist_prepend (oc->modes, g_steal_pointer (&mode));
       else
         g_critical ("Invalid modeline: %s", value);
+    } else if (strcmp (name, "scale-filter") == 0) {
+      oc->scale_filter = parse_scale_filter (value);
     }
   } else {
     g_critical ("Found unknown config section: %s", section);
