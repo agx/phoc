@@ -2,9 +2,9 @@ subdir('anim')
 
 phoc_enum_headers = files(
   [
-    'phosh-private.h',
-    'layer-shell-effects.h',
     'event.h',
+    'layer-shell-effects.h',
+    'phosh-private.h',
   ])
 phoc_enum_sources = gnome.mkenums_simple(
   'phoc-enums',
