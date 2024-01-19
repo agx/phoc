@@ -675,8 +675,8 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->layout->events.change, &self->layout_change);
 
   self->xdg_shell = wlr_xdg_shell_create(wl_display, PHOC_XDG_SHELL_VERSION);
-  wl_signal_add(&self->xdg_shell->events.new_surface, &self->xdg_shell_surface);
-  self->xdg_shell_surface.notify = phoc_handle_xdg_shell_surface;
+  wl_signal_add (&self->xdg_shell->events.new_toplevel, &self->xdg_shell_toplevel);
+  self->xdg_shell_toplevel.notify = phoc_handle_xdg_shell_toplevel;
 
   self->layer_shell = wlr_layer_shell_v1_create (wl_display, PHOC_LAYER_SHELL_VERSION);
   wl_signal_add(&self->layer_shell->events.new_surface, &self->layer_shell_surface);
@@ -794,7 +794,7 @@ phoc_desktop_finalize (GObject *object)
   /* TODO: currently destroys the backend before the desktop */
   //wl_list_remove (&self->new_output.link);
   wl_list_remove (&self->layout_change.link);
-  wl_list_remove (&self->xdg_shell_surface.link);
+  wl_list_remove (&self->xdg_shell_toplevel.link);
   wl_list_remove (&self->layer_shell_surface.link);
   wl_list_remove (&self->xdg_toplevel_decoration.link);
   wl_list_remove (&self->virtual_keyboard_new.link);

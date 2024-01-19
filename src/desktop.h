@@ -70,7 +70,7 @@ struct _PhocDesktop {
 
   struct wl_listener new_output;
   struct wl_listener layout_change;
-  struct wl_listener xdg_shell_surface;
+  struct wl_listener xdg_shell_toplevel;
   struct wl_listener layer_shell_surface;
   struct wl_listener xdg_toplevel_decoration;
   struct wl_listener virtual_keyboard_new;
@@ -138,5 +138,6 @@ PhocPhoshPrivate    *phoc_desktop_get_phosh_private              (PhocDesktop *s
 
 void                 phoc_desktop_notify_activity                (PhocDesktop *self,
                                                                   PhocSeat    *seat);
+
 gboolean phoc_desktop_is_privileged_protocol (PhocDesktop            *self,
                                               const struct wl_global *global);

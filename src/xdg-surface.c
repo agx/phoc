@@ -39,7 +39,7 @@ static GParamSpec *props[PROP_LAST_PROP];
  * An xdg toplevel surface as defined in the xdg-shell protocol. For
  * popups see [type@XdgPopup].
  *
- * For details on how to setup such an object see [func@handle_xdg_shell_surface].
+ * For details on how to setup such an object see [func@handle_xdg_shell_toplevel].
  */
 typedef struct _PhocXdgSurface {
   PhocView view;
@@ -711,29 +711,28 @@ phoc_xdg_surface_get_wlr_xdg_surface (PhocXdgSurface *self)
 
 
 void
-phoc_handle_xdg_shell_surface (struct wl_listener *listener, void *data)
+phoc_handle_xdg_shell_toplevel (struct wl_listener *listener, void *data)
 {
-  struct wlr_xdg_surface *surface = data;
+  struct wlr_xdg_toplevel *toplevel = data;
 
-  if (surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
+  if (toplevel->base->role == WLR_XDG_SURFACE_ROLE_POPUP) {
     g_debug ("New xdg popup");
     return;
   }
 
-  g_assert (surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
-  PhocDesktop *desktop = wl_container_of (listener, desktop, xdg_shell_surface);
-  g_debug ("new xdg toplevel: title=%s, app_id=%s",
-           surface->toplevel->title, surface->toplevel->app_id);
+  g_assert (toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xdg_shell_toplevel);
+  g_debug ("new xdg toplevel: title=%s, app_id=%s", toplevel->title, toplevel->app_id);
 
-  wlr_xdg_surface_ping (surface);
-  PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (surface);
+  wlr_xdg_surface_ping (toplevel->base);
+  PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (toplevel->base);
 
-  // Check for app-id override coming from gtk-shell
+  /* Check for app-id override coming from gtk-shell */
   PhocGtkShell *gtk_shell = phoc_desktop_get_gtk_shell (desktop);
   PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (gtk_shell,
-                                                                                 surface->surface);
+                                                                                 toplevel->base->surface);
   if (gtk_surface && phoc_gtk_surface_get_app_id (gtk_surface))
     phoc_view_set_app_id (PHOC_VIEW (phoc_surface), phoc_gtk_surface_get_app_id (gtk_surface));
   else
-    phoc_view_set_app_id (PHOC_VIEW (phoc_surface), surface->toplevel->app_id);
+    phoc_view_set_app_id (PHOC_VIEW (phoc_surface), toplevel->app_id);
 }
