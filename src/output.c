@@ -17,6 +17,7 @@
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/region.h>
+#include <wlr/util/transform.h>
 
 #include "anim/animatable.h"
 #include "bling.h"
