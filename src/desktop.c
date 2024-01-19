@@ -669,7 +669,7 @@ phoc_desktop_constructed (GObject *object)
   self->new_output.notify = handle_new_output;
   wl_signal_add (&wlr_backend->events.new_output, &self->new_output);
 
-  self->layout = wlr_output_layout_create ();
+  self->layout = wlr_output_layout_create (wl_display);
   wlr_xdg_output_manager_v1_create (wl_display, self->layout);
   self->layout_change.notify = handle_layout_change;
   wl_signal_add (&self->layout->events.change, &self->layout_change);
