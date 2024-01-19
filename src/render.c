@@ -87,10 +87,11 @@ G_DEFINE_TYPE_WITH_CODE (PhocRenderer, phoc_renderer, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, phoc_renderer_initable_iface_init));
 
 
-struct view_render_data {
+struct render_view_data {
   PhocView *view;
   int width;
   int height;
+  struct wlr_render_pass *render_pass;
 };
 
 struct touch_point_data {
@@ -429,72 +430,67 @@ damage_touch_points (PhocOutput *output)
   g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
 }
 
-#if 0
+
 static void
 view_render_to_buffer_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 {
-  if (!wlr_surface_has_buffer (surface)) {
-    return;
-  }
-
-  PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *self = phoc_server_get_renderer (server);
-  struct wlr_texture *texture = wlr_surface_get_texture (surface);
-
-  struct view_render_data *data = _data;
-  PhocView *view = data->view;
-
+  struct wlr_texture *texture;
+  struct render_view_data *data = _data;
   struct wlr_box geo;
-  phoc_view_get_geometry (view, &geo);
+  struct wlr_fbox src_box;
+  float alpha = phoc_view_get_alpha (data->view);
+
+  if (!wlr_surface_has_buffer (surface))
+    return;
+
+  texture = wlr_surface_get_texture (surface);
+  phoc_view_get_geometry (data->view, &geo);
 
   float scale = fmin (data->width / (float)geo.width,
                       data->height / (float)geo.height);
 
-  float proj[9];
-  wlr_matrix_identity (proj);
-  wlr_matrix_scale (proj, scale, scale);
-  wlr_matrix_translate (proj, -geo.x, -geo.y);
-
-  struct wlr_fbox src_box;
   wlr_surface_get_buffer_source_box (surface, &src_box);
-
   struct wlr_box dst_box = {
-    .x = sx,
-    .y = sy,
-    .width = surface->current.width,
-    .height = surface->current.height,
+    .x = sx * scale,
+    .y = sy * scale,
+    .width = surface->current.width * scale,
+    .height = surface->current.height * scale,
   };
 
-  float mat[9];
-  wlr_matrix_project_box (mat, &dst_box, wlr_output_transform_invert (surface->current.transform), 0, proj);
-  wlr_render_subtexture_with_matrix (self->wlr_renderer, texture, &src_box, mat, 1.0);
+  wlr_render_pass_add_texture (data->render_pass, &(struct wlr_render_texture_options) {
+      .texture = texture,
+      .src_box = src_box,
+      .dst_box = dst_box,
+      .transform = surface->current.transform,
+      .alpha = &alpha,
+    });
 }
-#endif
 
-/* FIXME: Rework when switching to wlroots 0.18.x git again */
+
 gboolean
 phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
                                      PhocView          *view,
                                      struct wlr_buffer *shm_buffer)
 {
-#if 0
   struct wlr_surface *surface = view->wlr_surface;
   struct wlr_buffer *buffer;
   void *data;
   uint32_t format;
   size_t stride;
+  int32_t width, height;
+  struct wlr_render_pass *render_pass;
+  const struct wlr_drm_format *fmt;
+  struct wlr_drm_format_set fmt_set = {};
+  bool success;
 
   g_return_val_if_fail (surface, false);
   g_return_val_if_fail (self->wlr_allocator, false);
   g_return_val_if_fail (shm_buffer, false);
 
-  int32_t width = shm_buffer->width;
-  int32_t height = shm_buffer->height;
-
-  struct wlr_drm_format_set fmt_set = {};
+  width = shm_buffer->width;
+  height = shm_buffer->height;
   wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_INVALID);
-
-  const struct wlr_drm_format *fmt = wlr_drm_format_set_get (&fmt_set, DRM_FORMAT_ARGB8888);
+  fmt = wlr_drm_format_set_get (&fmt_set, DRM_FORMAT_ARGB8888);
 
   buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
   if (!buffer) {
@@ -502,15 +498,20 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
     g_return_val_if_reached (false);
   }
 
-  struct view_render_data render_data = {
+  render_pass = wlr_renderer_begin_buffer_pass (self->wlr_renderer, buffer, NULL);
+  wlr_render_pass_add_rect (render_pass, &(struct wlr_render_rect_options){
+      .color = { 0, 0, 0, 0 },
+      .blend_mode = WLR_RENDER_BLEND_MODE_NONE,
+    });
+
+  struct render_view_data render_data = {
     .view = view,
     .width = width,
-    .height = height
+    .height = height,
+    .render_pass = render_pass,
   };
-
-  wlr_renderer_begin_with_buffer (self->wlr_renderer, buffer);
-  wlr_renderer_clear (self->wlr_renderer, (float[])COLOR_TRANSPARENT);
   wlr_surface_for_each_surface (surface, view_render_to_buffer_iterator, &render_data);
+  wlr_render_pass_submit (render_pass);
 
   if (!wlr_buffer_begin_data_ptr_access (shm_buffer,
                                          WLR_BUFFER_DATA_PTR_ACCESS_WRITE,
@@ -518,18 +519,21 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
     return false;
   }
 
-  wlr_renderer_read_pixels (self->wlr_renderer,
-                            DRM_FORMAT_ARGB8888, stride, width, height, 0, 0, 0, 0, data);
-  wlr_renderer_end (self->wlr_renderer);
+  struct wlr_texture *texture = wlr_texture_from_buffer (self->wlr_renderer, buffer);
+  success = wlr_texture_read_pixels (texture, &(struct wlr_texture_read_pixels_options) {
+      .data = data,
+      .format = format,
+      .stride = stride,
+      .src_box = (struct wlr_box) { .x = 0, .y = 0, .width = width, .height = height },
+    });
+  wlr_texture_destroy (texture);
 
   wlr_buffer_drop (buffer);
   wlr_drm_format_set_finish (&fmt_set);
 
   wlr_buffer_end_data_ptr_access (shm_buffer);
 
-  return true;
-#endif
-  return false;
+  return success;
 }
 
 
