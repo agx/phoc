@@ -24,7 +24,7 @@ Build-Depends:
  hwdata <pkg.phoc.embedwlroots>,
  libcap-dev <pkg.phoc.embedwlroots>,
  libdisplay-info-dev (>= 0.1.1) <pkg.phoc.embedwlroots>,
- libdrm-dev (>= 2.4.95) <pkg.phoc.embedwlroots>,
+ libdrm-dev (>= 2.4.118) <pkg.phoc.embedwlroots>,
  libegl1-mesa-dev <pkg.phoc.embedwlroots>,
  libgbm-dev (>= 17.1.0) <pkg.phoc.embedwlroots>,
  libgles2-mesa-dev <pkg.phoc.embedwlroots>,
