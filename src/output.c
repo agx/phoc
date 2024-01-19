@@ -435,9 +435,7 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
   if (!wlr_output_test_state (wlr_output, pending))
     return false;
 
-  wlr_presentation_surface_scanned_out_on_output (self->desktop->presentation,
-                                                  wlr_surface,
-                                                  wlr_output);
+  wlr_presentation_surface_scanned_out_on_output (wlr_surface, wlr_output);
 
   return wlr_output_commit_state (wlr_output, pending);
 }

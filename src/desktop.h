@@ -60,7 +60,6 @@ struct _PhocDesktop {
   struct wlr_virtual_pointer_manager_v1 *virtual_pointer;
   struct wlr_tablet_manager_v2 *tablet_v2;
   struct wlr_pointer_constraints_v1 *pointer_constraints;
-  struct wlr_presentation *presentation;
   struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager_v1;
   struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
   struct wlr_pointer_gestures_v1 *pointer_gestures;

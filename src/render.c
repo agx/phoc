@@ -246,9 +246,7 @@ render_surface_iterator (PhocOutput         *output,
 
   render_texture (output, texture, &src_box, &dst_box, &clip_box, surface->current.transform, alpha, ctx);
 
-  wlr_presentation_surface_scanned_out_on_output (output->desktop->presentation,
-                                                  surface,
-                                                  wlr_output);
+  wlr_presentation_surface_scanned_out_on_output (surface, wlr_output);
 
   collect_touch_points(output, surface, dst_box, scale);
 }

@@ -746,7 +746,7 @@ phoc_desktop_constructed (GObject *object)
   self->pointer_constraint.notify = handle_pointer_constraint;
   wl_signal_add (&self->pointer_constraints->events.new_constraint, &self->pointer_constraint);
 
-  self->presentation = wlr_presentation_create (wl_display, wlr_backend);
+  wlr_presentation_create (wl_display, wlr_backend);
   self->foreign_toplevel_manager_v1 = wlr_foreign_toplevel_manager_v1_create (wl_display);
   self->relative_pointer_manager = wlr_relative_pointer_manager_v1_create (wl_display);
   self->pointer_gestures = wlr_pointer_gestures_v1_create (wl_display);
