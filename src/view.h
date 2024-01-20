@@ -130,7 +130,7 @@ static inline PhocViewClass * PHOC_VIEW_GET_CLASS (gpointer ptr) {
 
 typedef struct _PhocViewChild PhocViewChild;
 
-typedef struct phoc_view_child_interface {
+typedef struct _PhocViewChildInterface {
   void (*get_pos)(PhocViewChild *child, int *sx, int *sy);
   void (*destroy)(PhocViewChild *child);
 } PhocViewChildInterface;
@@ -145,17 +145,17 @@ typedef struct phoc_view_child_interface {
  * A child of a [type@PhocView], e.g. a popup or subsurface
  */
 typedef struct _PhocViewChild {
-  const struct phoc_view_child_interface *impl;
+  const PhocViewChildInterface *impl;
 
-  PhocView                               *view;
-  PhocViewChild                          *parent;
-  GSList                                 *children;
-  struct wlr_surface                     *wlr_surface;
-  struct wl_list                          link;
-  bool                                    mapped;
+  PhocView                     *view;
+  PhocViewChild                *parent;
+  GSList                       *children;
+  struct wlr_surface           *wlr_surface;
+  struct wl_list                link;
+  bool                          mapped;
 
-  struct wl_listener                      commit;
-  struct wl_listener                      new_subsurface;
+  struct wl_listener            commit;
+  struct wl_listener            new_subsurface;
 } PhocViewChild;
 
 void                  phoc_view_appear_activated (PhocView *view, bool activated);
@@ -226,10 +226,10 @@ void                  phoc_view_add_bling (PhocView *self, PhocBling *bling);
 void                  phoc_view_remove_bling (PhocView *self, PhocBling *bling);
 GSList               *phoc_view_get_blings (PhocView *self);
 
-void                  phoc_view_child_init (PhocViewChild                          *child,
-                                            const struct phoc_view_child_interface *impl,
-                                            PhocView                               *view,
-                                            struct wlr_surface                     *wlr_surface);
+void                  phoc_view_child_init (PhocViewChild                *child,
+                                            const PhocViewChildInterface *impl,
+                                            PhocView                     *view,
+                                            struct wlr_surface           *wlr_surface);
 void                  phoc_view_child_destroy (PhocViewChild *child);
 void                  phoc_view_child_apply_damage (PhocViewChild *child);
 void                  phoc_view_child_damage_whole (PhocViewChild *child);

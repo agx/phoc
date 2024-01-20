@@ -16,11 +16,13 @@ enum layer_parent {
   LAYER_PARENT_SUBSURFACE
 };
 
-typedef struct phoc_layer_popup {
+
+typedef struct _PhocLayerPopup PhocLayerPopup;
+struct _PhocLayerPopup {
   enum layer_parent parent_type;
   union {
     PhocLayerSurface *parent_layer;
-    struct phoc_layer_popup *parent_popup;
+    PhocLayerPopup   *parent_popup;
   };
 
   struct wlr_xdg_popup *wlr_popup;
@@ -31,14 +33,16 @@ typedef struct phoc_layer_popup {
   struct wl_listener new_popup;
   struct wl_listener new_subsurface;
   struct wl_list subsurfaces; // phoc_layer_subsurface::link
-} PhocLayerPopup;
+};
 
-typedef struct phoc_layer_subsurface {
+
+typedef struct _PhocLayerSubsurface PhocLayerSubsurface;
+typedef struct _PhocLayerSubsurface {
   enum layer_parent parent_type;
   union {
-    PhocLayerSurface *parent_layer;
-    struct phoc_layer_popup *parent_popup;
-    struct phoc_layer_subsurface *parent_subsurface;
+    PhocLayerSurface    *parent_layer;
+    PhocLayerPopup      *parent_popup;
+    PhocLayerSubsurface *parent_subsurface;
   };
   struct wl_list link;
 
