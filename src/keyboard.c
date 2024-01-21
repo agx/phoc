@@ -775,22 +775,6 @@ phoc_keyboard_next_layout (PhocKeyboard *self)
   g_settings_set_value(self->input_settings, "sources", g_variant_builder_end(&builder));
 }
 
-
-/**
- * phoc_keyboard_get_meta_key:
- * @self: the keyboard
- *
- * Returns: the current Meta key
- */
-uint32_t
-phoc_keyboard_get_meta_key (PhocKeyboard *self)
-{
-  g_assert (PHOC_IS_KEYBOARD (self));
-
-  return self->meta_key;
-}
-
-
 /**
  * phoc_keyboard_grab_meta_press:
  * @self: the keyboard

@@ -25,7 +25,6 @@ G_DECLARE_FINAL_TYPE (PhocKeyboard, phoc_keyboard, PHOC, KEYBOARD, PhocInputDevi
 PhocKeyboard *phoc_keyboard_new (struct wlr_input_device *device,
                                  PhocSeat *seat);
 void          phoc_keyboard_next_layout (PhocKeyboard *self);
-uint32_t      phoc_keyboard_get_meta_key (PhocKeyboard *self);
 gboolean      phoc_keyboard_grab_meta_press (PhocKeyboard *self);
 
 G_END_DECLS
