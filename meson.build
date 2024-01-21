@@ -136,8 +136,15 @@ if get_option('buildtype') != 'plain'
   test_c_args += '-fstack-protector-strong'
 endif
 
+c_args = cc.get_supported_arguments(test_c_args)
+
+if cc.get_id() == 'clang'
+  # Avoid cast align warnings for wl_container_of, etc
+  c_args += '-Wno-cast-align'
+endif
+
 add_project_arguments(
-  cc.get_supported_arguments(test_c_args),
+  c_args,
   language: 'c'
 )
 

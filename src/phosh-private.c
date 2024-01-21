@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2019,2021 Purism SPC
  *
- * SPDX-License-Identifier: GPL-3.0+
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * Author: Guido Günther <agx@sigxcpu.org>
  */
 
@@ -641,7 +641,7 @@ handle_set_shell_state (struct wl_client               *client,
   if (self->state == (PhocPhoshPrivateShellState)state)
     return;
 
-  self->state = state;
+  self->state = (PhocPhoshPrivateShellState)state;
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SHELL_STATE]);
 }
 

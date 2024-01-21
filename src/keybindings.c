@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2019 Purism SPC
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * Author: Guido Günther <agx@sigxcpu.org>
+ */
+
 #define G_LOG_DOMAIN "phoc-keybindings"
 
 /**
@@ -266,20 +273,6 @@ is_hyper (const gchar *string)
           (string[4] == 'e' || string[4] == 'E') &&
           (string[5] == 'r' || string[5] == 'R') &&
           (string[6] == '>'));
-}
-
-static inline gboolean
-is_primary (const gchar *string)
-{
-  return ((string[0] == '<') &&
-          (string[1] == 'p' || string[1] == 'P') &&
-          (string[2] == 'r' || string[2] == 'R') &&
-          (string[3] == 'i' || string[3] == 'I') &&
-          (string[4] == 'm' || string[4] == 'M') &&
-          (string[5] == 'a' || string[5] == 'A') &&
-          (string[6] == 'r' || string[6] == 'R') &&
-          (string[7] == 'y' || string[7] == 'Y') &&
-          (string[8] == '>'));
 }
 
 static inline gboolean

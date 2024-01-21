@@ -80,6 +80,24 @@ build-with-xwayland-debian-trixie:
     variables:
       - $PKG_ONLY == "1"
 
+build-with-xwayland-debian-trixie-clang:
+  stage: build
+  image: ${DEBIAN_IMAGE}
+  variables:
+    CC: clang
+    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true --werror
+  before_script:
+    - eatmydata apt-get update
+    - eatmydata apt-get -y remove --purge libwlroots-dev
+    - eatmydata apt-get -y install clang
+  <<: *build
+  artifacts:
+    paths:
+      - _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
 build-with-xwayland-alpinelinux-edge:
   stage: build
   image: alpine:edge
@@ -207,6 +225,22 @@ commit-log-check:
       junit: commit-message-junit-report.xml
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
+
+license-check:
+  stage: style-checks
+  image: ${DEBIAN_IMAGE}
+  needs: []
+  before_script:
+    - eatmydata apt-get update
+    - eatmydata apt-get -y install reuse
+  script:
+    reuse lint
+  artifacts:
+    paths:
+      - _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
 
 package-deb-debian-trixie:arm64:
   stage: package

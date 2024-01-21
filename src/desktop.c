@@ -472,10 +472,7 @@ handle_pointer_constraint (struct wl_listener *listener, void *data)
   PhocSeat *seat = wlr_constraint->seat->data;
   PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
-  PhocPointerConstraint *constraint =
-    calloc(1, sizeof(PhocPointerConstraint));
-  constraint->constraint = wlr_constraint;
-
+  PhocPointerConstraint *constraint = g_new0 (PhocPointerConstraint, 1);
   constraint->destroy.notify = handle_constraint_destroy;
   wl_signal_add(&wlr_constraint->events.destroy, &constraint->destroy);
 
@@ -591,8 +588,6 @@ handle_xwayland_remove_startup_id (struct wl_listener *listener, void *data)
 static void
 handle_xwayland_surface (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = wl_container_of (listener, desktop, xwayland_surface);
-
   struct wlr_xwayland_surface *surface = data;
   g_debug ("new xwayland surface: title=%s, class=%s, instance=%s",
            surface->title, surface->class, surface->instance);
