@@ -43,11 +43,13 @@ struct _PhocKeyboard {
   GSettings *input_settings;
   GSettings *keyboard_settings;
   struct xkb_keymap *keymap;
-  uint32_t meta_key;
   GnomeXkbInfo *xkbinfo;
 
   xkb_keysym_t pressed_keysyms_translated[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
   xkb_keysym_t pressed_keysyms_raw[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
+
+  uint32_t meta_key;
+  bool     meta_press_valid;
 };
 G_DEFINE_TYPE(PhocKeyboard, phoc_keyboard, PHOC_TYPE_INPUT_DEVICE)
 
@@ -195,7 +197,6 @@ keyboard_execute_super_key (PhocKeyboard              *self,
                             uint32_t                   time,
                             enum wl_keyboard_key_state state)
 {
-  static bool press_valid = false;
   uint32_t super_mod = 1 << xkb_map_mod_get_index(self->keymap, "Mod4");
 
   if (modifiers > 0 && modifiers != super_mod) {
@@ -209,11 +210,11 @@ keyboard_execute_super_key (PhocKeyboard              *self,
 
       if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
         /* The super key was pressed wait for a release */
-        press_valid = true;
+        self->meta_press_valid = true;
         return phoc_phosh_private_forward_keysym (&combo, time, false);
-      } else if (press_valid == true) {
+      } else if (self->meta_press_valid == true) {
         /* The super key was released and is valid (no other key was pressed) */
-        press_valid = false;
+        self->meta_press_valid = false;
         return phoc_phosh_private_forward_keysym (&combo, time, true);
       }
 
@@ -222,7 +223,7 @@ keyboard_execute_super_key (PhocKeyboard              *self,
       /* A non super key was pressed, don't wait for the release
        * as the super key is a modifier.
        */
-      press_valid = false;
+      self->meta_press_valid = false;
     }
   }
 
@@ -787,4 +788,33 @@ phoc_keyboard_get_meta_key (PhocKeyboard *self)
   g_assert (PHOC_IS_KEYBOARD (self));
 
   return self->meta_key;
+}
+
+
+/**
+ * phoc_keyboard_grab_meta_press:
+ * @self: the keyboard
+ *
+ * If the meta key is currently the only pressed modifier grab it
+ * (hence canceling the meta key press/release sequence) making it
+ * available to other gestures (like left-click + meta).
+ *
+ * Returns: %TRUE if the meta key is pressed. Otherwise %FALSE.
+ */
+gboolean
+phoc_keyboard_grab_meta_press (PhocKeyboard *self)
+{
+  uint32_t modifiers;
+  struct wlr_input_device *device;
+
+  g_assert (PHOC_IS_KEYBOARD (self));
+
+  device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (self));
+  modifiers = wlr_keyboard_get_modifiers (wlr_keyboard_from_input_device (device));
+  if ((modifiers ^ self->meta_key) == 0) {
+    self->meta_press_valid = false;
+    return TRUE;
+  }
+
+  return FALSE;
 }

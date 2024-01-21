@@ -1132,7 +1132,7 @@ phoc_cursor_press_button (PhocCursor              *self,
   struct wlr_surface *surface;
 
   surface = phoc_desktop_surface_at (desktop, lx, ly, &sx, &sy, &view);
-  if (state == WLR_BUTTON_PRESSED && view && phoc_seat_has_meta_pressed (seat)) {
+  if (state == WLR_BUTTON_PRESSED && view && phoc_seat_grab_meta_press (seat)) {
     phoc_seat_set_focus_view (seat, view);
 
     switch (button) {
