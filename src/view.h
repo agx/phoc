@@ -166,7 +166,7 @@ gboolean              phoc_view_is_maximized (PhocView *view);
 gboolean              phoc_view_is_tiled (PhocView *view);
 gboolean              phoc_view_is_fullscreen (PhocView *self);
 void                  phoc_view_update_decorated (PhocView *view, bool decorated);
-void                  phoc_view_arrange (PhocView *self, PhocOutput *output);
+void                  phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center);
 void                  phoc_view_get_box (PhocView *view, struct wlr_box *box);
 void                  phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
 void                  phoc_view_move (PhocView *self, double x, double y);

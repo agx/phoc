@@ -677,7 +677,7 @@ phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction)
     return true;
   }
 
-  phoc_view_arrange (view, output);
+  phoc_view_arrange (view, output, TRUE);
   return true;
 }
 
@@ -1042,7 +1042,7 @@ view_update_scale (PhocView *view)
   }
 
   if (priv->scale != oldscale)
-    phoc_view_arrange (view, NULL);
+    phoc_view_arrange (view, NULL, TRUE);
 }
 
 
@@ -2290,11 +2290,12 @@ phoc_view_get_blings (PhocView *self)
  * phoc_view_arrange:
  * @self: a view
  * @output:(nullable): the output to arrange the view on
+ * @center: Whether to center the view as fallback
  *
  * Arrange a view based on it's current state (floating, tiled or maximized)
  */
 void
-phoc_view_arrange (PhocView *self, PhocOutput *output)
+phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center)
 {
   g_assert (PHOC_IS_VIEW (self));
   g_assert (output == NULL || PHOC_IS_OUTPUT (output));
@@ -2303,6 +2304,6 @@ phoc_view_arrange (PhocView *self, PhocOutput *output)
     view_arrange_maximized (self, output);
   else if (phoc_view_is_tiled (self))
     view_arrange_tiled (self, output);
-  else
+  else if (center)
     view_center (self, output);
 }
