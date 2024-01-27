@@ -199,6 +199,15 @@ keysym_is_subscribeable (PhocKeyCombo *combo)
   if (combo->keysym >= XKB_KEY_XF86MonBrightnessUp && combo->keysym <= XKB_KEY_XF86RotationLockToggle)
     return true;
 
+  /* more of these but from a block of mostly deprecated symbols so we add them
+   * explicitly */
+  switch (combo->keysym) {
+  case XKB_KEY_XF86Screensaver:
+    return true;
+  default:
+    break;
+  }
+
   if (combo->keysym == XKB_KEY_Super_L || combo->keysym == XKB_KEY_Super_R)
     return true;
 
