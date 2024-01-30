@@ -1325,16 +1325,12 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
 }
 
 bool
-phoc_seat_has_meta_pressed (PhocSeat *seat)
+phoc_seat_grab_meta_press (PhocSeat *seat)
 {
   for (GSList *elem = seat->keyboards; elem; elem = elem->next) {
     PhocKeyboard *keyboard = PHOC_KEYBOARD (elem->data);
-    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (keyboard);
-    struct wlr_input_device *device = phoc_input_device_get_device (input_device);
 
-    uint32_t modifiers =
-      wlr_keyboard_get_modifiers (wlr_keyboard_from_input_device(device));
-    if ((modifiers ^ phoc_keyboard_get_meta_key (keyboard)) == 0)
+    if (phoc_keyboard_grab_meta_press (keyboard))
       return true;
   }
 

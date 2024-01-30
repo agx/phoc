@@ -143,7 +143,7 @@ PhocCursor        *phoc_seat_get_cursor (PhocSeat *self);
 
 void               phoc_seat_configure_xcursor (PhocSeat *seat);
 
-bool               phoc_seat_has_meta_pressed (PhocSeat *seat);
+bool               phoc_seat_grab_meta_press (PhocSeat *seat);
 
 PhocView          *phoc_seat_get_focus_view  (PhocSeat *seat);
 void               phoc_seat_set_focus_view  (PhocSeat *seat, PhocView *view);
