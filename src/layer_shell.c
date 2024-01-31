@@ -273,7 +273,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   PhocView *view;
   wl_list_for_each (view, &output->desktop->views, link)
-    phoc_view_arrange (view, NULL);
+    phoc_view_arrange (view, NULL, output->desktop->maximize);
 
   // Arrange non-exlusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS(layers); ++i)
