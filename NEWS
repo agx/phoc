@@ -1,3 +1,15 @@
+phoc 0.36.0
+-----------
+Released February 2024
+* More internal cleanups and improvements. This time mostly around
+  decoration handling.
+* Improve ci checks
+* Fix some issues found by static analyzers
+* Issues fixed:
+  - https://gitlab.gnome.org/World/Phosh/phoc/-/issues/322
+* Contributors:
+    * Guido Günther
+
 phoc 0.35.0
 -----------
 Released Januar 2024

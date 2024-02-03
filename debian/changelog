@@ -1,3 +1,105 @@
+phoc (0.36.0) experimental; urgency=medium
+
+  * ci: Use our ci template.
+    This avoids an external dependency and unbreaks ci
+  * ci: Update shared scripts.
+    Update shared scripts to commit 04a85df2f3311f3012b6c49bf353b376ae0f32b2
+    (matching the ci template).
+    This isn't strictly necessary but avoids config drift.
+  * po: Add de template.
+    We want one template to make the po check happy
+  * ci: Add po check.
+    Just use our shared ci template for that
+  * ci: Add commit message style checks.
+    Since we pulled in the config in the previous commit let's add the check
+    as well.
+  * d/control: Update URL.
+    While at that fix the section and update the standards version
+  * view: Prefix view_unmap.
+    No functional change.
+  * view: Prefix view_is_ getters.
+    This makes them show up in the docs
+  * view: Don't leak details of view arrangement.
+    Instead of leaking the details how view are layed out keep that
+    local to view.
+  * view: Use phoc_view_arrange()
+    Use phoc_view_arrange() internally too.
+  * keybindings: Avoid self for keybinding.
+    The object in this unit is PhocKeybindings so don't use self for a
+    single keybinding to avoid confusion.
+  * keybindings: Allow for a parameter
+  * keybindings: Use a single handler to move a view
+  * view: Name public functions consistently
+  * keybindings: Prefix parse_accelerator.
+    It's a public function
+  * gtk-shell: Make phoc_gtk_{shell,surface}_from_resource static.
+    No need to have them public.
+  * doc-check: Make namespace check more strict.
+    The only bits not properly namespaced are wlroots signal handlers that
+    are located in other compilation units.
+  * view: Fix doc string
+  * view-deco: New class for decoration handling.
+    We'll turn it into a full bling but let's move functionality into a
+    separate class first.  As we set the same decoration sizes keep this
+    internal to PhocViewDeco.
+  * view-deco: Make PhocViewDeco a bling.
+    This way we don't need special handling for decorations in
+    output and renderer
+  * view: Nuke view_update_decorated.
+    Just call phoc_view_set_decarated
+  * view: Drop decorated boolean.
+    We can use the pointer to the decoration object now instead.
+  * view: Drop view_get_deco_box.
+    Now unused
+  * xdg-shell: Use typedefs for enums and structs
+  * layer-shell: Use typedefs for enums and structs
+  * licenses: Move to LICENSES/ and add missing ones.
+    This also helps us to use `reuse` out of the box
+  * protocols: Add copyright header to phosh-private
+  * treewide: Add a bunch of missing copyright header
+  * treewide: Use GPL-3.0-or-later consistently
+  * reuse: Add licensing information
+  * ci: Check copyright and licenses via reuse
+  * desktop: Use g_new0. Avoids possible NULL dereference
+  * seat: Guard against NULL focus
+  * layer-shell-effects: Guard against NULL output
+  * view: Add G_NORETURN.
+    This makes building with clang less noisy
+  * testlib: Add G_NORETURN.
+    This makes building with clang less noisy
+  * build: Disable -Wcast-align with clang.
+    This tiggers for Wayland's wl_container_of() where it doesn' matter for
+    us.
+  * keybindings: Drop unused function
+  * phosh-private: Cast enum.
+    Silences the clang warning (and we already co it just above the
+    assignment).
+  * ci: Add clang build
+  * cursor: Drop unused assignment in handle_shell_reveal
+    wlr_layer_surface_v1_try_from_wlr_surface is only used to check
+    if it's a layer-surface, we don't need the assigned value.
+    While at that make things a bit easier to read.
+    Fixes: 8c363c72 ("cursor: Convert to try_from")
+  * desktop: Drop unused value
+  * server: Make session startup failure a critical.
+    We exit the compositor so a warning looks like too low severity.
+  * server: Avoid shell for argument parsing.
+    This avoids yet another exec during session launch.
+    See https://gitlab.gnome.org/World/Phosh/phosh/-/merge_requests/1352
+  * seat: Grab meta press.
+    Instead of just checking if it's pressed grab it so we cancel the
+    release event for the meta key "stand alone press".
+    This allows to move views via meta + mouse-drag without e.g. bringing up
+    phosh's the overview afterwards.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/322
+  * keyboard: Remove now unused phoc_keyboard_get_meta_key.
+    This prevents some more leaking of keyboard details into the seat.
+  * layer-shell: Don't center views unconditionally.
+    We only want to do so when using automaximize
+    Fixes: 08504c40 ("view: Don't leak details of view arrangement")
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 31 Jan 2024 11:26:38 +0100
+
 phoc (0.35.0) experimental; urgency=medium
 
   [ Guido Günther ]
