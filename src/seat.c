@@ -528,6 +528,26 @@ get_output_from_settings (PhocSeat *self, PhocInputDevice *device)
   return phoc_desktop_find_output (desktop, edid[0], edid[1], edid[2]);
 }
 
+static PhocOutput *
+get_output_from_wlroots (PhocSeat *self, PhocInputDevice *device)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = server->desktop;
+  struct wlr_input_device *wlr_device = phoc_input_device_get_device (device);
+  struct wlr_touch *touch;
+
+  if (wlr_device->type != WLR_INPUT_DEVICE_TOUCH)
+    return NULL;
+
+  touch = wlr_touch_from_input_device (wlr_device);
+
+  if (!touch->output_name)
+    return NULL;
+
+  g_debug ("Looking up output %s", touch->output_name);
+  return phoc_desktop_find_output_by_name (desktop, touch->output_name);
+}
+
 
 static void
 seat_set_device_output_mappings (PhocSeat *self, PhocInputDevice *device)
@@ -551,6 +571,9 @@ seat_set_device_output_mappings (PhocSeat *self, PhocInputDevice *device)
   }
 
   output = get_output_from_settings (self, device);
+
+  if (!output)
+    output = get_output_from_wlroots (self, device);
 
   if (!output)
     output = phoc_desktop_get_builtin_output (desktop);
