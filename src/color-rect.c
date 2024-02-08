@@ -15,6 +15,8 @@
 #include "output.h"
 #include "utils.h"
 
+#include "render-private.h"
+
 /**
  * PhocColorRect:
  *
@@ -167,21 +169,35 @@ phoc_color_rect_dispose (GObject *object)
 }
 
 static void
-bling_render (PhocBling *bling, PhocOutput *output)
+bling_render (PhocBling *bling, PhocRenderContext *ctx)
 {
   PhocColorRect *self = PHOC_COLOR_RECT (bling);
+  pixman_region32_t damage;
 
   struct wlr_box box = self->box;
-  box.x -= output->lx;
-  box.y -= output->ly;
-  phoc_utils_scale_box (&box, output->wlr_output->scale);
+  box.x -= ctx->output->lx;
+  box.y -= ctx->output->ly;
+  phoc_utils_scale_box (&box, ctx->output->wlr_output->scale);
 
-  wlr_render_rect (output->wlr_output->renderer, &box,
-                   (float []){self->color.red,
-                     self->color.green,
-                     self->color.blue,
-                     self->color.alpha},
-                   output->wlr_output->transform_matrix);
+  if (!phoc_util_is_damaged (&box, ctx->damage, NULL, &damage)) {
+    pixman_region32_fini (&damage);
+    return;
+  }
+
+  phoc_output_transform_damage (ctx->output, &damage);
+  phoc_output_transform_box (ctx->output, &box);
+
+  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = box,
+      .color = {
+        .r = self->color.red,
+        .g = self->color.green,
+        .b = self->color.blue,
+        .a = self->color.alpha,
+      },
+      .clip = &damage,
+    });
+  pixman_region32_fini (&damage);
 }
 
 

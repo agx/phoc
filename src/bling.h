@@ -37,7 +37,7 @@ struct _PhocBlingInterface
    * Render the bling. Scissoring is handled by the renderer prior to invoking
    * this function.
    */
-  void          (*render)     (PhocBling *self, PhocOutput *output);
+  void          (*render)     (PhocBling *self, PhocRenderContext *ctx);
   /**
    * PhocBlingInterface::map:
    * @self: A bling
@@ -64,7 +64,7 @@ struct _PhocBlingInterface
 };
 
 void                    phoc_bling_render                        (PhocBling    *self,
-                                                                  PhocOutput   *render);
+                                                                  PhocRenderContext *ctx);
 PhocBox                 phoc_bling_get_box                       (PhocBling    *self);
 void                    phoc_bling_map                           (PhocBling    *self);
 void                    phoc_bling_unmap                         (PhocBling    *self);

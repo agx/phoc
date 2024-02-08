@@ -17,11 +17,11 @@
 #include "view-deco.h"
 #include "utils.h"
 
-#include <wlr/types/wlr_matrix.h>
+#include "render-private.h"
 
 #define PHOC_DECO_BORDER_WIDTH      4
 #define PHOC_DECO_TITLEBAR_HEIGHT  12
-#define PHOC_DECO_COLOR            { 0.2, 0.2, 0.2, 1.0 }
+#define PHOC_DECO_COLOR            ((struct wlr_render_color){ 0.2, 0.2, 0.2, 1.0 })
 
 /**
  * PhocViewDeco:
@@ -95,17 +95,29 @@ phoc_view_deco_damage_box (PhocViewDeco *self)
 
 
 static void
-phoc_view_deco_bling_render (PhocBling *bling, PhocOutput *output)
+phoc_view_deco_bling_render (PhocBling *bling, PhocRenderContext *ctx)
 {
-  PhocViewDeco *self = PHOC_VIEW_DECO (bling);
   struct wlr_box box = phoc_view_deco_bling_get_box (bling);
-  float color[] = PHOC_DECO_COLOR;
-  float matrix[9];
 
-  color[3] = phoc_view_get_alpha (self->view);
-  wlr_matrix_project_box (matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL, 0, output->wlr_output->transform_matrix);
+  box.x -= ctx->output->lx;
+  box.y -= ctx->output->ly;
+  phoc_utils_scale_box (&box, ctx->output->wlr_output->scale);
 
-  wlr_render_quad_with_matrix (output->wlr_output->renderer, color, matrix);
+  pixman_region32_t damage;
+  if (!phoc_util_is_damaged (&box, ctx->damage, NULL, &damage)) {
+    pixman_region32_fini (&damage);
+    return;
+  }
+
+  phoc_output_transform_damage (ctx->output, &damage);
+  phoc_output_transform_box (ctx->output, &box);
+
+  wlr_render_pass_add_rect(ctx->render_pass, &(struct wlr_render_rect_options){
+      .box = box,
+      .color = PHOC_DECO_COLOR,
+      .clip = &damage,
+    });
+  pixman_region32_fini (&damage);
 }
 
 

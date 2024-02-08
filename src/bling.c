@@ -29,7 +29,7 @@ phoc_bling_default_init (PhocBlingInterface *iface)
 
 
 void
-phoc_bling_render (PhocBling *self, PhocOutput *output)
+phoc_bling_render (PhocBling *self, PhocRenderContext *ctx)
 {
   PhocBlingInterface *iface;
 
@@ -38,7 +38,7 @@ phoc_bling_render (PhocBling *self, PhocOutput *output)
   iface = PHOC_BLING_GET_IFACE (self);
   g_assert (iface->render);
 
-  iface->render (self, output);
+  iface->render (self, ctx);
 }
 
 

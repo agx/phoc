@@ -20,8 +20,11 @@ typedef struct _PhocView PhocView;
 
 
 typedef struct _PhocRenderContext {
-  pixman_region32_t *damage;
-  float alpha;
+  PhocOutput                 *output;
+  pixman_region32_t          *damage;
+  float                       alpha;
+  struct wlr_render_pass     *render_pass;
+  enum wlr_scale_filter_mode  tex_filter;
 } PhocRenderContext;
 
 

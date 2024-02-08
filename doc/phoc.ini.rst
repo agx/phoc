@@ -78,6 +78,9 @@ can be specified as `*` to match any value. The configuration options are:
 - `mode`: The mode to use. The mode must be a valid mode for this output. See e.g. the output of `wlr-randr`.
   The default is to use the outputs preferred mode.
 - `modeline`: A custom video mode. This is only valid for the DRM backend
+- `scale-filter`: Filter to use to scale down textures. Valied values are `bilinear`, `nearest` and `auto`.
+  The later selects `biliniear` for fractional and `nearest` for integer scales automatically. If unset
+  `auto` is assumed.
 
 Example:
 

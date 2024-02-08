@@ -13,6 +13,7 @@ if grep -vE  '('\
 '|wayland-server-core.h:.* syntax error, unexpected'\
 '|argument pressed_keysyms: Unresolved type:'\
 '|argument iterator: Unresolved type: .wlr_surface_iterator_func_t.'\
+'|argument .*damage: Unresolved type: .pixman_region32_t.'\
 ')' "${LOG}" | grep -i 'warning:'; then
     exit 1
 fi

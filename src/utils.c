@@ -117,3 +117,38 @@ phoc_utils_scale_box (struct wlr_box *box, float scale)
   box->x = round (box->x * scale);
   box->y = round (box->y * scale);
 }
+
+/**
+ * phoc_util_is_box_damaged:
+ * @box: The box to check
+ * @damage: The damaged area
+ * @clip_box:(nullable): Box to clip damage to
+ * @overlap_damage: (out): The overlap of the rectangle with the damaged area.
+ *   Don't init the pixman region `is_damaged` does that for you.
+ *
+ * Checks if a given rectangle in `box` overlaps with a given damage area. If so
+ * returns `TRUE` and fills `out_damage` with the overlap.
+ *
+ * If the optional `clip_box` is specified the damage is clipped to
+ * that box.
+ *
+ * Returns: %TRUE on overlap otherwise %FALSE
+ */
+gboolean
+phoc_util_is_damaged (const struct wlr_box    *box,
+                      const pixman_region32_t *damage,
+                      const struct wlr_box    *clip_box,
+                      pixman_region32_t       *out_damage)
+{
+  pixman_region32_init (out_damage);
+  pixman_region32_union_rect (out_damage, out_damage,
+                              box->x, box->y, box->width, box->height);
+  pixman_region32_intersect (out_damage, out_damage, damage);
+
+  if (clip_box) {
+    pixman_region32_intersect_rect (out_damage, out_damage,
+                                    clip_box->x, clip_box->y, clip_box->width, clip_box->height);
+  }
+
+  return !!pixman_region32_not_empty (out_damage);
+}
