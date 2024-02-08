@@ -146,7 +146,32 @@
 
     <request name="set_drag_handle">
       <description summary="The drag mode">
-        Specify the size of the drag handle. The default is 0.
+        Specify the position of the drag handle and thus the area that responds
+        to drag gestures.
+
+        If the surface's non anchored edge is at the left or right it specifies
+        the x, otherwise the y coordinate of the drag handle in surface local
+        coordinates. The area between the non anchored surface edge and the
+        drag handle responds to drag gestures.
+
+         0  +-----------------+
+         1  |                 |
+         2  |        A        |
+         3  |                 |
+         4  +++++++++++++++++++  -- drag handle
+         5  |                 |
+         6  |                 |
+         7  |        B        |
+         8  |                 |
+         9  +-----------------+
+
+        If the above surface's non anchored edge is at the bottom then a drag handle
+        of 4 will make area B respond to touch events. If the non anchored edge is at
+        the top the same value makes area A respond to touch events.
+
+        A special value of 0 indicates that the whole surface should be draggable.
+
+        The default is 0.
 
         Drag-handle is double-buffered, see wl_surface.commit.
       </description>
