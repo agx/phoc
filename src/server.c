@@ -42,6 +42,8 @@ typedef struct _PhocServerPrivate {
   struct wl_display  *wl_display;
   guint               wl_source;
 
+  struct wlr_subcompositor *subcompositor;
+
   PhocDesktop        *desktop;
 
   gchar              *session_exec;
@@ -306,7 +308,7 @@ phoc_server_initable_init (GInitable    *initable,
   self->data_device_manager = wlr_data_device_manager_create(priv->wl_display);
 
   self->compositor = wlr_compositor_create (priv->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
-  self->subcompositor = wlr_subcompositor_create (priv->wl_display);
+  priv->subcompositor = wlr_subcompositor_create (priv->wl_display);
 
   return TRUE;
 }

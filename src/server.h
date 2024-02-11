@@ -60,7 +60,6 @@ struct _PhocServer {
 
   /* WLR tools */
   struct wlr_compositor *compositor;
-  struct wlr_subcompositor *subcompositor;
   struct wlr_backend    *backend;
   PhocRenderer          *renderer;
 
