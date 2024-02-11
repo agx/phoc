@@ -696,6 +696,7 @@ phoc_desktop_constructed (GObject *object)
   PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
   PhocServer *server = phoc_server_get_default ();
   struct wl_display *wl_display = phoc_server_get_wl_display (server);
+  struct wlr_backend *wlr_backend = phoc_server_get_backend (server);
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
 
@@ -703,7 +704,7 @@ phoc_desktop_constructed (GObject *object)
   wl_list_init (&self->outputs);
 
   self->new_output.notify = handle_new_output;
-  wl_signal_add (&server->backend->events.new_output, &self->new_output);
+  wl_signal_add (&wlr_backend->events.new_output, &self->new_output);
 
   self->layout = wlr_output_layout_create ();
   wlr_xdg_output_manager_v1_create (wl_display, self->layout);
@@ -788,7 +789,7 @@ phoc_desktop_constructed (GObject *object)
   self->pointer_constraint.notify = handle_pointer_constraint;
   wl_signal_add (&self->pointer_constraints->events.new_constraint, &self->pointer_constraint);
 
-  self->presentation = wlr_presentation_create (wl_display, server->backend);
+  self->presentation = wlr_presentation_create (wl_display, wlr_backend);
   self->foreign_toplevel_manager_v1 = wlr_foreign_toplevel_manager_v1_create (wl_display);
   self->relative_pointer_manager = wlr_relative_pointer_manager_v1_create (wl_display);
   self->pointer_gestures = wlr_pointer_gestures_v1_create (wl_display);

@@ -108,6 +108,7 @@ phoc_input_constructed (GObject *object)
   PhocInput *self = PHOC_INPUT (object);
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = phoc_server_get_desktop (server);
+  struct wlr_backend *wlr_backend = phoc_server_get_backend (server);
 
   g_debug ("Initializing phoc input");
   g_assert (desktop);
@@ -115,7 +116,7 @@ phoc_input_constructed (GObject *object)
   G_OBJECT_CLASS (phoc_input_parent_class)->constructed (object);
 
   self->new_input.notify = handle_new_input;
-  wl_signal_add (&server->backend->events.new_input, &self->new_input);
+  wl_signal_add (&wlr_backend->events.new_input, &self->new_input);
 
   /* Add the default seat */
   phoc_input_get_seat (self, PHOC_CONFIG_DEFAULT_SEAT_NAME);
