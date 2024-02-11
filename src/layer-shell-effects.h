@@ -83,7 +83,4 @@ gboolean                  phoc_draggable_layer_surface_is_unfolded (PhocDraggabl
 
 PhocLayerSurface         *phoc_alpha_layer_surface_get_layer_surface (PhocAlphaLayerSurface *alpha_surface);
 
-PhocAlphaLayerSurface    *phoc_layer_shell_effects_get_alpha_layer_surface_from_layer_surface (PhocLayerShellEffects *self,
-                                                                                               PhocLayerSurface *layer_surface);
-
 G_END_DECLS

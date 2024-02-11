@@ -110,7 +110,6 @@ struct _PhocLayerShellEffects {
   GHashTable         *drag_surfaces_by_layer_surface;
 
   GSList             *alpha_surfaces;
-  GHashTable         *alpha_surfaces_by_layer_surface;
 };
 
 G_DEFINE_TYPE (PhocLayerShellEffects, phoc_layer_shell_effects, G_TYPE_OBJECT)
@@ -374,8 +373,6 @@ phoc_alpha_layer_surface_destroy (PhocAlphaLayerSurface *alpha_surface)
   g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (layer_shell_effects));
 
   if (alpha_surface->layer_surface) {
-    g_hash_table_remove (layer_shell_effects->alpha_surfaces_by_layer_surface,
-                         alpha_surface->layer_surface);
     /* wlr signals */
     wl_list_remove (&alpha_surface->surface_handle_commit.link);
     wl_list_remove (&alpha_surface->layer_surface_handle_destroy.link);
@@ -410,13 +407,7 @@ alpha_layer_surface_handle_resource_destroy (struct wl_resource *resource)
 static void
 alpha_layer_surface_handle_destroy (struct wl_listener *listener, void *data)
 {
-  PhocLayerShellEffects *layer_shell_effects;
   PhocAlphaLayerSurface *alpha_surface = wl_container_of(listener, alpha_surface, layer_surface_handle_destroy);
-
-  /* Drop the gone layer-surface from the layer-surface -> alpha-surface mapping */
-  layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (alpha_surface->layer_shell_effects);
-  g_hash_table_remove (layer_shell_effects->alpha_surfaces_by_layer_surface,
-                       alpha_surface->layer_surface);
 
   /* The layer-surface is unusable for us now */
   alpha_surface->layer_surface = NULL;
@@ -618,8 +609,6 @@ handle_get_alpha_layer_surface (struct wl_client   *client,
   alpha_surface->layer_surface_handle_destroy.notify = alpha_layer_surface_handle_destroy;
   wl_signal_add (&wlr_layer_surface->events.destroy, &alpha_surface->layer_surface_handle_destroy);
 
-  g_hash_table_insert (self->alpha_surfaces_by_layer_surface,
-                       alpha_surface->layer_surface, alpha_surface);
   self->alpha_surfaces = g_slist_prepend (self->alpha_surfaces, g_steal_pointer (&alpha_surface));
 }
 
@@ -677,7 +666,6 @@ phoc_layer_shell_effects_finalize (GObject *object)
   PhocLayerShellEffects *self = PHOC_LAYER_SHELL_EFFECTS (object);
 
   g_clear_pointer (&self->drag_surfaces_by_layer_surface, g_hash_table_destroy);
-  g_clear_pointer (&self->alpha_surfaces_by_layer_surface, g_hash_table_destroy);
 
   wl_global_destroy (self->global);
 
@@ -700,7 +688,6 @@ phoc_layer_shell_effects_init (PhocLayerShellEffects *self)
   struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
 
   self->drag_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
-  self->alpha_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   self->global = wl_global_create (wl_display, &zphoc_layer_shell_effects_v1_interface,
                                    LAYER_SHELL_EFFECTS_VERSION, self, layer_shell_effects_bind);
@@ -1382,24 +1369,4 @@ phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
   g_return_val_if_fail (PHOC_IS_LAYER_SURFACE (layer_surface), NULL);
 
   return g_hash_table_lookup (self->drag_surfaces_by_layer_surface, layer_surface);
-}
-
-/**
- * phoc_layer_shell_effects_get_alpha_layer_surface_from_layer_surface: (skip)
- * @self: The layer shell effects interface
- * @layer_surface: The layer surface that should get the alpha effect
- *
- * Creates an object to handle alpha blending of layer surfaces
- *
- * Returns: A new alpha handing object
- */
-PhocAlphaLayerSurface *
-phoc_layer_shell_effects_get_alpha_layer_surface_from_layer_surface (
-  PhocLayerShellEffects *self,
-  PhocLayerSurface *layer_surface)
-{
-  g_return_val_if_fail (PHOC_IS_LAYER_SHELL_EFFECTS (self), NULL);
-  g_return_val_if_fail (PHOC_IS_LAYER_SURFACE (layer_surface), NULL);
-
-  return g_hash_table_lookup (self->alpha_surfaces_by_layer_surface, layer_surface);
 }
