@@ -60,7 +60,6 @@ struct _PhocServer {
 
   /* WLR tools */
   struct wlr_compositor *compositor;
-  PhocRenderer          *renderer;
 
   /* Global resources */
   struct wlr_data_device_manager *data_device_manager;

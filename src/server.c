@@ -45,6 +45,7 @@ typedef struct _PhocServerPrivate {
   struct wlr_subcompositor *subcompositor;
   struct wlr_backend *backend;
 
+  PhocRenderer       *renderer;
   PhocDesktop        *desktop;
 
   gchar              *session_exec;
@@ -290,11 +291,11 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-  self->renderer = phoc_renderer_new (priv->backend, error);
-  if (self->renderer == NULL) {
+  priv->renderer = phoc_renderer_new (priv->backend, error);
+  if (priv->renderer == NULL) {
     return FALSE;
   }
-  wlr_renderer = phoc_renderer_get_wlr_renderer (self->renderer);
+  wlr_renderer = phoc_renderer_get_wlr_renderer (priv->renderer);
   wlr_renderer_init_wl_shm (wlr_renderer, priv->wl_display);
 
   if (wlr_renderer_get_dmabuf_texture_formats (wlr_renderer)) {
@@ -334,7 +335,7 @@ phoc_server_dispose (GObject *object)
     priv->backend = NULL;
   }
 
-  g_clear_object (&self->renderer);
+  g_clear_object (&priv->renderer);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->dispose (object);
 }
@@ -528,9 +529,12 @@ phoc_server_get_session_exec (PhocServer *self)
 PhocRenderer *
 phoc_server_get_renderer (PhocServer *self)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return self->renderer;
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->renderer;
 }
 
 /**
@@ -697,7 +701,7 @@ phoc_server_set_linux_dmabuf_surface_feedback (PhocServer *self,
   if (enable) {
     struct wlr_linux_dmabuf_feedback_v1 feedback = { 0 };
     const struct wlr_linux_dmabuf_feedback_v1_init_options options = {
-      .main_renderer = phoc_renderer_get_wlr_renderer (self->renderer),
+      .main_renderer = phoc_renderer_get_wlr_renderer (priv->renderer),
       .scanout_primary_output = output->wlr_output,
     };
 
