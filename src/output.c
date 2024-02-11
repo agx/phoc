@@ -1241,12 +1241,12 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
  * Get a list of [type@PhocLayerSurface]s on this output in the given
  * `layer` in rendering order.
  *
- * Returns:(transfer container)(element-type PhocLayerSurface): The layer surfaces of that layer
+ * Returns:(transfer full): The layer surfaces of that layer
  */
-GList *
+GQueue *
 phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
 {
-  GList *layer_surfaces = NULL;
+  GQueue *layer_surfaces = g_queue_new ();
   PhocLayerSurface *layer_surface;
 
   wl_list_for_each_reverse (layer_surface, &self->layer_surfaces, link) {
@@ -1254,7 +1254,7 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone > 0)
-      layer_surfaces = g_list_prepend (layer_surfaces, layer_surface);
+      g_queue_push_head (layer_surfaces, layer_surface);
   }
 
   wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
@@ -1262,7 +1262,7 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone <= 0)
-      layer_surfaces = g_list_prepend (layer_surfaces, layer_surface);
+      g_queue_push_head (layer_surfaces, layer_surface);
   }
 
   return layer_surfaces;
