@@ -35,6 +35,7 @@ typedef struct _PhocServerPrivate {
   /* Phoc resources */
   PhocInput          *input;
   PhocConfig         *config;
+  PhocServerFlags     flags;
 
   PhocDesktop        *desktop;
 
@@ -423,7 +424,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   g_assert (!priv->inited);
 
   priv->config = config;
-  self->flags = flags;
+  priv->flags = flags;
   self->debug_flags = debug_flags;
   priv->mainloop = mainloop;
   priv->exit_status = 1;
@@ -450,7 +451,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 
   g_setenv("WAYLAND_DISPLAY", socket, true);
 
-  if (self->flags & PHOC_SERVER_FLAG_SHELL_MODE) {
+  if (priv->flags & PHOC_SERVER_FLAG_SHELL_MODE) {
     g_message ("Enabling shell mode");
     g_signal_connect_object (phoc_desktop_get_phosh_private (priv->desktop),
                              "notify::shell-state",
