@@ -42,6 +42,8 @@ typedef struct _PhocServerPrivate {
   struct wl_display  *wl_display;
   guint               wl_source;
 
+    /* WLR tools */
+  struct wlr_compositor *compositor;
   struct wlr_subcompositor *subcompositor;
   struct wlr_backend *backend;
 
@@ -309,7 +311,7 @@ phoc_server_initable_init (GInitable    *initable,
 
   self->data_device_manager = wlr_data_device_manager_create(priv->wl_display);
 
-  self->compositor = wlr_compositor_create (priv->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
+  priv->compositor = wlr_compositor_create (priv->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
   priv->subcompositor = wlr_subcompositor_create (priv->wl_display);
 
   return TRUE;
@@ -673,9 +675,12 @@ phoc_server_get_backend (PhocServer *self)
 struct wlr_compositor *
 phoc_server_get_compositor (PhocServer *self)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return self->compositor;
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->compositor;
 }
 
 
