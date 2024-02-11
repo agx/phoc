@@ -30,7 +30,9 @@
 
 
 typedef struct _PhocServerPrivate {
-  GStrv dt_compatibles;
+  PhocDesktop        *desktop;
+
+  GStrv               dt_compatibles;
   struct wlr_session *session;
 
   struct wlr_linux_dmabuf_v1 *linux_dmabuf_v1;
@@ -178,6 +180,7 @@ phoc_startup_session (PhocServer *server)
 static void
 on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *phosh)
 {
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   PhocPhoshPrivateShellState state;
   PhocOutput *output;
 
@@ -190,14 +193,14 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
   switch (state) {
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UP:
     /* Shell is up, lower shields */
-    wl_list_for_each (output, &self->desktop->outputs, link)
+    wl_list_for_each (output, &priv->desktop->outputs, link)
       phoc_output_lower_shield (output);
     break;
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN:
   default:
     /* Shell is gone, raise shields */
     /* TODO: prevent input without a shell attached */
-    wl_list_for_each (output, &self->desktop->outputs, link)
+    wl_list_for_each (output, &priv->desktop->outputs, link)
       phoc_output_raise_shield (output);
   }
 }
@@ -206,8 +209,9 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
 static gboolean
 phoc_server_client_has_security_context (PhocServer *self, const struct wl_client *client)
 {
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   const struct wlr_security_context_v1_state *context;
-  PhocDesktop *desktop = self->desktop;
+  PhocDesktop *desktop = priv->desktop;
 
   context = wlr_security_context_manager_v1_lookup_client (desktop->security_context_manager_v1,
                                                            (struct wl_client *)client);
@@ -219,17 +223,17 @@ static bool
 phoc_server_filter_globals (const struct wl_client *client,
                             const struct wl_global *global,
                             void                   *data)
-{
-  PhocServer *self = PHOC_SERVER (data);
+{  PhocServer *self = PHOC_SERVER (data);
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
 
 #ifdef PHOC_XWAYLAND
-  struct wlr_xwayland *xwayland = self->desktop->xwayland;
+  struct wlr_xwayland *xwayland = priv->desktop->xwayland;
   if (xwayland && global == xwayland->shell_v1->global)
     return xwayland->server && client == xwayland->server->client;
 #endif
 
   /* Clients with a security context can request privileged protocols */
-  if (phoc_desktop_is_privileged_protocol (self->desktop, global) &&
+  if (phoc_desktop_is_privileged_protocol (priv->desktop, global) &&
       phoc_server_client_has_security_context (self, client)) {
     return false;
   }
@@ -321,7 +325,7 @@ phoc_server_finalize (GObject *object)
   g_clear_pointer (&priv->dt_compatibles, g_strfreev);
   g_clear_handle_id (&self->wl_source, g_source_remove);
   g_clear_object (&self->input);
-  g_clear_object (&self->desktop);
+  g_clear_object (&priv->desktop);
   g_clear_pointer (&self->session, g_free);
 
   if (self->inited) {
@@ -402,6 +406,8 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
                    PhocServerFlags flags,
                    PhocServerDebugFlags debug_flags)
 {
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
+
   g_assert (!self->inited);
 
   self->config = config;
@@ -409,7 +415,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   self->debug_flags = debug_flags;
   self->mainloop = mainloop;
   self->exit_status = 1;
-  self->desktop = phoc_desktop_new (self->config);
+  priv->desktop = phoc_desktop_new (self->config);
   self->input = phoc_input_new ();
   self->session = g_strdup (session);
   self->mainloop = mainloop;
@@ -434,11 +440,11 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 
   if (self->flags & PHOC_SERVER_FLAG_SHELL_MODE) {
     g_message ("Enabling shell mode");
-    g_signal_connect_object (phoc_desktop_get_phosh_private (self->desktop),
+    g_signal_connect_object (phoc_desktop_get_phosh_private (priv->desktop),
                              "notify::shell-state",
                              G_CALLBACK (on_shell_state_changed),
                              self, G_CONNECT_SWAPPED);
-    on_shell_state_changed (self, NULL, phoc_desktop_get_phosh_private (self->desktop));
+    on_shell_state_changed (self, NULL, phoc_desktop_get_phosh_private (priv->desktop));
   }
 
   phoc_wayland_init (self);
@@ -488,9 +494,12 @@ phoc_server_get_renderer (PhocServer *self)
 PhocDesktop *
 phoc_server_get_desktop (PhocServer *self)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return self->desktop;
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->desktop;
 }
 
 /**

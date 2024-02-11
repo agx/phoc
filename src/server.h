@@ -60,7 +60,6 @@ struct _PhocServer {
 
   /* Phoc resources */
   PhocConfig *config;
-  PhocDesktop *desktop;
   PhocInput *input;
   PhocServerFlags flags;
   PhocServerDebugFlags debug_flags;
