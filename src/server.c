@@ -479,6 +479,9 @@ phoc_server_get_renderer (PhocServer *self)
 
 /**
  * phoc_server_get_desktop:
+ * @self: The server
+ *
+ * Get's the desktop singleton
  *
  * Returns: (transfer none): The desktop
  */

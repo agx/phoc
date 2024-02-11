@@ -1009,7 +1009,7 @@ munge_app_id (const gchar *app_id)
 static void
 view_update_scale (PhocView *view)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (view));
@@ -1024,7 +1024,7 @@ view_update_scale (PhocView *view)
 
   float scalex = 1.0f, scaley = 1.0f, oldscale = priv->scale;
 
-  if (priv->scale_to_fit || phoc_desktop_get_scale_to_fit (server->desktop)) {
+  if (priv->scale_to_fit || phoc_desktop_get_scale_to_fit (desktop)) {
     scalex = output->usable_area.width / (float)view->box.width;
     scaley = output->usable_area.height / (float)view->box.height;
     if (scaley < scalex)
@@ -1770,7 +1770,7 @@ phoc_view_init (PhocView *self)
   wl_list_init (&priv->child_surfaces);
   wl_list_init(&self->stack);
 
-  self->desktop = phoc_server_get_default ()->desktop;
+  self->desktop = phoc_server_get_desktop (phoc_server_get_default ());
 }
 
 
@@ -1785,14 +1785,12 @@ phoc_view_init (PhocView *self)
 PhocView *
 phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocView *view;
 
   wl_list_for_each(view, &desktop->views, link) {
-    if (view->wlr_surface == wlr_surface) {
+    if (view->wlr_surface == wlr_surface)
       return view;
-    }
   }
 
   return NULL;
@@ -2034,6 +2032,7 @@ phoc_view_get_activation_token (PhocView *self)
 void
 phoc_view_flush_activation_token (PhocView *self)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (self));
@@ -2041,7 +2040,7 @@ phoc_view_flush_activation_token (PhocView *self)
 
   g_return_if_fail (priv->activation_token);
 
-  phoc_phosh_private_notify_startup_id (phoc_desktop_get_phosh_private (phoc_server_get_default ()->desktop),
+  phoc_phosh_private_notify_startup_id (phoc_desktop_get_phosh_private (desktop),
                                         priv->activation_token,
                                         priv->activation_token_type);
   phoc_view_set_activation_token (self, NULL, -1);

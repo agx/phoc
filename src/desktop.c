@@ -467,7 +467,7 @@ handle_constraint_destroy (struct wl_listener *listener, void *data)
 static void
 handle_pointer_constraint (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_pointer_constraint_v1 *wlr_constraint = data;
   PhocSeat *seat = wlr_constraint->seat->data;
   PhocCursor *cursor = phoc_seat_get_cursor (seat);
@@ -478,7 +478,7 @@ handle_pointer_constraint (struct wl_listener *listener, void *data)
 
   double sx, sy;
   struct wlr_surface *surface = phoc_desktop_surface_at(
-    server->desktop,
+    desktop,
     cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
   if (surface == wlr_constraint->surface) {

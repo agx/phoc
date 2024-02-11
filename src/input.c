@@ -107,9 +107,10 @@ phoc_input_constructed (GObject *object)
 {
   PhocInput *self = PHOC_INPUT (object);
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
 
   g_debug ("Initializing phoc input");
-  g_assert (server->desktop);
+  g_assert (desktop);
 
   G_OBJECT_CLASS (phoc_input_parent_class)->constructed (object);
 

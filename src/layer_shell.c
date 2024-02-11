@@ -92,6 +92,7 @@ static void
 update_cursors (PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
 
   for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
@@ -101,7 +102,7 @@ update_cursors (PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */)
     double sx, sy;
 
     struct wlr_surface *surface = phoc_desktop_surface_at(
-      server->desktop,
+      desktop,
       cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
 
     if (surface == layer_surface->layer_surface->surface) {
@@ -302,6 +303,7 @@ void
 phoc_layer_shell_update_focus (void)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   enum zwlr_layer_shell_v1_layer layers_above_shell[] = {
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
@@ -310,7 +312,7 @@ phoc_layer_shell_update_focus (void)
   // Find topmost keyboard interactive layer, if such a layer exists
   // TODO: Make layer surface focus per-output based on cursor position
   PhocOutput *output;
-  wl_list_for_each (output, &server->desktop->outputs, link) {
+  wl_list_for_each (output, &desktop->outputs, link) {
     for (size_t i = 0; i < G_N_ELEMENTS(layers_above_shell); ++i) {
       wl_list_for_each_reverse (layer_surface, &output->layer_surfaces, link) {
         if (layer_surface->layer != layers_above_shell[i])

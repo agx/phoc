@@ -56,7 +56,7 @@ G_DEFINE_TYPE_WITH_CODE (PhocColorRect, phoc_color_rect, G_TYPE_OBJECT,
 static void
 phoc_color_rect_damage_box (PhocColorRect *self)
 {
-  PhocDesktop *desktop = phoc_server_get_default ()->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocOutput *output;
 
   if (!self->mapped)

@@ -331,12 +331,12 @@ handle_set_startup_id(struct wl_client *client,
                       struct wl_resource *resource,
                       const char *startup_id)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   g_debug ("%s: %s", __func__, startup_id);
 
   /* TODO: actually activate the corresponding view */
   if (startup_id) {
-    phoc_phosh_private_notify_startup_id (phoc_desktop_get_phosh_private (server->desktop),
+    phoc_phosh_private_notify_startup_id (phoc_desktop_get_phosh_private (desktop),
                                           startup_id,
                                           PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
   }
@@ -355,12 +355,12 @@ handle_notify_launch(struct wl_client *client,
                      struct wl_resource *resource,
                      const char *startup_id)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   g_debug ("%s: %s", __func__, startup_id);
   if (startup_id) {
-    wlr_xdg_activation_v1_add_token (server->desktop->xdg_activation_v1, startup_id);
-    phoc_phosh_private_notify_launch (phoc_desktop_get_phosh_private (server->desktop),
+    wlr_xdg_activation_v1_add_token (desktop->xdg_activation_v1, startup_id);
+    phoc_phosh_private_notify_launch (phoc_desktop_get_phosh_private (desktop),
                                       startup_id,
                                       PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
   }

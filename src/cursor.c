@@ -660,8 +660,7 @@ seat_view_deco_button (PhocSeatView *view, double sx,
 static bool
 phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int threshold)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   if (surface) {
     struct wlr_xdg_surface *wlr_xdg_surface;
@@ -735,11 +734,10 @@ phoc_handle_shell_reveal (struct wlr_surface *surface, double lx, double ly, int
 static void
 phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   double sx, sy;
   PhocView *view = NULL;
   PhocSeat *seat = self->seat;
-  PhocDesktop *desktop = server->desktop;
   struct wl_client *client = NULL;
   struct wlr_surface *surface;
 
@@ -893,7 +891,7 @@ phoc_cursor_class_init (PhocCursorClass *klass)
 static void
 on_drag_begin (PhocGesture *gesture, double lx, double ly, PhocCursor *self)
 {
-  PhocDesktop *desktop = phoc_server_get_default ()->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocLayerSurface *layer_surface;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   PhocDraggableLayerSurface *drag_surface;
@@ -1028,8 +1026,7 @@ phoc_cursor_update_focus (PhocCursor *self)
 void
 phoc_cursor_update_position (PhocCursor *self, uint32_t time)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocSeat *seat = self->seat;
   PhocView *view;
 
@@ -1122,10 +1119,9 @@ phoc_cursor_press_button (PhocCursor              *self,
                           double                   lx,
                           double                   ly)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   PhocSeat *seat = self->seat;
-  PhocDesktop *desktop = server->desktop;
   bool is_touch = device->type == WLR_INPUT_DEVICE_TOUCH;
   double sx, sy;
   PhocView *view;
@@ -1190,10 +1186,10 @@ phoc_cursor_press_button (PhocCursor              *self,
 static void
 handle_pointer_motion_relative (struct wl_listener *listener, void *data)
 {
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocCursor *self = wl_container_of (listener, self, motion);
   struct wlr_pointer_motion_event *event = data;
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
   double dx = event->delta_x;
   double dy = event->delta_y;
 
@@ -1203,7 +1199,7 @@ handle_pointer_motion_relative (struct wl_listener *listener, void *data)
   phoc_desktop_notify_activity (desktop, self->seat);
 
   wlr_relative_pointer_manager_v1_send_relative_motion (
-    server->desktop->relative_pointer_manager,
+    desktop->relative_pointer_manager,
     self->seat->seat, (uint64_t)event->time_msec * 1000, dx, dy,
     dx_unaccel, dy_unaccel);
 
@@ -1241,10 +1237,10 @@ handle_pointer_motion_relative (struct wl_listener *listener, void *data)
 static void
 handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 {
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocCursor *self = wl_container_of (listener, self, motion_absolute);
   struct wlr_pointer_motion_absolute_event *event = data;
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
   double lx, ly;
 
   phoc_desktop_notify_activity (desktop, self->seat);
@@ -1257,7 +1253,7 @@ handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
   handle_gestures_for_event_at (self, lx, ly, PHOC_EVENT_MOTION_NOTIFY, event, sizeof (*event));
 
   wlr_relative_pointer_manager_v1_send_relative_motion (
-    server->desktop->relative_pointer_manager,
+    desktop->relative_pointer_manager,
     self->seat->seat, (uint64_t)event->time_msec * 1000, dx, dy, dx, dy);
 
   if (self->pointer_view) {
@@ -1277,10 +1273,9 @@ handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 static void
 handle_pointer_button (struct wl_listener *listener, void *data)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = wl_container_of (listener, self, button);
   struct wlr_pointer_button_event *event = data;
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
   PhocEventType type;
   bool is_touch = event->pointer->base.type == WLR_INPUT_DEVICE_TOUCH;
 
@@ -1318,10 +1313,9 @@ phoc_cursor_handle_event (PhocCursor   *self,
 static void
 handle_pointer_axis (struct wl_listener *listener, void *data)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = wl_container_of (listener, self, axis);
   struct wlr_pointer_axis_event *event = data;
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
 
   phoc_desktop_notify_activity (desktop, self->seat);
   send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event->time_msec,
@@ -1331,9 +1325,8 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
 static void
 handle_pointer_frame (struct wl_listener *listener, void *data)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = wl_container_of (listener, self, frame);
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
 
   phoc_desktop_notify_activity (desktop, self->seat);
   wlr_seat_pointer_notify_frame (self->seat->seat);
@@ -1349,7 +1342,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
                                struct wlr_touch_down_event *event)
 {
   PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocSeat *seat = self->seat;
   PhocTouchPoint *touch_point;
   double lx, ly;
@@ -1451,8 +1444,7 @@ void
 phoc_cursor_handle_touch_motion (PhocCursor                    *self,
                                  struct wlr_touch_motion_event *event)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_touch_point *point;
   PhocTouchPoint *touch_point;
   double lx, ly;
@@ -1644,7 +1636,7 @@ void
 phoc_cursor_handle_focus_change (PhocCursor                                 *self,
                                  struct wlr_seat_pointer_focus_change_event *event)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   double sx = event->sx;
   double sy = event->sy;
 
@@ -1656,7 +1648,7 @@ phoc_cursor_handle_focus_change (PhocCursor                                 *sel
 
   phoc_cursor_constrain (self,
                          wlr_pointer_constraints_v1_constraint_for_surface (
-                           server->desktop->pointer_constraints,
+                           desktop->pointer_constraints,
                            event->new_surface, self->seat->seat),
                          sx, sy);
 }
@@ -1664,8 +1656,7 @@ phoc_cursor_handle_focus_change (PhocCursor                                 *sel
 static void
 phoc_cursor_handle_constraint_commit (PhocCursor *self)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   double sx, sy;
   struct wlr_surface *surface = phoc_desktop_surface_at (desktop,

@@ -1018,10 +1018,10 @@ accept_drag (PhocDraggableLayerSurface *drag_surface,
 PhocDraggableSurfaceState
 phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface, double lx, double ly)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
   struct wlr_box output_box;
-  wlr_output_layout_get_box (server->desktop->layout, wlr_layer_surface->output, &output_box);
+  wlr_output_layout_get_box (desktop->layout, wlr_layer_surface->output, &output_box);
   double sx = lx - drag_surface->geo.x - output_box.x;
   double sy = ly - drag_surface->geo.y - output_box.y;
   bool is_handle = false;
