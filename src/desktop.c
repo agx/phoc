@@ -204,7 +204,7 @@ layer_surface_at (PhocOutput                     *output,
                   double                         *sx,
                   double                         *sy)
 {
-  g_autoptr (GQueue) layer_surfaces = phoc_output_get_layer_surfaces_for_layer (output, layer);
+  GQueue *layer_surfaces = phoc_output_get_layer_surfaces_for_layer (output, layer);
 
   for (GList *l = layer_surfaces->tail; l; l = l->prev) {
     PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);

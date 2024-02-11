@@ -293,9 +293,8 @@ render_view (PhocOutput *output, PhocView *view, PhocRenderContext *ctx)
 static void
 render_layer (enum zwlr_layer_shell_v1_layer layer, PhocRenderContext *ctx)
 {
-  g_autoptr (GQueue) layer_surfaces = NULL;
+  GQueue *layer_surfaces = phoc_output_get_layer_surfaces_for_layer (ctx->output, layer);
 
-  layer_surfaces = phoc_output_get_layer_surfaces_for_layer (ctx->output, layer);
   for (GList *l = layer_surfaces->head; l; l = l->next) {
     PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);
 

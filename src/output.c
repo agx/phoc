@@ -70,6 +70,8 @@ typedef struct _PhocOutputPrivate {
 
   PhocOutputScaleFilter  scale_filter;
   gboolean               gamma_lut_changed;
+
+  GQueue                *layer_surfaces;
 } PhocOutputPrivate;
 
 static void phoc_output_initable_iface_init (GInitableIface *iface);
@@ -951,6 +953,7 @@ phoc_output_finalize (GObject *object)
                  (GDestroyNotify)phoc_output_frame_callback_info_free);
 
   wl_list_init (&self->layer_surfaces);
+  g_clear_pointer (&priv->layer_surfaces, g_queue_free);
 
   g_clear_signal_handler (&priv->render_cutouts_id, priv->renderer);
   g_clear_object (&priv->renderer);
@@ -1214,7 +1217,7 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
                                     PhocSurfaceIterator  iterator,
                                     void                *user_data)
 {
-  g_autoptr (GQueue) layer_surfaces = phoc_output_get_layer_surfaces_for_layer (self, layer);
+  GQueue *layer_surfaces = phoc_output_get_layer_surfaces_for_layer (self, layer);
 
   for (GList *l = layer_surfaces->tail; l; l = l->prev) {
     PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);
@@ -1232,20 +1235,26 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
  * Get a list of [type@PhocLayerSurface]s on this output in the given
  * `layer` in rendering order.
  *
- * Returns:(transfer full): The layer surfaces of that layer
+ * Returns:(transfer none): The layer surfaces of that layer
  */
 GQueue *
 phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
 {
-  GQueue *layer_surfaces = g_queue_new ();
   PhocLayerSurface *layer_surface;
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  g_clear_pointer (&priv->layer_surfaces, g_queue_free);
+  priv->layer_surfaces = g_queue_new ();
 
   wl_list_for_each_reverse (layer_surface, &self->layer_surfaces, link) {
     if (layer_surface->layer != layer)
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone > 0)
-      g_queue_push_head (layer_surfaces, layer_surface);
+      g_queue_push_head (priv->layer_surfaces, layer_surface);
   }
 
   wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
@@ -1253,10 +1262,10 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone <= 0)
-      g_queue_push_head (layer_surfaces, layer_surface);
+      g_queue_push_head (priv->layer_surfaces, layer_surface);
   }
 
-  return layer_surfaces;
+  return priv->layer_surfaces;
 }
 
 /**
