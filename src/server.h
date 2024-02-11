@@ -58,9 +58,6 @@ typedef enum _PhocServerDebugFlags {
 struct _PhocServer {
   GObject parent;
 
-  /* Wayland resources */
-  guint wl_source;
-
   /* WLR tools */
   struct wlr_compositor *compositor;
   struct wlr_subcompositor *subcompositor;

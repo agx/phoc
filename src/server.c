@@ -40,6 +40,7 @@ typedef struct _PhocServerPrivate {
 
   /* Wayland resources */
   struct wl_display  *wl_display;
+  guint               wl_source;
 
   PhocDesktop        *desktop;
 
@@ -120,7 +121,7 @@ phoc_wayland_init (PhocServer *self)
   GSource *wayland_event_source;
 
   wayland_event_source = wayland_event_source_new (priv->wl_display);
-  self->wl_source = g_source_attach (wayland_event_source, NULL);
+  priv->wl_source = g_source_attach (wayland_event_source, NULL);
 }
 
 
@@ -342,7 +343,7 @@ phoc_server_finalize (GObject *object)
   PhocServerPrivate *priv = phoc_server_get_instance_private (self);
 
   g_clear_pointer (&priv->dt_compatibles, g_strfreev);
-  g_clear_handle_id (&self->wl_source, g_source_remove);
+  g_clear_handle_id (&priv->wl_source, g_source_remove);
   g_clear_object (&priv->input);
   g_clear_object (&priv->desktop);
   g_clear_pointer (&priv->session_exec, g_free);
