@@ -53,5 +53,7 @@ const char       *phoc_layer_surface_get_namespace (PhocLayerSurface *self);
 PhocOutput       *phoc_layer_surface_get_output (PhocLayerSurface *self);
 void              phoc_layer_surface_set_alpha (PhocLayerSurface *self, float alpha);
 float             phoc_layer_surface_get_alpha (PhocLayerSurface *self);
+enum zwlr_layer_shell_v1_layer
+                  phoc_layer_surface_get_layer (PhocLayerSurface *self);
 
 G_END_DECLS
