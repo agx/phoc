@@ -57,9 +57,6 @@ typedef enum _PhocServerDebugFlags {
    which will be replaced by getters and setters over time */
 struct _PhocServer {
   GObject parent;
-
-  /* Global resources */
-  struct wlr_data_device_manager *data_device_manager;
 };
 
 PhocServer        *phoc_server_get_default (void);

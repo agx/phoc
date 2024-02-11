@@ -58,6 +58,7 @@ typedef struct _PhocServerPrivate {
   struct wlr_session *session;
 
   struct wlr_linux_dmabuf_v1 *linux_dmabuf_v1;
+  struct wlr_data_device_manager *data_device_manager;
 } PhocServerPrivate;
 
 static void phoc_server_initable_iface_init (GInitableIface *iface);
@@ -309,7 +310,7 @@ phoc_server_initable_init (GInitable    *initable,
     g_message ("Linux dmabuf support unavailale");
   }
 
-  self->data_device_manager = wlr_data_device_manager_create(priv->wl_display);
+  priv->data_device_manager = wlr_data_device_manager_create(priv->wl_display);
 
   priv->compositor = wlr_compositor_create (priv->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
   priv->subcompositor = wlr_subcompositor_create (priv->wl_display);
