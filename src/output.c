@@ -1214,21 +1214,12 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
                                     PhocSurfaceIterator  iterator,
                                     void                *user_data)
 {
-  PhocLayerSurface *layer_surface;
+  g_autoptr (GQueue) layer_surfaces = phoc_output_get_layer_surfaces_for_layer (self, layer);
 
-  wl_list_for_each_reverse (layer_surface, &self->layer_surfaces, link) {
-    if (layer_surface->layer != layer)
-      continue;
+  for (GList *l = layer_surfaces->tail; l; l = l->prev) {
+    PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);
 
-    if (layer_surface->layer_surface->current.exclusive_zone <= 0)
-      phoc_output_layer_surface_for_each_surface (self, layer_surface, iterator, user_data);
-  }
-  wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
-    if (layer_surface->layer != layer)
-      continue;
-
-    if (layer_surface->layer_surface->current.exclusive_zone > 0)
-      phoc_output_layer_surface_for_each_surface (self, layer_surface, iterator, user_data);
+    phoc_output_layer_surface_for_each_surface (self, layer_surface, iterator, user_data);
   }
 }
 
