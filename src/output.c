@@ -1239,7 +1239,7 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
  * @layer: The layer to get the surfaces for
  *
  * Get a list of [type@PhocLayerSurface]s on this output in the given
- * `layer`.
+ * `layer` in rendering order.
  *
  * Returns:(transfer container)(element-type PhocLayerSurface): The layer surfaces of that layer
  */
