@@ -497,7 +497,6 @@ alpha_surface_handle_commit (struct wl_listener *listener, void *data)
   alpha_surface->current  = alpha_surface->pending;
   phoc_layer_surface_set_alpha (layer_surface, alpha_surface->current);
 
-  phoc_layer_surface_get_output (layer_surface);
   output = phoc_layer_surface_get_output (layer_surface);
   phoc_output_damage_whole_surface (output,
                                     layer_surface->layer_surface->surface,
