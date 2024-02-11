@@ -59,7 +59,6 @@ struct _PhocServer {
   GObject parent;
 
   /* Wayland resources */
-  struct wl_display *wl_display;
   guint wl_source;
 
   /* WLR tools */

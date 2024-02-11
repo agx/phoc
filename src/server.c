@@ -38,6 +38,9 @@ typedef struct _PhocServerPrivate {
   PhocServerFlags     flags;
   PhocServerDebugFlags debug_flags;
 
+  /* Wayland resources */
+  struct wl_display  *wl_display;
+
   PhocDesktop        *desktop;
 
   gchar              *session_exec;
@@ -113,9 +116,10 @@ wayland_event_source_new (struct wl_display *display)
 static void
 phoc_wayland_init (PhocServer *self)
 {
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   GSource *wayland_event_source;
 
-  wayland_event_source = wayland_event_source_new (self->wl_display);
+  wayland_event_source = wayland_event_source_new (priv->wl_display);
   self->wl_source = g_source_attach (wayland_event_source, NULL);
 }
 
@@ -265,16 +269,16 @@ phoc_server_initable_init (GInitable    *initable,
   PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   struct wlr_renderer *wlr_renderer;
 
-  self->wl_display = wl_display_create();
-  if (self->wl_display == NULL) {
+  priv->wl_display = wl_display_create();
+  if (priv->wl_display == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
                  "Could not create wayland display");
     return FALSE;
   }
-  wl_display_set_global_filter (self->wl_display, phoc_server_filter_globals, self);
+  wl_display_set_global_filter (priv->wl_display, phoc_server_filter_globals, self);
 
-  self->backend = wlr_backend_autocreate (self->wl_display, &priv->session);
+  self->backend = wlr_backend_autocreate (priv->wl_display, &priv->session);
   if (self->backend == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
@@ -287,21 +291,21 @@ phoc_server_initable_init (GInitable    *initable,
     return FALSE;
   }
   wlr_renderer = phoc_renderer_get_wlr_renderer (self->renderer);
-  wlr_renderer_init_wl_shm (wlr_renderer, self->wl_display);
+  wlr_renderer_init_wl_shm (wlr_renderer, priv->wl_display);
 
   if (wlr_renderer_get_dmabuf_texture_formats (wlr_renderer)) {
-    wlr_drm_create (self->wl_display, wlr_renderer);
-    priv->linux_dmabuf_v1 = wlr_linux_dmabuf_v1_create_with_renderer (self->wl_display,
+    wlr_drm_create (priv->wl_display, wlr_renderer);
+    priv->linux_dmabuf_v1 = wlr_linux_dmabuf_v1_create_with_renderer (priv->wl_display,
                                                                       PHOC_LINUX_DMABUF_VERSION,
                                                                       wlr_renderer);
   } else {
     g_message ("Linux dmabuf support unavailale");
   }
 
-  self->data_device_manager = wlr_data_device_manager_create(self->wl_display);
+  self->data_device_manager = wlr_data_device_manager_create(priv->wl_display);
 
-  self->compositor = wlr_compositor_create (self->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
-  self->subcompositor = wlr_subcompositor_create (self->wl_display);
+  self->compositor = wlr_compositor_create (priv->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
+  self->subcompositor = wlr_subcompositor_create (priv->wl_display);
 
   return TRUE;
 }
@@ -318,9 +322,10 @@ static void
 phoc_server_dispose (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
 
   if (self->backend) {
-    wl_display_destroy_clients (self->wl_display);
+    wl_display_destroy_clients (priv->wl_display);
     wlr_backend_destroy(self->backend);
     self->backend = NULL;
   }
@@ -349,7 +354,7 @@ phoc_server_finalize (GObject *object)
 
   g_clear_pointer (&priv->config, phoc_config_destroy);
 
-  g_clear_pointer (&self->wl_display, wl_display_destroy);
+  g_clear_pointer (&priv->wl_display, wl_display_destroy);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
@@ -434,7 +439,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   priv->session_exec = g_strdup (exec);
   priv->mainloop = mainloop;
 
-  const char *socket = wl_display_add_socket_auto(self->wl_display);
+  const char *socket = wl_display_add_socket_auto (priv->wl_display);
   if (!socket) {
     g_warning("Unable to open wayland socket: %s", strerror(errno));
     wlr_backend_destroy(self->backend);
@@ -446,7 +451,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   if (!wlr_backend_start(self->backend)) {
     g_warning("Failed to start backend");
     wlr_backend_destroy(self->backend);
-    wl_display_destroy(self->wl_display);
+    wl_display_destroy (priv->wl_display);
     return FALSE;
   }
 
@@ -633,9 +638,12 @@ phoc_server_get_compatibles (PhocServer *self)
 struct wl_display *
 phoc_server_get_wl_display (PhocServer *self)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return self->wl_display;
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->wl_display;
 }
 
 
