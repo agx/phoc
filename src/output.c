@@ -1241,8 +1241,10 @@ phoc_output_layer_for_each_surface (PhocOutput          *self,
 GQueue *
 phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocLayerSurface *layer_surface;
   PhocOutputPrivate *priv;
+  g_autoptr (GQueue) queue = NULL;
 
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
@@ -1250,15 +1252,14 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
   if (priv->layer_surfaces[layer])
     return priv->layer_surfaces[layer];
 
-  g_clear_pointer (&priv->layer_surfaces[layer], g_queue_free);
-  priv->layer_surfaces[layer] = g_queue_new ();
+  queue = g_queue_new ();
 
   wl_list_for_each_reverse (layer_surface, &self->layer_surfaces, link) {
     if (layer_surface->layer != layer)
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone > 0)
-      g_queue_push_head (priv->layer_surfaces[layer], layer_surface);
+      g_queue_push_head (queue, layer_surface);
   }
 
   wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
@@ -1266,9 +1267,64 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone <= 0)
-      g_queue_push_head (priv->layer_surfaces[layer], layer_surface);
+      g_queue_push_head (queue, layer_surface);
   }
 
+  GSList *stacks = phoc_desktop_get_layer_surface_stacks (desktop);
+  for (GSList *s = stacks; s; s = s->next) {
+    PhocStackedLayerSurface *stack = s->data;
+    PhocLayerSurface *stacked, *target;
+    GList *stacked_link, *target_link;
+
+    if (phoc_stacked_layer_surface_get_layer (stack) != layer)
+      continue;
+
+    stacked = phoc_stacked_layer_surface_get_layer_surface (stack);
+    if (!stacked)
+      continue;
+
+    if (phoc_layer_surface_get_output (stacked) != self)
+      continue;
+
+    target = phoc_stacked_layer_surface_get_target_layer_surface (stack);
+    if (!target)
+      continue;
+
+    if (phoc_layer_surface_get_output (stacked) != self)
+      continue;
+
+    if (phoc_layer_surface_get_layer (target) != phoc_layer_surface_get_layer (stacked)) {
+      g_critical ("Stacked surface and target surface not in same layer");
+      continue;
+    }
+
+    stacked_link = g_queue_find (queue, stacked);
+    g_assert (stacked_link);
+    g_queue_unlink (queue, stacked_link);
+
+    target_link = g_queue_find (queue, target);
+    g_assert (target_link);
+
+    switch (phoc_stacked_layer_surface_get_position (stack)) {
+    case PHOC_STACKED_SURFACE_STACK_BELOW:
+      g_debug ("Stacking '%s' below '%s'",
+               PHOC_LAYER_SURFACE (stacked_link->data)->layer_surface->namespace,
+               PHOC_LAYER_SURFACE (target_link->data)->layer_surface->namespace);
+      g_queue_insert_before_link (queue, target_link, stacked_link);
+      break;
+    case PHOC_STACKED_SURFACE_STACK_ABOVE:
+      g_debug ("Stacking '%s' above '%s'",
+               PHOC_LAYER_SURFACE (stacked_link->data)->layer_surface->namespace,
+               PHOC_LAYER_SURFACE (target_link->data)->layer_surface->namespace);
+      g_queue_insert_after_link (queue, target_link, stacked_link);
+      break;
+    default:
+      g_assert_not_reached ();
+    }
+  }
+
+  g_clear_pointer (&priv->layer_surfaces[layer], g_queue_free);
+  priv->layer_surfaces[layer] = g_steal_pointer (&queue);
   return priv->layer_surfaces[layer];
 }
 
