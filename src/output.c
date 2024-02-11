@@ -84,6 +84,11 @@ G_DEFINE_TYPE_WITH_CODE (PhocOutput, phoc_output, G_TYPE_OBJECT,
 
 #define PHOC_OUTPUT_SELF(p) PHOC_PRIV_CONTAINER(PHOC_OUTPUT, PhocOutput, (p))
 
+static void phoc_output_for_each_surface (PhocOutput          *self,
+                                          PhocSurfaceIterator  iterator,
+                                          void                *user_data,
+                                          gboolean             visible_only);
+
 typedef struct {
   PhocAnimatable    *animatable;
   PhocFrameCallback  callback;
@@ -1308,7 +1313,7 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
  *
  * Iterate over surfaces on the output.
  */
-void
+static void
 phoc_output_for_each_surface (PhocOutput          *self,
                               PhocSurfaceIterator  iterator,
                               void                *user_data,

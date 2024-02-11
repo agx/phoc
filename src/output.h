@@ -104,10 +104,6 @@ void        phoc_output_xwayland_children_for_each_surface (PhocOutput *self,
                                                             PhocSurfaceIterator iterator,
                                                             void *user_data);
 #endif
-void        phoc_output_for_each_surface             (PhocOutput *self,
-                                                      PhocSurfaceIterator iterator,
-                                                      void *user_data,
-                                                      gboolean visible_only);
 GList *     phoc_output_get_layer_surfaces_for_layer (PhocOutput                     *self,
                                                       enum zwlr_layer_shell_v1_layer  layer);
 
