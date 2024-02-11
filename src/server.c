@@ -580,6 +580,7 @@ phoc_server_get_config (PhocServer *self)
 
 /**
  * phoc_server_get_last_active_seat:
+ * @self: The server
  *
  * Get's the last active seat.
  *
