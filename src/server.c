@@ -30,6 +30,8 @@
 
 
 typedef struct _PhocServerPrivate {
+  gboolean            inited;
+
   PhocDesktop        *desktop;
 
   gchar              *session_exec;
@@ -334,9 +336,9 @@ phoc_server_finalize (GObject *object)
   g_clear_object (&priv->desktop);
   g_clear_pointer (&priv->session_exec, g_free);
 
-  if (self->inited) {
+  if (priv->inited) {
     g_unsetenv("WAYLAND_DISPLAY");
-    self->inited = FALSE;
+    priv->inited = FALSE;
   }
 
   g_clear_pointer (&self->config, phoc_config_destroy);
@@ -414,7 +416,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 {
   PhocServerPrivate *priv = phoc_server_get_instance_private (self);
 
-  g_assert (!self->inited);
+  g_assert (!priv->inited);
 
   self->config = config;
   self->flags = flags;
@@ -457,7 +459,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   if (priv->session_exec)
     phoc_startup_session (self);
 
-  self->inited = TRUE;
+  priv->inited = TRUE;
   return TRUE;
 }
 

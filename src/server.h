@@ -63,7 +63,6 @@ struct _PhocServer {
   PhocInput *input;
   PhocServerFlags flags;
   PhocServerDebugFlags debug_flags;
-  gboolean inited;
 
   /* Wayland resources */
   struct wl_display *wl_display;
