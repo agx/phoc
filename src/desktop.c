@@ -780,8 +780,7 @@ phoc_desktop_constructed (GObject *object)
   wlr_viewporter_create (wl_display);
   wlr_single_pixel_buffer_manager_v1_create (wl_display);
 
-  struct wlr_xdg_foreign_registry *foreign_registry =
-                wlr_xdg_foreign_registry_create (wl_display);
+  struct wlr_xdg_foreign_registry *foreign_registry = wlr_xdg_foreign_registry_create (wl_display);
   wlr_xdg_foreign_v1_create (wl_display, foreign_registry);
   wlr_xdg_foreign_v2_create (wl_display, foreign_registry);
 

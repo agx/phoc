@@ -43,6 +43,7 @@ typedef struct _PhocServerPrivate {
   guint               wl_source;
 
   struct wlr_subcompositor *subcompositor;
+  struct wlr_backend *backend;
 
   PhocDesktop        *desktop;
 
@@ -281,15 +282,15 @@ phoc_server_initable_init (GInitable    *initable,
   }
   wl_display_set_global_filter (priv->wl_display, phoc_server_filter_globals, self);
 
-  self->backend = wlr_backend_autocreate (priv->wl_display, &priv->session);
-  if (self->backend == NULL) {
+  priv->backend = wlr_backend_autocreate (priv->wl_display, &priv->session);
+  if (priv->backend == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
                  "Could not create backend");
     return FALSE;
   }
 
-  self->renderer = phoc_renderer_new (self->backend, error);
+  self->renderer = phoc_renderer_new (priv->backend, error);
   if (self->renderer == NULL) {
     return FALSE;
   }
@@ -327,10 +328,10 @@ phoc_server_dispose (GObject *object)
   PhocServer *self = PHOC_SERVER (object);
   PhocServerPrivate *priv = phoc_server_get_instance_private (self);
 
-  if (self->backend) {
+  if (priv->backend) {
     wl_display_destroy_clients (priv->wl_display);
-    wlr_backend_destroy(self->backend);
-    self->backend = NULL;
+    wlr_backend_destroy (priv->backend);
+    priv->backend = NULL;
   }
 
   g_clear_object (&self->renderer);
@@ -445,15 +446,15 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   const char *socket = wl_display_add_socket_auto (priv->wl_display);
   if (!socket) {
     g_warning("Unable to open wayland socket: %s", strerror(errno));
-    wlr_backend_destroy(self->backend);
+    wlr_backend_destroy (priv->backend);
     return FALSE;
   }
 
   g_print ("Running compositor on wayland display '%s'\n", socket);
 
-  if (!wlr_backend_start(self->backend)) {
+  if (!wlr_backend_start (priv->backend)) {
     g_warning("Failed to start backend");
-    wlr_backend_destroy(self->backend);
+    wlr_backend_destroy (priv->backend);
     wl_display_destroy (priv->wl_display);
     return FALSE;
   }
@@ -647,6 +648,18 @@ phoc_server_get_wl_display (PhocServer *self)
   priv = phoc_server_get_instance_private (self);
 
   return priv->wl_display;
+}
+
+
+struct wlr_backend *
+phoc_server_get_backend (PhocServer *self)
+{
+  PhocServerPrivate *priv;
+
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->backend;
 }
 
 
