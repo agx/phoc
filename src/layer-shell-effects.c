@@ -697,12 +697,12 @@ phoc_layer_shell_effects_class_init (PhocLayerShellEffectsClass *klass)
 static void
 phoc_layer_shell_effects_init (PhocLayerShellEffects *self)
 {
-  struct wl_display *display = phoc_server_get_default ()->wl_display;
+  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
 
   self->drag_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
   self->alpha_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  self->global = wl_global_create (display, &zphoc_layer_shell_effects_v1_interface,
+  self->global = wl_global_create (wl_display, &zphoc_layer_shell_effects_v1_interface,
                                    LAYER_SHELL_EFFECTS_VERSION, self, layer_shell_effects_bind);
 
 }

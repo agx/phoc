@@ -1902,12 +1902,12 @@ static void
 phoc_seat_constructed (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT(object);
-  PhocServer *server = phoc_server_get_default ();
+  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  self->seat = wlr_seat_create (server->wl_display, priv->name);
+  self->seat = wlr_seat_create (wl_display, priv->name);
   g_assert (self->seat);
   self->seat->data = self;
 

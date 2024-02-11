@@ -630,6 +630,15 @@ phoc_server_get_compatibles (PhocServer *self)
 }
 
 
+struct wl_display *
+phoc_server_get_wl_display (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->wl_display;
+}
+
+
 struct wlr_session *
 phoc_server_get_session (PhocServer *self)
 {
