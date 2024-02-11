@@ -1187,6 +1187,25 @@ phoc_desktop_get_draggable_layer_surface (PhocDesktop *self, PhocLayerSurface *l
 }
 
 /**
+ * phoc_desktop_get_layer_surface_stacks:
+ * @self: The desktop
+ *
+ * Get the list of currently known stacks
+ *
+ * Returns:(transfer none)(element-type PhocStackedLayerSurface): The layer surface stacks
+ */
+GSList *
+phoc_desktop_get_layer_surface_stacks (PhocDesktop *self)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  priv = phoc_desktop_get_instance_private (self);
+  return phoc_layer_shell_effects_get_layer_surface_stacks (priv->layer_shell_effects);
+}
+
+/**
  * phoc_desktop_get_gtk_shell:
  * @self: The `PhocDesktop`
  *

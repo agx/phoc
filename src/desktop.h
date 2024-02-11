@@ -134,7 +134,9 @@ PhocLayerSurface  *phoc_desktop_layer_surface_at(PhocDesktop *self,
                                                  double lx, double ly,
                                                  double *sx, double *sy);
 PhocDraggableLayerSurface *
-phoc_desktop_get_draggable_layer_surface (PhocDesktop *self, PhocLayerSurface *layer_surface);
+                     phoc_desktop_get_draggable_layer_surface    (PhocDesktop *self,
+                                                                  PhocLayerSurface *layer_surface);
+GSList              *phoc_desktop_get_layer_surface_stacks       (PhocDesktop *self);
 
 PhocGtkShell        *phoc_desktop_get_gtk_shell                  (PhocDesktop *self);
 PhocPhoshPrivate    *phoc_desktop_get_phosh_private              (PhocDesktop *self);
