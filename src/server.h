@@ -58,9 +58,6 @@ typedef enum _PhocServerDebugFlags {
 struct _PhocServer {
   GObject parent;
 
-  /* Phoc resources */
-  PhocServerDebugFlags debug_flags;
-
   /* Wayland resources */
   struct wl_display *wl_display;
   guint wl_source;

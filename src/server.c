@@ -36,6 +36,7 @@ typedef struct _PhocServerPrivate {
   PhocInput          *input;
   PhocConfig         *config;
   PhocServerFlags     flags;
+  PhocServerDebugFlags debug_flags;
 
   PhocDesktop        *desktop;
 
@@ -135,7 +136,7 @@ on_session_exit (GPid pid, gint status, PhocServer *self)
     else
       g_warning ("Session terminated: %s (%d)", err->message, priv->exit_status);
   }
-  if (!(self->debug_flags & PHOC_SERVER_DEBUG_FLAG_NO_QUIT))
+  if (!(priv->debug_flags & PHOC_SERVER_DEBUG_FLAG_NO_QUIT))
     g_main_loop_quit (priv->mainloop);
 }
 
@@ -425,7 +426,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 
   priv->config = config;
   priv->flags = flags;
-  self->debug_flags = debug_flags;
+  priv->debug_flags = debug_flags;
   priv->mainloop = mainloop;
   priv->exit_status = 1;
   priv->desktop = phoc_desktop_new (priv->config);
@@ -589,9 +590,12 @@ phoc_server_get_config (PhocServer *self)
 gboolean
 phoc_server_check_debug_flags (PhocServer *self, PhocServerDebugFlags check)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return !!(self->debug_flags & check);
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return !!(priv->debug_flags & check);
 }
 
 /**
