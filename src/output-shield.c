@@ -141,7 +141,7 @@ phoc_output_shield_get_property (GObject    *object,
 static void
 stop_render (PhocOutputShield *self)
 {
-  PhocRenderer *renderer = phoc_server_get_default ()->renderer;
+  PhocRenderer *renderer = phoc_server_get_renderer (phoc_server_get_default ());
 
   g_clear_signal_handler (&self->render_end_id, renderer);
 }
@@ -169,7 +169,7 @@ on_render (PhocOutputShield *self, PhocRenderContext *ctx)
 static void
 start_render (PhocOutputShield *self)
 {
-  PhocRenderer *renderer = phoc_server_get_default ()->renderer;
+  PhocRenderer *renderer = phoc_server_get_renderer (phoc_server_get_default ());
 
   if (self->render_end_id)
     return;

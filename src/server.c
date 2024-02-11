@@ -519,6 +519,9 @@ phoc_server_get_session_exec (PhocServer *self)
 
 /**
  * phoc_server_get_renderer:
+ * @self: The server
+ *
+ * Gets the renderer object
  *
  * Returns: (transfer none): The renderer
  */
