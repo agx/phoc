@@ -59,7 +59,6 @@ struct _PhocServer {
   GObject parent;
 
   /* Phoc resources */
-  PhocConfig *config;
   PhocServerFlags flags;
   PhocServerDebugFlags debug_flags;
 

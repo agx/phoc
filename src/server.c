@@ -34,6 +34,7 @@ typedef struct _PhocServerPrivate {
 
   /* Phoc resources */
   PhocInput          *input;
+  PhocConfig         *config;
 
   PhocDesktop        *desktop;
 
@@ -344,7 +345,7 @@ phoc_server_finalize (GObject *object)
     priv->inited = FALSE;
   }
 
-  g_clear_pointer (&self->config, phoc_config_destroy);
+  g_clear_pointer (&priv->config, phoc_config_destroy);
 
   g_clear_pointer (&self->wl_display, wl_display_destroy);
 
@@ -421,12 +422,12 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 
   g_assert (!priv->inited);
 
-  self->config = config;
+  priv->config = config;
   self->flags = flags;
   self->debug_flags = debug_flags;
   priv->mainloop = mainloop;
   priv->exit_status = 1;
-  priv->desktop = phoc_desktop_new (self->config);
+  priv->desktop = phoc_desktop_new (priv->config);
   priv->input = phoc_input_new ();
   priv->session_exec = g_strdup (exec);
   priv->mainloop = mainloop;
@@ -567,9 +568,12 @@ phoc_server_get_input (PhocServer *self)
 PhocConfig *
 phoc_server_get_config (PhocServer *self)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return self->config;
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->config;
 }
 
 
