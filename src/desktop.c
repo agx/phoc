@@ -653,8 +653,9 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
 
   if (config->xwayland) {
     struct wl_display *wl_display = phoc_server_get_wl_display (server);
+    struct wlr_compositor *wlr_compositor = phoc_server_get_compositor (server);
 
-    self->xwayland = wlr_xwayland_create (wl_display, server->compositor, config->xwayland_lazy);
+    self->xwayland = wlr_xwayland_create (wl_display, wlr_compositor, config->xwayland_lazy);
     if (!self->xwayland) {
       g_critical ("Failed to initialize Xwayland");
       g_unsetenv ("DISPLAY");

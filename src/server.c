@@ -670,6 +670,15 @@ phoc_server_get_backend (PhocServer *self)
 }
 
 
+struct wlr_compositor *
+phoc_server_get_compositor (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->compositor;
+}
+
+
 struct wlr_session *
 phoc_server_get_session (PhocServer *self)
 {

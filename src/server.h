@@ -81,6 +81,7 @@ const char *const *phoc_server_get_compatibles (PhocServer *self);
 PhocSeat          *phoc_server_get_last_active_seat (PhocServer *self);
 struct wlr_session *phoc_server_get_session (PhocServer *self);
 struct wlr_backend *phoc_server_get_backend (PhocServer *self);
+struct wlr_compositor *phoc_server_get_compositor (PhocServer *self);
 struct wl_display *phoc_server_get_wl_display (PhocServer *self);
 void               phoc_server_set_linux_dmabuf_surface_feedback (PhocServer  *self,
                                                                   PhocView    *view,
