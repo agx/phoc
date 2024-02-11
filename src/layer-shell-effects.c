@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2022 Purism SPC
+ *               2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Author: Guido Günther <agx@sigxcpu.org>
@@ -17,7 +18,7 @@
 
 #include <glib-object.h>
 
-#define LAYER_SHELL_EFFECTS_VERSION 2
+#define LAYER_SHELL_EFFECTS_VERSION 3
 #define DRAG_ACCEPT_THRESHOLD_DISTANCE 16
 #define DRAG_REJECT_THRESHOLD_DISTANCE 24
 #define SLIDE_ANIM_DURATION_MS 300 /* ms */
@@ -37,6 +38,7 @@ typedef enum {
                                              ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
                                              ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT)
 } PhocLayerShellEffectDrags;
+
 
 typedef struct _PhocDraggableLayerSurfaceParams {
   /* Margin when folded / unfolded */
@@ -96,6 +98,23 @@ struct _PhocAlphaLayerSurface {
 };
 
 
+struct _PhocStackedLayerSurface {
+  struct wl_resource *resource;
+  PhocLayerSurface *layer_surface;
+  PhocLayerShellEffects *layer_shell_effects;
+
+  /* Double buffered stack target */
+  struct {
+    PhocLayerSurface      *surface;
+    PhocStackedSurfacePos  position;
+  } pending, current;
+
+  struct wl_listener surface_handle_commit;
+  struct wl_listener layer_surface_handle_destroy;
+  struct wl_listener target_layer_surface_handle_destroy;
+};
+
+
 /**
  * PhocLayerShellEffects:
  *
@@ -106,18 +125,21 @@ struct _PhocLayerShellEffects {
 
   struct wl_global   *global;
   GSList             *resources;
+
   GSList             *drag_surfaces;
   GHashTable         *drag_surfaces_by_layer_surface;
 
   GSList             *alpha_surfaces;
+
+  GSList             *stacked_surfaces;
 };
 
 G_DEFINE_TYPE (PhocLayerShellEffects, phoc_layer_shell_effects, G_TYPE_OBJECT)
 
-static PhocLayerShellEffects    *phoc_layer_shell_effects_from_resource    (struct wl_resource *resource);
+static PhocLayerShellEffects     *phoc_layer_shell_effects_from_resource     (struct wl_resource *resource);
 static PhocDraggableLayerSurface *phoc_draggable_layer_surface_from_resource (struct wl_resource *resource);
-static PhocAlphaLayerSurface     *phoc_alpha_layer_surface_from_resource (struct wl_resource *resource);
-
+static PhocAlphaLayerSurface     *phoc_alpha_layer_surface_from_resource     (struct wl_resource *resource);
+static PhocStackedLayerSurface   *phoc_stacked_layer_surface_from_resource   (struct wl_resource *resource);
 
 static void
 resource_handle_destroy(struct wl_client *client,
@@ -306,6 +328,74 @@ static const struct zphoc_alpha_layer_surface_v1_interface alpha_layer_surface_v
 };
 
 
+static void
+handle_stacked_layer_surface_stack_above (struct wl_client   *client,
+                                          struct wl_resource *resource,
+                                          struct wl_resource *surface_resource)
+{
+  PhocStackedLayerSurface *stacked_surface = wl_resource_get_user_data (resource);
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
+
+  g_assert (stacked_surface);
+
+  if (!stacked_surface->layer_surface)
+    return;
+
+  wlr_layer_surface = wlr_layer_surface_v1_from_resource (surface_resource);
+  if (!wlr_layer_surface) {
+    wl_resource_post_error (resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
+                            "Layer surface not yet committed");
+  }
+
+  if (!wlr_layer_surface->data) {
+    wl_resource_post_error (resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
+                            "Layer surface not yet committed");
+  }
+
+  stacked_surface->pending.surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
+  stacked_surface->pending.position = PHOC_STACKED_SURFACE_STACK_ABOVE;
+}
+
+
+static void
+handle_stacked_layer_surface_stack_below (struct wl_client   *client,
+                                          struct wl_resource *resource,
+                                          struct wl_resource *surface_resource)
+{
+  PhocStackedLayerSurface *stacked_surface = wl_resource_get_user_data (resource);
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
+
+  g_assert (stacked_surface);
+
+  if (!stacked_surface->layer_surface)
+    return;
+
+  wlr_layer_surface = wlr_layer_surface_v1_from_resource (surface_resource);
+  if (!wlr_layer_surface) {
+    wl_resource_post_error (resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
+                            "Layer surface not yet committed");
+  }
+
+  if (!wlr_layer_surface->data) {
+    wl_resource_post_error (resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
+                            "Layer surface not yet committed");
+  }
+
+  stacked_surface->pending.surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
+  stacked_surface->pending.position = PHOC_STACKED_SURFACE_STACK_BELOW;
+}
+
+
+static const struct zphoc_stacked_layer_surface_v1_interface stacked_layer_surface_v1_impl = {
+  .stack_above = handle_stacked_layer_surface_stack_above,
+  .stack_below = handle_stacked_layer_surface_stack_below,
+  .destroy = resource_handle_destroy,
+};
+
 
 static PhocDraggableLayerSurface *
 phoc_draggable_layer_surface_from_resource (struct wl_resource *resource)
@@ -321,6 +411,15 @@ phoc_alpha_layer_surface_from_resource (struct wl_resource *resource)
 {
   g_assert (wl_resource_instance_of (resource, &zphoc_alpha_layer_surface_v1_interface,
                                      &alpha_layer_surface_v1_impl));
+  return wl_resource_get_user_data (resource);
+}
+
+
+static PhocStackedLayerSurface *
+phoc_stacked_layer_surface_from_resource (struct wl_resource *resource)
+{
+  g_assert (wl_resource_instance_of (resource, &zphoc_stacked_layer_surface_v1_interface,
+                                     &stacked_layer_surface_v1_impl));
   return wl_resource_get_user_data (resource);
 }
 
@@ -387,6 +486,49 @@ phoc_alpha_layer_surface_destroy (PhocAlphaLayerSurface *alpha_surface)
 
 
 static void
+phoc_stacked_layer_surface_destroy (PhocStackedLayerSurface *stacked_surface)
+{
+  PhocLayerShellEffects *layer_shell_effects;
+  PhocLayerSurface *layer_surface;
+
+  if (stacked_surface == NULL)
+    return;
+
+  g_debug ("Destroying stacked_layer_surface %p (res %p)", stacked_surface, stacked_surface->resource);
+  layer_shell_effects = PHOC_LAYER_SHELL_EFFECTS (stacked_surface->layer_shell_effects);
+  g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (layer_shell_effects));
+
+  layer_surface = stacked_surface->layer_surface;
+  if (layer_surface) {
+      PhocOutput *output;
+
+    /* wlr signals */
+    wl_list_remove (&stacked_surface->surface_handle_commit.link);
+    wl_list_remove (&stacked_surface->layer_surface_handle_destroy.link);
+
+    output = phoc_layer_surface_get_output (layer_surface);
+    if (output) {
+      enum zwlr_layer_shell_v1_layer layer = phoc_layer_surface_get_layer (layer_surface);
+
+      phoc_output_set_layer_dirty (output, layer);
+    }
+  }
+
+  if (stacked_surface->current.surface)
+    wl_list_remove (&stacked_surface->target_layer_surface_handle_destroy.link);
+
+  layer_shell_effects->stacked_surfaces = g_slist_remove (layer_shell_effects->stacked_surfaces,
+                                                          stacked_surface);
+
+  stacked_surface->layer_surface = NULL;
+  stacked_surface->current.surface = NULL;
+
+  wl_resource_set_user_data (stacked_surface->resource, NULL);
+  g_free (stacked_surface);
+}
+
+
+static void
 draggable_layer_surface_handle_resource_destroy (struct wl_resource *resource)
 {
   PhocDraggableLayerSurface *drag_surface = phoc_draggable_layer_surface_from_resource (resource);
@@ -401,6 +543,15 @@ alpha_layer_surface_handle_resource_destroy (struct wl_resource *resource)
   PhocAlphaLayerSurface *alpha_surface = phoc_alpha_layer_surface_from_resource (resource);
 
   phoc_alpha_layer_surface_destroy (alpha_surface);
+}
+
+
+static void
+stacked_layer_surface_handle_resource_destroy (struct wl_resource *resource)
+{
+  PhocStackedLayerSurface *stacked_surface = phoc_stacked_layer_surface_from_resource (resource);
+
+  phoc_stacked_layer_surface_destroy (stacked_surface);
 }
 
 
@@ -432,7 +583,35 @@ draggable_layer_surface_handle_destroy (struct wl_listener *listener, void *data
 
 
 static void
-surface_handle_commit (struct wl_listener *listener, void *data)
+stacked_layer_surface_handle_destroy (struct wl_listener *listener, void *data)
+{
+  PhocStackedLayerSurface *stacked_surface;
+
+  stacked_surface = wl_container_of (listener, stacked_surface, layer_surface_handle_destroy);
+
+  /* The layer-surface is unusable for us now */
+  stacked_surface->layer_surface = NULL;
+
+  /* No need to invalidate the output layer as the layer surface's destroy handler does so */
+}
+
+
+static void
+stacked_target_layer_surface_handle_destroy (struct wl_listener *listener, void *data)
+{
+  PhocStackedLayerSurface *stacked_surface;
+
+  stacked_surface = wl_container_of (listener, stacked_surface, target_layer_surface_handle_destroy);
+
+  /* The layer-surface is unusable for us now */
+  stacked_surface->current.surface = NULL;
+
+  /* No need to invalidate the output layer cache, the layer surface's destroy handler does so */
+}
+
+
+static void
+draggable_layer_surface_handle_commit (struct wl_listener *listener, void *data)
 {
   PhocDraggableLayerSurface *drag_surface =
     wl_container_of(listener, drag_surface, surface_handle_commit);
@@ -497,6 +676,57 @@ alpha_surface_handle_commit (struct wl_listener *listener, void *data)
 
 
 static void
+stacked_surface_handle_commit (struct wl_listener *listener, void *data)
+{
+  PhocStackedLayerSurface *stacked_surface =
+    wl_container_of (listener, stacked_surface, surface_handle_commit);
+  PhocOutput *output;
+
+  /* stacked surface already inert */
+  if (stacked_surface->layer_surface == NULL)
+    return;
+
+  if (memcmp (&stacked_surface->current,
+              &stacked_surface->pending,
+              sizeof (stacked_surface->current)) == 0) {
+    return;
+  }
+
+  if (phoc_layer_surface_get_layer (stacked_surface->pending.surface) !=
+      phoc_layer_surface_get_layer (stacked_surface->layer_surface)) {
+    wl_resource_post_error (stacked_surface->resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_LAYER,
+                            "Layer surface not on same layer");
+    return;
+  }
+
+  if (phoc_layer_surface_get_output (stacked_surface->pending.surface) !=
+      phoc_layer_surface_get_output (stacked_surface->layer_surface)) {
+    wl_resource_post_error (stacked_surface->resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_OUTPUT,
+                            "Layer surface not on same output");
+    return;
+  }
+
+  if (stacked_surface->current.surface) {
+    /* Remove listeners for current target surface */
+    wl_list_remove (&stacked_surface->target_layer_surface_handle_destroy.link);
+  }
+
+  stacked_surface->current = stacked_surface->pending;
+
+  /* Connect destroy listener for current target surface */
+  stacked_surface->target_layer_surface_handle_destroy.notify = stacked_target_layer_surface_handle_destroy;
+  wl_signal_add (&stacked_surface->current.surface->layer_surface->events.destroy,
+                 &stacked_surface->target_layer_surface_handle_destroy);
+
+  output = phoc_layer_surface_get_output (stacked_surface->layer_surface);
+  phoc_output_set_layer_dirty (output,
+                               phoc_layer_surface_get_layer (stacked_surface->current.surface));
+}
+
+
+static void
 handle_get_draggable_layer_surface (struct wl_client   *client,
                                     struct wl_resource *layer_shell_effects_resource,
                                     uint32_t            id,
@@ -544,7 +774,7 @@ handle_get_draggable_layer_surface (struct wl_client   *client,
   g_assert (PHOC_IS_LAYER_SURFACE (wlr_layer_surface->data));
   drag_surface->layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
 
-  drag_surface->surface_handle_commit.notify = surface_handle_commit;
+  drag_surface->surface_handle_commit.notify = draggable_layer_surface_handle_commit;
   wl_signal_add (&wlr_surface->events.commit, &drag_surface->surface_handle_commit);
 
   drag_surface->layer_surface_handle_destroy.notify = draggable_layer_surface_handle_destroy;
@@ -614,6 +844,63 @@ handle_get_alpha_layer_surface (struct wl_client   *client,
 
 
 static void
+handle_get_stacked_layer_surface (struct wl_client   *client,
+                                  struct wl_resource *layer_shell_effects_resource,
+                                  uint32_t            id,
+                                  struct wl_resource *layer_surface_resource)
+{
+  PhocLayerShellEffects *self;
+  g_autofree PhocStackedLayerSurface *stacked_surface = NULL;
+  struct wlr_surface *wlr_surface;
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
+  int version;
+
+  self = phoc_layer_shell_effects_from_resource (layer_shell_effects_resource);
+  g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (self));
+  wlr_layer_surface = wlr_layer_surface_v1_from_resource (layer_surface_resource);
+  wlr_surface = wlr_layer_surface->surface;
+  g_assert (wlr_surface);
+
+  stacked_surface = g_new0 (PhocStackedLayerSurface, 1);
+
+  version = wl_resource_get_version (layer_shell_effects_resource);
+  stacked_surface->layer_shell_effects = self;
+  stacked_surface->resource = wl_resource_create (client,
+                                                 &zphoc_stacked_layer_surface_v1_interface,
+                                                 version,
+                                                 id);
+  if (stacked_surface->resource == NULL) {
+    wl_client_post_no_memory(client);
+    return;
+  }
+
+  g_debug ("New stacked layer_surface %p (res %p)", stacked_surface, stacked_surface->resource);
+  wl_resource_set_implementation (stacked_surface->resource,
+                                  &stacked_layer_surface_v1_impl,
+                                  stacked_surface,
+                                  stacked_layer_surface_handle_resource_destroy);
+  if (!wlr_layer_surface->data) {
+    wl_resource_post_error (layer_shell_effects_resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_ERROR_BAD_SURFACE,
+                            "Layer surface not yet committed");
+    return;
+  }
+
+  g_assert (PHOC_IS_LAYER_SURFACE (wlr_layer_surface->data));
+
+  stacked_surface->layer_surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
+
+  stacked_surface->surface_handle_commit.notify = stacked_surface_handle_commit;
+  wl_signal_add (&wlr_surface->events.commit, &stacked_surface->surface_handle_commit);
+
+  stacked_surface->layer_surface_handle_destroy.notify = stacked_layer_surface_handle_destroy;
+  wl_signal_add (&wlr_layer_surface->events.destroy, &stacked_surface->layer_surface_handle_destroy);
+
+  self->stacked_surfaces = g_slist_prepend (self->stacked_surfaces, g_steal_pointer (&stacked_surface));
+}
+
+
+static void
 layer_shell_effects_handle_resource_destroy (struct wl_resource *resource)
 {
   PhocLayerShellEffects *self = wl_resource_get_user_data (resource);
@@ -629,6 +916,7 @@ static const struct zphoc_layer_shell_effects_v1_interface layer_shell_effects_i
   .destroy = resource_handle_destroy,
   .get_draggable_layer_surface = handle_get_draggable_layer_surface,
   .get_alpha_layer_surface = handle_get_alpha_layer_surface,
+  .get_stacked_layer_surface = handle_get_stacked_layer_surface,
 };
 
 
@@ -937,6 +1225,18 @@ phoc_alpha_layer_surface_get_layer_surface (PhocAlphaLayerSurface *alpha_surface
   return alpha_surface->layer_surface;
 }
 
+/**
+ * phoc_stacked_layer_surface_get_layer_surface:
+ * @stacked_surface: The layer surface binder
+ *
+ * Returns: (transfer none): The layer surface that has another layer
+ *     surface bound to it
+ */
+PhocLayerSurface *
+phoc_stacked_layer_surface_get_layer_surface (PhocStackedLayerSurface *stacked_surface)
+{
+  return stacked_surface->layer_surface;
+}
 
 
 static void
@@ -1369,4 +1669,55 @@ phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
   g_return_val_if_fail (PHOC_IS_LAYER_SURFACE (layer_surface), NULL);
 
   return g_hash_table_lookup (self->drag_surfaces_by_layer_surface, layer_surface);
+}
+
+/**
+ * phoc_layer_shell_effects_get_layer_surface_stacks:
+ * @self: The effects object that tracks the layer surface stacks
+ *
+ * Get the list of currently known stacks
+ *
+ * Returns:(transfer none)(element-type PhocStackedLayerSurface): The layer surface stacks
+ */
+GSList *
+phoc_layer_shell_effects_get_layer_surface_stacks (PhocLayerShellEffects *self)
+{
+  g_assert (PHOC_IS_LAYER_SHELL_EFFECTS (self));
+
+  return self->stacked_surfaces;
+}
+
+enum zwlr_layer_shell_v1_layer
+phoc_stacked_layer_surface_get_layer (PhocStackedLayerSurface *stacked_surface)
+{
+  g_assert (stacked_surface);
+
+  if (!stacked_surface->layer_surface)
+    return ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
+
+  return phoc_layer_surface_get_layer (stacked_surface->layer_surface);
+}
+
+/**
+ * phoc_stacked_layer_surface_get_target_layer_surface:
+ * @stacked_surface: The stacked surface
+ *
+ * Get the [type@LayerSurface] this [type@StackedLayerSurface] is attached to
+ *
+ * Returns:(transfer none)(nullable): The target layer surface
+ */
+PhocLayerSurface *
+phoc_stacked_layer_surface_get_target_layer_surface (PhocStackedLayerSurface *stacked_surface)
+{
+  g_assert (stacked_surface);
+
+  return stacked_surface->current.surface;
+}
+
+PhocStackedSurfacePos
+phoc_stacked_layer_surface_get_position (PhocStackedLayerSurface *stacked_surface)
+{
+  g_assert (stacked_surface);
+
+  return stacked_surface->current.position;
 }

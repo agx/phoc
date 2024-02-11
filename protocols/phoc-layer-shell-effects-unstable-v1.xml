@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <protocol name="phoc_layer_surface_effects_unstable_v1">
   <copyright>
-    Copyright © 2022 Guido Günther
+    Copyright © 2022-2024 Guido Günther
 
     Permission to use, copy, modify, distribute, and sell this
     software and its documentation for any purpose is hereby granted
@@ -25,7 +25,7 @@
     THIS SOFTWARE.
   </copyright>
 
-  <interface name="zphoc_layer_shell_effects_v1" version="2">
+  <interface name="zphoc_layer_shell_effects_v1" version="3">
     <description summary="Adjust properties of layer surfaces">
       Assigns additional features to layer surfaces such as opacity or gestures interaction.
 
@@ -46,6 +46,12 @@
       <entry name="bad_surface" value="0" summary="layer surface is not committed"/>
       <entry name="bad_anchors" value="1" summary="layer surface is not anchored to 3 edges"/>
       <entry name="bad_margin" value="2" summary="layer surface has no margin to use"/>
+    </enum>
+
+    <enum name="stack_error" since="3">
+      <entry name="invalid_layer" value="0" summary="layer surfaces not in same layer"/>
+      <entry name="invalid_output" value="1" summary="layer surfaces not on same output"/>
+      <entry name="invalid_surface" value="2" summary="layer surface invalid"/>
     </enum>
 
     <request name="get_draggable_layer_surface">
@@ -92,6 +98,15 @@
       <description summary="Allow layer_surface to become transparent"/>
       <arg name="id" type="new_id" interface="zphoc_alpha_layer_surface_v1"/>
       <arg name="layer_surface" type="object" interface="zwlr_layer_surface_v1"/>
+    </request>
+
+    <request name="get_stacked_layer_surface" since="3">
+      <description summary="Allow to tweak how a layer surfaces is stacked">
+        Making a layer surface stacked allows to fixate it's position in
+        the layer surface stack.
+      </description>
+      <arg name="id" type="new_id" interface="zphoc_stacked_layer_surface_v1"/>
+      <arg name="surface" type="object" interface="zwlr_layer_surface_v1"/>
     </request>
 
   </interface>
@@ -240,6 +255,34 @@
     <request name="destroy" type="destructor">
       <description summary="destroy the alpha_layer_surface">
         This request destroys the alpha layer surface.
+      </description>
+    </request>
+
+  </interface>
+
+  <interface name="zphoc_stacked_layer_surface_v1" version="3">
+
+    <request name="stack_below">
+      <description summary="Stack surface below the given layer surface">
+        Attaches the stacked layer surface below the layer surface given
+        in this request. Both surfaces must be in the same layer and on
+        the same output. Otherwise a protocol error will be raised.
+      </description>
+      <arg name="surface" type="object" interface="zwlr_layer_surface_v1"/>
+    </request>
+
+    <request name="stack_above">
+      <description summary="Stack surface below the given layer surface">
+        Attaches the stacked layer surface above the layer surface given
+        in this request. Both surfaces must be in the same layer and on
+        the same output. Otherwise a protocol error will be raised.
+      </description>
+      <arg name="surface" type="object" interface="zwlr_layer_surface_v1"/>
+    </request>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the stacked layer_surface">
+        This request destroys the stacked layer surface
       </description>
     </request>
 
