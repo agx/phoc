@@ -1305,7 +1305,8 @@ phoc_desktop_get_views (PhocDesktop *self)
  * @view: a view
  *
  * Move the given view to the front of the view stack meaning that it
- * will be rendered on top of other views.
+ * will be rendered on top of other views (but below move-to-top
+ * views if `view` isn't a `move-to-top-view` itself).
  */
 void
 phoc_desktop_move_view_to_top (PhocDesktop *self, PhocView *view)
@@ -1320,7 +1321,19 @@ phoc_desktop_move_view_to_top (PhocDesktop *self, PhocView *view)
   g_assert (view_link);
 
   g_queue_unlink (priv->views, view_link);
-  g_queue_push_head_link (priv->views, view_link);
+
+  if (G_UNLIKELY (phoc_view_is_always_on_top (view))) {
+    g_queue_push_head_link (priv->views, view_link);
+  } else {
+    GList *l = NULL;
+
+    for (l = phoc_desktop_get_views (self)->head; l; l = l->next) {
+      if (!phoc_view_is_always_on_top (PHOC_VIEW (l->data)))
+        break;
+    }
+
+    g_queue_insert_before_link (priv->views, l, view_link);
+  }
 }
 
 /**
@@ -1380,6 +1393,7 @@ phoc_desktop_insert_view (PhocDesktop *self, PhocView *view)
   priv = phoc_desktop_get_instance_private (self);
 
   g_queue_push_head (priv->views, view);
+  phoc_desktop_move_view_to_top (self, view);
 }
 
 /**
@@ -1400,4 +1414,30 @@ phoc_desktop_remove_view (PhocDesktop *self, PhocView *view)
   priv = phoc_desktop_get_instance_private (self);
 
   return g_queue_remove (priv->views, view);
+}
+
+/**
+ * phoc_desktop_set_view_always_on_top:
+ * @self: The desktop singleton
+ * @view: The view to operate on
+ * @on_top: Whether to render this view on top of other views
+ *
+ * If `on_top` is `TRUE` marks the `view` (and it's children) as being
+ * placed on top of other views. If `on_top` if `FALSE` the `view` will
+ * be placed normally.
+ */
+void
+phoc_desktop_set_view_always_on_top (PhocDesktop *self, PhocView *view, gboolean on_top)
+{
+  PhocView *child;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  g_assert (PHOC_IS_VIEW (view));
+
+  phoc_view_set_always_on_top (view, on_top);
+  phoc_desktop_move_view_to_top (self, view);
+
+  /* Raise children recursively */
+  wl_list_for_each_reverse (child, &view->stack, parent_link)
+    phoc_desktop_set_view_always_on_top (self, child, on_top);
 }

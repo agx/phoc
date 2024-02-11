@@ -49,6 +49,7 @@ typedef struct _PhocViewPrivate {
   PhocViewDeco  *deco;
   PhocViewState  state;
   PhocViewTileDirection tile_direction;
+  gboolean       always_on_top;
 
   PhocOutput    *fullscreen_output;
 
@@ -1118,6 +1119,9 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
       }
     }
   }
+
+  if (self->parent && phoc_view_is_always_on_top (self->parent))
+    phoc_view_set_always_on_top (self, TRUE);
 
   phoc_desktop_insert_view (self->desktop, self);
   phoc_view_damage_whole (self);
@@ -2319,7 +2323,6 @@ phoc_view_get_blings (PhocView *self)
   return priv->blings;
 }
 
-
 /**
  * phoc_view_arrange:
  * @self: a view
@@ -2342,4 +2345,43 @@ phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center)
     view_arrange_tiled (self, output);
   else if (center)
     view_center (self, output);
+}
+
+/**
+ * phoc_view_set_always_on_top:
+ * @self: a view
+ * @on_top: Whether the view should be rendered on top of other views
+ *
+ * Specifies whether the view should be rendered on top of other views.
+ */
+void
+phoc_view_set_always_on_top (PhocView *self, gboolean on_top)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  priv = phoc_view_get_instance_private (self);
+
+  priv->always_on_top = on_top;
+}
+
+/**
+ * phoc_view_is_always_on_top:
+ * @self: a view
+ *
+ * Whether a view is always rendered on top of all other views
+ *
+ * Returns: %TRUE if the view is marked as always-on-top
+ */
+bool
+phoc_view_is_always_on_top (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->always_on_top;
 }

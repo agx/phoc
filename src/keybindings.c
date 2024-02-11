@@ -15,6 +15,7 @@
 #include "phoc-config.h"
 #include "keybindings.h"
 #include "seat.h"
+#include "server.h"
 #include "keyboard.h"
 
 #include <wlr/types/wlr_keyboard.h>
@@ -47,6 +48,23 @@ typedef struct _PhocKeybindings
 } PhocKeybindings;
 
 G_DEFINE_TYPE (PhocKeybindings, phoc_keybindings, G_TYPE_OBJECT);
+
+
+static void
+handle_always_on_top (PhocSeat *seat, GVariant *param)
+{
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocView *view = phoc_seat_get_focus_view (seat);
+  gboolean on_top;
+
+  if (!view)
+    return;
+
+  on_top = !phoc_view_is_always_on_top (view);
+  g_debug ("always-on-top for %s: %d", phoc_view_get_app_id (view), on_top);
+  phoc_desktop_set_view_always_on_top (desktop, view, on_top);
+}
+
 
 static void
 handle_maximize (PhocSeat *seat, GVariant *param)
@@ -543,6 +561,7 @@ phoc_keybindings_constructed (GObject *object)
   G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
 
   self->settings = g_settings_new (KEYBINDINGS_SCHEMA_ID);
+  phoc_add_keybinding (self, self->settings, "always-on-top", handle_always_on_top, NULL);
   phoc_add_keybinding (self, self->settings, "close", handle_close, NULL);
   phoc_add_keybinding (self, self->settings, "cycle-windows", handle_cycle_windows, NULL);
   phoc_add_keybinding (self, self->settings,

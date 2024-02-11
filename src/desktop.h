@@ -125,6 +125,7 @@ struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
                                             double lx, double ly, double *sx, double *sy,
                                             PhocView **view);
 gboolean phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view);
+void     phoc_desktop_set_view_always_on_top (PhocDesktop *self, PhocView *view, gboolean on_top);
 
 PhocLayerSurface  *phoc_desktop_layer_surface_at(PhocDesktop *self,
                                                  double lx, double ly,
