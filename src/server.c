@@ -557,6 +557,23 @@ phoc_server_get_input (PhocServer *self)
 }
 
 /**
+ * phoc_server_get_config:
+ * @self: The server
+ *
+ * Get the object that has the config file content.
+ *
+ * Returns:(transfer none): The config
+ */
+PhocConfig *
+phoc_server_get_config (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->config;
+}
+
+
+/**
  * phoc_server_get_last_active_seat:
  *
  * Get's the last active seat.

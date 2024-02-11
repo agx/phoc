@@ -87,6 +87,7 @@ gint               phoc_server_get_session_exit_status (PhocServer *self);
 PhocRenderer      *phoc_server_get_renderer (PhocServer *self);
 PhocDesktop       *phoc_server_get_desktop (PhocServer *self);
 PhocInput         *phoc_server_get_input (PhocServer *self);
+PhocConfig        *phoc_server_get_config (PhocServer *self);
 const char *const *phoc_server_get_compatibles (PhocServer *self);
 PhocSeat          *phoc_server_get_last_active_seat (PhocServer *self);
 struct wlr_session *phoc_server_get_session (PhocServer *self);
