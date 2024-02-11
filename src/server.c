@@ -32,6 +32,9 @@
 typedef struct _PhocServerPrivate {
   gboolean            inited;
 
+  /* Phoc resources */
+  PhocInput          *input;
+
   PhocDesktop        *desktop;
 
   gchar              *session_exec;
@@ -332,7 +335,7 @@ phoc_server_finalize (GObject *object)
 
   g_clear_pointer (&priv->dt_compatibles, g_strfreev);
   g_clear_handle_id (&self->wl_source, g_source_remove);
-  g_clear_object (&self->input);
+  g_clear_object (&priv->input);
   g_clear_object (&priv->desktop);
   g_clear_pointer (&priv->session_exec, g_free);
 
@@ -424,7 +427,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   priv->mainloop = mainloop;
   priv->exit_status = 1;
   priv->desktop = phoc_desktop_new (self->config);
-  self->input = phoc_input_new ();
+  priv->input = phoc_input_new ();
   priv->session_exec = g_strdup (exec);
   priv->mainloop = mainloop;
 
@@ -545,9 +548,12 @@ phoc_server_get_desktop (PhocServer *self)
 PhocInput *
 phoc_server_get_input (PhocServer *self)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return self->input;
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->input;
 }
 
 /**
@@ -560,9 +566,12 @@ phoc_server_get_input (PhocServer *self)
 PhocSeat *
 phoc_server_get_last_active_seat (PhocServer *self)
 {
-  g_assert (PHOC_IS_SERVER (self));
+  PhocServerPrivate *priv;
 
-  return phoc_input_get_last_active_seat (self->input);
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return phoc_input_get_last_active_seat (priv->input);
 }
 
 
