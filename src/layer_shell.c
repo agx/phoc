@@ -372,6 +372,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, surface_commit);
   struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
   struct wlr_output *wlr_output = wlr_layer_surface->output;
+
   if (wlr_output != NULL) {
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
     struct wlr_box old_geo = layer_surface->geo;
@@ -379,6 +380,8 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     bool layer_changed = false;
     if (wlr_layer_surface->current.committed != 0) {
       layer_changed = layer_surface->layer != wlr_layer_surface->current.layer;
+
+      phoc_output_set_layer_dirty (output, layer_surface->layer);
 
       layer_surface->layer = wlr_layer_surface->current.layer;
       phoc_layer_shell_arrange (output);
@@ -415,6 +418,8 @@ handle_surface_commit (struct wl_listener *listener, void *data)
                                        layer_surface->geo.x,
                                        layer_surface->geo.y);
     }
+
+    phoc_output_set_layer_dirty (output, layer_surface->layer);
   }
 }
 
@@ -423,6 +428,7 @@ static void
 handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, destroy);
+
   g_object_unref (layer_surface);
 }
 
@@ -907,7 +913,7 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
   layer_surface->new_popup.notify = handle_new_popup;
   wl_signal_add (&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
 
-  PhocOutput *output = wlr_layer_surface->output->data;
+  PhocOutput *output = PHOC_OUTPUT (wlr_layer_surface->output->data);
   wl_list_insert (&output->layer_surfaces, &layer_surface->link);
 
   // Temporarily set the layer's current state to pending

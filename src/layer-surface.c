@@ -125,6 +125,9 @@ phoc_layer_surface_finalize (GObject *object)
     phoc_layer_surface_unmap (self);
 
   wl_list_remove (&self->link);
+  if (output)
+    phoc_output_set_layer_dirty (output, self->layer);
+
   wl_list_remove (&self->destroy.link);
   wl_list_remove (&self->map.link);
   wl_list_remove (&self->unmap.link);

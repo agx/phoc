@@ -71,7 +71,7 @@ typedef struct _PhocOutputPrivate {
   PhocOutputScaleFilter  scale_filter;
   gboolean               gamma_lut_changed;
 
-  GQueue                *layer_surfaces;
+  GQueue                *layer_surfaces[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY + 1];
 } PhocOutputPrivate;
 
 static void phoc_output_initable_iface_init (GInitableIface *iface);
@@ -953,7 +953,8 @@ phoc_output_finalize (GObject *object)
                  (GDestroyNotify)phoc_output_frame_callback_info_free);
 
   wl_list_init (&self->layer_surfaces);
-  g_clear_pointer (&priv->layer_surfaces, g_queue_free);
+  for (int i = 0; i < G_N_ELEMENTS (priv->layer_surfaces); i++)
+    g_clear_pointer (&priv->layer_surfaces[i], g_queue_free);
 
   g_clear_signal_handler (&priv->render_cutouts_id, priv->renderer);
   g_clear_object (&priv->renderer);
@@ -1246,15 +1247,18 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
 
-  g_clear_pointer (&priv->layer_surfaces, g_queue_free);
-  priv->layer_surfaces = g_queue_new ();
+  if (priv->layer_surfaces[layer])
+    return priv->layer_surfaces[layer];
+
+  g_clear_pointer (&priv->layer_surfaces[layer], g_queue_free);
+  priv->layer_surfaces[layer] = g_queue_new ();
 
   wl_list_for_each_reverse (layer_surface, &self->layer_surfaces, link) {
     if (layer_surface->layer != layer)
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone > 0)
-      g_queue_push_head (priv->layer_surfaces, layer_surface);
+      g_queue_push_head (priv->layer_surfaces[layer], layer_surface);
   }
 
   wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
@@ -1262,10 +1266,33 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
       continue;
 
     if (layer_surface->layer_surface->current.exclusive_zone <= 0)
-      g_queue_push_head (priv->layer_surfaces, layer_surface);
+      g_queue_push_head (priv->layer_surfaces[layer], layer_surface);
   }
 
-  return priv->layer_surfaces;
+  return priv->layer_surfaces[layer];
+}
+
+/**
+ * phoc_output_set_layer_dirty:
+ * @self: the output
+ * @layer: The layer to marks as dirty
+ *
+ * Invalidate the ordering of layer surfaces.
+ *
+ * Moving a layer surface between layers or changing the exclusive zone
+ * might affect a layer surfaces position in the stack. Calling this function
+ * invalidates the current ordering and makes sure the ordering is recalculated
+ * on next access.
+ */
+void
+phoc_output_set_layer_dirty (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  g_clear_pointer (&priv->layer_surfaces[layer], g_queue_free);
 }
 
 /**
