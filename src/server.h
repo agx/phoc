@@ -46,19 +46,6 @@ typedef enum _PhocServerDebugFlags {
   PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS = 1 << 6,
 } PhocServerDebugFlags;
 
-/**
- * PhocServer:
- *
- * The server singleton.
- *
- * Maintains the compositors state.
- */
-/* TODO: we keep the struct public due to heaps of direct access
-   which will be replaced by getters and setters over time */
-struct _PhocServer {
-  GObject parent;
-};
-
 PhocServer        *phoc_server_get_default (void);
 gboolean           phoc_server_setup (PhocServer *self, PhocConfig *config,
                                       const char *exec, GMainLoop *mainloop,
