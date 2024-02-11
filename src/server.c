@@ -577,6 +577,22 @@ phoc_server_get_config (PhocServer *self)
   return priv->config;
 }
 
+/**
+ * phoc_server_check_debug_flags:
+ * @self: The server
+ * @check: The flags to check
+ *
+ * Checks if the given debug flags are set in this server
+ *
+ * Returns: %TRUE if all of the given flags are set, otherwise %FALSE
+ */
+gboolean
+phoc_server_check_debug_flags (PhocServer *self, PhocServerDebugFlags check)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return !!(self->debug_flags & check);
+}
 
 /**
  * phoc_server_get_last_active_seat:

@@ -284,7 +284,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   phoc_output_update_shell_reveal (output);
 
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL)) {
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL))) {
     PhocLayerSurface *layer_surface;
     g_message ("Dumping layers:");
     wl_list_for_each (layer_surface, &output->layer_surfaces, link) {

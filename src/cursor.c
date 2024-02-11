@@ -1380,7 +1380,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
     }
   }
 
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)) {
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))) {
     PhocOutput *output;
     wl_list_for_each (output, &desktop->outputs, link) {
       if (wlr_output_layout_contains_point (desktop->layout, output->wlr_output, lx, ly)) {

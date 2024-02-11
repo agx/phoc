@@ -193,7 +193,7 @@ collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wl
 {
   PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocServer *server = phoc_server_get_default ();
-  if (G_LIKELY (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
+  if (G_LIKELY (!(phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))))
     return;
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
@@ -654,7 +654,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
 
   render_touch_points (ctx);
   g_signal_emit (self, signals[RENDER_END], 0, ctx);
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server,PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)))
     render_damage (self, ctx);
 
   damage_touch_points (output);

@@ -812,7 +812,7 @@ phoc_desktop_constructed (GObject *object)
 
   /* org.gnome.desktop.interface settings */
   priv->interface_settings = g_settings_new ("org.gnome.desktop.interface");
-  if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS) {
+  if (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS)) {
     priv->enable_animations = FALSE;
   } else {
     g_signal_connect_swapped (priv->interface_settings, "changed::enable-animations",
@@ -940,7 +940,7 @@ phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
   PhocView *view;
   PhocServer *server = phoc_server_get_default();
 
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE)) {
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE))) {
     if (enable == FALSE)
       g_info ("Not disabling auto-maximize due to `auto-maximize` debug flag");
     enable = TRUE;

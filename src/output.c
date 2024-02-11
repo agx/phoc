@@ -448,7 +448,7 @@ get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
   transform = wlr_output_transform_invert (self->wlr_output->transform);
   wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
 
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))) {
     pixman_region32_union_rect (frame_damage, frame_damage,
                                 0, 0, self->wlr_output->width, self->wlr_output->height);
 
@@ -885,7 +885,7 @@ phoc_output_initable_init (GInitable    *initable,
   wlr_output_transformed_resolution (self->wlr_output, &width, &height);
   wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
 
-  if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_CUTOUTS) {
+  if (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_CUTOUTS)) {
     priv->cutouts = phoc_cutouts_overlay_new (phoc_server_get_compatibles (server));
     if (priv->cutouts) {
       g_message ("Adding cutouts overlay");
