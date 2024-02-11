@@ -32,6 +32,10 @@
 typedef struct _PhocServerPrivate {
   PhocDesktop        *desktop;
 
+  gchar              *session_exec;
+  gint                exit_status;
+  GMainLoop          *mainloop;
+
   GStrv               dt_compatibles;
   struct wlr_session *session;
 
@@ -111,20 +115,21 @@ phoc_wayland_init (PhocServer *self)
 static void
 on_session_exit (GPid pid, gint status, PhocServer *self)
 {
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   g_autoptr(GError) err = NULL;
 
   g_return_if_fail (PHOC_IS_SERVER (self));
   g_spawn_close_pid (pid);
   if (g_spawn_check_wait_status (status, &err)) {
-    self->exit_status = 0;
+    priv->exit_status = 0;
   } else {
     if (err->domain ==  G_SPAWN_EXIT_ERROR)
-      self->exit_status = err->code;
+      priv->exit_status = err->code;
     else
-      g_warning ("Session terminated: %s (%d)", err->message, self->exit_status);
+      g_warning ("Session terminated: %s (%d)", err->message, priv->exit_status);
   }
   if (!(self->debug_flags & PHOC_SERVER_DEBUG_FLAG_NO_QUIT))
-    g_main_loop_quit (self->mainloop);
+    g_main_loop_quit (priv->mainloop);
 }
 
 
@@ -144,15 +149,16 @@ on_child_setup (gpointer unused)
 static gboolean
 phoc_startup_session_in_idle (PhocServer *self)
 {
+  PhocServerPrivate *priv = phoc_server_get_instance_private (self);
   GPid pid;
   g_auto (GStrv) argv;
   g_autoptr (GError) err = NULL;
   gboolean success;
 
-  success = g_shell_parse_argv (self->session, NULL, &argv, &err);
+  success = g_shell_parse_argv (priv->session_exec, NULL, &argv, &err);
   if (!success) {
     g_critical ("Failed to parse session command: %s", err->message);
-    g_main_loop_quit (self->mainloop);
+    g_main_loop_quit (priv->mainloop);
   }
 
   if (g_spawn_async (NULL, argv, NULL,
@@ -161,7 +167,7 @@ phoc_startup_session_in_idle (PhocServer *self)
     g_child_watch_add (pid, (GChildWatchFunc)on_session_exit, self);
   } else {
     g_critical ("Failed to launch session: %s", err->message);
-    g_main_loop_quit (self->mainloop);
+    g_main_loop_quit (priv->mainloop);
   }
   return FALSE;
 }
@@ -326,7 +332,7 @@ phoc_server_finalize (GObject *object)
   g_clear_handle_id (&self->wl_source, g_source_remove);
   g_clear_object (&self->input);
   g_clear_object (&priv->desktop);
-  g_clear_pointer (&self->session, g_free);
+  g_clear_pointer (&priv->session_exec, g_free);
 
   if (self->inited) {
     g_unsetenv("WAYLAND_DISPLAY");
@@ -402,7 +408,7 @@ phoc_server_get_default (void)
  */
 gboolean
 phoc_server_setup (PhocServer *self, PhocConfig *config,
-                   const char *session, GMainLoop *mainloop,
+                   const char *exec, GMainLoop *mainloop,
                    PhocServerFlags flags,
                    PhocServerDebugFlags debug_flags)
 {
@@ -413,12 +419,12 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   self->config = config;
   self->flags = flags;
   self->debug_flags = debug_flags;
-  self->mainloop = mainloop;
-  self->exit_status = 1;
+  priv->mainloop = mainloop;
+  priv->exit_status = 1;
   priv->desktop = phoc_desktop_new (self->config);
   self->input = phoc_input_new ();
-  self->session = g_strdup (session);
-  self->mainloop = mainloop;
+  priv->session_exec = g_strdup (exec);
+  priv->mainloop = mainloop;
 
   const char *socket = wl_display_add_socket_auto(self->wl_display);
   if (!socket) {
@@ -448,7 +454,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   }
 
   phoc_wayland_init (self);
-  if (self->session)
+  if (priv->session_exec)
     phoc_startup_session (self);
 
   self->inited = TRUE;
@@ -467,7 +473,31 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 gint
 phoc_server_get_session_exit_status (PhocServer *self)
 {
-  return self->exit_status;
+  PhocServerPrivate *priv;
+
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->exit_status;
+}
+
+/**
+ * phoc_server_get_session_exec:
+ * @self: The server
+ *
+ * Return the command that will be run to start the session
+ *
+ * Returns: The command run at startup
+ */
+const char *
+phoc_server_get_session_exec (PhocServer *self)
+{
+  PhocServerPrivate *priv;
+
+  g_assert (PHOC_IS_SERVER (self));
+  priv = phoc_server_get_instance_private (self);
+
+  return priv->session_exec;
 }
 
 /**

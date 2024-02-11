@@ -65,11 +65,6 @@ struct _PhocServer {
   PhocServerDebugFlags debug_flags;
   gboolean inited;
 
-  /* The session */
-  gchar *session;
-  gint exit_status;
-  GMainLoop *mainloop;
-
   /* Wayland resources */
   struct wl_display *wl_display;
   guint wl_source;
@@ -89,6 +84,7 @@ gboolean           phoc_server_setup (PhocServer *self, PhocConfig *config,
                                       const char *exec, GMainLoop *mainloop,
                                       PhocServerFlags flags,
                                       PhocServerDebugFlags debug_flags);
+const char        *phoc_server_get_session_exec (PhocServer *self);
 gint               phoc_server_get_session_exit_status (PhocServer *self);
 PhocRenderer      *phoc_server_get_renderer (PhocServer *self);
 PhocDesktop       *phoc_server_get_desktop (PhocServer *self);
