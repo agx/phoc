@@ -113,22 +113,22 @@ popup_handle_destroy (struct wl_listener *listener, void *data)
 static void
 popup_handle_map (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocXdgPopup *popup = wl_container_of (listener, popup, map);
 
   popup->child.mapped = true;
   phoc_view_child_damage_whole (&popup->child);
-  phoc_input_update_cursor_focus (server->input);
+  phoc_input_update_cursor_focus (input);
 }
 
 static void
 popup_handle_unmap (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocXdgPopup *popup = wl_container_of (listener, popup, unmap);
 
   phoc_view_child_damage_whole (&popup->child);
-  phoc_input_update_cursor_focus (server->input);
+  phoc_input_update_cursor_focus (input);
   popup->child.mapped = false;
 }
 

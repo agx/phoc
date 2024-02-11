@@ -301,7 +301,7 @@ guess_seat_for_view (PhocView *view)
   // the best we can do is to pick the first seat that has the surface focused
   // for the pointer
   PhocServer *server = phoc_server_get_default ();
-  PhocInput *input = server->input;
+  PhocInput *input = phoc_server_get_input (server);
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);

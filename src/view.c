@@ -563,6 +563,7 @@ phoc_view_restore (PhocView *view)
 void
 phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (view));
@@ -573,7 +574,7 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
   if (was_fullscreen != fullscreen) {
     /* don't allow unfocused surfaces to make themselves fullscreen */
     if (fullscreen && phoc_view_is_mapped (view))
-      g_return_if_fail (phoc_input_view_has_focus (phoc_server_get_default()->input, view));
+      g_return_if_fail (phoc_input_view_has_focus (input, view));
 
     PHOC_VIEW_GET_CLASS (view)->set_fullscreen (view, fullscreen);
 
@@ -707,7 +708,7 @@ phoc_view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *out
 static bool
 view_center (PhocView *view, PhocOutput *output)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   struct wlr_box box, geom;
   PhocViewPrivate *priv;
 
@@ -720,7 +721,6 @@ view_center (PhocView *view, PhocOutput *output)
     return false;
 
   PhocDesktop *desktop = view->desktop;
-  PhocInput *input = server->input;
   PhocSeat *seat = phoc_input_get_last_active_seat (input);
   PhocCursor *cursor;
 
@@ -902,13 +902,13 @@ subsurface_handle_destroy (struct wl_listener *listener, void *data)
 static void
 subsurface_handle_map (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocSubsurface *subsurface = wl_container_of (listener, subsurface, map);
   PhocView *view = subsurface->child.view;
 
   subsurface->child.mapped = true;
   phoc_view_child_damage_whole (&subsurface->child);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
 
   struct wlr_box box;
   phoc_view_get_box (view, &box);
@@ -925,11 +925,11 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
 static void
 subsurface_handle_unmap (struct wl_listener *listener,void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocSubsurface *subsurface = wl_container_of (listener, subsurface, unmap);
 
   phoc_view_child_damage_whole (&subsurface->child);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
 
   subsurface->child.mapped = false;
 }
@@ -1056,7 +1056,7 @@ on_global_scale_to_fit_changed (PhocView *self, GParamSpec *pspec, gpointer unus
 void
 phoc_view_map (PhocView *self, struct wlr_surface *surface)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocViewPrivate *priv = phoc_view_get_instance_private (self);
 
   g_assert (self->wlr_surface == NULL);
@@ -1089,7 +1089,7 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
 
   wl_list_insert(&self->desktop->views, &self->link);
   phoc_view_damage_whole (self);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
   priv->pid = PHOC_VIEW_GET_CLASS (self)->get_pid (self);
 
   priv->notify_scale_to_fit_id =
@@ -1407,12 +1407,12 @@ handle_toplevel_handle_request_maximize (struct wl_listener *listener,void *data
 static void
 handle_toplevel_handle_request_activate (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocViewPrivate *priv = wl_container_of(listener, priv, toplevel_handle_request_activate);
   PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_foreign_toplevel_handle_v1_activated_event *event = data;
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (seat));

@@ -373,14 +373,14 @@ count_surface_iterator (PhocOutput         *output,
 PHOC_TRACE_NO_INLINE static bool
 scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_state *pending)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   struct wlr_output *wlr_output = self->wlr_output;
-  PhocServer *server = phoc_server_get_default ();
   size_t n_surfaces = 0;
   struct wlr_surface *wlr_surface;
 
   g_assert (PHOC_IS_VIEW (view));
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
     PhocDragIcon *drag_icon;
 
@@ -809,10 +809,10 @@ phoc_output_initable_init (GInitable    *initable,
                            GError      **error)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (server);
+  PhocRenderer *renderer = phoc_server_get_renderer (server);
   PhocOutput *self = PHOC_OUTPUT (initable);
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
-  PhocRenderer *renderer = phoc_server_get_renderer (server);
-  PhocInput *input = server->input;
   struct wlr_box output_box;
   int width, height;
 
@@ -1293,8 +1293,8 @@ phoc_output_for_each_surface (PhocOutput          *self,
                               void                *user_data,
                               gboolean             visible_only)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocDesktop *desktop = self->desktop;
-  PhocServer *server = phoc_server_get_default ();
 
   if (self->fullscreen_view != NULL) {
     PhocView *view = self->fullscreen_view;
@@ -1316,8 +1316,7 @@ phoc_output_for_each_surface (PhocOutput          *self,
     }
   }
 
-  phoc_output_drag_icons_for_each_surface (self, server->input,
-                                           iterator, user_data);
+  phoc_output_drag_icons_for_each_surface (self, input, iterator, user_data);
 
   for (enum zwlr_layer_shell_v1_layer layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
        layer <= ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY; layer++) {
@@ -1885,12 +1884,14 @@ should_reveal_shell (PhocOutput *self)
 {
   PhocServer *server = phoc_server_get_default();
   PhocDesktop *desktop = phoc_server_get_desktop (server);
+  PhocInput *input = phoc_server_get_input (server);
   PhocOutputPrivate *priv;
   PhocLayerSurface *layer_surface;
+
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
     /* is our layer-surface focused on some seat? */
     if (seat->focused_layer && seat->focused_layer->output == self->wlr_output) {

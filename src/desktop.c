@@ -410,9 +410,9 @@ static void
 input_inhibit_activate (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = wl_container_of(listener, desktop, input_inhibit_activate);
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (seat));
@@ -424,9 +424,9 @@ input_inhibit_activate (struct wl_listener *listener, void *data)
 static void
 input_inhibit_deactivate (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (seat));
@@ -527,6 +527,7 @@ static void
 handle_xwayland_ready (struct wl_listener *listener,
                        void               *data)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocDesktop *desktop = wl_container_of (listener, desktop, xwayland_ready);
   xcb_connection_t *xcb_conn = xcb_connect (NULL, NULL);
 
@@ -561,8 +562,7 @@ handle_xwayland_ready (struct wl_listener *listener,
 
 #ifdef PHOC_XWAYLAND
   if (desktop->xwayland != NULL) {
-    PhocSeat *xwayland_seat = phoc_input_get_seat (phoc_server_get_default ()->input,
-                                                   PHOC_CONFIG_DEFAULT_SEAT_NAME);
+    PhocSeat *xwayland_seat = phoc_input_get_seat (input, PHOC_CONFIG_DEFAULT_SEAT_NAME);
     wlr_xwayland_set_seat (desktop->xwayland, xwayland_seat->seat);
   }
 #endif
@@ -951,7 +951,7 @@ phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
 
   /* Disabling auto-maximize leaves all views in their current position */
   if (!enable) {
-    PhocInput *input = phoc_server_get_default()->input;
+    PhocInput *input = phoc_server_get_input (server);
 
     wl_list_for_each (view, &self->views, link)
       phoc_view_appear_activated (view, phoc_input_view_has_focus (input, view));

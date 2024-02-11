@@ -535,6 +535,22 @@ phoc_server_get_desktop (PhocServer *self)
 }
 
 /**
+ * phoc_server_get_input:
+ * @self: The server
+ *
+ * Get the device handling new input devices and seats.
+ *
+ * Returns:(transfer none): The input
+ */
+PhocInput *
+phoc_server_get_input (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->input;
+}
+
+/**
  * phoc_server_get_last_active_seat:
  *
  * Get's the last active seat.

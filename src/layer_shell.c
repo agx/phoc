@@ -93,8 +93,9 @@ update_cursors (PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = phoc_server_get_desktop (server);
+  PhocInput *input = phoc_server_get_input (server);
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (seat));
@@ -250,9 +251,10 @@ phoc_layer_shell_find_osk (PhocOutput *output)
 void
 phoc_layer_shell_arrange (PhocOutput *output)
 {
-  struct wlr_box usable_area = { 0 };
   PhocServer *server = phoc_server_get_default ();
-  GSList *seats = phoc_input_get_seats (server->input);
+  PhocInput *input = phoc_server_get_input (server);
+  struct wlr_box usable_area = { 0 };
+  GSList *seats = phoc_input_get_seats (input);
   enum zwlr_layer_shell_v1_layer layers[] = {
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
@@ -303,6 +305,7 @@ void
 phoc_layer_shell_update_focus (void)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (server);
   PhocDesktop *desktop = phoc_server_get_desktop (server);
   enum zwlr_layer_shell_v1_layer layers_above_shell[] = {
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
@@ -349,7 +352,7 @@ phoc_layer_shell_update_focus (void)
     }
   }
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (seat));
@@ -361,6 +364,7 @@ static void
 handle_surface_commit (struct wl_listener *listener, void *data)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (server);
   PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, surface_commit);
   struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
   struct wlr_output *wlr_output = wlr_layer_surface->output;
@@ -387,7 +391,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     struct wlr_surface *surface = wlr_layer_surface->surface;
     if (surface->previous.width != surface->current.width ||
         surface->previous.height != surface->current.height) {
-      update_cursors(layer_surface, phoc_input_get_seats (server->input));
+      update_cursors (layer_surface, phoc_input_get_seats (input));
     }
 
     bool geo_changed =
@@ -512,7 +516,7 @@ popup_new_subsurface (struct wl_listener *listener, void *data)
 static void
 popup_handle_map (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocLayerPopup *popup = wl_container_of (listener, popup, map);
   PhocLayerSurface *layer = popup_get_root_layer(popup);
   struct wlr_output *wlr_output = layer->layer_surface->output;
@@ -541,13 +545,13 @@ popup_handle_map (struct wl_listener *listener, void *data)
 
   wlr_surface_send_enter(popup->wlr_popup->base->surface, wlr_output);
   popup_damage(popup, true);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
 }
 
 static void
 popup_handle_unmap (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocLayerPopup *popup = wl_container_of (listener, popup, unmap);
   PhocLayerSubsurface *child, *tmp;
 
@@ -556,7 +560,7 @@ popup_handle_unmap (struct wl_listener *listener, void *data)
   }
   wl_list_remove(&popup->new_subsurface.link);
   popup_damage(popup, true);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
 }
 
 static void
@@ -665,7 +669,7 @@ static void subsurface_new_subsurface (struct wl_listener *listener, void *data)
 static void
 subsurface_handle_map (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocLayerSubsurface *subsurface = wl_container_of (listener, subsurface, map);
 
   struct wlr_subsurface *child;
@@ -687,13 +691,13 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
 
   wlr_surface_send_enter(subsurface->wlr_subsurface->surface, subsurface_get_root_layer(subsurface)->layer_surface->output);
   subsurface_damage(subsurface, true);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
 }
 
 static void
 subsurface_handle_unmap (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocLayerSubsurface *subsurface = wl_container_of (listener, subsurface, unmap);
   PhocLayerSubsurface *child, *tmp;
 
@@ -702,7 +706,7 @@ subsurface_handle_unmap (struct wl_listener *listener, void *data)
   }
   wl_list_remove(&subsurface->new_subsurface.link);
   subsurface_damage(subsurface, true);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
 }
 
 static void
@@ -799,7 +803,7 @@ handle_map (struct wl_listener *listener, void *data)
 static void
 handle_unmap (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocLayerSurface *layer_surface = wl_container_of(listener, layer_surface, unmap);
   PhocOutput *output = phoc_layer_surface_get_output (layer_surface);
 
@@ -812,7 +816,7 @@ handle_unmap (struct wl_listener *listener, void *data)
   wl_list_remove(&layer_surface->new_subsurface.link);
 
   phoc_layer_surface_unmap (layer_surface);
-  phoc_input_update_cursor_focus(server->input);
+  phoc_input_update_cursor_focus (input);
 
   if (output)
     phoc_layer_shell_arrange (output);
@@ -902,9 +906,9 @@ handle_layer_shell_surface (struct wl_listener *listener, void *data)
 void
 phoc_layer_shell_update_osk (PhocOutput *output, gboolean arrange)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocLayerSurface *osk;
-  PhocServer *server = phoc_server_get_default ();
-  GSList *seats = phoc_input_get_seats (server->input);
+  GSList *seats = phoc_input_get_seats (input);
   gboolean force_overlay = FALSE;
 
   g_assert (PHOC_IS_OUTPUT (output));

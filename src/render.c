@@ -191,11 +191,12 @@ render_texture (PhocOutput               *output,
 static void
 collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wlr_box box, float scale)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocServer *server = phoc_server_get_default ();
   if (G_LIKELY (!(server->debug_flags & PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
     return;
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
     struct wlr_touch_point *point;
 
@@ -643,7 +644,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
     // Render top layer above views
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_TOP, ctx);
   }
-  render_drag_icons (server->input, ctx);
+  render_drag_icons (phoc_server_get_input (server), ctx);
 
   render_layer (ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, ctx);
 
