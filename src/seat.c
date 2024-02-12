@@ -1389,8 +1389,7 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
   if (!view->wlr_surface)
     return;
 
-  wl_list_remove (&view->link);
-  wl_list_insert (&desktop->views, &view->link);
+  phoc_desktop_move_view_to_top (desktop, view);
   phoc_view_damage_whole (view);
 
   /* Raise children recursively */

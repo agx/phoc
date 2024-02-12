@@ -1109,9 +1109,9 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   if (self->desktop->maximize) {
     phoc_view_appear_activated (self, true);
 
-    if (!wl_list_empty(&self->desktop->views)) {
+    if (phoc_desktop_has_views (self->desktop)) {
       // mapping a new stack may make the old stack disappear, so damage its area
-      PhocView *top_view = wl_container_of(self->desktop->views.next, self, link);
+      PhocView *top_view = phoc_desktop_get_view_by_index (self->desktop, 0);
       while (top_view) {
         phoc_view_damage_whole (top_view);
         top_view = top_view->parent;
@@ -1119,7 +1119,7 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
     }
   }
 
-  wl_list_insert(&self->desktop->views, &self->link);
+  phoc_desktop_insert_view (self->desktop, self);
   phoc_view_damage_whole (self);
   phoc_input_update_cursor_focus (input);
   priv->pid = PHOC_VIEW_GET_CLASS (self)->get_pid (self);
@@ -1176,11 +1176,11 @@ phoc_view_unmap (PhocView *view)
     priv->fullscreen_output = NULL;
   }
 
-  wl_list_remove(&view->link);
+  phoc_desktop_remove_view (view->desktop, view);
 
-  if (was_visible && view->desktop->maximize && !wl_list_empty(&view->desktop->views)) {
-    // damage the newly activated stack as well since it may have just become visible
-    PhocView *top_view = wl_container_of(view->desktop->views.next, view, link);
+  if (was_visible && view->desktop->maximize && phoc_desktop_has_views (view->desktop)) {
+    /* Damage the newly activated stack as well since it may have just become visible */
+    PhocView *top_view = phoc_desktop_get_view_by_index (view->desktop, 0);
     while (top_view) {
       phoc_view_damage_whole (top_view);
       top_view = top_view->parent;
@@ -1820,9 +1820,10 @@ PhocView *
 phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-  PhocView *view;
 
-  wl_list_for_each(view, &desktop->views, link) {
+  for (GList *l = phoc_desktop_get_views (desktop)->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
+
     if (view->wlr_surface == wlr_surface)
       return view;
   }

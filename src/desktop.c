@@ -73,6 +73,8 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 
 typedef struct _PhocDesktopPrivate {
+  GQueue                *views;
+
   PhocIdleInhibit       *idle_inhibit;
 
   gboolean               enable_animations;
@@ -171,17 +173,17 @@ view_at (PhocView *view, double lx, double ly, struct wlr_surface **surface, dou
 }
 
 static PhocView *
-desktop_view_at (PhocDesktop         *desktop,
+desktop_view_at (PhocDesktop         *self,
                  double               lx,
                  double               ly,
                  struct wlr_surface **surface,
                  double              *sx,
                  double              *sy)
 {
-  PhocView *view;
+  for (GList *l = phoc_desktop_get_views (self)->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
 
-  wl_list_for_each (view, &desktop->views, link) {
-    if (phoc_desktop_view_is_visible (desktop, view) && view_at (view, lx, ly, surface, sx, sy))
+    if (phoc_desktop_view_is_visible (self, view) && view_at (view, lx, ly, surface, sx, sy))
       return view;
   }
   return NULL;
@@ -323,25 +325,32 @@ phoc_desktop_surface_at(PhocDesktop *desktop,
 }
 
 gboolean
-phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view)
+phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
 {
+  PhocDesktopPrivate *priv;
+  PhocView *top_view;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  g_assert (PHOC_IS_VIEW (view));
+
+  priv = phoc_desktop_get_instance_private (self);
+
   if (!phoc_view_is_mapped (view)) {
     return false;
   }
 
-  g_assert_false (wl_list_empty (&desktop->views));
+  g_assert_true (priv->views->head);
 
-  if (wl_list_length (&desktop->outputs) != 1) {
+  if (wl_list_length (&self->outputs) != 1) {
     // current heuristics work well only for single output
     return true;
   }
 
-  if (!desktop->maximize) {
+  if (!self->maximize) {
     return true;
   }
 
-  PhocView *top_view = wl_container_of (desktop->views.next, view, link);
-
+  top_view = phoc_desktop_get_view_by_index (self, 0);
 #ifdef PHOC_XWAYLAND
   // XWayland parent relations can be complicated and aren't described by PhocView
   // relationships very well at the moment, so just make all XWayland windows visible
@@ -369,10 +378,10 @@ static void
 handle_layout_change (struct wl_listener *listener, void *data)
 {
   PhocDesktop *self;
+  PhocDesktopPrivate *priv;
   struct wlr_output *center_output;
   struct wlr_box center_output_box;
   double center_x, center_y;
-  PhocView *view;
   PhocOutput *output;
 
   self = wl_container_of (listener, self, layout_change);
@@ -380,17 +389,20 @@ handle_layout_change (struct wl_listener *listener, void *data)
   if (center_output == NULL)
     return;
 
+  priv = phoc_desktop_get_instance_private (self);
   wlr_output_layout_get_box (self->layout, center_output, &center_output_box);
   center_x = center_output_box.x + center_output_box.width / 2;
   center_y = center_output_box.y + center_output_box.height / 2;
 
   /* Make sure all views are on an existing output */
-  wl_list_for_each (view, &self->views, link) {
+  for (GList *l = priv->views->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
     struct wlr_box box;
-    phoc_view_get_box (view, &box);
 
+    phoc_view_get_box (view, &box);
     if (wlr_output_layout_intersects (self->layout, NULL, &box))
       continue;
+
     phoc_view_move (view, center_x - box.width / 2, center_y - box.height / 2);
   }
 
@@ -695,7 +707,6 @@ phoc_desktop_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
 
-  wl_list_init (&self->views);
   wl_list_init (&self->outputs);
 
   self->new_output.notify = handle_new_output;
@@ -827,6 +838,8 @@ phoc_desktop_finalize (GObject *object)
   PhocDesktop *self = PHOC_DESKTOP (object);
   PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
 
+  g_clear_pointer (&priv->views, g_queue_free);
+
   /* TODO: currently destroys the backend before the desktop */
   //wl_list_remove (&self->new_output.link);
   wl_list_remove (&self->layout_change.link);
@@ -905,6 +918,7 @@ phoc_desktop_init (PhocDesktop *self)
   PhocDesktopPrivate *priv;
 
   priv = phoc_desktop_get_instance_private (self);
+  priv->views = g_queue_new ();
   priv->enable_animations = TRUE;
 
   self->input_output_map = g_hash_table_new_full (g_str_hash,
@@ -929,7 +943,7 @@ phoc_desktop_new (void)
 void
 phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
 {
-  PhocView *view;
+  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
   PhocServer *server = phoc_server_get_default();
 
   if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE))) {
@@ -945,12 +959,17 @@ phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
   if (!enable) {
     PhocInput *input = phoc_server_get_input (server);
 
-    wl_list_for_each (view, &self->views, link)
+    for (GList *l = priv->views->head; l; l = l->next) {
+      PhocView *view = PHOC_VIEW (l->data);
+
       phoc_view_appear_activated (view, phoc_input_view_has_focus (input, view));
+    }
     return;
   }
 
-  wl_list_for_each (view, &self->views, link) {
+  for (GList *l = priv->views->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
+
     phoc_view_auto_maximize (view);
     phoc_view_appear_activated (view, true);
   }
@@ -1258,4 +1277,127 @@ phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *
     );
 
   return is_priv;
+}
+
+/**
+ * phoc_desktop_get_views:
+ * @self: the desktop
+ *
+ * Get the current views. Don't manipulate the queue directly. This is
+ * only meant for reading.
+ *
+ * Returns:(transfer none): The views.
+ */
+GQueue *
+phoc_desktop_get_views (PhocDesktop *self)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  priv = phoc_desktop_get_instance_private (self);
+
+  return priv->views;
+}
+
+/**
+ * phoc_desktop_move_view_to_top:
+ * @self: the desktop
+ * @view: a view
+ *
+ * Move the given view to the front of the view stack meaning that it
+ * will be rendered on top of other views.
+ */
+void
+phoc_desktop_move_view_to_top (PhocDesktop *self, PhocView *view)
+{
+  GList *view_link;
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  priv = phoc_desktop_get_instance_private (self);
+
+  view_link = g_queue_find (priv->views, view);
+  g_assert (view_link);
+
+  g_queue_unlink (priv->views, view_link);
+  g_queue_push_head_link (priv->views, view_link);
+}
+
+/**
+ * phoc_desktop_has_views:
+ * @self: the desktop
+ *
+ * Check whether the desktop has any views.
+ *
+ * Returns: %TRUE if there's at least on view, otherwise %FALSE
+ */
+gboolean
+phoc_desktop_has_views (PhocDesktop *self)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  priv = phoc_desktop_get_instance_private (self);
+
+  return !!priv->views->head;
+}
+
+/**
+ * phoc_desktop_get_view_by_index:
+ * @self: the desktop
+ * @index: the index to get the view for
+ *
+ * Gets the view at the given position in the queue. If the view is
+ * not part of that desktop %NULL is returned.
+ *
+ * Returns:(transfer none)(nullable): the looked up view
+ */
+PhocView *
+phoc_desktop_get_view_by_index (PhocDesktop *self, guint index)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  priv = phoc_desktop_get_instance_private (self);
+
+  return g_queue_peek_nth (priv->views, index);
+}
+
+/**
+ * phoc_desktop_insert_view:
+ * @self: the desktop
+ * @view: the view to insert
+ *
+ * Insert the view into the queue of views. New views are inserted
+ * at the front so they appear on top of other views.
+ */
+void
+phoc_desktop_insert_view (PhocDesktop *self, PhocView *view)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  priv = phoc_desktop_get_instance_private (self);
+
+  g_queue_push_head (priv->views, view);
+}
+
+/**
+ * phoc_desktop_remove_view:
+ * @self: the desktop
+ * @view: The view to remove
+ *
+ * Removes a view from the queue of views.
+ *
+ * Returns: %TRUE if the view was found, otherwise %FALSE
+ */
+gboolean
+phoc_desktop_remove_view (PhocDesktop *self, PhocView *view)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+  priv = phoc_desktop_get_instance_private (self);
+
+  return g_queue_remove (priv->views, view);
 }
