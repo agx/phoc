@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2019 Purism SPC
+ *               2023-2024 The Phosh Developers
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Author: Guido Günther <agx@sigxcpu.org>
  */
@@ -36,36 +38,33 @@
  * Maintains the compositor's state.
  */
 typedef struct _PhocServer {
-  GObject             parent;
+  GObject              parent;
 
-  gboolean            inited;
+  gboolean             inited;
 
-  /* Phoc resources */
-  PhocInput          *input;
-  PhocConfig         *config;
-  PhocServerFlags     flags;
+  PhocInput           *input;
+  PhocConfig          *config;
+  PhocServerFlags      flags;
   PhocServerDebugFlags debug_flags;
 
-  /* Wayland resources */
-  struct wl_display  *wl_display;
-  guint               wl_source;
+  PhocRenderer        *renderer;
+  PhocDesktop         *desktop;
 
-    /* WLR tools */
-  struct wlr_compositor *compositor;
+  gchar               *session_exec;
+  gint                 exit_status;
+  GMainLoop           *mainloop;
+
+  GStrv                dt_compatibles;
+
+  struct wl_display   *wl_display;
+  guint                wl_source;
+
+  struct wlr_compositor    *compositor;
   struct wlr_subcompositor *subcompositor;
-  struct wlr_backend *backend;
+  struct wlr_backend       *backend;
+  struct wlr_session       *session;
 
-  PhocRenderer       *renderer;
-  PhocDesktop        *desktop;
-
-  gchar              *session_exec;
-  gint                exit_status;
-  GMainLoop          *mainloop;
-
-  GStrv               dt_compatibles;
-  struct wlr_session *session;
-
-  struct wlr_linux_dmabuf_v1 *linux_dmabuf_v1;
+  struct wlr_linux_dmabuf_v1     *linux_dmabuf_v1;
   struct wlr_data_device_manager *data_device_manager;
 } PhocServer;
 
