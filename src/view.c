@@ -21,6 +21,7 @@
 #include "view-private.h"
 
 #define PHOC_ANIM_DURATION_WINDOW_FADE 150
+#define PHOC_MOVE_TO_CORNER_MARGIN 12
 
 enum {
   PROP_0,
@@ -693,6 +694,64 @@ phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction)
   phoc_view_arrange (view, output, TRUE);
   return true;
 }
+
+
+void
+phoc_view_move_to_corner (PhocView *self, PhocViewCorner corner)
+{
+  PhocViewPrivate *priv;
+  PhocOutput *output;
+  struct wlr_box usable_area, box, geom;
+  float x,y;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  output = phoc_view_get_output (self);
+  if (!output)
+    return;
+
+  /* TODO: Simplify saved vs actual state before enabling */
+  if (priv->state != PHOC_VIEW_STATE_FLOATING || phoc_view_is_fullscreen (self))
+    return;
+
+  /* TODO: Simplify scale-to-fit vs geom before enabling */
+  if (!G_APPROX_VALUE (priv->scale, 1.0, FLT_EPSILON)) {
+    g_warning_once ("move-to-center not allowed for scale-to-fit-views");
+    return;
+  }
+
+  usable_area = output->usable_area;
+  phoc_view_get_box (self, &box);
+  phoc_view_get_geometry (self, &geom);
+
+  x = output->lx + usable_area.x - geom.x;
+  y = output->ly + usable_area.y - geom.y;
+
+  switch (corner) {
+  case PHOC_VIEW_CORNER_NORTH_WEST:
+    x += PHOC_MOVE_TO_CORNER_MARGIN;
+    y += PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  case PHOC_VIEW_CORNER_NORTH_EAST:
+    x += usable_area.width - box.width - PHOC_MOVE_TO_CORNER_MARGIN;
+    y += PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  case PHOC_VIEW_CORNER_SOUTH_EAST:
+    x += usable_area.width - box.width - PHOC_MOVE_TO_CORNER_MARGIN;
+    y += usable_area.height - box.height - PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  case PHOC_VIEW_CORNER_SOUTH_WEST:
+    x += PHOC_MOVE_TO_CORNER_MARGIN;
+    y += usable_area.height - box.height - PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  phoc_view_move (self, x, y);
+}
+
 
 void
 phoc_view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)

@@ -37,6 +37,13 @@ typedef enum _PhocViewDecoPart {
   PHOC_VIEW_DECO_PART_TITLEBAR      = 1 << 4,
 } PhocViewDecoPart;
 
+typedef enum {
+  PHOC_VIEW_CORNER_NORTH_WEST,
+  PHOC_VIEW_CORNER_NORTH_EAST,
+  PHOC_VIEW_CORNER_SOUTH_EAST,
+  PHOC_VIEW_CORNER_SOUTH_WEST,
+} PhocViewCorner;
+
 /**
  * PhocView:
  * @parent: The view's parent
@@ -175,6 +182,7 @@ void                  phoc_view_get_box (PhocView *view, struct wlr_box *box);
 void                  phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
 void                  phoc_view_move (PhocView *self, double x, double y);
 bool                  phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction);
+void                  phoc_view_move_to_corner (PhocView *self, PhocViewCorner corner);
 void                  phoc_view_move_resize (PhocView *view,
                                              double    x,
                                              double    y,

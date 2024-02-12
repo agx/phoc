@@ -174,6 +174,21 @@ handle_move_to_monitor (PhocSeat *seat, GVariant *param)
 
 
 static void
+handle_move_to_corner (PhocSeat *seat, GVariant *param)
+{
+  PhocView *view = phoc_seat_get_focus_view (seat);
+  PhocViewCorner corner;
+
+  corner = g_variant_get_int32 (param);
+
+  if (!view)
+    return;
+
+  phoc_view_move_to_corner (view, corner);
+}
+
+
+static void
 handle_switch_input_source (PhocSeat *seat, GVariant *param)
 {
   struct wlr_keyboard *wlr_keyboard = wlr_seat_get_keyboard (seat->seat);
@@ -582,6 +597,18 @@ phoc_keybindings_constructed (GObject *object)
   phoc_add_keybinding (self, self->settings,
                        "move-to-monitor-left", handle_move_to_monitor,
                        g_variant_new_int32 (WLR_DIRECTION_LEFT));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-nw", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_NORTH_WEST));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-ne", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_NORTH_EAST));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-se", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_SOUTH_EAST));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-sw", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_SOUTH_WEST));
   /* TODO: we need a real switch-applications but ALT-TAB should do s.th.
    * useful */
   phoc_add_keybinding (self, self->settings, "switch-applications", handle_cycle_windows, NULL);
