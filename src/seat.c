@@ -1390,7 +1390,6 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
     return;
 
   phoc_desktop_move_view_to_top (desktop, view);
-  phoc_view_damage_whole (view);
 
   /* Raise children recursively */
   wl_list_for_each_reverse (child, &view->stack, parent_link)

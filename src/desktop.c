@@ -1334,6 +1334,8 @@ phoc_desktop_move_view_to_top (PhocDesktop *self, PhocView *view)
 
     g_queue_insert_before_link (priv->views, l, view_link);
   }
+
+  phoc_view_damage_whole (view);
 }
 
 /**
