@@ -48,8 +48,6 @@ struct _PhocDesktop {
 
   struct wl_list outputs; // PhocOutput::link
 
-  PhocConfig *config;
-
   struct wlr_output_layout *layout;
   struct wlr_xdg_shell *xdg_shell;
   struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
@@ -103,7 +101,7 @@ struct _PhocDesktop {
   GHashTable *input_output_map;
 };
 
-PhocDesktop *phoc_desktop_new (PhocConfig *config);
+PhocDesktop *phoc_desktop_new (void);
 void         phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean on);
 gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);
 void         phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean on);

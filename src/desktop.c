@@ -66,7 +66,6 @@
 
 enum {
   PROP_0,
-  PROP_CONFIG,
   PROP_SCALE_TO_FIT,
   PROP_LAST_PROP,
 };
@@ -108,10 +107,6 @@ phoc_desktop_set_property (GObject      *object,
   PhocDesktop *self = PHOC_DESKTOP (object);
 
   switch (property_id) {
-  case PROP_CONFIG:
-    self->config = g_value_get_pointer (value);
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_CONFIG]);
-    break;
   case PROP_SCALE_TO_FIT:
     phoc_desktop_set_scale_to_fit (self, g_value_get_boolean (value));
     break;
@@ -131,9 +126,6 @@ phoc_desktop_get_property (GObject    *object,
   PhocDesktop *self = PHOC_DESKTOP (object);
 
   switch (property_id) {
-  case PROP_CONFIG:
-    g_value_set_pointer (value, self->config);
-    break;
   case PROP_SCALE_TO_FIT:
     g_value_set_boolean (value, phoc_desktop_get_scale_to_fit (self));
     break;
@@ -647,8 +639,8 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
 {
 #ifdef PHOC_XWAYLAND
   const char *cursor_default = PHOC_XCURSOR_DEFAULT;
-  PhocConfig *config = self->config;
   PhocServer *server = phoc_server_get_default ();
+  PhocConfig *config = phoc_server_get_config (server);
 
   self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
   g_return_if_fail (self->xcursor_manager);
@@ -893,13 +885,6 @@ phoc_desktop_class_init (PhocDesktopClass *klass)
   object_class->constructed = phoc_desktop_constructed;
   object_class->finalize = phoc_desktop_finalize;
 
-  props[PROP_CONFIG] =
-    g_param_spec_pointer (
-      "config",
-      "Config",
-      "The config object",
-      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
   /**
    * PhocDesktop:scale-to-fit:
    *
@@ -930,9 +915,9 @@ phoc_desktop_init (PhocDesktop *self)
 
 
 PhocDesktop *
-phoc_desktop_new (PhocConfig *config)
+phoc_desktop_new (void)
 {
-  return g_object_new (PHOC_TYPE_DESKTOP, "config", config, NULL);
+  return g_object_new (PHOC_TYPE_DESKTOP, NULL);
 }
 
 

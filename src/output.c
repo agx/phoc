@@ -834,7 +834,7 @@ phoc_output_initable_init (GInitable    *initable,
   struct wlr_box output_box;
   int width, height;
 
-  PhocConfig *config = self->desktop->config;
+  PhocConfig *config = phoc_server_get_config (phoc_server_get_default ());
 
   g_message ("Output '%s' added ('%s'/'%s'/'%s'), "
              "%" PRId32 "mm x %" PRId32 "mm",
