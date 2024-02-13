@@ -51,19 +51,23 @@ G_DEFINE_TYPE (PhocKeybindings, phoc_keybindings, G_TYPE_OBJECT);
 static void
 handle_maximize (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus != NULL)
-    phoc_view_maximize (focus, NULL);
+  if (!view)
+    return;
+
+  phoc_view_maximize (view, NULL);
 }
 
 static void
 handle_unmaximize (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus != NULL)
-    phoc_view_restore (focus);
+  if (!view)
+    return;
+
+  phoc_view_restore (view);
 }
 
 
@@ -87,24 +91,27 @@ handle_tile (PhocSeat *seat, GVariant *param)
 static void
 handle_toggle_maximized (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus != NULL) {
-    if (phoc_view_is_maximized (focus))
-      phoc_view_restore (focus);
-    else
-      phoc_view_maximize (focus, NULL);
-  }
+  if (!view)
+    return;
+
+  if (phoc_view_is_maximized (view))
+    phoc_view_restore (view);
+  else
+    phoc_view_maximize (view, NULL);
 }
+
 
 static void
 handle_toggle_fullscreen (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus) {
-    phoc_view_set_fullscreen(focus, !phoc_view_is_fullscreen (focus), NULL);
-  }
+  if (!view)
+    return;
+
+  phoc_view_set_fullscreen(view, !phoc_view_is_fullscreen (view), NULL);
 }
 
 
@@ -125,10 +132,12 @@ handle_cycle_windows_backwards (PhocSeat *seat, GVariant *param)
 static void
 handle_close (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus)
-    phoc_view_close (focus);
+  if (!view)
+    return;
+
+  phoc_view_close (view);
 }
 
 
@@ -138,9 +147,11 @@ handle_move_to_monitor (PhocSeat *seat, GVariant *param)
   PhocView *view = phoc_seat_get_focus_view (seat);
   enum wlr_direction dir;
 
+  if (!view)
+    return;
+
   dir = g_variant_get_int32 (param);
-  if (view)
-    phoc_view_move_to_next_output (view, dir);
+  phoc_view_move_to_next_output (view, dir);
 }
 
 
