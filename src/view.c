@@ -2318,7 +2318,9 @@ phoc_view_get_blings (PhocView *self)
  * @output:(nullable): the output to arrange the view on
  * @center: Whether to center the view as fallback
  *
- * Arrange a view based on it's current state (floating, tiled or maximized)
+ * Arrange a view based on it's current state (floating, tiled or
+ * maximized).  If the view is neither tiled nor maximized and
+ * `center` is `FALSE` this operation is a noop.
  */
 void
 phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center)
