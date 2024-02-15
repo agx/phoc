@@ -777,15 +777,15 @@ handle_map (struct wl_listener *listener, void *data)
 
   layer_surface->mapped = true;
 
-  struct wlr_subsurface *subsurface;
-  wl_list_for_each (subsurface, &wlr_layer_surface->surface->current.subsurfaces_below, current.link) {
-    PhocLayerSubsurface *phoc_subsurface = layer_subsurface_create (subsurface);
+  struct wlr_subsurface *wlr_subsurface;
+  wl_list_for_each (wlr_subsurface, &wlr_layer_surface->surface->current.subsurfaces_below, current.link) {
+    PhocLayerSubsurface *phoc_subsurface = layer_subsurface_create (wlr_subsurface);
     phoc_subsurface->parent_type = LAYER_PARENT_LAYER;
     phoc_subsurface->parent_layer = layer_surface;
     wl_list_insert (&layer_surface->subsurfaces, &phoc_subsurface->link);
   }
-  wl_list_for_each (subsurface, &wlr_layer_surface->surface->current.subsurfaces_above, current.link) {
-    PhocLayerSubsurface *phoc_subsurface = layer_subsurface_create (subsurface);
+  wl_list_for_each (wlr_subsurface, &wlr_layer_surface->surface->current.subsurfaces_above, current.link) {
+    PhocLayerSubsurface *phoc_subsurface = layer_subsurface_create (wlr_subsurface);
     phoc_subsurface->parent_type = LAYER_PARENT_LAYER;
     phoc_subsurface->parent_layer = layer_surface;
     wl_list_insert (&layer_surface->subsurfaces, &phoc_subsurface->link);
