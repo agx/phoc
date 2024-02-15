@@ -418,7 +418,7 @@ handle_destroy (struct wl_listener *listener, void *data)
 
 
 static void
-subsurface_destroy (PhocLayerSubsurface *subsurface)
+phoc_layer_subsurface_destroy (PhocLayerSubsurface *subsurface)
 {
   wl_list_remove (&subsurface->map.link);
   wl_list_remove (&subsurface->unmap.link);
@@ -560,7 +560,7 @@ popup_handle_unmap (struct wl_listener *listener, void *data)
   PhocLayerSubsurface *child, *tmp;
 
   wl_list_for_each_safe (child, tmp, &popup->subsurfaces, link)
-    subsurface_destroy (child);
+    phoc_layer_subsurface_destroy (child);
 
   wl_list_remove (&popup->new_subsurface.link);
   popup_damage (popup, true);
@@ -706,7 +706,7 @@ subsurface_handle_unmap (struct wl_listener *listener, void *data)
   PhocLayerSubsurface *child, *tmp;
 
   wl_list_for_each_safe (child, tmp, &subsurface->subsurfaces, link)
-    subsurface_destroy (child);
+    phoc_layer_subsurface_destroy (child);
 
   wl_list_remove (&subsurface->new_subsurface.link);
   subsurface_damage (subsurface, true);
@@ -725,7 +725,7 @@ subsurface_handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocLayerSubsurface *subsurface = wl_container_of (listener, subsurface, destroy);
 
-  subsurface_destroy (subsurface);
+  phoc_layer_subsurface_destroy (subsurface);
 }
 
 static PhocLayerSubsurface *
@@ -814,7 +814,7 @@ handle_unmap (struct wl_listener *listener, void *data)
 
   PhocLayerSubsurface *subsurface, *tmp;
   wl_list_for_each_safe (subsurface, tmp, &layer_surface->subsurfaces, link)
-    subsurface_destroy (subsurface);
+    phoc_layer_subsurface_destroy (subsurface);
 
   wl_list_remove (&layer_surface->new_subsurface.link);
 
