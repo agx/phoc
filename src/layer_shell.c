@@ -616,13 +616,12 @@ popup_create (struct wlr_xdg_popup *wlr_popup)
 static void
 handle_new_popup (struct wl_listener *listener, void *data)
 {
-  PhocLayerSurface *phoc_layer_surface =
-    wl_container_of (listener, phoc_layer_surface, new_popup);
+  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
   PhocLayerPopup *popup = popup_create (wlr_popup);
 
   popup->parent_type = LAYER_PARENT_LAYER;
-  popup->parent_layer = phoc_layer_surface;
+  popup->parent_layer = layer_surface;
   popup_unconstrain (popup);
 }
 
@@ -757,13 +756,13 @@ layer_subsurface_create (struct wlr_subsurface *wlr_subsurface)
 static void
 handle_new_subsurface (struct wl_listener *listener, void *data)
 {
-  PhocLayerSurface *phoc_layer_surface = wl_container_of (listener, phoc_layer_surface, new_subsurface);
+  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
 
   PhocLayerSubsurface *subsurface = layer_subsurface_create (wlr_subsurface);
   subsurface->parent_type = LAYER_PARENT_LAYER;
-  subsurface->parent_layer = phoc_layer_surface;
-  wl_list_insert (&phoc_layer_surface->subsurfaces, &subsurface->link);
+  subsurface->parent_layer = layer_surface;
+  wl_list_insert (&layer_surface->subsurfaces, &subsurface->link);
 }
 
 static void
