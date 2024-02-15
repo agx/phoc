@@ -430,7 +430,7 @@ subsurface_destroy (PhocLayerSubsurface *subsurface)
 
 
 static PhocLayerPopup *popup_create (struct wlr_xdg_popup *wlr_popup);
-static PhocLayerSubsurface *layer_subsurface_create (struct wlr_subsurface *wlr_subsurface);
+static PhocLayerSubsurface *phoc_layer_subsurface_create (struct wlr_subsurface *wlr_subsurface);
 
 static PhocLayerSurface *
 popup_get_root_layer (PhocLayerPopup *popup)
@@ -510,7 +510,7 @@ popup_new_subsurface (struct wl_listener *listener, void *data)
 {
   PhocLayerPopup *popup = wl_container_of (listener, popup, new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
-  PhocLayerSubsurface *subsurface = layer_subsurface_create (wlr_subsurface);
+  PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
 
   subsurface->parent_type = LAYER_PARENT_POPUP;
   subsurface->parent_popup = popup;
@@ -531,14 +531,14 @@ popup_handle_map (struct wl_listener *listener, void *data)
 
   struct wlr_subsurface *child;
   wl_list_for_each (child, &popup->wlr_popup->base->surface->current.subsurfaces_below, current.link) {
-    PhocLayerSubsurface *new_subsurface = layer_subsurface_create (child);
+    PhocLayerSubsurface *new_subsurface = phoc_layer_subsurface_create (child);
 
     new_subsurface->parent_type = LAYER_PARENT_POPUP;
     new_subsurface->parent_popup = popup;
     wl_list_insert (&popup->subsurfaces, &new_subsurface->link);
   }
   wl_list_for_each (child, &popup->wlr_popup->base->surface->current.subsurfaces_above, current.link) {
-    PhocLayerSubsurface *new_subsurface = layer_subsurface_create (child);
+    PhocLayerSubsurface *new_subsurface = phoc_layer_subsurface_create (child);
 
     new_subsurface->parent_type = LAYER_PARENT_POPUP;
     new_subsurface->parent_popup = popup;
@@ -663,7 +663,7 @@ subsurface_new_subsurface (struct wl_listener *listener, void *data)
 {
   PhocLayerSubsurface *subsurface = wl_container_of (listener, subsurface, new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
-  PhocLayerSubsurface *new_subsurface = layer_subsurface_create (wlr_subsurface);
+  PhocLayerSubsurface *new_subsurface = phoc_layer_subsurface_create (wlr_subsurface);
 
   new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
   new_subsurface->parent_subsurface = subsurface;
@@ -678,14 +678,14 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
 
   struct wlr_subsurface *child;
   wl_list_for_each (child, &subsurface->wlr_subsurface->surface->current.subsurfaces_below, current.link) {
-    PhocLayerSubsurface *new_subsurface = layer_subsurface_create (child);
+    PhocLayerSubsurface *new_subsurface = phoc_layer_subsurface_create (child);
 
     new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
     new_subsurface->parent_subsurface = subsurface;
     wl_list_insert (&subsurface->subsurfaces, &new_subsurface->link);
   }
   wl_list_for_each (child, &subsurface->wlr_subsurface->surface->current.subsurfaces_above, current.link) {
-    PhocLayerSubsurface *new_subsurface = layer_subsurface_create (child);
+    PhocLayerSubsurface *new_subsurface = phoc_layer_subsurface_create (child);
     new_subsurface->parent_type = LAYER_PARENT_SUBSURFACE;
     new_subsurface->parent_subsurface = subsurface;
     wl_list_insert (&subsurface->subsurfaces, &new_subsurface->link);
@@ -729,7 +729,7 @@ subsurface_handle_destroy (struct wl_listener *listener, void *data)
 }
 
 static PhocLayerSubsurface *
-layer_subsurface_create (struct wlr_subsurface *wlr_subsurface)
+phoc_layer_subsurface_create (struct wlr_subsurface *wlr_subsurface)
 {
   PhocLayerSubsurface *subsurface = calloc (1, sizeof (PhocLayerSubsurface));
 
@@ -759,7 +759,7 @@ handle_new_subsurface (struct wl_listener *listener, void *data)
   PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
 
-  PhocLayerSubsurface *subsurface = layer_subsurface_create (wlr_subsurface);
+  PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
   subsurface->parent_type = LAYER_PARENT_LAYER;
   subsurface->parent_layer = layer_surface;
   wl_list_insert (&layer_surface->subsurfaces, &subsurface->link);
@@ -779,13 +779,13 @@ handle_map (struct wl_listener *listener, void *data)
 
   struct wlr_subsurface *wlr_subsurface;
   wl_list_for_each (wlr_subsurface, &wlr_layer_surface->surface->current.subsurfaces_below, current.link) {
-    PhocLayerSubsurface *subsurface = layer_subsurface_create (wlr_subsurface);
+    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
     subsurface->parent_type = LAYER_PARENT_LAYER;
     subsurface->parent_layer = layer_surface;
     wl_list_insert (&layer_surface->subsurfaces, &subsurface->link);
   }
   wl_list_for_each (wlr_subsurface, &wlr_layer_surface->surface->current.subsurfaces_above, current.link) {
-    PhocLayerSubsurface *subsurface = layer_subsurface_create (wlr_subsurface);
+    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
     subsurface->parent_type = LAYER_PARENT_LAYER;
     subsurface->parent_layer = layer_surface;
     wl_list_insert (&layer_surface->subsurfaces, &subsurface->link);
