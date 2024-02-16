@@ -245,8 +245,7 @@ keyboard_execute_binding (PhocKeyboard              *self,
                           size_t                     keysyms_len,
                           enum wl_keyboard_key_state state)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocKeybindings *keybindings;
+  PhocConfig *config = phoc_server_get_config (phoc_server_get_default ());
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (self));
 
   if (state != WL_KEYBOARD_KEY_STATE_PRESSED)
@@ -259,10 +258,8 @@ keyboard_execute_binding (PhocKeyboard              *self,
     }
   }
 
-  size_t n = pressed_keysyms_length(pressed_keysyms);
-  keybindings = server->config->keybindings;
-
-  if (phoc_keybindings_handle_pressed (keybindings, modifiers, pressed_keysyms, n, seat))
+  size_t n = pressed_keysyms_length (pressed_keysyms);
+  if (phoc_keybindings_handle_pressed (config->keybindings, modifiers, pressed_keysyms, n, seat))
     return true;
 
   return false;

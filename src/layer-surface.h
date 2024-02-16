@@ -24,6 +24,8 @@ G_DECLARE_FINAL_TYPE (PhocLayerSurface, phoc_layer_surface, PHOC, LAYER_SURFACE,
  *
  * For details on how to setup a layer surface see `handle_layer_shell_surface`.
  */
+/* TODO: we keep the struct public for now due to the list links and
+   notifiers but we should avoid other member access */
 struct _PhocLayerSurface {
   GObject parent;
 

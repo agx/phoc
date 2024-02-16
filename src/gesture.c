@@ -949,11 +949,11 @@ phoc_gesture_set_state (PhocGesture            *gesture,
  * phoc_gesture_get_sequences:
  * @gesture: a #PhocGesture
  *
- * Returns the list of #PhocEventSequences currently being interpreted
- * by @gesture.
+ * Returns the list of [type@EventSequence]s currently being interpreted
+ * by [type@Gesture].
  *
  * Returns: (transfer container) (element-type PhocEventSequence): A list
- *          of #PhocEventSequence s, the list elements are owned by PHOC+
+ *          of #PhocEventSequence s, the list elements are owned by Phoc
  *          and must not be freed or modified, the list itself must be deleted
  *          through g_list_free()
  **/

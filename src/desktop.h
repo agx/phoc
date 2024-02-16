@@ -39,6 +39,8 @@
 
 G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
 
+/* TODO: we keep the struct public for now due to the list links and
+   notifiers but we should avoid other member access */
 struct _PhocDesktop {
   GObject parent;
 

@@ -71,7 +71,7 @@ phoc_view_deco_bling_get_box (PhocBling *bling)
 static void
 phoc_view_deco_damage_box (PhocViewDeco *self)
 {
-  PhocDesktop *desktop = phoc_server_get_default ()->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocOutput *output;
 
   if (!self->mapped)

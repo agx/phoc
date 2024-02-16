@@ -38,7 +38,7 @@ typedef enum _PhocOutputScaleFilter {
  *
  * See wlroot's #wlr_output.
  */
-/* TODO: we keep the struct public due to the list links and
+/* TODO: we keep the struct public for now due to the list links and
    notifiers but we should avoid other member access */
 struct _PhocOutput {
   GObject                   parent;

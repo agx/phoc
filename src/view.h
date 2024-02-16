@@ -42,6 +42,8 @@ typedef enum _PhocViewDecoPart {
  *
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
+/* TODO: we keep the struct public for now due to the list links but we should
+   avoid other member access */
 struct _PhocView {
   GObject parent_instance;
 

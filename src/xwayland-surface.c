@@ -58,7 +58,7 @@ G_DEFINE_TYPE (PhocXWaylandSurface, phoc_xwayland_surface, PHOC_TYPE_VIEW)
 static bool
 is_moveable (PhocView *view)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_xwayland_surface *xwayland_surface;
 
   g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
@@ -68,8 +68,8 @@ is_moveable (PhocView *view)
     return true;
 
   for (guint i = 0; i < xwayland_surface->window_type_len; i++)
-    if (xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_NORMAL] &&
-        xwayland_surface->window_type[i] != server->desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_DIALOG])
+    if (xwayland_surface->window_type[i] != desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_NORMAL] &&
+        xwayland_surface->window_type[i] != desktop->xwayland_atoms[NET_WM_WINDOW_TYPE_DIALOG])
       return false;
 
   return true;
@@ -301,7 +301,7 @@ guess_seat_for_view (PhocView *view)
   // the best we can do is to pick the first seat that has the surface focused
   // for the pointer
   PhocServer *server = phoc_server_get_default ();
-  PhocInput *input = server->input;
+  PhocInput *input = phoc_server_get_input (server);
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);

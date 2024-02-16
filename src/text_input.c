@@ -394,19 +394,17 @@ void
 phoc_input_method_relay_init (PhocSeat *seat,
                               PhocInputMethodRelay *relay)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   g_assert (PHOC_IS_SEAT (seat));
   relay->seat = seat;
   wl_list_init (&relay->text_inputs);
 
   relay->text_input_new.notify = relay_handle_text_input;
-  wl_signal_add (&server->desktop->text_input->events.text_input,
-                 &relay->text_input_new);
+  wl_signal_add (&desktop->text_input->events.text_input, &relay->text_input_new);
 
   relay->input_method_new.notify = relay_handle_input_method;
-  wl_signal_add(&server->desktop->input_method->events.input_method,
-                &relay->input_method_new);
+  wl_signal_add (&desktop->input_method->events.input_method, &relay->input_method_new);
 }
 
 void

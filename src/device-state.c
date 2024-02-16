@@ -384,9 +384,9 @@ phoc_device_state_class_init (PhocDeviceStateClass *klass)
 static void
 phoc_device_state_init (PhocDeviceState *self)
 {
-  struct wl_display *display = phoc_server_get_default ()->wl_display;
+  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
 
-  self->global = wl_global_create (display, &zphoc_device_state_v1_interface,
+  self->global = wl_global_create (wl_display, &zphoc_device_state_v1_interface,
                                    DEVICE_STATE_PROTOCOL_VERSION, self, device_state_bind);
 
 }

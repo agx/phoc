@@ -220,7 +220,7 @@ on_proxy_new_for_bus_finish (GObject *object, GAsyncResult *res, gpointer data)
 {
   PhocIdleInhibit *self = data;
   g_autoptr (GError) err = NULL;
-  PhocServer *server = phoc_server_get_default ();
+  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
   GDBusProxy *screensaver_proxy;
 
   screensaver_proxy = g_dbus_proxy_new_for_bus_finish (res, &err);
@@ -234,7 +234,7 @@ on_proxy_new_for_bus_finish (GObject *object, GAsyncResult *res, gpointer data)
 
   self->screensaver_proxy = screensaver_proxy;
   /* We connected to DBus so let's expose zwp_idle_inhibit_manager_v1 */
-  self->wlr_idle_inhibit = wlr_idle_inhibit_v1_create (server->wl_display);
+  self->wlr_idle_inhibit = wlr_idle_inhibit_v1_create (wl_display);
   if (!self->wlr_idle_inhibit) {
     g_clear_object (&self->screensaver_proxy);
     return;

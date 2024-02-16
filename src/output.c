@@ -325,12 +325,12 @@ phoc_output_handle_damage (struct wl_listener *listener, void *user_data)
 static void
 phoc_output_set_gamma_lut (PhocOutput *self, struct wlr_output_state *pending)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   struct wlr_gamma_control_v1 *gamma_control;
 
-  gamma_control = wlr_gamma_control_manager_v1_get_control(
-    phoc_server_get_default ()->desktop->gamma_control_manager_v1, self->wlr_output);
-
+  gamma_control = wlr_gamma_control_manager_v1_get_control (desktop->gamma_control_manager_v1,
+                                                            self->wlr_output);
   priv->gamma_lut_changed = FALSE;
 
   if (!wlr_gamma_control_v1_apply (gamma_control, pending))
@@ -373,14 +373,14 @@ count_surface_iterator (PhocOutput         *output,
 PHOC_TRACE_NO_INLINE static bool
 scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_state *pending)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   struct wlr_output *wlr_output = self->wlr_output;
-  PhocServer *server = phoc_server_get_default ();
   size_t n_surfaces = 0;
   struct wlr_surface *wlr_surface;
 
   g_assert (PHOC_IS_VIEW (view));
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
     PhocDragIcon *drag_icon;
 
@@ -448,7 +448,7 @@ get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
   transform = wlr_output_transform_invert (self->wlr_output->transform);
   wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
 
-  if (G_UNLIKELY (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)) {
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))) {
     pixman_region32_union_rect (frame_damage, frame_damage,
                                 0, 0, self->wlr_output->width, self->wlr_output->height);
 
@@ -808,15 +808,13 @@ phoc_output_initable_init (GInitable    *initable,
                            GCancellable *cancellable,
                            GError      **error)
 {
+  PhocServer *server = phoc_server_get_default ();
+  PhocInput *input = phoc_server_get_input (server);
+  PhocRenderer *renderer = phoc_server_get_renderer (server);
   PhocOutput *self = PHOC_OUTPUT (initable);
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
-  PhocServer *server = phoc_server_get_default ();
-  PhocRenderer *renderer = phoc_server_get_renderer (server);
-  PhocInput *input = server->input;
   struct wlr_box output_box;
   int width, height;
-
-  g_assert (PHOC_IS_DESKTOP (server->desktop));
 
   PhocConfig *config = self->desktop->config;
 
@@ -887,7 +885,7 @@ phoc_output_initable_init (GInitable    *initable,
   wlr_output_transformed_resolution (self->wlr_output, &width, &height);
   wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
 
-  if (server->debug_flags & PHOC_SERVER_DEBUG_FLAG_CUTOUTS) {
+  if (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_CUTOUTS)) {
     priv->cutouts = phoc_cutouts_overlay_new (phoc_server_get_compatibles (server));
     if (priv->cutouts) {
       g_message ("Adding cutouts overlay");
@@ -1295,8 +1293,8 @@ phoc_output_for_each_surface (PhocOutput          *self,
                               void                *user_data,
                               gboolean             visible_only)
 {
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocDesktop *desktop = self->desktop;
-  PhocServer *server = phoc_server_get_default ();
 
   if (self->fullscreen_view != NULL) {
     PhocView *view = self->fullscreen_view;
@@ -1318,8 +1316,7 @@ phoc_output_for_each_surface (PhocOutput          *self,
     }
   }
 
-  phoc_output_drag_icons_for_each_surface (self, server->input,
-                                           iterator, user_data);
+  phoc_output_drag_icons_for_each_surface (self, input, iterator, user_data);
 
   for (enum zwlr_layer_shell_v1_layer layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
        layer <= ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY; layer++) {
@@ -1342,17 +1339,17 @@ phoc_output_damage_whole (PhocOutput *self)
 static bool
 phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
-  if (!phoc_desktop_view_is_visible (server->desktop, view)) {
+  if (!phoc_desktop_view_is_visible (desktop, view))
     return false;
-  }
-  if (self->fullscreen_view == NULL) {
+
+  if (self->fullscreen_view == NULL)
     return true;
-  }
-  if (self->fullscreen_view == view) {
+
+  if (self->fullscreen_view == view)
     return true;
-  }
+
 #ifdef PHOC_XWAYLAND
   if (PHOC_IS_XWAYLAND_SURFACE (self->fullscreen_view) && PHOC_IS_XWAYLAND_SURFACE (view)) {
     // Special case: accept damage from children
@@ -1361,9 +1358,9 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
     struct wlr_xwayland_surface *fullscreen_xsurface =
       phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (self->fullscreen_view));
     while (xsurface != NULL) {
-      if (fullscreen_xsurface == xsurface) {
+      if (fullscreen_xsurface == xsurface)
         return true;
-      }
+
       xsurface = xsurface->parent;
     }
   }
@@ -1885,13 +1882,16 @@ phoc_output_has_layer (PhocOutput *self, enum zwlr_layer_shell_v1_layer layer)
 static gboolean
 should_reveal_shell (PhocOutput *self)
 {
-  PhocOutputPrivate *priv;
   PhocServer *server = phoc_server_get_default();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
+  PhocInput *input = phoc_server_get_input (server);
+  PhocOutputPrivate *priv;
   PhocLayerSurface *layer_surface;
+
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
 
-  for (GSList *elem = phoc_input_get_seats (server->input); elem; elem = elem->next) {
+  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
     /* is our layer-surface focused on some seat? */
     if (seat->focused_layer && seat->focused_layer->output == self->wlr_output) {
@@ -1909,8 +1909,9 @@ should_reveal_shell (PhocOutput *self)
 
   /* is some draggable surface unfolded, being dragged or animated? */
   wl_list_for_each (layer_surface, &self->layer_surfaces, link) {
-    PhocDraggableLayerSurface *draggable =
-      phoc_desktop_get_draggable_layer_surface (server->desktop, layer_surface);
+    PhocDraggableLayerSurface *draggable;
+
+    draggable = phoc_desktop_get_draggable_layer_surface (desktop, layer_surface);
     if (draggable &&
         (phoc_draggable_layer_surface_get_state (draggable) != PHOC_DRAGGABLE_SURFACE_STATE_NONE ||
          phoc_draggable_layer_surface_is_unfolded (draggable))) {

@@ -697,12 +697,12 @@ phoc_layer_shell_effects_class_init (PhocLayerShellEffectsClass *klass)
 static void
 phoc_layer_shell_effects_init (PhocLayerShellEffects *self)
 {
-  struct wl_display *display = phoc_server_get_default ()->wl_display;
+  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
 
   self->drag_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
   self->alpha_surfaces_by_layer_surface = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  self->global = wl_global_create (display, &zphoc_layer_shell_effects_v1_interface,
+  self->global = wl_global_create (wl_display, &zphoc_layer_shell_effects_v1_interface,
                                    LAYER_SHELL_EFFECTS_VERSION, self, layer_shell_effects_bind);
 
 }
@@ -1018,10 +1018,10 @@ accept_drag (PhocDraggableLayerSurface *drag_surface,
 PhocDraggableSurfaceState
 phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface, double lx, double ly)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
   struct wlr_box output_box;
-  wlr_output_layout_get_box (server->desktop->layout, wlr_layer_surface->output, &output_box);
+  wlr_output_layout_get_box (desktop->layout, wlr_layer_surface->output, &output_box);
   double sx = lx - drag_surface->geo.x - output_box.x;
   double sy = ly - drag_surface->geo.y - output_box.y;
   bool is_handle = false;

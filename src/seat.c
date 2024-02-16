@@ -107,9 +107,9 @@ phoc_seat_get_property (GObject    *object,
 static void
 handle_swipe_begin (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_begin);
-  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = desktop->pointer_gestures;
   struct wlr_pointer_swipe_begin_event *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_begin (gestures, cursor->seat->seat,
@@ -120,9 +120,9 @@ handle_swipe_begin (struct wl_listener *listener, void *data)
 static void
 handle_swipe_update (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_update);
-  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = desktop->pointer_gestures;
   struct wlr_pointer_swipe_update_event *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_update (gestures, cursor->seat->seat,
@@ -133,9 +133,9 @@ handle_swipe_update (struct wl_listener *listener, void *data)
 static void
 handle_swipe_end (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, swipe_end);
-  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = desktop->pointer_gestures;
   struct wlr_pointer_swipe_end_event *event = data;
 
   wlr_pointer_gestures_v1_send_swipe_end (gestures, cursor->seat->seat,
@@ -146,9 +146,9 @@ handle_swipe_end (struct wl_listener *listener, void *data)
 static void
 handle_pinch_begin (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_begin);
-  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = desktop->pointer_gestures;
   struct wlr_pointer_pinch_begin_event *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_begin (gestures, cursor->seat->seat,
@@ -159,9 +159,9 @@ handle_pinch_begin (struct wl_listener *listener, void *data)
 static void
 handle_pinch_update (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_update);
-  struct wlr_pointer_gestures_v1 *gestures = server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = desktop->pointer_gestures;
   struct wlr_pointer_pinch_update_event *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_update (gestures, cursor->seat->seat,
@@ -173,10 +173,9 @@ handle_pinch_update (struct wl_listener *listener, void *data)
 static void
 handle_pinch_end (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, pinch_end);
-  struct wlr_pointer_gestures_v1 *gestures =
-    server->desktop->pointer_gestures;
+  struct wlr_pointer_gestures_v1 *gestures = desktop->pointer_gestures;
   struct wlr_pointer_pinch_end_event *event = data;
 
   wlr_pointer_gestures_v1_send_pinch_end (gestures, cursor->seat->seat,
@@ -187,8 +186,7 @@ handle_pinch_end (struct wl_listener *listener, void *data)
 static void
 on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   if (phoc_switch_is_tablet_mode_switch (switch_)) {
@@ -206,10 +204,9 @@ on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
 static void
 handle_touch_down (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_down);
   struct wlr_touch_down_event *event = data;
-  PhocDesktop *desktop = server->desktop;
   PhocOutput *output = g_hash_table_lookup (desktop->input_output_map, event->touch->base.name);
 
   if (output && !output->wlr_output->enabled) {
@@ -225,10 +222,9 @@ handle_touch_down (struct wl_listener *listener, void *data)
 static void
 handle_touch_up (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_up);
   struct wlr_touch_up_event *event = data;
-  PhocDesktop *desktop = server->desktop;
 
   if (!phoc_cursor_is_active_touch_id (cursor, event->touch_id))
     return;
@@ -241,10 +237,9 @@ handle_touch_up (struct wl_listener *listener, void *data)
 static void
 handle_touch_motion (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_motion);
   struct wlr_touch_motion_event *event = data;
-  PhocDesktop *desktop = server->desktop;
 
   if (!phoc_cursor_is_active_touch_id (cursor, event->touch_id))
     return;
@@ -265,7 +260,7 @@ handle_tablet_tool_position (PhocCursor             *cursor,
                              double                  dx,
                              double                  dy)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
   if (!change_x && !change_y)
@@ -281,7 +276,6 @@ handle_tablet_tool_position (PhocCursor             *cursor,
   }
 
   double sx, sy;
-  PhocDesktop *desktop = server->desktop;
   struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
                                                          cursor->cursor->x,
                                                          cursor->cursor->y,
@@ -312,9 +306,8 @@ handle_tablet_tool_position (PhocCursor             *cursor,
 static void
 handle_tool_axis (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_axis);
-  PhocDesktop *desktop = server->desktop;
 
   struct wlr_tablet_tool_axis_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
@@ -367,9 +360,8 @@ handle_tool_axis (struct wl_listener *listener, void *data)
 static void
 handle_tool_tip (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_tip);
-  PhocDesktop *desktop = server->desktop;
   struct wlr_tablet_tool_tip_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
@@ -400,9 +392,8 @@ handle_tablet_tool_destroy (struct wl_listener *listener, void *data)
 static void
 handle_tool_button (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_button);
-  PhocDesktop *desktop = server->desktop;
   struct wlr_tablet_tool_button_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
@@ -416,10 +407,9 @@ handle_tool_button (struct wl_listener *listener, void *data)
 static void
 handle_tablet_tool_set_cursor (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocTabletTool *tool = wl_container_of (listener, tool, set_cursor);
   struct wlr_tablet_v2_event_cursor *evt = data;
-  PhocDesktop *desktop = server->desktop;
 
   struct wlr_seat_pointer_request_set_cursor_event event = {
     .surface = evt->surface,
@@ -436,9 +426,8 @@ handle_tablet_tool_set_cursor (struct wl_listener *listener, void *data)
 static void
 handle_tool_proximity (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_proximity);
-  PhocDesktop *desktop = server->desktop;
   struct wlr_tablet_tool_proximity_event *event = data;
   struct wlr_tablet_tool *tool = event->tool;
 
@@ -504,9 +493,8 @@ handle_pointer_focus_change (struct wl_listener *listener,
 static PhocOutput *
 get_output_from_settings (PhocSeat *self, PhocInputDevice *device)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
   GSettings *settings;
   g_auto (GStrv) edid = NULL;
 
@@ -531,8 +519,7 @@ get_output_from_settings (PhocSeat *self, PhocInputDevice *device)
 static PhocOutput *
 get_output_from_wlroots (PhocSeat *self, PhocInputDevice *device)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_input_device *wlr_device = phoc_input_device_get_device (device);
   struct wlr_touch *touch;
 
@@ -552,8 +539,7 @@ get_output_from_wlroots (PhocSeat *self, PhocInputDevice *device)
 static void
 seat_set_device_output_mappings (PhocSeat *self, PhocInputDevice *device)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_cursor *cursor = self->cursor->cursor;
   PhocOutput *output;
   const char *type = "";
@@ -629,12 +615,11 @@ phoc_seat_configure_cursor (PhocSeat *seat)
 static void
 phoc_seat_init_cursor (PhocSeat *seat)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   seat->cursor = phoc_cursor_new (seat);
 
   struct wlr_cursor *wlr_cursor = seat->cursor->cursor;
-  PhocDesktop *desktop = server->desktop;
 
   wlr_cursor_attach_output_layout (wlr_cursor, desktop->layout);
 
@@ -845,10 +830,10 @@ phoc_drag_icon_update_position (PhocDragIcon *icon)
 void
 phoc_drag_icon_damage_whole (PhocDragIcon *icon)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocOutput *output;
 
-  wl_list_for_each (output, &server->desktop->outputs, link) {
+  wl_list_for_each (output, &desktop->outputs, link) {
     phoc_output_damage_whole_drag_icon (output, icon);
   }
 }
@@ -955,8 +940,7 @@ on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
 static void
 on_keyboard_activity (PhocSeat *self, PhocKeyboard *keyboard)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   g_assert (PHOC_IS_SEAT (self));
   g_assert (PHOC_IS_KEYBOARD (keyboard));
@@ -1002,8 +986,8 @@ on_pointer_destroy (PhocTouch *pointer)
 static void
 seat_add_pointer (PhocSeat *seat, struct wlr_input_device *device)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocPointer *pointer = phoc_pointer_new (device, seat);
-  PhocDesktop *desktop = phoc_server_get_default ()->desktop;
   PhocOutput *output;
   struct wlr_pointer *wlr_pointer;
 
@@ -1055,10 +1039,9 @@ seat_add_switch (PhocSeat *self, struct wlr_input_device *device)
 static void
 on_touch_destroy (PhocTouch *touch)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (touch));
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (touch));
 
   g_assert (PHOC_IS_TOUCH (touch));
@@ -1184,7 +1167,7 @@ handle_tablet_pad_button (struct wl_listener *listener, void *data)
 static void
 seat_add_tablet_pad (PhocSeat *seat, struct wlr_input_device *device)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocTabletPad *tablet_pad = g_new0 (PhocTabletPad, 1);
   struct wlr_tablet_pad *wlr_tablet_pad = wlr_tablet_pad_from_input_device (device);
 
@@ -1212,10 +1195,7 @@ seat_add_tablet_pad (PhocSeat *seat, struct wlr_input_device *device)
 
   wl_list_init (&tablet_pad->tablet_destroy.link);
 
-  PhocDesktop *desktop = server->desktop;
-
-  tablet_pad->tablet_v2_pad =
-    wlr_tablet_pad_create (desktop->tablet_v2, seat->seat, device);
+  tablet_pad->tablet_v2_pad = wlr_tablet_pad_create (desktop->tablet_v2, seat->seat, device);
 
   /* Search for a sibling tablet */
   if (!wlr_input_device_is_libinput (device)) {
@@ -1243,9 +1223,8 @@ seat_add_tablet_pad (PhocSeat *seat, struct wlr_input_device *device)
 static void
 on_tablet_destroy (PhocSeat *seat, PhocTablet *tablet)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = server->desktop;
   struct wlr_input_device *device = phoc_input_device_get_device (PHOC_INPUT_DEVICE (tablet));
 
   g_assert (PHOC_IS_TABLET (tablet));
@@ -1264,7 +1243,7 @@ static void
 seat_add_tablet_tool (PhocSeat                *seat,
                       struct wlr_input_device *device)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   if (!wlr_input_device_is_libinput (device))
     return;
@@ -1278,10 +1257,7 @@ seat_add_tablet_tool (PhocSeat                *seat,
   wlr_cursor_attach_input_device (seat->cursor->cursor, device);
   phoc_seat_add_input_mapping_settings (seat, PHOC_INPUT_DEVICE (tablet));
 
-  PhocDesktop *desktop = server->desktop;
-
-  tablet->tablet_v2 =
-    wlr_tablet_create (desktop->tablet_v2, seat->seat, device);
+  tablet->tablet_v2 = wlr_tablet_create (desktop->tablet_v2, seat->seat, device);
 
   struct libinput_device_group *group =
     libinput_device_get_device_group (wlr_libinput_get_device_handle (device));
@@ -1331,10 +1307,10 @@ phoc_seat_add_device (PhocSeat *seat, struct wlr_input_device *device)
 void
 phoc_seat_configure_xcursor (PhocSeat *seat)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocOutput *output;
 
-  wl_list_for_each (output, &server->desktop->outputs, link) {
+  wl_list_for_each (output, &desktop->outputs, link) {
     float scale = output->wlr_output->scale;
     if (!wlr_xcursor_manager_load (seat->cursor->xcursor_manager, scale)) {
       g_critical ("Cannot load xcursor theme for output '%s' "
@@ -1488,14 +1464,14 @@ phoc_seat_allow_input (PhocSeat *seat, struct wl_resource *resource)
 static void
 seat_raise_view_stack (PhocSeat *seat, PhocView *view)
 {
-  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   if (!view->wlr_surface) {
     return;
   }
 
   wl_list_remove (&view->link);
-  wl_list_insert (&server->desktop->views, &view->link);
+  wl_list_insert (&desktop->views, &view->link);
   phoc_view_damage_whole (view);
 
   PhocView *child;
@@ -1926,12 +1902,12 @@ static void
 phoc_seat_constructed (GObject *object)
 {
   PhocSeat *self = PHOC_SEAT(object);
-  PhocServer *server = phoc_server_get_default ();
+  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   G_OBJECT_CLASS (phoc_seat_parent_class)->constructed (object);
 
-  self->seat = wlr_seat_create (server->wl_display, priv->name);
+  self->seat = wlr_seat_create (wl_display, priv->name);
   g_assert (self->seat);
   self->seat->data = self;
 

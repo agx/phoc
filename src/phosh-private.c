@@ -172,11 +172,10 @@ phoc_phosh_private_keyboard_event_accelerator_is_registered (PhocKeyCombo       
 static bool
 phoc_phosh_private_accelerator_already_subscribed (PhocKeyCombo *combo)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocPhoshPrivate *phosh = phoc_desktop_get_phosh_private (desktop);
   GList *l;
   PhocPhoshPrivateKeyboardEventData *kbevent;
-  PhocServer *server = phoc_server_get_default ();
-
-  PhocPhoshPrivate *phosh = phoc_desktop_get_phosh_private (server->desktop);
 
   for (l = phosh->keyboard_events; l != NULL; l = l->next) {
     kbevent = (PhocPhoshPrivateKeyboardEventData *)l->data;
@@ -751,12 +750,13 @@ static void
 phoc_phosh_private_constructed (GObject *object)
 {
   PhocPhoshPrivate *self = PHOC_PHOSH_PRIVATE (object);
-  struct wl_display *display = phoc_server_get_default ()->wl_display;
+  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
 
   G_OBJECT_CLASS (phoc_phosh_private_parent_class)->constructed (object);
 
   g_info ("Initializing phosh private interface");
-  self->global = wl_global_create (display, &phosh_private_interface, PHOSH_PRIVATE_VERSION, self, phosh_private_bind);
+  self->global = wl_global_create (wl_display, &phosh_private_interface,
+                                   PHOSH_PRIVATE_VERSION, self, phosh_private_bind);
 }
 
 
@@ -816,9 +816,9 @@ phoc_phosh_private_forward_keysym (PhocKeyCombo *combo,
                                    uint32_t      timestamp,
                                    bool          pressed)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocPhoshPrivate *phosh = phoc_desktop_get_phosh_private (desktop);
   GList *l;
-  PhocServer *server = phoc_server_get_default ();
-  PhocPhoshPrivate *phosh = phoc_desktop_get_phosh_private (server->desktop);
   bool forwarded = false;
 
   for (l = phosh->keyboard_events; l != NULL; l = l->next) {
