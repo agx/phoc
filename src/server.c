@@ -451,6 +451,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
 
 /**
  * phoc_server_get_exit_status:
+ * @self: The server
  *
  * Return the session's exit status. This is only meaningful
  * if the session has ended.
