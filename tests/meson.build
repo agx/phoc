@@ -8,6 +8,7 @@ test_env.set('GSETTINGS_BACKEND', 'memory')
 test_env.set('GSETTINGS_SCHEMA_DIR', '@0@/data'.format(meson.project_build_root()))
 test_env.set('PYTHONDONTWRITEBYTECODE', 'yes')
 test_env.set('MALLOC_CHECK_', '2')
+test_env.set('MALLOC_PERTURB_', '123')
 test_env.set('XDG_CONFIG_HOME', meson.current_source_dir())
 test_env.set('XDG_CONFIG_DIRS', meson.current_source_dir())
 # Use x11 backend by default
