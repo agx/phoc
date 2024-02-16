@@ -50,19 +50,19 @@ static PhocTextInput *
 relay_get_focusable_text_input (PhocInputMethodRelay *relay)
 {
   PhocTextInput *text_input = NULL;
-  wl_list_for_each(text_input, &relay->text_inputs, link) {
-    if (text_input->pending_focused_surface) {
+  wl_list_for_each (text_input, &relay->text_inputs, link) {
+    if (text_input->pending_focused_surface)
       return text_input;
-    }
   }
   return NULL;
 }
 
 static PhocTextInput *
-relay_get_focused_text_input(PhocInputMethodRelay *relay)
+relay_get_focused_text_input (PhocInputMethodRelay *relay)
 {
   PhocTextInput *text_input = NULL;
-  wl_list_for_each(text_input, &relay->text_inputs, link) {
+
+  wl_list_for_each (text_input, &relay->text_inputs, link) {
     if (text_input->input->focused_surface) {
       g_assert (text_input->pending_focused_surface == NULL);
       return text_input;
@@ -74,31 +74,31 @@ relay_get_focused_text_input(PhocInputMethodRelay *relay)
 static void
 handle_im_commit (struct wl_listener *listener, void *data)
 {
-  PhocInputMethodRelay *relay = wl_container_of(listener, relay, input_method_commit);
+  PhocInputMethodRelay *relay = wl_container_of (listener, relay, input_method_commit);
+  PhocTextInput *text_input = relay_get_focused_text_input (relay);
 
-  PhocTextInput *text_input = relay_get_focused_text_input(relay);
-  if (!text_input) {
+  if (!text_input)
     return;
-  }
+
   struct wlr_input_method_v2 *context = data;
   g_assert (context == relay->input_method);
   if (context->current.preedit.text) {
-    wlr_text_input_v3_send_preedit_string(text_input->input,
-                                          context->current.preedit.text,
-                                          context->current.preedit.cursor_begin,
-                                          context->current.preedit.cursor_end);
+    wlr_text_input_v3_send_preedit_string (text_input->input,
+                                           context->current.preedit.text,
+                                           context->current.preedit.cursor_begin,
+                                           context->current.preedit.cursor_end);
   }
   if (context->current.commit_text) {
-    wlr_text_input_v3_send_commit_string(text_input->input,
-                                         context->current.commit_text);
+    wlr_text_input_v3_send_commit_string (text_input->input,
+                                          context->current.commit_text);
   }
   if (context->current.delete.before_length
       || context->current.delete.after_length) {
-    wlr_text_input_v3_send_delete_surrounding_text(text_input->input,
-                                                   context->current.delete.before_length,
-                                                   context->current.delete.after_length);
+    wlr_text_input_v3_send_delete_surrounding_text (text_input->input,
+                                                    context->current.delete.before_length,
+                                                    context->current.delete.after_length);
   }
-  wlr_text_input_v3_send_done(text_input->input);
+  wlr_text_input_v3_send_done (text_input->input);
 }
 
 static void
@@ -135,35 +135,36 @@ handle_im_grab_keyboard (struct wl_listener *listener, void *data)
 static void
 text_input_clear_pending_focused_surface (PhocTextInput *text_input)
 {
-  wl_list_remove(&text_input->pending_focused_surface_destroy.link);
-  wl_list_init(&text_input->pending_focused_surface_destroy.link);
+  wl_list_remove (&text_input->pending_focused_surface_destroy.link);
+  wl_list_init (&text_input->pending_focused_surface_destroy.link);
   text_input->pending_focused_surface = NULL;
 }
 
 static void
-text_input_set_pending_focused_surface(PhocTextInput *text_input, struct wlr_surface *surface)
+text_input_set_pending_focused_surface (PhocTextInput *text_input, struct wlr_surface *surface)
 {
-  text_input_clear_pending_focused_surface(text_input);
-  g_assert(surface);
+  text_input_clear_pending_focused_surface (text_input);
+  g_assert (surface);
   text_input->pending_focused_surface = surface;
-  wl_signal_add(&surface->events.destroy, &text_input->pending_focused_surface_destroy);
+  wl_signal_add (&surface->events.destroy, &text_input->pending_focused_surface_destroy);
 }
 
 static void
 handle_im_destroy (struct wl_listener *listener, void *data)
 {
-  PhocInputMethodRelay *relay = wl_container_of(listener, relay, input_method_destroy);
+  PhocInputMethodRelay *relay = wl_container_of (listener, relay, input_method_destroy);
   struct wlr_input_method_v2 *context = data;
+
   g_assert (context == relay->input_method);
   relay->input_method = NULL;
-  PhocTextInput *text_input = relay_get_focused_text_input(relay);
+  PhocTextInput *text_input = relay_get_focused_text_input (relay);
   if (text_input) {
     // keyboard focus is still there, so keep the surface at hand in case
     // the input method returns
     g_assert (text_input->pending_focused_surface == NULL);
-    text_input_set_pending_focused_surface(text_input,
-                                           text_input->input->focused_surface);
-    wlr_text_input_v3_send_leave(text_input->input);
+    text_input_set_pending_focused_surface (text_input,
+                                            text_input->input->focused_surface);
+    wlr_text_input_v3_send_leave (text_input->input);
   }
 }
 
@@ -179,27 +180,30 @@ static void
 relay_send_im_done (PhocInputMethodRelay *relay, struct wlr_text_input_v3 *input)
 {
   struct wlr_input_method_v2 *input_method = relay->input_method;
+
   if (!input_method) {
     g_debug ("Sending IM_DONE but im is gone");
     return;
   }
-  if (!text_input_is_focused(input)) {
+  if (!text_input_is_focused (input)) {
     // Don't let input method know about events from unfocused surfaces.
     return;
   }
   // TODO: only send each of those if they were modified
   if (input->active_features & WLR_TEXT_INPUT_V3_FEATURE_SURROUNDING_TEXT) {
-    wlr_input_method_v2_send_surrounding_text(input_method,
-                                              input->current.surrounding.text, input->current.surrounding.cursor,
-                                              input->current.surrounding.anchor);
+    wlr_input_method_v2_send_surrounding_text (input_method,
+                                               input->current.surrounding.text,
+                                               input->current.surrounding.cursor,
+                                               input->current.surrounding.anchor);
   }
-  wlr_input_method_v2_send_text_change_cause(input_method,
-                                             input->current.text_change_cause);
+  wlr_input_method_v2_send_text_change_cause (input_method,
+                                              input->current.text_change_cause);
   if (input->active_features & WLR_TEXT_INPUT_V3_FEATURE_CONTENT_TYPE) {
-    wlr_input_method_v2_send_content_type(input_method,
-                                          input->current.content_type.hint, input->current.content_type.purpose);
+    wlr_input_method_v2_send_content_type (input_method,
+                                           input->current.content_type.hint,
+                                           input->current.content_type.purpose);
   }
-  wlr_input_method_v2_send_done(input_method);
+  wlr_input_method_v2_send_done (input_method);
   // TODO: pass intent, display popup size
 }
 
@@ -207,8 +211,8 @@ static void
 handle_text_input_enable (struct wl_listener *listener, void *data)
 {
   PhocTextInput *text_input = wl_container_of (listener, text_input, enable);
-
   PhocInputMethodRelay *relay = text_input->relay;
+
   if (relay->input_method == NULL) {
     g_debug ("Enabling text input when input method is gone");
     return;
@@ -240,7 +244,7 @@ handle_text_input_commit (struct wl_listener *listener, void *data)
     g_debug ("Text input committed, but input method is gone");
     return;
   }
-  relay_send_im_done(relay, text_input->input);
+  relay_send_im_done (relay, text_input->input);
 }
 
 static void
@@ -252,55 +256,54 @@ relay_disable_text_input (PhocInputMethodRelay *relay, PhocTextInput *text_input
   }
   // relay_send_im_done protects from receiving unfocussed done,
   // but deactivate must be prevented too
-  if (!text_input_is_focused(text_input->input)) {
+  if (!text_input_is_focused (text_input->input))
     return;
-  }
-  wlr_input_method_v2_send_deactivate(relay->input_method);
-  relay_send_im_done(relay, text_input->input);
+
+  wlr_input_method_v2_send_deactivate (relay->input_method);
+  relay_send_im_done (relay, text_input->input);
 }
 
 static void
 handle_text_input_disable (struct wl_listener *listener, void *data)
 {
-  PhocTextInput *text_input = wl_container_of(listener, text_input, disable);
+  PhocTextInput *text_input = wl_container_of (listener, text_input, disable);
   PhocInputMethodRelay *relay = text_input->relay;
 
-  relay_disable_text_input(relay, text_input);
+  relay_disable_text_input (relay, text_input);
 }
 
 static void
 handle_text_input_destroy (struct wl_listener *listener, void *data)
 {
-  PhocTextInput *text_input = wl_container_of(listener, text_input, destroy);
+  PhocTextInput *text_input = wl_container_of (listener, text_input, destroy);
   PhocInputMethodRelay *relay = text_input->relay;
 
-  if (text_input->input->current_enabled) {
-    relay_disable_text_input(relay, text_input);
-  }
-  text_input_clear_pending_focused_surface(text_input);
-  wl_list_remove(&text_input->commit.link);
-  wl_list_remove(&text_input->destroy.link);
-  wl_list_remove(&text_input->disable.link);
-  wl_list_remove(&text_input->enable.link);
-  wl_list_remove(&text_input->link);
+  if (text_input->input->current_enabled)
+    relay_disable_text_input (relay, text_input);
+
+  text_input_clear_pending_focused_surface (text_input);
+  wl_list_remove (&text_input->commit.link);
+  wl_list_remove (&text_input->destroy.link);
+  wl_list_remove (&text_input->disable.link);
+  wl_list_remove (&text_input->enable.link);
+  wl_list_remove (&text_input->link);
   text_input->input = NULL;
-  free(text_input);
+  free (text_input);
 }
 
 static void
 handle_pending_focused_surface_destroy (struct wl_listener *listener, void *data)
 {
-  PhocTextInput *text_input = wl_container_of(listener, text_input,
-                                              pending_focused_surface_destroy);
+  PhocTextInput *text_input = wl_container_of (listener, text_input,
+                                               pending_focused_surface_destroy);
   struct wlr_surface *surface = data;
 
   g_assert (text_input->pending_focused_surface == surface);
-  text_input_clear_pending_focused_surface(text_input);
+  text_input_clear_pending_focused_surface (text_input);
 }
 
 static PhocTextInput *
-phoc_text_input_create (PhocInputMethodRelay     *relay,
-                        struct wlr_text_input_v3 *text_input)
+phoc_text_input_create (PhocInputMethodRelay *relay, struct wlr_text_input_v3 *text_input)
 {
   PhocTextInput *input = g_new0 (PhocTextInput, 1);
 
@@ -330,7 +333,7 @@ phoc_text_input_create (PhocInputMethodRelay     *relay,
 static void
 relay_handle_text_input (struct wl_listener *listener, void *data)
 {
-  PhocInputMethodRelay *relay = wl_container_of(listener, relay, text_input_new);
+  PhocInputMethodRelay *relay = wl_container_of (listener, relay, text_input_new);
   struct wlr_text_input_v3 *wlr_text_input = data;
 
   if (relay->seat->seat != wlr_text_input->seat) {
@@ -354,8 +357,7 @@ relay_handle_text_input (struct wl_listener *listener, void *data)
 }
 
 static void
-relay_handle_input_method (struct wl_listener *listener,
-                           void *data)
+relay_handle_input_method (struct wl_listener *listener, void *data)
 {
   PhocInputMethodRelay *relay = wl_container_of (listener, relay, input_method_new);
   struct wlr_input_method_v2 *input_method = data;
@@ -374,13 +376,13 @@ relay_handle_input_method (struct wl_listener *listener,
   g_debug ("Input method available");
   relay->input_method = input_method;
 
-  wl_signal_add(&relay->input_method->events.commit, &relay->input_method_commit);
+  wl_signal_add (&relay->input_method->events.commit, &relay->input_method_commit);
   relay->input_method_commit.notify = handle_im_commit;
 
   wl_signal_add (&relay->input_method->events.grab_keyboard, &relay->input_method_grab_keyboard);
   relay->input_method_grab_keyboard.notify = handle_im_grab_keyboard;
 
-  wl_signal_add(&relay->input_method->events.destroy, &relay->input_method_destroy);
+  wl_signal_add (&relay->input_method->events.destroy, &relay->input_method_destroy);
   relay->input_method_destroy.notify = handle_im_destroy;
 
   PhocTextInput *text_input = relay_get_focusable_text_input (relay);
@@ -391,8 +393,7 @@ relay_handle_input_method (struct wl_listener *listener,
 }
 
 void
-phoc_input_method_relay_init (PhocSeat *seat,
-                              PhocInputMethodRelay *relay)
+phoc_input_method_relay_init (PhocSeat *seat, PhocInputMethodRelay *relay)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
@@ -423,36 +424,34 @@ phoc_input_method_relay_destroy (PhocInputMethodRelay *relay)
  * same seat.
  */
 void
-phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
-                                   struct wlr_surface *surface)
+phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay, struct wlr_surface *surface)
 {
   PhocTextInput *text_input;
 
-  wl_list_for_each(text_input, &relay->text_inputs, link) {
-
+  wl_list_for_each (text_input, &relay->text_inputs, link) {
     if (text_input->pending_focused_surface) {
       g_assert (text_input->input->focused_surface == NULL);
-      if (surface != text_input->pending_focused_surface) {
-        text_input_clear_pending_focused_surface(text_input);
-      }
+      if (surface != text_input->pending_focused_surface)
+        text_input_clear_pending_focused_surface (text_input);
+
     } else if (text_input->input->focused_surface) {
       g_assert (text_input->pending_focused_surface == NULL);
       if (surface != text_input->input->focused_surface) {
-        relay_disable_text_input(relay, text_input);
-        wlr_text_input_v3_send_leave(text_input->input);
+        relay_disable_text_input (relay, text_input);
+        wlr_text_input_v3_send_leave (text_input->input);
       }
     }
 
     if (surface
-        && wl_resource_get_client(text_input->input->resource)
-        == wl_resource_get_client(surface->resource)) {
+        && wl_resource_get_client (text_input->input->resource)
+        == wl_resource_get_client (surface->resource)) {
 
       if (relay->input_method) {
-        if (surface != text_input->input->focused_surface) {
-          wlr_text_input_v3_send_enter(text_input->input, surface);
-        }
+        if (surface != text_input->input->focused_surface)
+          wlr_text_input_v3_send_enter (text_input->input, surface);
+
       } else if (surface != text_input->pending_focused_surface) {
-        text_input_set_pending_focused_surface(text_input, surface);
+        text_input_set_pending_focused_surface (text_input, surface);
       }
     }
   }
@@ -468,14 +467,13 @@ phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
  * Returns: `true` if input method is enabled, otherwise `false`.
  */
 bool
-phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay,
-                                    struct wlr_surface   *surface)
+phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay, struct wlr_surface *surface)
 {
   PhocTextInput *text_input;
+
   g_return_val_if_fail (surface, false);
 
   surface = wlr_surface_get_root_surface (surface);
-
   wl_list_for_each (text_input, &relay->text_inputs, link) {
     if (!text_input->input->focused_surface)
       continue;
