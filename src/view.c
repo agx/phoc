@@ -520,6 +520,13 @@ phoc_view_auto_maximize (PhocView *view)
     phoc_view_maximize (view, NULL);
 }
 
+/**
+ * phoc_view_restore:
+ * @view: The view to restore
+ *
+ * Put a view back into floating state while restoring it's previous
+ * size and position.
+ */
 void
 phoc_view_restore (PhocView *view)
 {
