@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020,2021 Purism SPC
+ *                    2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -135,10 +136,10 @@ phoc_utils_scale_box (struct wlr_box *box, float scale)
  * Returns: %TRUE on overlap otherwise %FALSE
  */
 gboolean
-phoc_util_is_damaged (const struct wlr_box    *box,
-                      const pixman_region32_t *damage,
-                      const struct wlr_box    *clip_box,
-                      pixman_region32_t       *out_damage)
+phoc_utils_is_damaged (const struct wlr_box    *box,
+                       const pixman_region32_t *damage,
+                       const struct wlr_box    *clip_box,
+                       pixman_region32_t       *out_damage)
 {
   pixman_region32_init (out_damage);
   pixman_region32_union_rect (out_damage, out_damage,

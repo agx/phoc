@@ -179,7 +179,7 @@ bling_render (PhocBling *bling, PhocRenderContext *ctx)
   box.y -= ctx->output->ly;
   phoc_utils_scale_box (&box, ctx->output->wlr_output->scale);
 
-  if (!phoc_util_is_damaged (&box, ctx->damage, NULL, &damage)) {
+  if (!phoc_utils_is_damaged (&box, ctx->damage, NULL, &damage)) {
     pixman_region32_fini (&damage);
     return;
   }

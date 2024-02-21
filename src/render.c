@@ -164,7 +164,7 @@ render_texture (PhocOutput               *output,
   struct wlr_fbox src_box = {0};
   enum wl_output_transform transform;
 
-  if (!phoc_util_is_damaged (&proj_box, ctx->damage, clip_box, &damage))
+  if (!phoc_utils_is_damaged (&proj_box, ctx->damage, clip_box, &damage))
     goto buffer_damage_finish;
 
   if (_src_box)
