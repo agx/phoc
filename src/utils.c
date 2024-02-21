@@ -176,6 +176,8 @@ void
 phoc_utils_wlr_surface_enter_output (struct wlr_surface *wlr_surface, struct wlr_output *wlr_output)
 {
   wlr_surface_send_enter (wlr_surface, wlr_output);
+
+  phoc_utils_wlr_surface_update_scales (wlr_surface);
 }
 
 
@@ -183,4 +185,6 @@ void
 phoc_utils_wlr_surface_leave_output (struct wlr_surface *wlr_surface, struct wlr_output *wlr_output)
 {
   wlr_surface_send_leave (wlr_surface, wlr_output);
+
+  phoc_utils_wlr_surface_update_scales (wlr_surface);
 }
