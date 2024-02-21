@@ -45,5 +45,10 @@ gboolean   phoc_utils_is_damaged            (const struct wlr_box    *box,
                                              pixman_region32_t       *out_damage);
 
 void       phoc_utils_wlr_surface_update_scales (struct wlr_surface *surface);
+void       phoc_utils_wlr_surface_enter_output  (struct wlr_surface *wlr_surface,
+                                                 struct wlr_output  *wlr_output);
+void       phoc_utils_wlr_surface_leave_output  (struct wlr_surface *wlr_surface,
+                                                 struct wlr_output  *wlr_output);
+
 
 G_END_DECLS

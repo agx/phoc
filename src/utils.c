@@ -170,3 +170,17 @@ phoc_utils_wlr_surface_update_scales (struct wlr_surface *surface)
 
   wlr_surface_set_preferred_buffer_scale (surface, ceil (scale));
 }
+
+
+void
+phoc_utils_wlr_surface_enter_output (struct wlr_surface *wlr_surface, struct wlr_output *wlr_output)
+{
+  wlr_surface_send_enter (wlr_surface, wlr_output);
+}
+
+
+void
+phoc_utils_wlr_surface_leave_output (struct wlr_surface *wlr_surface, struct wlr_output *wlr_output)
+{
+  wlr_surface_send_leave (wlr_surface, wlr_output);
+}

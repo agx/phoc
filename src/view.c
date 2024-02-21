@@ -190,17 +190,20 @@ phoc_view_get_deco_part (PhocView *self, double sx, double sy)
 
 
 static void
-surface_send_enter_iterator (struct wlr_surface *surface, int x, int y, void *data)
+surface_send_enter_iterator (struct wlr_surface *wlr_surface, int x, int y, void *data)
 {
   struct wlr_output *wlr_output = data;
-  wlr_surface_send_enter(surface, wlr_output);
+
+  phoc_utils_wlr_surface_enter_output (wlr_surface, wlr_output);
 }
 
+
 static void
-surface_send_leave_iterator (struct wlr_surface *surface, int x, int y, void *data)
+surface_send_leave_iterator (struct wlr_surface *wlr_surface, int x, int y, void *data)
 {
   struct wlr_output *wlr_output = data;
-  wlr_surface_send_leave(surface, wlr_output);
+
+  phoc_utils_wlr_surface_leave_output (wlr_surface, wlr_output);
 }
 
 
