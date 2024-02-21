@@ -14,6 +14,8 @@
 #include "output.h"
 #include "utils.h"
 
+#include <wlr/types/wlr_fractional_scale_v1.h>
+
 #include <inttypes.h>
 #include <math.h>
 #include <wlr/util/box.h>
@@ -168,6 +170,7 @@ phoc_utils_wlr_surface_update_scales (struct wlr_surface *surface)
       scale = surface_output->output->scale;
   }
 
+  wlr_fractional_scale_v1_notify_scale (surface, scale);
   wlr_surface_set_preferred_buffer_scale (surface, ceil (scale));
 }
 
