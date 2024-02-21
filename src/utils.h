@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "output.h"
+
 #include <glib.h>
 #include <wlr/types/wlr_output_layout.h>
 
@@ -41,5 +43,7 @@ gboolean   phoc_utils_is_damaged            (const struct wlr_box    *box,
                                              const pixman_region32_t *damage,
                                              const struct wlr_box    *clip_box,
                                              pixman_region32_t       *out_damage);
+
+void       phoc_utils_wlr_surface_update_scales (struct wlr_surface *surface);
 
 G_END_DECLS

@@ -11,10 +11,12 @@
 
 #define G_LOG_DOMAIN "phoc-utils"
 
+#include "output.h"
+#include "utils.h"
+
 #include <inttypes.h>
 #include <math.h>
 #include <wlr/util/box.h>
-#include "utils.h"
 
 
 void
@@ -152,4 +154,19 @@ phoc_utils_is_damaged (const struct wlr_box    *box,
   }
 
   return !!pixman_region32_not_empty (out_damage);
+}
+
+
+void
+phoc_utils_wlr_surface_update_scales (struct wlr_surface *surface)
+{
+  float scale = 1.0;
+
+  struct wlr_surface_output *surface_output;
+  wl_list_for_each (surface_output, &surface->current_outputs, link) {
+    if (surface_output->output->scale > scale)
+      scale = surface_output->output->scale;
+  }
+
+  wlr_surface_set_preferred_buffer_scale (surface, ceil (scale));
 }
