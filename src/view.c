@@ -916,12 +916,14 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
 
   struct wlr_box box;
   phoc_view_get_box (view, &box);
+
   PhocOutput *output;
-  wl_list_for_each(output, &view->desktop->outputs, link) {
-    bool intersects = wlr_output_layout_intersects(view->desktop->layout,
-                                                   output->wlr_output, &box);
+  wl_list_for_each (output, &view->desktop->outputs, link) {
+    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
+                                                    output->wlr_output, &box);
     if (intersects) {
-      wlr_surface_send_enter (subsurface->wlr_subsurface->surface, output->wlr_output);
+      phoc_utils_wlr_surface_enter_output (subsurface->wlr_subsurface->surface,
+                                           output->wlr_output);
     }
   }
 }
