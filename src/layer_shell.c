@@ -19,6 +19,7 @@
 #include "output.h"
 #include "seat.h"
 #include "server.h"
+#include "utils.h"
 
 #include <glib.h>
 
@@ -551,7 +552,7 @@ popup_handle_map (struct wl_listener *listener, void *data)
   popup->new_subsurface.notify = popup_new_subsurface;
   wl_signal_add (&popup->wlr_popup->base->surface->events.new_subsurface, &popup->new_subsurface);
 
-  wlr_surface_send_enter (popup->wlr_popup->base->surface, wlr_output);
+  phoc_utils_wlr_surface_enter_output (popup->wlr_popup->base->surface, wlr_output);
   popup_damage (popup, true);
   phoc_input_update_cursor_focus (input);
 }
@@ -703,8 +704,9 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
   wl_signal_add (&subsurface->wlr_subsurface->surface->events.new_subsurface,
                  &subsurface->new_subsurface);
 
-  wlr_surface_send_enter (subsurface->wlr_subsurface->surface,
-                          subsurface_get_root_layer (subsurface)->layer_surface->output);
+  PhocLayerSurface *layer_surface = subsurface_get_root_layer (subsurface);
+  phoc_utils_wlr_surface_enter_output (subsurface->wlr_subsurface->surface,
+                                       layer_surface->layer_surface->output);
   subsurface_damage (subsurface, true);
   phoc_input_update_cursor_focus (input);
 }
@@ -814,7 +816,7 @@ handle_map (struct wl_listener *listener, void *data)
                                           wlr_layer_surface->surface, layer_surface->geo.x,
                                           layer_surface->geo.y);
 
-  wlr_surface_send_enter (wlr_layer_surface->surface, output->wlr_output);
+  phoc_utils_wlr_surface_enter_output (wlr_layer_surface->surface, output->wlr_output);
 
   phoc_layer_shell_arrange (output);
   phoc_layer_shell_update_focus ();
