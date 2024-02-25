@@ -455,20 +455,21 @@ handle_map (struct wl_listener *listener, void *data)
   self->surface_commit.notify = handle_surface_commit;
   wl_signal_add (&surface->surface->events.commit, &self->surface_commit);
 
-  if (surface->maximized_horz && surface->maximized_vert)
-    phoc_view_maximize (view, NULL);
-
-  phoc_view_auto_maximize (view);
-
   phoc_view_map (view, surface->surface);
 
-  if (!surface->override_redirect) {
+  if (surface->override_redirect)
+    phoc_view_set_initial_focus (view);
+  else {
     if (surface->decorations == WLR_XWAYLAND_SURFACE_DECORATIONS_ALL)
       phoc_view_set_decorated (view, TRUE);
+
     phoc_view_setup (view);
-  } else {
-    phoc_view_set_initial_focus (view);
   }
+
+  phoc_view_auto_maximize (PHOC_VIEW (self));
+
+  if (surface->maximized_horz && surface->maximized_vert)
+    phoc_view_maximize (view, NULL);
 }
 
 static void
