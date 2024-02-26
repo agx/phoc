@@ -142,3 +142,24 @@ phoc_drag_icon_is_mapped (PhocDragIcon *self)
 {
   return self && self->wlr_drag_icon->surface->mapped;
 }
+
+
+double
+phoc_drag_icon_get_x (PhocDragIcon *self)
+{
+  return self->x;
+}
+
+
+double
+phoc_drag_icon_get_y (PhocDragIcon *self)
+{
+  return self->y;
+}
+
+
+struct wlr_surface *
+phoc_drag_icon_get_wlr_surface (PhocDragIcon *self)
+{
+  return self->wlr_drag_icon->surface;
+}
