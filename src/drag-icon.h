@@ -16,21 +16,6 @@ G_BEGIN_DECLS
 typedef struct _PhocSeat PhocSeat;
 typedef struct _PhocDragIcon PhocDragIcon;
 
-
-struct _PhocDragIcon {
-  PhocSeat             *seat;
-  struct wlr_drag_icon *wlr_drag_icon;
-
-  double                x, y;
-  double                dx, dy;
-
-  struct wl_listener    surface_commit;
-  struct wl_listener    map;
-  struct wl_listener    unmap;
-  struct wl_listener    destroy;
-};
-
-
 PhocDragIcon *phoc_drag_icon_create (PhocSeat *seat, struct wlr_drag_icon *icon);
 gboolean      phoc_drag_icon_is_mapped (PhocDragIcon *self);
 double        phoc_drag_icon_get_x (PhocDragIcon *self);

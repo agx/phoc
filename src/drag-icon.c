@@ -15,6 +15,20 @@
 #include <wlr/types/wlr_compositor.h>
 
 
+struct _PhocDragIcon {
+  PhocSeat             *seat;
+  struct wlr_drag_icon *wlr_drag_icon;
+
+  double                x, y;
+  double                dx, dy;
+
+  struct wl_listener    surface_commit;
+  struct wl_listener    map;
+  struct wl_listener    unmap;
+  struct wl_listener    destroy;
+};
+
+
 static void
 phoc_drag_icon_damage_whole (PhocDragIcon *icon)
 {
