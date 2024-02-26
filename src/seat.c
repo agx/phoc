@@ -1979,6 +1979,23 @@ phoc_seat_has_keyboard (PhocSeat *self)
 
 
 gboolean
+phoc_seat_has_hw_keyboard (PhocSeat *self)
+{
+  if (self->keyboards == NULL)
+    return FALSE;
+
+  for (GSList *l = self->keyboards; l; l = l->next) {
+    PhocKeyboard *keyboard = PHOC_KEYBOARD (l->data);
+
+    if (phoc_input_device_get_is_keyboard (PHOC_INPUT_DEVICE (keyboard)))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+
+gboolean
 phoc_seat_has_switch (PhocSeat *self, enum wlr_switch_type type)
 {
   g_assert (PHOC_IS_SEAT (self));
