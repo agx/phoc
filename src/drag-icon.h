@@ -32,6 +32,7 @@ struct _PhocDragIcon {
 
 
 PhocDragIcon *phoc_drag_icon_create (PhocSeat *seat, struct wlr_drag_icon *icon);
+gboolean      phoc_drag_icon_is_mapped (PhocDragIcon *self);
 void          phoc_drag_icon_update_position (PhocDragIcon *self);
 
 G_END_DECLS

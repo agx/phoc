@@ -128,3 +128,17 @@ phoc_drag_icon_create (PhocSeat *seat, struct wlr_drag_icon *wlr_drag_icon)
 
   return self;
 }
+
+/**
+ * phoc_drag_icon_is_mapped:
+ * @self: (nullable): The drag icon to check
+ *
+ * Check if a [type@DragIcon] is currently mapped
+ *
+ * Returns: %TRUE if a view is currently mapped, otherwise %FALSE
+ */
+gboolean
+phoc_drag_icon_is_mapped (PhocDragIcon *self)
+{
+  return self && self->wlr_drag_icon->surface->mapped;
+}

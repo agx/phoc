@@ -386,7 +386,8 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
 
     g_assert (PHOC_IS_SEAT (seat));
     drag_icon = seat->drag_icon;
-    if (drag_icon && drag_icon->wlr_drag_icon->surface->mapped)
+
+    if (phoc_drag_icon_is_mapped (drag_icon))
       return false;
   }
 
@@ -1258,7 +1259,7 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
 
     g_assert (PHOC_IS_SEAT (seat));
     PhocDragIcon *drag_icon = seat->drag_icon;
-    if (!drag_icon || !drag_icon->wlr_drag_icon->surface->mapped)
+    if (!phoc_drag_icon_is_mapped (drag_icon))
       continue;
 
     double ox = drag_icon->x - output_box.x;
