@@ -12,6 +12,7 @@ test_env.set('XDG_CONFIG_HOME', meson.current_source_dir())
 test_env.set('XDG_CONFIG_DIRS', meson.current_source_dir())
 # Use x11 backend by default
 test_env.set('WLR_BACKENDS', 'x11')
+test_env.set('WLR_RENDERER', 'pixman')
 test_env.set('XDG_RUNTIME_DIR', meson.current_build_dir())
 
 # For -Db_sanitize=address
