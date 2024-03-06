@@ -386,7 +386,8 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
 
     g_assert (PHOC_IS_SEAT (seat));
     drag_icon = seat->drag_icon;
-    if (drag_icon && drag_icon->wlr_drag_icon->surface->mapped)
+
+    if (phoc_drag_icon_is_mapped (drag_icon))
       return false;
   }
 
@@ -1258,12 +1259,12 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
 
     g_assert (PHOC_IS_SEAT (seat));
     PhocDragIcon *drag_icon = seat->drag_icon;
-    if (!drag_icon || !drag_icon->wlr_drag_icon->surface->mapped)
+    if (!phoc_drag_icon_is_mapped (drag_icon))
       continue;
 
-    double ox = drag_icon->x - output_box.x;
-    double oy = drag_icon->y - output_box.y;
-    phoc_output_surface_for_each_surface (self, drag_icon->wlr_drag_icon->surface,
+    double ox = phoc_drag_icon_get_x (drag_icon) - output_box.x;
+    double oy = phoc_drag_icon_get_y (drag_icon) - output_box.y;
+    phoc_output_surface_for_each_surface (self, phoc_drag_icon_get_wlr_surface (drag_icon),
                                           ox, oy, iterator, user_data);
   }
 }
@@ -1453,8 +1454,10 @@ phoc_output_damage_whole_drag_icon (PhocOutput *self, PhocDragIcon *icon)
 {
   bool whole = true;
 
-  phoc_output_surface_for_each_surface (self, icon->wlr_drag_icon->surface,
-                                        icon->x, icon->y,
+  phoc_output_surface_for_each_surface (self,
+                                        phoc_drag_icon_get_wlr_surface (icon),
+                                        phoc_drag_icon_get_x (icon),
+                                        phoc_drag_icon_get_y (icon),
                                         damage_surface_iterator, &whole);
 }
 

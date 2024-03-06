@@ -29,6 +29,8 @@ sources = files(
   'desktop.h',
   'device-state.c',
   'device-state.h',
+  'drag-icon.c',
+  'drag-icon.h',
   'event.c',
   'event.h',
   'gesture.h',

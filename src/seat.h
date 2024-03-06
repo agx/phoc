@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "drag-icon.h"
 #include "input.h"
 #include "layers.h"
 #include "text_input.h"
@@ -23,7 +24,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (PhocSeat, phoc_seat, PHOC, SEAT, GObject)
 
 typedef struct _PhocCursor PhocCursor;
-typedef struct _PhocDragIcon PhocDragIcon;
 typedef struct _PhocTablet PhocTablet;
 
 /**
@@ -69,6 +69,7 @@ typedef struct _PhocSeat {
   struct wl_listener              destroy;
 } PhocSeat;
 
+
 typedef struct _PhocSeatView {
   PhocSeat          *seat;
   PhocView          *view;
@@ -80,18 +81,6 @@ typedef struct _PhocSeatView {
   struct wl_list     link;   // PhocSeat::views
 } PhocSeatView;
 
-struct _PhocDragIcon {
-  PhocSeat             *seat;
-  struct wlr_drag_icon *wlr_drag_icon;
-
-  double                x, y;
-  double                dx, dy;
-
-  struct wl_listener    surface_commit;
-  struct wl_listener    map;
-  struct wl_listener    unmap;
-  struct wl_listener    destroy;
-};
 
 typedef struct _PhocTabletPad {
   struct wl_list                   link;
@@ -110,6 +99,7 @@ typedef struct _PhocTabletPad {
   struct wl_listener               tablet_destroy;
 } PhocTabletPad;
 
+
 typedef struct _PhocTabletTool {
   struct wl_list                    link;
   struct wl_list                    tool_link;
@@ -124,6 +114,7 @@ typedef struct _PhocTabletTool {
   PhocTablet                       *current_tablet;
   struct wl_listener                tablet_destroy;
 } PhocTabletTool;
+
 
 typedef struct PhocPointerConstraint {
   struct wlr_pointer_constraint_v1 *constraint;
@@ -160,10 +151,6 @@ void               phoc_seat_begin_resize (PhocSeat *seat, PhocView *view,
 void               phoc_seat_end_compositor_grab (PhocSeat *seat);
 
 PhocSeatView      *phoc_seat_view_from_view (PhocSeat *seat, PhocView *view);
-
-void               phoc_drag_icon_update_position (PhocDragIcon *icon);
-
-void               phoc_drag_icon_damage_whole (PhocDragIcon *icon);
 
 void               phoc_seat_set_exclusive_client (PhocSeat         *seat,
                                                    struct wl_client *client);

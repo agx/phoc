@@ -680,50 +680,6 @@ phoc_seat_init_cursor (PhocSeat *seat)
 }
 
 static void
-phoc_drag_icon_handle_surface_commit (struct wl_listener *listener, void *data)
-{
-  PhocDragIcon *icon = wl_container_of (listener, icon, surface_commit);
-  struct wlr_drag_icon *wlr_icon = icon->wlr_drag_icon;
-
-  icon->dx += wlr_icon->surface->current.dx;
-  icon->dy += wlr_icon->surface->current.dy;
-
-  phoc_drag_icon_update_position (icon);
-}
-
-static void
-phoc_drag_icon_handle_map (struct wl_listener *listener, void *data)
-{
-  PhocDragIcon *icon = wl_container_of (listener, icon, map);
-
-  phoc_drag_icon_damage_whole (icon);
-}
-
-static void
-phoc_drag_icon_handle_unmap (struct wl_listener *listener, void *data)
-{
-  PhocDragIcon *icon = wl_container_of (listener, icon, unmap);
-
-  phoc_drag_icon_damage_whole (icon);
-}
-
-static void
-phoc_drag_icon_handle_destroy (struct wl_listener *listener, void *data)
-{
-  PhocDragIcon *icon = wl_container_of (listener, icon, destroy);
-
-  phoc_drag_icon_damage_whole (icon);
-
-  g_assert (icon->seat->drag_icon == icon);
-  icon->seat->drag_icon = NULL;
-
-  wl_list_remove (&icon->surface_commit.link);
-  wl_list_remove (&icon->unmap.link);
-  wl_list_remove (&icon->destroy.link);
-  free (icon);
-}
-
-static void
 phoc_seat_handle_request_start_drag (struct wl_listener *listener, void *data)
 {
   PhocSeat *seat = wl_container_of (listener, seat, request_start_drag);
@@ -752,28 +708,12 @@ phoc_seat_handle_start_drag (struct wl_listener *listener, void *data)
 {
   PhocSeat *seat = wl_container_of (listener, seat, start_drag);
   struct wlr_drag *wlr_drag = data;
-  struct wlr_drag_icon *wlr_drag_icon = wlr_drag->icon;
 
-  if (wlr_drag_icon == NULL)
+  if (!wlr_drag->icon)
     return;
 
-  PhocDragIcon *icon = g_new0 (PhocDragIcon, 1);
-  icon->seat = seat;
-  icon->wlr_drag_icon = wlr_drag_icon;
-
-  icon->surface_commit.notify = phoc_drag_icon_handle_surface_commit;
-  wl_signal_add (&wlr_drag_icon->surface->events.commit, &icon->surface_commit);
-  icon->unmap.notify = phoc_drag_icon_handle_unmap;
-  wl_signal_add (&wlr_drag_icon->surface->events.unmap, &icon->unmap);
-  icon->map.notify = phoc_drag_icon_handle_map;
-  wl_signal_add (&wlr_drag_icon->surface->events.map, &icon->map);
-  icon->destroy.notify = phoc_drag_icon_handle_destroy;
-  wl_signal_add (&wlr_drag_icon->events.destroy, &icon->destroy);
-
   g_assert (seat->drag_icon == NULL);
-  seat->drag_icon = icon;
-
-  phoc_drag_icon_update_position (icon);
+  seat->drag_icon = phoc_drag_icon_create (seat, wlr_drag->icon);
 }
 
 static void
@@ -794,49 +734,6 @@ phoc_seat_handle_request_set_primary_selection (struct wl_listener *listener, vo
   wlr_seat_set_primary_selection (seat->seat, event->source, event->serial);
 }
 
-void
-phoc_drag_icon_update_position (PhocDragIcon *icon)
-{
-  phoc_drag_icon_damage_whole (icon);
-
-  PhocSeat *seat = icon->seat;
-  struct wlr_drag *wlr_drag = icon->wlr_drag_icon->drag;
-
-  g_assert (wlr_drag != NULL);
-
-  switch (seat->seat->drag->grab_type) {
-  case WLR_DRAG_GRAB_KEYBOARD_POINTER:;
-    struct wlr_cursor *cursor = seat->cursor->cursor;
-    icon->x = cursor->x + icon->dx;
-    icon->y = cursor->y + icon->dy;
-    break;
-  case WLR_DRAG_GRAB_KEYBOARD_TOUCH:;
-    struct wlr_touch_point *point =
-      wlr_seat_touch_get_point (seat->seat, wlr_drag->touch_id);
-    if (point == NULL) {
-      return;
-    }
-    icon->x = seat->touch_x + icon->dx;
-    icon->y = seat->touch_y + icon->dy;
-    break;
-  case WLR_DRAG_GRAB_KEYBOARD:
-  default:
-    g_error ("Invalid drag grab type %d", seat->seat->drag->grab_type);
-  }
-
-  phoc_drag_icon_damage_whole (icon);
-}
-
-void
-phoc_drag_icon_damage_whole (PhocDragIcon *icon)
-{
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-  PhocOutput *output;
-
-  wl_list_for_each (output, &desktop->outputs, link) {
-    phoc_output_damage_whole_drag_icon (output, icon);
-  }
-}
 
 static void seat_view_destroy (PhocSeatView *seat_view);
 
