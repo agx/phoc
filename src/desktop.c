@@ -12,6 +12,7 @@
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_input_inhibitor.h>
@@ -53,6 +54,7 @@
 #include "xwayland-surface.h"
 
 /* Maximum protocol versions we support */
+#define PHOC_FRACTIONAL_SCALE_VERSION 1
 #define PHOC_XDG_SHELL_VERSION 5
 #define PHOC_LAYER_SHELL_VERSION 2
 
@@ -780,6 +782,7 @@ phoc_desktop_constructed (GObject *object)
   self->xdg_toplevel_decoration.notify = handle_xdg_toplevel_decoration;
   wlr_viewporter_create (wl_display);
   wlr_single_pixel_buffer_manager_v1_create (wl_display);
+  wlr_fractional_scale_manager_v1_create (wl_display, PHOC_FRACTIONAL_SCALE_VERSION);
 
   struct wlr_xdg_foreign_registry *foreign_registry = wlr_xdg_foreign_registry_create (wl_display);
   wlr_xdg_foreign_v1_create (wl_display, foreign_registry);

@@ -598,17 +598,7 @@ update_output_scale_iterator (PhocOutput         *self,
 
 
 {
-  struct wlr_surface_output *surface_output;
-
-  wl_list_for_each (surface_output, &surface->current_outputs, link) {
-    if (surface_output->output->scale > scale) {
-      scale = surface_output->output->scale;
-    }
-  }
-
-  /* TODO: once we implement wlr_fractional_scale_v1_notify_scale */
-  //wlr_fractional_scale_v1_notify_scale(surface, scale);
-  wlr_surface_set_preferred_buffer_scale (surface, ceil(scale));
+  phoc_utils_wlr_surface_update_scales (surface);
 }
 
 

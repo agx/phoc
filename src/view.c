@@ -190,18 +190,22 @@ phoc_view_get_deco_part (PhocView *self, double sx, double sy)
 
 
 static void
-surface_send_enter_iterator (struct wlr_surface *surface, int x, int y, void *data)
+surface_send_enter_iterator (struct wlr_surface *wlr_surface, int x, int y, void *data)
 {
   struct wlr_output *wlr_output = data;
-  wlr_surface_send_enter(surface, wlr_output);
+
+  phoc_utils_wlr_surface_enter_output (wlr_surface, wlr_output);
 }
 
+
 static void
-surface_send_leave_iterator (struct wlr_surface *surface, int x, int y, void *data)
+surface_send_leave_iterator (struct wlr_surface *wlr_surface, int x, int y, void *data)
 {
   struct wlr_output *wlr_output = data;
-  wlr_surface_send_leave(surface, wlr_output);
+
+  phoc_utils_wlr_surface_leave_output (wlr_surface, wlr_output);
 }
+
 
 static void
 view_update_output (PhocView *view, const struct wlr_box *before)
@@ -217,28 +221,28 @@ view_update_output (PhocView *view, const struct wlr_box *before)
 
   PhocOutput *output;
   wl_list_for_each (output, &desktop->outputs, link) {
-    bool intersected = before != NULL && wlr_output_layout_intersects(
-      desktop->layout, output->wlr_output, before);
-    bool intersects = wlr_output_layout_intersects (desktop->layout, output->wlr_output, &box);
+    bool intersected, intersects;
+
+    intersected = before && wlr_output_layout_intersects (desktop->layout,
+                                                          output->wlr_output,
+                                                          before);
+    intersects = wlr_output_layout_intersects (desktop->layout, output->wlr_output, &box);
 
     if (intersected && !intersects) {
       phoc_view_for_each_surface (view, surface_send_leave_iterator, output->wlr_output);
-      if (priv->toplevel_handle) {
-        wlr_foreign_toplevel_handle_v1_output_leave (
-          priv->toplevel_handle, output->wlr_output);
-      }
+      if (priv->toplevel_handle)
+        wlr_foreign_toplevel_handle_v1_output_leave (priv->toplevel_handle, output->wlr_output);
     }
 
     if (!intersected && intersects) {
       phoc_view_for_each_surface (view, surface_send_enter_iterator, output->wlr_output);
 
-      if (priv->toplevel_handle) {
-        wlr_foreign_toplevel_handle_v1_output_enter (
-          priv->toplevel_handle, output->wlr_output);
-      }
+      if (priv->toplevel_handle)
+        wlr_foreign_toplevel_handle_v1_output_enter (priv->toplevel_handle, output->wlr_output);
     }
   }
 }
+
 
 static void
 view_save(PhocView *view)
@@ -912,12 +916,14 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
 
   struct wlr_box box;
   phoc_view_get_box (view, &box);
+
   PhocOutput *output;
-  wl_list_for_each(output, &view->desktop->outputs, link) {
-    bool intersects = wlr_output_layout_intersects(view->desktop->layout,
-                                                   output->wlr_output, &box);
+  wl_list_for_each (output, &view->desktop->outputs, link) {
+    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
+                                                    output->wlr_output, &box);
     if (intersects) {
-      wlr_surface_send_enter (subsurface->wlr_subsurface->surface, output->wlr_output);
+      phoc_utils_wlr_surface_enter_output (subsurface->wlr_subsurface->surface,
+                                           output->wlr_output);
     }
   }
 }

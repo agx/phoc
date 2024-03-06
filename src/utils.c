@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020,2021 Purism SPC
+ *                    2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -10,10 +11,14 @@
 
 #define G_LOG_DOMAIN "phoc-utils"
 
+#include "output.h"
+#include "utils.h"
+
+#include <wlr/types/wlr_fractional_scale_v1.h>
+
 #include <inttypes.h>
 #include <math.h>
 #include <wlr/util/box.h>
-#include "utils.h"
 
 
 void
@@ -135,10 +140,10 @@ phoc_utils_scale_box (struct wlr_box *box, float scale)
  * Returns: %TRUE on overlap otherwise %FALSE
  */
 gboolean
-phoc_util_is_damaged (const struct wlr_box    *box,
-                      const pixman_region32_t *damage,
-                      const struct wlr_box    *clip_box,
-                      pixman_region32_t       *out_damage)
+phoc_utils_is_damaged (const struct wlr_box    *box,
+                       const pixman_region32_t *damage,
+                       const struct wlr_box    *clip_box,
+                       pixman_region32_t       *out_damage)
 {
   pixman_region32_init (out_damage);
   pixman_region32_union_rect (out_damage, out_damage,
@@ -151,4 +156,38 @@ phoc_util_is_damaged (const struct wlr_box    *box,
   }
 
   return !!pixman_region32_not_empty (out_damage);
+}
+
+
+void
+phoc_utils_wlr_surface_update_scales (struct wlr_surface *surface)
+{
+  float scale = 1.0;
+
+  struct wlr_surface_output *surface_output;
+  wl_list_for_each (surface_output, &surface->current_outputs, link) {
+    if (surface_output->output->scale > scale)
+      scale = surface_output->output->scale;
+  }
+
+  wlr_fractional_scale_v1_notify_scale (surface, scale);
+  wlr_surface_set_preferred_buffer_scale (surface, ceil (scale));
+}
+
+
+void
+phoc_utils_wlr_surface_enter_output (struct wlr_surface *wlr_surface, struct wlr_output *wlr_output)
+{
+  wlr_surface_send_enter (wlr_surface, wlr_output);
+
+  phoc_utils_wlr_surface_update_scales (wlr_surface);
+}
+
+
+void
+phoc_utils_wlr_surface_leave_output (struct wlr_surface *wlr_surface, struct wlr_output *wlr_output)
+{
+  wlr_surface_send_leave (wlr_surface, wlr_output);
+
+  phoc_utils_wlr_surface_update_scales (wlr_surface);
 }

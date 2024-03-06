@@ -104,7 +104,7 @@ phoc_view_deco_bling_render (PhocBling *bling, PhocRenderContext *ctx)
   phoc_utils_scale_box (&box, ctx->output->wlr_output->scale);
 
   pixman_region32_t damage;
-  if (!phoc_util_is_damaged (&box, ctx->damage, NULL, &damage)) {
+  if (!phoc_utils_is_damaged (&box, ctx->damage, NULL, &damage)) {
     pixman_region32_fini (&damage);
     return;
   }
