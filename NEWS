@@ -1,3 +1,19 @@
+phoc 0.37.0
+-----------
+Released March 2024
+* Switch to wlr_render_pass
+* Allow to configure an output's scale-filte rmode
+* Support fractional-scale-v1 protocol
+* More bugfixes, internal restructuring and cleanups
+* Improve output mapping when running nested
+* Issues fixed:
+  * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/344
+  * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/346
+  * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/345
+* Contributors:
+    * Guido Günther
+    * Sergey Lisov
+
 phoc 0.36.0
 -----------
 Released February 2024
