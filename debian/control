@@ -14,7 +14,7 @@ Build-Depends:
  libwayland-dev,
  libxkbcommon-dev,
  meson (>= 0.54.0),
- pkg-config,
+ pkgconf,
  wayland-protocols,
  libxcb1-dev,
  libwlroots-dev (>= 0.17.1) <!pkg.phoc.embedwlroots>,
