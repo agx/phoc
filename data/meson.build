@@ -13,7 +13,7 @@ install_data(
 desktopconf = configuration_data()
 desktopconf.set('bindir', bindir)
 desktop_file = 'sm.puri.Phoc.desktop'
-i18n.merge_file(
+merged = i18n.merge_file(
   input: configure_file(
     input: desktop_file + '.in.in',
     output: desktop_file + '.in',
@@ -25,6 +25,13 @@ i18n.merge_file(
   install_dir: desktopdir,
   type: 'desktop'
 )
+
+desktop_utils = find_program('desktop-file-validate', required: false)
+if desktop_utils.found()
+  test('Validate desktop file',
+       desktop_utils, args: [merged],
+      )
+endif
 
 devconf = configuration_data()
 devconf.set('compositor', meson.project_build_root() / 'src' / 'phoc')

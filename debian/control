@@ -55,6 +55,7 @@ Build-Depends:
  python3-toml <!nodoc>,
  python3-typogrify <!nodoc>,
 # Needed to run the tests
+ desktop-file-utils <!nocheck>,
  mutter-common <!nocheck>,
  xvfb <!nocheck>,
  xauth <!nocheck>,
