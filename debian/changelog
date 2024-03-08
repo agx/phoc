@@ -1,3 +1,151 @@
+phoc (0.37.0) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * phosh-private: Add XF86Screensaver to the list of subscribable symbols.
+  * doc-check: Allow for pixman_region32_t to be unrsolved.
+    Some upcoming helpers will have this function argument.
+  * util: Introduce phoc_util_is_box_damaged.
+    This will be helpful for damage tracking when switching to render_pass.
+    It is similar to is_damge in the renderer but we want it public as e.g.
+    blings will want to use that too.
+  * output: Add helpers to transform boxes and regions.
+    This will be useful when switching to render_pass
+  * render: Clarify buffer render vs scanout rendering.
+    Rendering to a buffer uses the legacy renderer while rendering targeting
+    scanout is using render_pass. Make it clear where the view render
+    itertor fits in.
+  * render: Switch to wlr_render_pass.
+    This switches us to wlr_render_pass and to wlr_output_commit_state.
+    phoc_renderer_render_view_to_buffer keeps using wlr_renderer directly as
+    it needs wlr_renderer_readpixels. This will be fixed when switching to
+    0.18.x and wlr_texture_read_pixels.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/344
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/346
+  * output: Add scale filter mode.
+    This allows to use different texture filters based on output scale.  For
+    fractional we use bilinear filtering and for integer scales the nearest
+    filtering (as we don't need to scale down).
+  * settings: Allow to set output scale-filter
+  * layer-shell-effects: Better document drag handle.
+    The current description made it impossible to figure out how it works
+    without looking at the code.
+  * server: Fix docstring.
+    Fixes: ac4e8bbc ("server: Exit when session exits")
+  * docs: Update dependent libraries.
+    Add phoc and glib. Since wlroots is documented in the source
+    code we link to the git repository.
+  * docs: Add urlmap.
+    This allows for external linking
+  * treewide: Add TODOs.
+    Add TODOs for the remaining classes we want to encapsulat
+  * treewide: Use phoc_server_get_desktop()
+    We had about all combinations:
+    - Fetching the server, then the desktop
+    - Fetching the server, then using server->desktop directly
+    - Using phoc_server_get_desktop ()
+    - Using phoc_server_get_default ()->desktop
+    As we want PhocDesktop in all cases use
+      PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+    consistently. Only in the few places that use server and desktop use
+      PhocDesktop *desktop = phoc_server_get_desktop (server);
+    We also move fetching the desktop to the top of functions and clean up
+    some minor misindents along the way.
+  * server: Make desktop private.
+    This makes sure we only access the desktop that way.
+  * server: Make session startup related variables private
+  * server: Make init flag private
+  * treewide: Add and use phoc_server_get_input()
+    This brings it in line with phoc_server_get_desktop() making
+    an explicit server variable unnecessary in many functions.
+  * server: Make input private
+  * server: Add and use phoc_server_get_config()
+    This gets it in line with phoc_server_get_desktop()
+  * server: Make config private
+  * server: Make flags private
+  * server: Fix doc string
+  * server: Add and use phoc_server_get_debug_flags()
+    This gets it in line with phoc_server_get_desktop()
+  * server: Make debug flags private
+  * treewide: Add and use phoc_server_get_wl_display()
+    This gets it in line with phoc_server_get_desktop()
+  * server: Make wl_display private
+  * server: Make wl_source private
+  * server: Make wlr_subcompositor private
+  * treewide: Add and use phoc_server_get_backend()
+    This gets it in line with phoc_server_get_desktop()
+  * server: Make backend private
+  * treewide: Use phoc_server_get_render()
+    This gets it in line with phoc_server_get_desktop()
+  * server: Make renderer private
+  * treewide: Add and use phoc_server_get_compositor()
+    This gets it in line with phoc_server_get_desktop()
+  * server: Make compositor private
+  * server: Make data device manager private
+  * server: Drop private data.
+    As the server is not derivable we can use `self` directly now
+    that all data members are private.
+  * layer-shell: Improve indent.
+    Use full line length, drop superfluos braces and add space before
+    function's (). No functional change.
+  * layer-shell: Drop phoc_ prefix
+  * layer-shell: Use wlr_ prefix for wlr's subsurfaces
+  * layer-shell: Drop phoc prefix from phoc's subsurface
+  * layer-shell: Add phoc prefix to layer_subsurface_new()
+    Make is consistent with other constructors.
+  * layer-shell: Prefix destructor.
+    Makes it consistent with the constructor
+  * text-input: Indent fixes
+  * utils: Fix prefix
+  * view: Uncrustify view_update_output.
+    Let's clean that up before making more changes.
+  * output: Move scale updates to separate function
+  * view: Move surface enter/leave handling to separate function
+  * utils: Update buffer scale when a surface enters/leaves an output.
+    Besides doing sending the preferred buffer scale on output scale changes
+    we also need to do so when a view moves to another output.
+    Fixes: 07315fc7 ("output: Refresh textures on scale changes")
+  * treewide: Add support for fractional-scale-v1 protocol.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/345
+  * view: Update surface scale on subsurface map.
+    Use our new helper for that.
+  * layer-shell: Send surface scale on map.
+    Use the surface helper to not only notify about output enter but also
+    buffer and fractional scale.
+  * tests: Use pixman renderer.
+    We mosty test positioning / stacking so use a renderer that works well
+    in containers.
+    If we want to test renderer related bits we can set the renderer
+    explicitly.
+  * xwayland-surface: Setup view before maximizing.
+    Otherwise initially maximized XWayland views aren't rendered.
+    Fixes: 1e9df0a2 ("treewide: Adjust to map logic changes")
+  * drag-icon: Move into it's own file.
+    There's no need for a GObject but it unclutters the seat. This is the
+    minimal code move.
+  * drag-icon: Add and use is_mapped()
+    As in phoc_view_is_mapped() we handle NULL gracefully to simplify
+    the checking.
+  * drag-icon: Add getters
+  * output: Use drag-icon getters
+  * drag-icon: Make struct private.
+    We don't bother with a GObject until we need properties for e.g.
+    animations.
+  * output: Use drag-icon header.
+    This allows us to drop the forward declaration
+
+  [ Sergey Lisov ]
+  * seat: Respect touchscreen to output mapping from wlroots
+    wlroots' touchscreen objects (struct wlr_touch) have the "output_name"
+    field, which specifies the corresponding output device, from wlroots' own
+    point of view. Use these mappings if present not explicitly overridden by
+    gsettings.
+    This fixes the issue where touch inputs do not get rotated with the screen
+    when changing device orientation on setups where wlroots provides this
+    information (such as when running nested).
+    Helps: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/312
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 06 Mar 2024 17:42:59 +0100
+
 phoc (0.36.0) experimental; urgency=medium
 
   * ci: Use our ci template.
