@@ -307,7 +307,7 @@ phoc_server_initable_init (GInitable    *initable,
                                                                       PHOC_LINUX_DMABUF_VERSION,
                                                                       wlr_renderer);
   } else {
-    g_message ("Linux dmabuf support unavailale");
+    g_message ("Linux dmabuf support unavailable");
   }
 
   self->data_device_manager = wlr_data_device_manager_create (self->wl_display);
