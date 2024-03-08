@@ -56,6 +56,7 @@ Build-Depends:
  python3-typogrify <!nodoc>,
 # Needed to run the tests
  desktop-file-utils <!nocheck>,
+ libglib2.0-bin <!nocheck>,
  mutter-common <!nocheck>,
  xvfb <!nocheck>,
  xauth <!nocheck>,
