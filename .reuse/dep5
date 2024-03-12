@@ -91,12 +91,12 @@ Files:
  HACKING.md
  NEWS
  README.md
- data/icons/sm.puri.Phoc.svg
+ data/icons/mobi.phosh.Phoc.svg
  data/leak-suppress.txt
  data/phoc-dev.in
  data/phoc-dev.ini
  data/phoc-dev.service.in
- data/sm.puri.Phoc.desktop.in.in
+ data/mobi.phosh.Phoc.desktop.in.in
  data/sm.puri.phoc.gschema.xml
  debian/*
  doc/gettingstarted.md

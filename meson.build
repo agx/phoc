@@ -154,7 +154,7 @@ i18n  = import('i18n')
 config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 config_h.set_quoted('LOCALEDIR', localedir)
-config_h.set_quoted('PHOC_APP_ID', 'sm.puri.Phoc')
+config_h.set_quoted('PHOC_APP_ID', 'mobi.phosh.Phoc')
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland,
 	     description: 'Whether xwayland is enabled')

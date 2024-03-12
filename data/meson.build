@@ -18,7 +18,7 @@ install_data(
 
 desktopconf = configuration_data()
 desktopconf.set('bindir', bindir)
-desktop_file = 'sm.puri.Phoc.desktop'
+desktop_file = 'mobi.phosh.Phoc.desktop'
 merged = i18n.merge_file(
   input: configure_file(
     input: desktop_file + '.in.in',
