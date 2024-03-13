@@ -25,7 +25,7 @@
     THIS SOFTWARE.
   </copyright>
 
-  <interface name="zphoc_device_state_v1" version="1">
+  <interface name="zphoc_device_state_v1" version="2">
     <description summary="Device state information">
       Phones, tablets, convertibles, laptops can have additional hardware attached or switch
       their operation mode from e.g. tablet to laptop. This protocol is meant to provide information
@@ -51,6 +51,7 @@
       </description>
       <entry name="tablet_mode_switch" value="1" summary="The device has a tablet mode switch"/>
       <entry name="lid_switch" value="2" summary="The device has a lid switch"/>
+      <entry name="keyboard" value="4" summary="The device has a hardware keyboard attached" since="2"/>
     </enum>
 
     <enum name="error">

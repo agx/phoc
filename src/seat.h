@@ -163,4 +163,5 @@ void               phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
 gboolean           phoc_seat_has_touch    (PhocSeat *self);
 gboolean           phoc_seat_has_pointer  (PhocSeat *self);
 gboolean           phoc_seat_has_keyboard (PhocSeat *self);
+gboolean           phoc_seat_has_hw_keyboard (PhocSeat *self);
 gboolean           phoc_seat_has_switch   (PhocSeat *self, enum wlr_switch_type type);

@@ -754,13 +754,35 @@ phoc_seat_handle_destroy (struct wl_listener *listener, void *data)
 }
 
 
+static gboolean
+seat_has_keyboard (PhocSeat *self)
+{
+  if (self->keyboards == NULL)
+    return FALSE;
+
+  for (GSList *l = self->keyboards; l; l = l->next) {
+    PhocKeyboard *keyboard = PHOC_KEYBOARD (l->data);
+
+    /* If it's not managed by libinput (e.g. virtual keyboard) we
+       have no idea so we can only assume it's usable. */
+    if (!phoc_input_device_get_is_libinput (PHOC_INPUT_DEVICE (keyboard)))
+      return TRUE;
+
+    if (phoc_input_device_get_is_keyboard (PHOC_INPUT_DEVICE (keyboard)))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+
 static void
 seat_update_capabilities (PhocSeat *self)
 {
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
   uint32_t caps = 0;
 
-  if (self->keyboards != NULL)
+  if (seat_has_keyboard (self))
     caps |= WL_SEAT_CAPABILITY_KEYBOARD;
 
   if (self->pointers != NULL)
@@ -1953,6 +1975,23 @@ phoc_seat_has_keyboard (PhocSeat *self)
 
   g_assert (self->seat);
   return (self->seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD);
+}
+
+
+gboolean
+phoc_seat_has_hw_keyboard (PhocSeat *self)
+{
+  if (self->keyboards == NULL)
+    return FALSE;
+
+  for (GSList *l = self->keyboards; l; l = l->next) {
+    PhocKeyboard *keyboard = PHOC_KEYBOARD (l->data);
+
+    if (phoc_input_device_get_is_keyboard (PHOC_INPUT_DEVICE (keyboard)))
+      return TRUE;
+  }
+
+  return FALSE;
 }
 
 

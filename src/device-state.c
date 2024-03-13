@@ -17,7 +17,7 @@
 
 #include <glib-object.h>
 
-#define DEVICE_STATE_PROTOCOL_VERSION 1
+#define DEVICE_STATE_PROTOCOL_VERSION 2
 
 enum {
   PROP_0,
@@ -414,6 +414,9 @@ phoc_device_state_update_capabilities (PhocDeviceState *self)
   if (phoc_seat_has_switch (self->seat, WLR_SWITCH_TYPE_LID))
     caps |= ZPHOC_DEVICE_STATE_V1_CAPABILITY_LID_SWITCH;
 
+  if (phoc_seat_has_hw_keyboard (self->seat))
+    caps |= ZPHOC_DEVICE_STATE_V1_CAPABILITY_KEYBOARD;
+
   if (caps == self->caps)
     return;
 
@@ -422,8 +425,14 @@ phoc_device_state_update_capabilities (PhocDeviceState *self)
   /* Send out updated capabilities */
   for (GSList *l = self->resources; l; l = l->next) {
     struct wl_resource *resource = l->data;
+    uint32_t versioned_caps = caps;
+    int version;
 
-    zphoc_device_state_v1_send_capabilities (resource, caps);
+    version = wl_resource_get_version (resource);
+    if (version < ZPHOC_DEVICE_STATE_V1_CAPABILITY_KEYBOARD_SINCE_VERSION)
+      versioned_caps &= ~ZPHOC_DEVICE_STATE_V1_CAPABILITY_KEYBOARD;
+
+    zphoc_device_state_v1_send_capabilities (resource, versioned_caps);
   }
 }
 

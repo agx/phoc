@@ -85,7 +85,7 @@ handle_global (void *data, struct wl_registry *registry,
 {
   if (strcmp (interface, zphoc_device_state_v1_interface.name) == 0) {
     phoc_device_state = wl_registry_bind (registry, name,
-                                          &zphoc_device_state_v1_interface, 1);
+                                          &zphoc_device_state_v1_interface, 2);
     zphoc_device_state_v1_add_listener (phoc_device_state, &device_state_listener, NULL);
   }
 }
