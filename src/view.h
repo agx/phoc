@@ -235,5 +235,6 @@ void                  phoc_view_child_init (PhocViewChild                *child,
 void                  phoc_view_child_destroy (PhocViewChild *child);
 void                  phoc_view_child_apply_damage (PhocViewChild *child);
 void                  phoc_view_child_damage_whole (PhocViewChild *child);
+void                  phoc_view_child_map (PhocViewChild *child, struct wlr_surface *wlr_surface);
 
 G_END_DECLS

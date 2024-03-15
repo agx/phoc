@@ -114,24 +114,10 @@ popup_handle_destroy (struct wl_listener *listener, void *data)
 static void
 popup_handle_map (struct wl_listener *listener, void *data)
 {
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocXdgPopup *popup = wl_container_of (listener, popup, map);
-  PhocView *view = popup->child.view;
 
-  popup->child.mapped = true;
-  phoc_view_child_damage_whole (&popup->child);
-
-  struct wlr_box box;
-  phoc_view_get_box (view, &box);
-
-  PhocOutput *output;
-  wl_list_for_each (output, &view->desktop->outputs, link) {
-    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
-                                                    output->wlr_output, &box);
-    if (intersects)
-      phoc_utils_wlr_surface_enter_output (popup->child.wlr_surface, output->wlr_output);
-  }
-  phoc_input_update_cursor_focus (input);
+  /* Chain up to parent */
+  phoc_view_child_map (&popup->child, popup->child.wlr_surface);
 }
 
 static void
