@@ -756,10 +756,10 @@ phoc_output_fill_state (PhocOutput              *self,
     else if (preferred_mode != NULL)
       wlr_output_state_set_mode (pending, preferred_mode);
 
-    if (!output_config->scale)
-      wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
-    else
+    if (output_config->scale)
       wlr_output_state_set_scale (pending, output_config->scale);
+    else
+      wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
 
     wlr_output_state_set_transform (pending, output_config->transform);
     priv->scale_filter = output_config->scale_filter;
