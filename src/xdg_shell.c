@@ -123,12 +123,10 @@ popup_handle_map (struct wl_listener *listener, void *data)
 static void
 popup_handle_unmap (struct wl_listener *listener, void *data)
 {
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocXdgPopup *popup = wl_container_of (listener, popup, unmap);
 
-  phoc_view_child_damage_whole (&popup->child);
-  phoc_input_update_cursor_focus (input);
-  popup->child.mapped = false;
+  /* Chain up to parent */
+  phoc_view_child_unmap (&popup->child);
 }
 
 

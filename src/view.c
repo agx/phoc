@@ -854,6 +854,17 @@ phoc_view_child_map (PhocViewChild *child, struct wlr_surface *wlr_surface)
 
 
 void
+phoc_view_child_unmap (PhocViewChild *child)
+{
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
+
+  phoc_view_child_damage_whole (child);
+  phoc_input_update_cursor_focus (input);
+  child->mapped = false;
+}
+
+
+void
 phoc_view_child_init (PhocViewChild                *child,
                       const PhocViewChildInterface *impl,
                       PhocView                     *view,
@@ -937,17 +948,16 @@ subsurface_handle_map (struct wl_listener *listener, void *data)
   phoc_view_child_map (&subsurface->child, subsurface->wlr_subsurface->surface);
 }
 
+
 static void
 subsurface_handle_unmap (struct wl_listener *listener,void *data)
 {
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocSubsurface *subsurface = wl_container_of (listener, subsurface, unmap);
 
-  phoc_view_child_damage_whole (&subsurface->child);
-  phoc_input_update_cursor_focus (input);
-
-  subsurface->child.mapped = false;
+  /* Chain up to parent */
+  phoc_view_child_unmap (&subsurface->child);
 }
+
 
 static void
 phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)
