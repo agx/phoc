@@ -1941,10 +1941,10 @@ phoc_seat_init (PhocSeat *self)
 PhocSeat *
 phoc_seat_new (PhocInput *input, const char *name)
 {
-  return PHOC_SEAT (g_object_new (PHOC_TYPE_SEAT,
-                                  "input", input,
-                                  "name", name,
-                                  NULL));
+  return g_object_new (PHOC_TYPE_SEAT,
+                       "input", input,
+                       "name", name,
+                       NULL);
 }
 
 

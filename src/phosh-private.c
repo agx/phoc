@@ -807,7 +807,7 @@ phoc_phosh_private_init (PhocPhoshPrivate *self)
 PhocPhoshPrivate *
 phoc_phosh_private_new (void)
 {
-  return PHOC_PHOSH_PRIVATE (g_object_new (PHOC_TYPE_PHOSH_PRIVATE, NULL));
+  return g_object_new (PHOC_TYPE_PHOSH_PRIVATE, NULL);
 }
 
 

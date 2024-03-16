@@ -285,9 +285,9 @@ phoc_output_shield_init (PhocOutputShield *self)
 PhocOutputShield *
 phoc_output_shield_new (PhocOutput *output)
 {
-  return PHOC_OUTPUT_SHIELD (g_object_new (PHOC_TYPE_OUTPUT_SHIELD,
-                                           "output", output,
-                                           NULL));
+  return g_object_new (PHOC_TYPE_OUTPUT_SHIELD,
+                       "output", output,
+                       NULL);
 }
 
 

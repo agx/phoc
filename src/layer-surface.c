@@ -179,9 +179,9 @@ phoc_layer_surface_init (PhocLayerSurface *self)
 PhocLayerSurface *
 phoc_layer_surface_new (struct wlr_layer_surface_v1 *layer_surface)
 {
-  return PHOC_LAYER_SURFACE (g_object_new (PHOC_TYPE_LAYER_SURFACE,
-                                           "wlr-layer-surface", layer_surface,
-                                           NULL));
+  return g_object_new (PHOC_TYPE_LAYER_SURFACE,
+                       "wlr-layer-surface", layer_surface,
+                       NULL);
 }
 
 

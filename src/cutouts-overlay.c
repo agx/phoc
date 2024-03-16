@@ -147,9 +147,9 @@ phoc_cutouts_overlay_init (PhocCutoutsOverlay *self)
 PhocCutoutsOverlay *
 phoc_cutouts_overlay_new (const char * const *compatibles)
 {
-  return PHOC_CUTOUTS_OVERLAY (g_object_new (PHOC_TYPE_CUTOUTS_OVERLAY,
-                                             "compatibles", compatibles,
-                                             NULL));
+  return g_object_new (PHOC_TYPE_CUTOUTS_OVERLAY,
+                       "compatibles", compatibles,
+                       NULL);
 }
 
 

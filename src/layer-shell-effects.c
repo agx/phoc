@@ -711,7 +711,7 @@ phoc_layer_shell_effects_init (PhocLayerShellEffects *self)
 PhocLayerShellEffects *
 phoc_layer_shell_effects_new (void)
 {
-  return PHOC_LAYER_SHELL_EFFECTS (g_object_new (PHOC_TYPE_LAYER_SHELL_EFFECTS, NULL));
+  return g_object_new (PHOC_TYPE_LAYER_SHELL_EFFECTS, NULL);
 }
 
 

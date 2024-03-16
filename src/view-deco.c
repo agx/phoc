@@ -261,7 +261,7 @@ phoc_view_deco_init (PhocViewDeco *self)
 PhocViewDeco *
 phoc_view_deco_new (PhocView *view)
 {
-  return PHOC_VIEW_DECO (g_object_new (PHOC_TYPE_VIEW_DECO, "view", view, NULL));
+  return g_object_new (PHOC_TYPE_VIEW_DECO, "view", view, NULL);
 }
 
 

@@ -302,9 +302,9 @@ phoc_property_easer_init (PhocPropertyEaser *self)
 PhocPropertyEaser *
 phoc_property_easer_new (GObject *target)
 {
-  return PHOC_PROPERTY_EASER (g_object_new (PHOC_TYPE_PROPERTY_EASER,
-                                            "target", target,
-                                            NULL));
+  return g_object_new (PHOC_TYPE_PROPERTY_EASER,
+                       "target", target,
+                       NULL);
 }
 
 /**

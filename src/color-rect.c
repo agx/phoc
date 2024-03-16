@@ -311,10 +311,10 @@ phoc_color_rect_init (PhocColorRect *self)
 PhocColorRect *
 phoc_color_rect_new (PhocBox *box, PhocColor *color)
 {
-  return PHOC_COLOR_RECT (g_object_new (PHOC_TYPE_COLOR_RECT,
-                                        "box", box,
-                                        "color", color,
-                                        NULL));
+  return g_object_new (PHOC_TYPE_COLOR_RECT,
+                       "box", box,
+                       "color", color,
+                       NULL);
 }
 
 
