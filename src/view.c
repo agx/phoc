@@ -77,7 +77,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
 
 #define PHOC_VIEW_SELF(p) PHOC_PRIV_CONTAINER(PHOC_VIEW, PhocView, (p))
 
-static bool view_center (PhocView *view, PhocOutput *output);
 
 typedef struct _PhocSubsurface {
   PhocViewChild child;
@@ -87,6 +86,13 @@ typedef struct _PhocSubsurface {
   struct wl_listener map;
   struct wl_listener unmap;
 } PhocSubsurface;
+
+#define PHOC_TYPE_SUBSURFACE (phoc_subsurface_get_type ())
+G_DECLARE_FINAL_TYPE (PhocSubsurface, phoc_subsurface, PHOC, SUBSURFACE, PhocViewChild)
+G_DEFINE_FINAL_TYPE (PhocSubsurface, phoc_subsurface, PHOC_TYPE_VIEW_CHILD)
+
+
+static bool view_center (PhocView *view, PhocOutput *output);
 
 
 static struct wlr_foreign_toplevel_handle_v1 *
@@ -1024,6 +1030,38 @@ subsurface_handle_unmap (struct wl_listener *listener,void *data)
 
   /* Chain up to parent */
   phoc_view_child_unmap (&subsurface->child);
+}
+
+
+static void
+phoc_subsurface_finalize (GObject *object)
+{
+  G_OBJECT_CLASS (phoc_subsurface_parent_class)->finalize (object);
+}
+
+
+static void
+phoc_subsurface_class_init (PhocSubsurfaceClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = phoc_subsurface_finalize;
+}
+
+
+static void
+phoc_subsurface_init (PhocSubsurface *self)
+{
+}
+
+
+static PhocSubsurface *
+phoc_subsurface_new (PhocView *view, struct wlr_surface *wlr_surface)
+{
+  return g_object_new (PHOC_TYPE_SUBSURFACE,
+                       "view", view,
+                       "wlr-surface", wlr_surface,
+                       NULL);
 }
 
 
