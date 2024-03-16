@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
- * Copyright (C) 2023-2024 Guido Günther
+ * Copyright (C) 2023-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
