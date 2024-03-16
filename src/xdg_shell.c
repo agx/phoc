@@ -17,6 +17,7 @@
 #include "view-child-private.h"
 #include "utils.h"
 
+
 typedef struct _PhocXdgToplevelDecoration {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
   PhocXdgSurface *surface;
@@ -24,6 +25,7 @@ typedef struct _PhocXdgToplevelDecoration {
   struct wl_listener request_mode;
   struct wl_listener surface_commit;
 } PhocXdgToplevelDecoration;
+
 
 typedef struct _PhocXdgPopup {
   PhocViewChild child;
@@ -35,6 +37,11 @@ typedef struct _PhocXdgPopup {
   struct wl_listener new_popup;
   struct wl_listener reposition;
 } PhocXdgPopup;
+
+#define PHOC_TYPE_XDG_POPUP (phoc_xdg_popup_get_type ())
+G_DECLARE_FINAL_TYPE (PhocXdgPopup, phoc_xdg_popup, PHOC, XDG_POPUP, PhocViewChild)
+G_DEFINE_FINAL_TYPE (PhocXdgPopup, phoc_xdg_popup, PHOC_TYPE_VIEW_CHILD)
+
 
 static const PhocViewChildInterface popup_impl;
 
@@ -151,6 +158,28 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
   phoc_view_damage_whole (popup->child.view);
 
   popup_unconstrain (popup);
+}
+
+
+static void
+phoc_xdg_popup_finalize (GObject *object)
+{
+  G_OBJECT_CLASS (phoc_xdg_popup_parent_class)->finalize (object);
+}
+
+
+static void
+phoc_xdg_popup_class_init (PhocXdgPopupClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = phoc_xdg_popup_finalize;
+}
+
+
+static void
+phoc_xdg_popup_init (PhocXdgPopup *self)
+{
 }
 
 
