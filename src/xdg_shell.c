@@ -57,7 +57,7 @@ popup_destroy (PhocViewChild *child)
   wl_list_remove (&popup->map.link);
   wl_list_remove (&popup->destroy.link);
 
-  free (popup);
+  g_object_unref (child);
 }
 
 
@@ -183,13 +183,20 @@ phoc_xdg_popup_init (PhocXdgPopup *self)
 }
 
 
+static PhocXdgPopup *
+phoc_xdg_popup_new (PhocView *view, struct wlr_surface *wlr_surface)
+{
+  return g_object_new (PHOC_TYPE_XDG_POPUP,
+                       "view", view,
+                       "wlr-surface", wlr_surface,
+                       NULL);
+}
+
+
 PhocXdgPopup *
 phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
 {
-  PhocXdgPopup *popup = calloc (1, sizeof(PhocXdgPopup));
-
-  if (popup == NULL)
-    return NULL;
+  PhocXdgPopup *popup = phoc_xdg_popup_new (view, wlr_popup->base->surface);
 
   popup->wlr_popup = wlr_popup;
   phoc_view_child_setup (&popup->child, &popup_impl, view, wlr_popup->base->surface);
