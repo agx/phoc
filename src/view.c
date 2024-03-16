@@ -18,6 +18,7 @@
 #include "server.h"
 #include "utils.h"
 #include "timed-animation.h"
+#include "view-child-private.h"
 #include "view-private.h"
 
 #define PHOC_ANIM_DURATION_WINDOW_FADE 150
@@ -932,10 +933,10 @@ phoc_view_child_unmap (PhocViewChild *child)
 
 
 void
-phoc_view_child_init (PhocViewChild                *child,
-                      const PhocViewChildInterface *impl,
-                      PhocView                     *view,
-                      struct wlr_surface           *wlr_surface)
+phoc_view_child_setup (PhocViewChild                *child,
+                       const PhocViewChildInterface *impl,
+                       PhocView                     *view,
+                       struct wlr_surface           *wlr_surface)
 {
   PhocViewPrivate *priv;
 
@@ -1032,8 +1033,7 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
   PhocSubsurface *subsurface = g_new0 (PhocSubsurface, 1);
 
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_init (&subsurface->child, &subsurface_impl,
-                        view, wlr_subsurface->surface);
+  phoc_view_child_setup (&subsurface->child, &subsurface_impl, view, wlr_subsurface->surface);
   subsurface->child.mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
@@ -1054,8 +1054,8 @@ phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *
   subsurface->child.parent = child;
   child->children = g_slist_prepend (child->children, &subsurface->child);
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_init (&subsurface->child, &subsurface_impl, child->view,
-                        wlr_subsurface->surface);
+  phoc_view_child_setup (&subsurface->child, &subsurface_impl, child->view,
+                         wlr_subsurface->surface);
   subsurface->child.mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;

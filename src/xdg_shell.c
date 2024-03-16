@@ -14,6 +14,7 @@
 #include "input.h"
 #include "server.h"
 #include "view.h"
+#include "view-child-private.h"
 #include "utils.h"
 
 typedef struct _PhocXdgToplevelDecoration {
@@ -162,7 +163,7 @@ phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
     return NULL;
 
   popup->wlr_popup = wlr_popup;
-  phoc_view_child_init (&popup->child, &popup_impl, view, wlr_popup->base->surface);
+  phoc_view_child_setup (&popup->child, &popup_impl, view, wlr_popup->base->surface);
 
   popup->destroy.notify = popup_handle_destroy;
   wl_signal_add (&wlr_popup->base->events.destroy, &popup->destroy);

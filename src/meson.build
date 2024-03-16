@@ -92,6 +92,8 @@ sources = files(
   'utils.h',
   'view.c',
   'view.h',
+  'view-child.c',
+  'view-child-private.h',
   'view-deco.c',
   'view-deco.h',
   'virtual.c',
