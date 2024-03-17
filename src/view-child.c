@@ -90,9 +90,36 @@ phoc_view_child_get_property (GObject    *object,
 
 
 static void
+phoc_view_child_handle_new_subsurface (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *self = wl_container_of (listener, self, new_subsurface);
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  phoc_view_child_subsurface_create (self, wlr_subsurface);
+}
+
+
+static void
+phoc_view_child_handle_commit (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *self = wl_container_of (listener, self, commit);
+
+  phoc_view_child_apply_damage (self);
+}
+
+
+static void
 phoc_view_child_constructed (GObject *object)
 {
+  PhocViewChild *self = PHOC_VIEW_CHILD (object);
+
   G_OBJECT_CLASS (phoc_view_child_parent_class)->constructed (object);
+
+  self->commit.notify = phoc_view_child_handle_commit;
+  wl_signal_add (&self->wlr_surface->events.commit, &self->commit);
+
+  self->new_subsurface.notify = phoc_view_child_handle_new_subsurface;
+  wl_signal_add (&self->wlr_surface->events.new_subsurface, &self->new_subsurface);
 }
 
 

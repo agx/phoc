@@ -70,14 +70,14 @@ static inline gboolean PHOC_IS_VIEW_CHILD_CLASS (gpointer ptr) {
 static inline PhocViewChildClass * PHOC_VIEW_CHILD_GET_CLASS (gpointer ptr) {
   return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_child_get_type (), PhocViewChildClass); }
 
-void                  phoc_view_child_setup (PhocViewChild                *self,
-                                             PhocView                     *view,
-                                             struct wlr_surface           *wlr_surface);
+void                  phoc_view_child_setup (PhocViewChild *self);
 void                  phoc_view_child_destroy (PhocViewChild *self);
 void                  phoc_view_child_apply_damage (PhocViewChild *self);
 void                  phoc_view_child_damage_whole (PhocViewChild *self);
 void                  phoc_view_child_map (PhocViewChild *self, struct wlr_surface *wlr_surface);
 void                  phoc_view_child_unmap (PhocViewChild *self);
 void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
+void                  phoc_view_child_subsurface_create (PhocViewChild         *child,
+                                                         struct wlr_subsurface *wlr_subsurface);
 
 G_END_DECLS
