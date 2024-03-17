@@ -492,7 +492,7 @@ handle_new_popup (struct wl_listener *listener, void *data)
   PhocXdgSurface *self = wl_container_of (listener, self, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
 
-  phoc_xdg_popup_create (PHOC_VIEW (self), wlr_popup);
+  phoc_xdg_popup_new (PHOC_VIEW (self), wlr_popup);
 }
 
 

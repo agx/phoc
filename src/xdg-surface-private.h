@@ -15,7 +15,7 @@ G_BEGIN_DECLS
 typedef struct _PhocXdgPopup PhocXdgPopup;
 typedef struct _PhocXdgToplevelDecoration PhocXdgToplevelDecoration;
 
-PhocXdgPopup      *phoc_xdg_popup_create           (PhocView             *view,
+PhocXdgPopup      *phoc_xdg_popup_new              (PhocView             *view,
                                                     struct wlr_xdg_popup *wlr_popup);
 void               phoc_xdg_surface_set_decoration (PhocXdgSurface            *self,
                                                     PhocXdgToplevelDecoration *decoration);

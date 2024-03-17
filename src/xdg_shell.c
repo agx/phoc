@@ -18,6 +18,14 @@
 #include "utils.h"
 
 
+enum {
+  PROP_0,
+  PROP_WLR_POPUP,
+  PROP_LAST_PROP
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
+
 typedef struct _PhocXdgToplevelDecoration {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
   PhocXdgSurface *surface;
@@ -28,7 +36,8 @@ typedef struct _PhocXdgToplevelDecoration {
 
 
 typedef struct _PhocXdgPopup {
-  PhocViewChild child;
+  PhocViewChild     parent_instance;
+
   struct wlr_xdg_popup *wlr_popup;
 
   struct wl_listener destroy;
@@ -60,7 +69,7 @@ popup_unconstrain (PhocXdgPopup* popup)
   // get the output of the popup's positioner anchor point and convert it to
   // the toplevel parent's coordinate system and then pass it to
   // wlr_xdg_popup_unconstrain_from_box
-  PhocView *view = PHOC_VIEW (popup->child.view);
+  PhocView *view = PHOC_VIEW (PHOC_VIEW_CHILD (popup)->view);
 
   PhocOutput *output = phoc_desktop_layout_get_output (view->desktop, view->box.x, view->box.y);
   if (output == NULL)
@@ -90,7 +99,7 @@ popup_handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocXdgPopup *popup = wl_container_of (listener, popup, destroy);
 
-  phoc_view_child_destroy (&popup->child);
+  phoc_view_child_destroy (PHOC_VIEW_CHILD (popup));
 }
 
 
@@ -100,7 +109,7 @@ popup_handle_new_popup (struct wl_listener *listener, void *data)
   PhocXdgPopup *popup = wl_container_of (listener, popup, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
 
-  phoc_xdg_popup_create (popup->child.view, wlr_popup);
+  phoc_xdg_popup_new (PHOC_VIEW_CHILD (popup)->view, wlr_popup);
 }
 
 
@@ -111,7 +120,67 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
 
   /* clear the old popup positon */
   /* TODO: this is too much damage */
-  phoc_view_damage_whole (popup->child.view);
+  phoc_view_damage_whole (PHOC_VIEW_CHILD (popup)->view);
+
+  popup_unconstrain (popup);
+}
+
+
+static void
+phoc_xdg_popup_set_property (GObject      *object,
+                             guint         property_id,
+                             const GValue *value,
+                             GParamSpec   *pspec)
+{
+  PhocXdgPopup *popup = PHOC_XDG_POPUP (object);
+
+  switch (property_id) {
+  case PROP_WLR_POPUP:
+    popup->wlr_popup = g_value_get_pointer (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_xdg_popup_get_property (GObject    *object,
+                             guint       property_id,
+                             GValue     *value,
+                             GParamSpec *pspec)
+{
+  PhocXdgPopup *popup = PHOC_XDG_POPUP (object);
+
+  switch (property_id) {
+  case PROP_WLR_POPUP:
+    g_value_set_pointer (value, popup->wlr_popup);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_xdg_popup_constructed (GObject *object)
+{
+  PhocXdgPopup *popup = PHOC_XDG_POPUP (object);
+
+  G_OBJECT_CLASS (phoc_xdg_popup_parent_class)->constructed (object);
+
+  phoc_view_child_setup (PHOC_VIEW_CHILD (popup));
+
+  popup->destroy.notify = popup_handle_destroy;
+  wl_signal_add (&popup->wlr_popup->base->events.destroy, &popup->destroy);
+
+  popup->new_popup.notify = popup_handle_new_popup;
+  wl_signal_add (&popup->wlr_popup->base->events.new_popup, &popup->new_popup);
+
+  popup->reposition.notify = popup_handle_reposition;
+  wl_signal_add (&popup->wlr_popup->events.reposition, &popup->reposition);
 
   popup_unconstrain (popup);
 }
@@ -136,9 +205,19 @@ phoc_xdg_popup_class_init (PhocXdgPopupClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   PhocViewChildClass *view_child_class = PHOC_VIEW_CHILD_CLASS (klass);
 
+  object_class->constructed = phoc_xdg_popup_constructed;
   object_class->finalize = phoc_xdg_popup_finalize;
+  object_class->get_property = phoc_xdg_popup_get_property;
+  object_class->set_property = phoc_xdg_popup_set_property;
 
   view_child_class->get_pos = popup_get_pos;
+
+  props[PROP_WLR_POPUP] =
+    g_param_spec_pointer ("wlr-popup", "", "",
+                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+
 }
 
 
@@ -148,36 +227,14 @@ phoc_xdg_popup_init (PhocXdgPopup *self)
 }
 
 
-static PhocXdgPopup *
-phoc_xdg_popup_new (PhocView *view, struct wlr_surface *wlr_surface)
+PhocXdgPopup *
+phoc_xdg_popup_new (PhocView *view, struct wlr_xdg_popup *wlr_xdg_popup)
 {
   return g_object_new (PHOC_TYPE_XDG_POPUP,
                        "view", view,
-                       "wlr-surface", wlr_surface,
+                       "wlr-popup", wlr_xdg_popup,
+                       "wlr-surface", wlr_xdg_popup->base->surface,
                        NULL);
-}
-
-
-PhocXdgPopup *
-phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
-{
-  PhocXdgPopup *popup = phoc_xdg_popup_new (view, wlr_popup->base->surface);
-
-  popup->wlr_popup = wlr_popup;
-  phoc_view_child_setup (&popup->child);
-
-  popup->destroy.notify = popup_handle_destroy;
-  wl_signal_add (&wlr_popup->base->events.destroy, &popup->destroy);
-
-  popup->new_popup.notify = popup_handle_new_popup;
-  wl_signal_add (&wlr_popup->base->events.new_popup, &popup->new_popup);
-
-  popup->reposition.notify = popup_handle_reposition;
-  wl_signal_add (&wlr_popup->events.reposition, &popup->reposition);
-
-  popup_unconstrain (popup);
-
-  return popup;
 }
 
 
