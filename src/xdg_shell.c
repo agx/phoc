@@ -32,8 +32,6 @@ typedef struct _PhocXdgPopup {
   struct wlr_xdg_popup *wlr_popup;
 
   struct wl_listener destroy;
-  struct wl_listener map;
-  struct wl_listener unmap;
   struct wl_listener new_popup;
   struct wl_listener reposition;
 } PhocXdgPopup;
@@ -95,24 +93,6 @@ popup_handle_destroy (struct wl_listener *listener, void *data)
   phoc_view_child_destroy (&popup->child);
 }
 
-static void
-popup_handle_map (struct wl_listener *listener, void *data)
-{
-  PhocXdgPopup *popup = wl_container_of (listener, popup, map);
-
-  /* Chain up to parent */
-  phoc_view_child_map (&popup->child, popup->child.wlr_surface);
-}
-
-static void
-popup_handle_unmap (struct wl_listener *listener, void *data)
-{
-  PhocXdgPopup *popup = wl_container_of (listener, popup, unmap);
-
-  /* Chain up to parent */
-  phoc_view_child_unmap (&popup->child);
-}
-
 
 static void
 popup_handle_new_popup (struct wl_listener *listener, void *data)
@@ -144,8 +124,6 @@ phoc_xdg_popup_finalize (GObject *object)
 
   wl_list_remove (&popup->reposition.link);
   wl_list_remove (&popup->new_popup.link);
-  wl_list_remove (&popup->unmap.link);
-  wl_list_remove (&popup->map.link);
   wl_list_remove (&popup->destroy.link);
 
   G_OBJECT_CLASS (phoc_xdg_popup_parent_class)->finalize (object);
@@ -190,12 +168,6 @@ phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
 
   popup->destroy.notify = popup_handle_destroy;
   wl_signal_add (&wlr_popup->base->events.destroy, &popup->destroy);
-
-  popup->map.notify = popup_handle_map;
-  wl_signal_add (&wlr_popup->base->surface->events.map, &popup->map);
-
-  popup->unmap.notify = popup_handle_unmap;
-  wl_signal_add (&wlr_popup->base->surface->events.unmap, &popup->unmap);
 
   popup->new_popup.notify = popup_handle_new_popup;
   wl_signal_add (&wlr_popup->base->events.new_popup, &popup->new_popup);

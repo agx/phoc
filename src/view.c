@@ -83,8 +83,6 @@ typedef struct _PhocSubsurface {
   struct wlr_subsurface *wlr_subsurface;
 
   struct wl_listener destroy;
-  struct wl_listener map;
-  struct wl_listener unmap;
 } PhocSubsurface;
 
 #define PHOC_TYPE_SUBSURFACE (phoc_subsurface_get_type ())
@@ -912,25 +910,6 @@ subsurface_handle_destroy (struct wl_listener *listener, void *data)
   phoc_view_child_destroy(&subsurface->child);
 }
 
-static void
-subsurface_handle_map (struct wl_listener *listener, void *data)
-{
-  PhocSubsurface *subsurface = wl_container_of (listener, subsurface, map);
-
-  /* Chain up to parent */
-  phoc_view_child_map (&subsurface->child, subsurface->wlr_subsurface->surface);
-}
-
-
-static void
-subsurface_handle_unmap (struct wl_listener *listener,void *data)
-{
-  PhocSubsurface *subsurface = wl_container_of (listener, subsurface, unmap);
-
-  /* Chain up to parent */
-  phoc_view_child_unmap (&subsurface->child);
-}
-
 
 static void
 phoc_subsurface_finalize (GObject *object)
@@ -938,8 +917,6 @@ phoc_subsurface_finalize (GObject *object)
   PhocSubsurface *subsurface = PHOC_SUBSURFACE (object);
 
   wl_list_remove (&subsurface->destroy.link);
-  wl_list_remove (&subsurface->map.link);
-  wl_list_remove (&subsurface->unmap.link);
 
   G_OBJECT_CLASS (phoc_subsurface_parent_class)->finalize (object);
 }
@@ -983,12 +960,6 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
 
   subsurface->destroy.notify = subsurface_handle_destroy;
   wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
-
-  subsurface->map.notify = subsurface_handle_map;
-  wl_signal_add (&wlr_subsurface->surface->events.map, &subsurface->map);
-
-  subsurface->unmap.notify = subsurface_handle_unmap;
-  wl_signal_add (&wlr_subsurface->surface->events.unmap, &subsurface->unmap);
 }
 
 void
@@ -1004,12 +975,6 @@ phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *
 
   subsurface->destroy.notify = subsurface_handle_destroy;
   wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
-
-  subsurface->map.notify = subsurface_handle_map;
-  wl_signal_add (&wlr_subsurface->surface->events.map, &subsurface->map);
-
-  subsurface->unmap.notify = subsurface_handle_unmap;
-  wl_signal_add (&wlr_subsurface->surface->events.unmap, &subsurface->unmap);
 
   phoc_view_child_damage_whole (&subsurface->child);
 }

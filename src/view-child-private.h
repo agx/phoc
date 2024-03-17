@@ -35,6 +35,8 @@ struct _PhocViewChild {
   struct wl_list                link; // PhocViewPrivate::child_surfaces
   bool                          mapped;
 
+  struct wl_listener            map;
+  struct wl_listener            unmap;
   struct wl_listener            commit;
   struct wl_listener            new_subsurface;
 };
@@ -45,12 +47,16 @@ struct _PhocViewChild {
  *   element in the widget class structure in order for the class mechanism
  *   to work correctly. This allows a PhocViewClass pointer to be cast to
  *   a GObjectClass pointer.
+ * @map: Invoked on map. Chain up to parent.
+ * @unmap: Invoked on unmap. Chain up to parent.
  * @get_pos: Get the child's position relative to it's parent.
  */
 typedef struct _PhocViewChildClass
 {
   GObjectClass parent_class;
 
+  void               (*map) (PhocViewChild *self);
+  void               (*unmap) (PhocViewChild *self);
   void               (*get_pos) (PhocViewChild *self, int *sx, int *sy);
 } PhocViewChildClass;
 
@@ -74,8 +80,6 @@ void                  phoc_view_child_setup (PhocViewChild *self);
 void                  phoc_view_child_destroy (PhocViewChild *self);
 void                  phoc_view_child_apply_damage (PhocViewChild *self);
 void                  phoc_view_child_damage_whole (PhocViewChild *self);
-void                  phoc_view_child_map (PhocViewChild *self, struct wlr_surface *wlr_surface);
-void                  phoc_view_child_unmap (PhocViewChild *self);
 void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
 void                  phoc_view_child_subsurface_create (PhocViewChild         *child,
                                                          struct wlr_subsurface *wlr_subsurface);

@@ -90,6 +90,24 @@ phoc_view_child_get_property (GObject    *object,
 
 
 static void
+phoc_view_child_handle_map (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *self = wl_container_of (listener, self, map);
+
+  PHOC_VIEW_CHILD_GET_CLASS (self)->map (self);
+}
+
+
+static void
+phoc_view_child_handle_unmap (struct wl_listener *listener, void *data)
+{
+  PhocViewChild *self = wl_container_of (listener, self, unmap);
+
+  PHOC_VIEW_CHILD_GET_CLASS (self)->unmap (self);
+}
+
+
+static void
 phoc_view_child_handle_new_subsurface (struct wl_listener *listener, void *data)
 {
   PhocViewChild *self = wl_container_of (listener, self, new_subsurface);
@@ -114,6 +132,12 @@ phoc_view_child_constructed (GObject *object)
   PhocViewChild *self = PHOC_VIEW_CHILD (object);
 
   G_OBJECT_CLASS (phoc_view_child_parent_class)->constructed (object);
+
+  self->map.notify = phoc_view_child_handle_map;
+  wl_signal_add (&self->wlr_surface->events.map, &self->map);
+
+  self->unmap.notify = phoc_view_child_handle_unmap;
+  wl_signal_add (&self->wlr_surface->events.unmap, &self->unmap);
 
   self->commit.notify = phoc_view_child_handle_commit;
   wl_signal_add (&self->wlr_surface->events.commit, &self->commit);
@@ -148,6 +172,9 @@ phoc_view_child_finalize (GObject *object)
   g_clear_pointer (&self->children, g_slist_free);
 
   wl_list_remove (&self->link);
+
+  wl_list_remove (&self->map.link);
+  wl_list_remove (&self->unmap.link);
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->new_subsurface.link);
 
@@ -155,6 +182,41 @@ phoc_view_child_finalize (GObject *object)
   self->wlr_surface = NULL;
 
   G_OBJECT_CLASS (phoc_view_child_parent_class)->finalize (object);
+}
+
+
+static void
+phoc_view_child_map_default (PhocViewChild *self)
+{
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
+  PhocView *view = self->view;
+
+  self->mapped = true;
+  phoc_view_child_damage_whole (self);
+
+  struct wlr_box box;
+  phoc_view_get_box (view, &box);
+
+  PhocOutput *output;
+  wl_list_for_each (output, &view->desktop->outputs, link) {
+    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
+                                                    output->wlr_output, &box);
+    if (intersects)
+      phoc_utils_wlr_surface_enter_output (self->wlr_surface, output->wlr_output);
+  }
+
+  phoc_input_update_cursor_focus (input);
+}
+
+
+static void
+phoc_view_child_unmap_default (PhocViewChild *self)
+{
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
+
+  phoc_view_child_damage_whole (self);
+  phoc_input_update_cursor_focus (input);
+  self->mapped = false;
 }
 
 
@@ -177,6 +239,8 @@ phoc_view_child_class_init (PhocViewChildClass *klass)
   object_class->constructed = phoc_view_child_constructed;
   object_class->finalize = phoc_view_child_finalize;
 
+  view_child_class->map = phoc_view_child_map_default;
+  view_child_class->unmap = phoc_view_child_unmap_default;
   view_child_class->get_pos = phoc_view_child_get_pos_default;
 
   props[PROP_VIEW] =
@@ -240,41 +304,6 @@ phoc_view_child_damage_whole (PhocViewChild *self)
                                             view_box.y + sy - output_box.y);
 
   }
-}
-
-
-void
-phoc_view_child_unmap (PhocViewChild *self)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-
-  phoc_view_child_damage_whole (self);
-  phoc_input_update_cursor_focus (input);
-  self->mapped = false;
-}
-
-
-void
-phoc_view_child_map (PhocViewChild *self, struct wlr_surface *wlr_surface)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-  PhocView *view = self->view;
-
-  self->mapped = true;
-  phoc_view_child_damage_whole (self);
-
-  struct wlr_box box;
-  phoc_view_get_box (view, &box);
-
-  PhocOutput *output;
-  wl_list_for_each (output, &view->desktop->outputs, link) {
-    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
-                                                    output->wlr_output, &box);
-    if (intersects)
-      phoc_utils_wlr_surface_enter_output (wlr_surface, output->wlr_output);
-  }
-
-  phoc_input_update_cursor_focus (input);
 }
 
 
