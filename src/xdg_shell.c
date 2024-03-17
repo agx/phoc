@@ -99,7 +99,7 @@ popup_handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocXdgPopup *popup = wl_container_of (listener, popup, destroy);
 
-  phoc_view_child_destroy (PHOC_VIEW_CHILD (popup));
+  g_object_unref (popup);
 }
 
 

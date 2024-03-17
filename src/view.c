@@ -907,7 +907,8 @@ static void
 subsurface_handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocSubsurface *subsurface = wl_container_of(listener, subsurface, destroy);
-  phoc_view_child_destroy(&subsurface->child);
+
+  g_object_unref (subsurface);
 }
 
 
@@ -1138,9 +1139,8 @@ phoc_view_unmap (PhocView *view)
   wl_list_remove (&priv->surface_new_subsurface.link);
 
   PhocViewChild *child, *tmp;
-  wl_list_for_each_safe(child, tmp, &priv->child_surfaces, link) {
-    phoc_view_child_destroy(child);
-  }
+  wl_list_for_each_safe (child, tmp, &priv->child_surfaces, link)
+    g_object_unref (child);
 
   if (phoc_view_is_fullscreen (view)) {
     phoc_output_damage_whole (priv->fullscreen_output);
@@ -1857,21 +1857,6 @@ phoc_view_get_output (PhocView *view)
     return NULL;
 
   return PHOC_OUTPUT (wlr_output->data);
-}
-
-/**
- * phoc_view_child_destroy:
- * @child: The view child to destroy
- *
- * Destroys a view child freeing its resources.
- */
-void
-phoc_view_child_destroy (PhocViewChild *child)
-{
-  if (child == NULL)
-    return;
-
-  g_object_unref (child);
 }
 
 /**
