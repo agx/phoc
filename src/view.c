@@ -949,8 +949,6 @@ subsurface_destroy (PhocViewChild *child)
   wl_list_remove (&subsurface->destroy.link);
   wl_list_remove (&subsurface->map.link);
   wl_list_remove (&subsurface->unmap.link);
-
-  g_object_unref (subsurface);
 }
 
 
@@ -1954,29 +1952,9 @@ phoc_view_child_destroy (PhocViewChild *child)
   if (child == NULL)
     return;
 
-  if (phoc_view_child_is_mapped (child) && phoc_view_is_mapped (child->view))
-    phoc_view_child_damage_whole (child);
-
-  /* Remove from parent if it's also a PhocChild */
-  if (child->parent != NULL) {
-    child->parent->children = g_slist_remove (child->parent->children, child);
-    child->parent = NULL;
-  }
-
-  /* Detach us from all children */
-  for (GSList *elem = child->children; elem; elem = elem->next) {
-    PhocViewChild *subchild = elem->data;
-    subchild->parent = NULL;
-    /* The subchild lost its parent, so it cannot see that the parent is unmapped. Unmap it directly */
-    subchild->mapped = false;
-  }
-  g_clear_pointer (&child->children, g_slist_free);
-
-  wl_list_remove(&child->link);
-  wl_list_remove(&child->commit.link);
-  wl_list_remove(&child->new_subsurface.link);
-
   child->impl->destroy(child);
+
+  g_object_unref (child);
 }
 
 /**

@@ -101,6 +101,29 @@ phoc_view_child_finalize (GObject *object)
 {
   PhocViewChild *self = PHOC_VIEW_CHILD (object);
 
+  if (phoc_view_child_is_mapped (self) && phoc_view_is_mapped (self->view))
+    phoc_view_child_damage_whole (self);
+
+  /* Remove from parent if it's also a PhocViewChild */
+  if (self->parent != NULL) {
+    self->parent->children = g_slist_remove (self->parent->children, self);
+    self->parent = NULL;
+  }
+
+  /* Detach us from all children */
+  for (GSList *elem = self->children; elem; elem = elem->next) {
+    PhocViewChild *subchild = elem->data;
+    subchild->parent = NULL;
+    /* The subchild lost its parent, so it cannot see that the parent is unmapped. Unmap it directly */
+    /* TODO: But then we won't damage them on destroy? */
+    subchild->mapped = false;
+  }
+  g_clear_pointer (&self->children, g_slist_free);
+
+  wl_list_remove (&self->link);
+  wl_list_remove (&self->commit.link);
+  wl_list_remove (&self->new_subsurface.link);
+
   self->view = NULL;
   self->wlr_surface = NULL;
 

@@ -56,8 +56,6 @@ popup_destroy (PhocViewChild *child)
   wl_list_remove (&popup->unmap.link);
   wl_list_remove (&popup->map.link);
   wl_list_remove (&popup->destroy.link);
-
-  g_object_unref (child);
 }
 
 
