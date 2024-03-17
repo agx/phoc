@@ -846,18 +846,6 @@ view_center (PhocView *view, PhocOutput *output)
 }
 
 
-static bool
-phoc_view_child_is_mapped (PhocViewChild *child)
-{
-  while (child) {
-    if (!child->mapped) {
-      return false;
-    }
-    child = child->parent;
-  }
-  return true;
-}
-
 static void
 phoc_view_child_handle_commit (struct wl_listener *listener, void *data)
 {
@@ -900,41 +888,6 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
 
   wl_list_for_each (subsurface, &surface->current.subsurfaces_above, current.link)
     phoc_view_child_subsurface_create (child, subsurface);
-}
-
-
-void
-phoc_view_child_map (PhocViewChild *child, struct wlr_surface *wlr_surface)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-  PhocView *view = child->view;
-
-  child->mapped = true;
-  phoc_view_child_damage_whole (child);
-
-  struct wlr_box box;
-  phoc_view_get_box (view, &box);
-
-  PhocOutput *output;
-  wl_list_for_each (output, &view->desktop->outputs, link) {
-    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
-                                                    output->wlr_output, &box);
-    if (intersects)
-      phoc_utils_wlr_surface_enter_output (wlr_surface, output->wlr_output);
-  }
-
-  phoc_input_update_cursor_focus (input);
-}
-
-
-void
-phoc_view_child_unmap (PhocViewChild *child)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-
-  phoc_view_child_damage_whole (child);
-  phoc_input_update_cursor_focus (input);
-  child->mapped = false;
 }
 
 
@@ -2025,53 +1978,6 @@ phoc_view_child_destroy (PhocViewChild *child)
 
   child->impl->destroy(child);
 }
-
-/*
- * phoc_view_child_apply_damage:
- * @child: A view child
- *
- * This is the equivalent of [method@Phoc.View.apply_damage] but for
- * [struct@Phoc.ViewChild].
- */
-void
-phoc_view_child_apply_damage (PhocViewChild *child)
-{
-  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
-    return;
-
-  phoc_view_apply_damage (child->view);
-}
-
-/**
- * phoc_view_child_damage_whole:
- * @child: A view child
- *
- * This is the equivalent of [method@Phoc.View.damage_whole] but for
- * [struct@Phoc.ViewChild].
- */
-void
-phoc_view_child_damage_whole (PhocViewChild *child)
-{
-  PhocOutput *output;
-  int sx, sy;
-  struct wlr_box view_box;
-
-  if (!child || !phoc_view_child_is_mapped (child) || !phoc_view_is_mapped (child->view))
-    return;
-
-  phoc_view_get_box (child->view, &view_box);
-  child->impl->get_pos (child, &sx, &sy);
-
-  wl_list_for_each (output, &child->view->desktop->outputs, link) {
-    struct wlr_box output_box;
-    wlr_output_layout_get_box (child->view->desktop->layout, output->wlr_output, &output_box);
-    phoc_output_damage_whole_local_surface (output, child->wlr_surface,
-                                            view_box.x + sx - output_box.x,
-                                            view_box.y + sy - output_box.y);
-
-  }
-}
-
 
 /**
  * phoc_view_set_scale_to_fit:
