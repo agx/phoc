@@ -20,21 +20,13 @@ G_BEGIN_DECLS
  * @parent: (nullable): The parent of this child if another child
  * @children: (nullable): children of this child
  *
- * A child of a [type@PhocView], e.g. a popup or subsurface
+ * A child of a [type@View], e.g. a popup or subsurface
  */
 typedef struct _PhocView PhocView;
+
 typedef struct _PhocViewChild PhocViewChild;
-
-/* TODO: drop and use class virtual method */
-typedef struct _PhocViewChildInterface {
-  void (*get_pos)(PhocViewChild *child, int *sx, int *sy);
-  void (*destroy)(PhocViewChild *child);
-} PhocViewChildInterface;
-
 struct _PhocViewChild {
   GObject                      parent_instance;
-
-  const PhocViewChildInterface *impl;
 
   PhocView                     *view;
   PhocViewChild                *parent;
@@ -47,10 +39,19 @@ struct _PhocViewChild {
   struct wl_listener            new_subsurface;
 };
 
+/**
+ * PhocViewChildClass:
+ * @parent_class: The object class structure needs to be the first
+ *   element in the widget class structure in order for the class mechanism
+ *   to work correctly. This allows a PhocViewClass pointer to be cast to
+ *   a GObjectClass pointer.
+ * @get_pos: Get the child's position relative to it's parent.
+ */
 typedef struct _PhocViewChildClass
 {
   GObjectClass parent_class;
 
+  void               (*get_pos) (PhocViewChild *self, int *sx, int *sy);
 } PhocViewChildClass;
 
 #define PHOC_TYPE_VIEW_CHILD (phoc_view_child_get_type ())
@@ -70,7 +71,6 @@ static inline PhocViewChildClass * PHOC_VIEW_CHILD_GET_CLASS (gpointer ptr) {
   return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_child_get_type (), PhocViewChildClass); }
 
 void                  phoc_view_child_setup (PhocViewChild                *self,
-                                             const PhocViewChildInterface *impl,
                                              PhocView                     *view,
                                              struct wlr_surface           *wlr_surface);
 void                  phoc_view_child_destroy (PhocViewChild *self);
@@ -78,5 +78,6 @@ void                  phoc_view_child_apply_damage (PhocViewChild *self);
 void                  phoc_view_child_damage_whole (PhocViewChild *self);
 void                  phoc_view_child_map (PhocViewChild *self, struct wlr_surface *wlr_surface);
 void                  phoc_view_child_unmap (PhocViewChild *self);
+void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
 
 G_END_DECLS

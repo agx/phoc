@@ -131,15 +131,26 @@ phoc_view_child_finalize (GObject *object)
 }
 
 
+G_NORETURN
+static void
+phoc_view_child_get_pos_default (PhocViewChild *self, int *sx, int *sy)
+{
+  g_assert_not_reached ();
+}
+
+
 static void
 phoc_view_child_class_init (PhocViewChildClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  PhocViewChildClass *view_child_class = PHOC_VIEW_CHILD_CLASS (klass);
 
   object_class->get_property = phoc_view_child_get_property;
   object_class->set_property = phoc_view_child_set_property;
   object_class->constructed = phoc_view_child_constructed;
   object_class->finalize = phoc_view_child_finalize;
+
+  view_child_class->get_pos = phoc_view_child_get_pos_default;
 
   props[PROP_VIEW] =
     g_param_spec_object ("view", "", "",
@@ -192,7 +203,7 @@ phoc_view_child_damage_whole (PhocViewChild *self)
     return;
 
   phoc_view_get_box (self->view, &view_box);
-  self->impl->get_pos (self, &sx, &sy);
+  phoc_view_child_get_pos (self, &sx, &sy);
 
   wl_list_for_each (output, &self->view->desktop->outputs, link) {
     struct wlr_box output_box;
@@ -237,4 +248,13 @@ phoc_view_child_map (PhocViewChild *self, struct wlr_surface *wlr_surface)
   }
 
   phoc_input_update_cursor_focus (input);
+}
+
+
+void
+phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy)
+{
+  g_assert (PHOC_IS_VIEW_CHILD (self));
+
+  PHOC_VIEW_CHILD_GET_CLASS (self)->get_pos (self, sx, sy);
 }

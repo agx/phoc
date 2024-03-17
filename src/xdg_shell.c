@@ -43,22 +43,6 @@ G_DECLARE_FINAL_TYPE (PhocXdgPopup, phoc_xdg_popup, PHOC, XDG_POPUP, PhocViewChi
 G_DEFINE_FINAL_TYPE (PhocXdgPopup, phoc_xdg_popup, PHOC_TYPE_VIEW_CHILD)
 
 
-static const PhocViewChildInterface popup_impl;
-
-static void
-popup_destroy (PhocViewChild *child)
-{
-  g_assert (child->impl == &popup_impl);
-  PhocXdgPopup *popup = (PhocXdgPopup *)child;
-
-  wl_list_remove (&popup->reposition.link);
-  wl_list_remove (&popup->new_popup.link);
-  wl_list_remove (&popup->unmap.link);
-  wl_list_remove (&popup->map.link);
-  wl_list_remove (&popup->destroy.link);
-}
-
-
 static void
 popup_get_pos (PhocViewChild *child, int *sx, int *sy)
 {
@@ -70,12 +54,6 @@ popup_get_pos (PhocViewChild *child, int *sx, int *sy)
                                      wlr_popup->current.geometry.y - wlr_popup->base->current.geometry.y,
                                      sx, sy);
 }
-
-
-static const PhocViewChildInterface popup_impl = {
-  .get_pos = popup_get_pos,
-  .destroy = popup_destroy,
-};
 
 
 static void
@@ -162,6 +140,14 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
 static void
 phoc_xdg_popup_finalize (GObject *object)
 {
+  PhocXdgPopup *popup = PHOC_XDG_POPUP (object);
+
+  wl_list_remove (&popup->reposition.link);
+  wl_list_remove (&popup->new_popup.link);
+  wl_list_remove (&popup->unmap.link);
+  wl_list_remove (&popup->map.link);
+  wl_list_remove (&popup->destroy.link);
+
   G_OBJECT_CLASS (phoc_xdg_popup_parent_class)->finalize (object);
 }
 
@@ -170,8 +156,11 @@ static void
 phoc_xdg_popup_class_init (PhocXdgPopupClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  PhocViewChildClass *view_child_class = PHOC_VIEW_CHILD_CLASS (klass);
 
   object_class->finalize = phoc_xdg_popup_finalize;
+
+  view_child_class->get_pos = popup_get_pos;
 }
 
 
@@ -197,7 +186,7 @@ phoc_xdg_popup_create (PhocView *view, struct wlr_xdg_popup *wlr_popup)
   PhocXdgPopup *popup = phoc_xdg_popup_new (view, wlr_popup->base->surface);
 
   popup->wlr_popup = wlr_popup;
-  phoc_view_child_setup (&popup->child, &popup_impl, view, wlr_popup->base->surface);
+  phoc_view_child_setup (&popup->child, view, wlr_popup->base->surface);
 
   popup->destroy.notify = popup_handle_destroy;
   wl_signal_add (&wlr_popup->base->events.destroy, &popup->destroy);

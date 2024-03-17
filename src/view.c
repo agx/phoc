@@ -893,14 +893,11 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
 
 void
 phoc_view_child_setup (PhocViewChild                *child,
-                       const PhocViewChildInterface *impl,
                        PhocView                     *view,
                        struct wlr_surface           *wlr_surface)
 {
   PhocViewPrivate *priv;
 
-  g_assert (impl->destroy);
-  child->impl = impl;
   child->view = view;
   child->wlr_surface = wlr_surface;
 
@@ -917,19 +914,15 @@ phoc_view_child_setup (PhocViewChild                *child,
 }
 
 
-static const PhocViewChildInterface subsurface_impl;
-
 static void
 subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
 {
   struct wlr_surface *wlr_surface;
   struct wlr_subsurface *wlr_subsurface;
 
-  g_assert (child->impl == &subsurface_impl);
-
   wlr_surface = child->wlr_surface;
-  if (child->parent && child->parent->impl && child->parent->impl->get_pos)
-    child->parent->impl->get_pos (child->parent, sx, sy);
+  if (child->parent)
+    phoc_view_child_get_pos (child->parent, sx, sy);
   else
     *sx = *sy = 0;
 
@@ -938,24 +931,6 @@ subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
   *sx += wlr_subsurface->current.x;
   *sy += wlr_subsurface->current.y;
 }
-
-
-static void
-subsurface_destroy (PhocViewChild *child)
-{
-  PhocSubsurface *subsurface = (PhocSubsurface *)child;
-
-  g_assert (child->impl == &subsurface_impl);
-  wl_list_remove (&subsurface->destroy.link);
-  wl_list_remove (&subsurface->map.link);
-  wl_list_remove (&subsurface->unmap.link);
-}
-
-
-static const PhocViewChildInterface subsurface_impl = {
-  .get_pos = subsurface_get_pos,
-  .destroy = subsurface_destroy,
-};
 
 
 static void
@@ -988,6 +963,12 @@ subsurface_handle_unmap (struct wl_listener *listener,void *data)
 static void
 phoc_subsurface_finalize (GObject *object)
 {
+  PhocSubsurface *subsurface = PHOC_SUBSURFACE (object);
+
+  wl_list_remove (&subsurface->destroy.link);
+  wl_list_remove (&subsurface->map.link);
+  wl_list_remove (&subsurface->unmap.link);
+
   G_OBJECT_CLASS (phoc_subsurface_parent_class)->finalize (object);
 }
 
@@ -996,8 +977,10 @@ static void
 phoc_subsurface_class_init (PhocSubsurfaceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  PhocViewChildClass *view_child_class = PHOC_VIEW_CHILD_CLASS (klass);
 
   object_class->finalize = phoc_subsurface_finalize;
+  view_child_class->get_pos = subsurface_get_pos;
 }
 
 
@@ -1023,7 +1006,7 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
   PhocSubsurface *subsurface = phoc_subsurface_new (view, wlr_subsurface->surface);
 
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_setup (&subsurface->child, &subsurface_impl, view, wlr_subsurface->surface);
+  phoc_view_child_setup (&subsurface->child, view, wlr_subsurface->surface);
   subsurface->child.mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
@@ -1044,8 +1027,7 @@ phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *
   subsurface->child.parent = child;
   child->children = g_slist_prepend (child->children, &subsurface->child);
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_setup (&subsurface->child, &subsurface_impl, child->view,
-                         wlr_subsurface->surface);
+  phoc_view_child_setup (&subsurface->child, child->view, wlr_subsurface->surface);
   subsurface->child.mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
@@ -1951,8 +1933,6 @@ phoc_view_child_destroy (PhocViewChild *child)
 {
   if (child == NULL)
     return;
-
-  child->impl->destroy(child);
 
   g_object_unref (child);
 }
