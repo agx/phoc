@@ -100,6 +100,8 @@ sources = files(
   'virtual.h',
   'xdg-activation-v1.c',
   'xdg-activation-v1.h',
+  'xdg-popup.c',
+  'xdg-popup.h',
   'xdg_shell.c',
   'xdg-surface.c',
   'xdg-surface.h',

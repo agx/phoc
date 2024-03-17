@@ -13,6 +13,7 @@
 #include "cursor.h"
 #include "server.h"
 #include "view-private.h"
+#include "xdg-popup.h"
 #include "xdg-surface.h"
 #include "xdg-surface-private.h"
 

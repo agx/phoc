@@ -20,7 +20,7 @@ G_BEGIN_DECLS
  * @parent: (nullable): The parent of this child if another child
  * @children: (nullable): children of this child
  *
- * A child of a [type@View], e.g. a popup or subsurface
+ * A child of a [type@View], e.g. a [type@XdgPopup] or subsurface
  */
 typedef struct _PhocView PhocView;
 
