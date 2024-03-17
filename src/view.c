@@ -79,7 +79,8 @@ G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
 
 
 typedef struct _PhocSubsurface {
-  PhocViewChild child;
+  PhocViewChild      parent_instance;
+
   struct wlr_subsurface *wlr_subsurface;
 
   struct wl_listener destroy;
@@ -956,29 +957,32 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
   PhocSubsurface *subsurface = phoc_subsurface_new (view, wlr_subsurface->surface);
 
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_setup (&subsurface->child);
-  subsurface->child.mapped = wlr_subsurface->surface->mapped;
+  phoc_view_child_setup (PHOC_VIEW_CHILD (subsurface));
+  PHOC_VIEW_CHILD (subsurface)->mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
   wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
 }
+
 
 void
 phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *wlr_subsurface)
 {
   PhocSubsurface *subsurface = phoc_subsurface_new (child->view, wlr_subsurface->surface);
 
-  subsurface->child.parent = child;
-  child->children = g_slist_prepend (child->children, &subsurface->child);
+  PHOC_VIEW_CHILD (subsurface)->parent = child;
+  child->children = g_slist_prepend (child->children, subsurface);
+
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_setup (&subsurface->child);
-  subsurface->child.mapped = wlr_subsurface->surface->mapped;
+  phoc_view_child_setup (PHOC_VIEW_CHILD (subsurface));
+  PHOC_VIEW_CHILD (subsurface)->mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
   wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
 
-  phoc_view_child_damage_whole (&subsurface->child);
+  phoc_view_child_damage_whole (PHOC_VIEW_CHILD (subsurface));
 }
+
 
 static void
 phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *data)
