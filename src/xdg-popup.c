@@ -50,7 +50,7 @@ G_DEFINE_FINAL_TYPE (PhocXdgPopup, phoc_xdg_popup, PHOC_TYPE_VIEW_CHILD)
 static void
 popup_get_pos (PhocViewChild *child, int *sx, int *sy)
 {
-  PhocXdgPopup *popup = (PhocXdgPopup *)child;
+  PhocXdgPopup *popup = PHOC_XDG_POPUP (child);
   struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
 
   wlr_xdg_popup_get_toplevel_coords (wlr_popup,
@@ -66,7 +66,7 @@ popup_unconstrain (PhocXdgPopup* popup)
   /* get the output of the popup's positioner anchor point and convert it to
    * the toplevel parent's coordinate system and then pass it to
    * wlr_xdg_popup_unconstrain_from_box */
-  PhocView *view = PHOC_VIEW (PHOC_VIEW_CHILD (popup)->view);
+  PhocView *view = PHOC_VIEW_CHILD (popup)->view;
 
   PhocOutput *output = phoc_desktop_layout_get_output (view->desktop, view->box.x, view->box.y);
   if (output == NULL)
