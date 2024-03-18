@@ -79,7 +79,5 @@ static inline PhocViewChildClass * PHOC_VIEW_CHILD_GET_CLASS (gpointer ptr) {
 void                  phoc_view_child_apply_damage (PhocViewChild *self);
 void                  phoc_view_child_damage_whole (PhocViewChild *self);
 void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
-void                  phoc_view_child_subsurface_create (PhocViewChild         *child,
-                                                         struct wlr_subsurface *wlr_subsurface);
 
 G_END_DECLS

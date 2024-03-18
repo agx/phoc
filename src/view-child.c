@@ -14,6 +14,7 @@
 #include "input.h"
 #include "output.h"
 #include "server.h"
+#include "subsurface.h"
 #include "utils.h"
 #include "view-private.h"
 #include "view-child-private.h"
@@ -29,6 +30,18 @@ static GParamSpec *props[PROP_LAST_PROP];
 
 
 G_DEFINE_TYPE (PhocViewChild, phoc_view_child, G_TYPE_OBJECT)
+
+
+static void
+phoc_view_child_subsurface_create (PhocViewChild *self, struct wlr_subsurface *wlr_subsurface)
+{
+  PhocSubsurface *subsurface = phoc_subsurface_new (self->view, wlr_subsurface);
+
+  PHOC_VIEW_CHILD (subsurface)->parent = self;
+  self->children = g_slist_prepend (self->children, subsurface);
+
+  phoc_view_child_damage_whole (PHOC_VIEW_CHILD (subsurface));
+}
 
 
 static void

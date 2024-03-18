@@ -854,18 +854,6 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
 }
 
 
-void
-phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *wlr_subsurface)
-{
-  PhocSubsurface *subsurface = phoc_subsurface_new (child->view, wlr_subsurface);
-
-  PHOC_VIEW_CHILD (subsurface)->parent = child;
-  child->children = g_slist_prepend (child->children, subsurface);
-
-  phoc_view_child_damage_whole (PHOC_VIEW_CHILD (subsurface));
-}
-
-
 static void
 phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *data)
 {
