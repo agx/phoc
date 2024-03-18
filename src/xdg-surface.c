@@ -35,9 +35,10 @@ static GParamSpec *props[PROP_LAST_PROP];
 /**
  * PhocXdgSurface:
  *
- * An xdg surface.
+ * An xdg toplevel surface as defined in the xdg-shell protocol. For
+ * popups see [type@XdgPopup].
  *
- * For how to setup such an object see handle_xdg_shell_surface.
+ * For details on how to setup such an object see [func@handle_xdg_shell_surface].
  */
 typedef struct _PhocXdgSurface {
   PhocView view;
@@ -691,4 +692,33 @@ phoc_xdg_surface_get_wlr_xdg_surface (PhocXdgSurface *self)
   g_assert (PHOC_IS_XDG_SURFACE (self));
 
   return self->xdg_surface;
+}
+
+
+void
+phoc_handle_xdg_shell_surface (struct wl_listener *listener, void *data)
+{
+  struct wlr_xdg_surface *surface = data;
+
+  g_assert (surface->role != WLR_XDG_SURFACE_ROLE_NONE);
+  if (surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
+    g_debug ("new xdg popup");
+    return;
+  }
+
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xdg_shell_surface);
+  g_debug ("new xdg toplevel: title=%s, app_id=%s",
+           surface->toplevel->title, surface->toplevel->app_id);
+
+  wlr_xdg_surface_ping (surface);
+  PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (surface);
+
+  // Check for app-id override coming from gtk-shell
+  PhocGtkShell *gtk_shell = phoc_desktop_get_gtk_shell (desktop);
+  PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (gtk_shell,
+                                                                                 surface->surface);
+  if (gtk_surface && phoc_gtk_surface_get_app_id (gtk_surface))
+    phoc_view_set_app_id (PHOC_VIEW (phoc_surface), phoc_gtk_surface_get_app_id (gtk_surface));
+  else
+    phoc_view_set_app_id (PHOC_VIEW (phoc_surface), surface->toplevel->app_id);
 }
