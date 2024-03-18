@@ -724,7 +724,7 @@ phoc_desktop_constructed (GObject *object)
 
   self->layer_shell = wlr_layer_shell_v1_create (wl_display, PHOC_LAYER_SHELL_VERSION);
   wl_signal_add(&self->layer_shell->events.new_surface, &self->layer_shell_surface);
-  self->layer_shell_surface.notify = handle_layer_shell_surface;
+  self->layer_shell_surface.notify = phoc_handle_layer_shell_surface;
   priv->layer_shell_effects = phoc_layer_shell_effects_new ();
 
   self->tablet_v2 = wlr_tablet_v2_create (wl_display);

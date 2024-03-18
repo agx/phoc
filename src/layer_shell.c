@@ -851,7 +851,7 @@ handle_unmap (struct wl_listener *listener, void *data)
 
 
 void
-handle_layer_shell_surface (struct wl_listener *listener, void *data)
+phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
 {
   struct wlr_layer_surface_v1 *wlr_layer_surface = data;
   PhocDesktop *desktop = wl_container_of (listener, desktop, layer_shell_surface);
