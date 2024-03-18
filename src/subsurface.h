@@ -16,14 +16,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocSubsurface, phoc_subsurface, PHOC, SUBSURFACE, PhocViewChild)
 
-typedef struct _PhocSubsurface {
-  PhocViewChild         parent_instance;
-
-  struct wlr_subsurface *wlr_subsurface;
-
-  struct wl_listener     destroy;
-} PhocSubsurface;
-
 PhocSubsurface *phoc_subsurface_new (PhocView *view, struct wlr_subsurface *wlr_subsurface);
 
 G_END_DECLS

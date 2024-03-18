@@ -20,6 +20,19 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+/**
+ * PhocSubsurface:
+ *
+ * A subsurface attached to a [type@View] or [type@ViewChild].
+ */
+typedef struct _PhocSubsurface {
+  PhocViewChild          parent_instance;
+
+  struct wlr_subsurface *wlr_subsurface;
+
+  struct wl_listener     destroy;
+} PhocSubsurface;
+
 
 G_DEFINE_FINAL_TYPE (PhocSubsurface, phoc_subsurface, PHOC_TYPE_VIEW_CHILD)
 
@@ -83,7 +96,7 @@ phoc_subsurface_get_property (GObject    *object,
 static void
 subsurface_handle_destroy (struct wl_listener *listener, void *data)
 {
-  PhocSubsurface *self = wl_container_of(listener, self, destroy);
+  PhocSubsurface *self = wl_container_of (listener, self, destroy);
 
   g_object_unref (self);
 }
