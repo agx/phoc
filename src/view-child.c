@@ -31,6 +31,19 @@ static GParamSpec *props[PROP_LAST_PROP];
 G_DEFINE_TYPE (PhocViewChild, phoc_view_child, G_TYPE_OBJECT)
 
 
+static void
+phoc_view_child_init_subsurfaces (PhocViewChild *self, struct wlr_surface *surface)
+{
+  struct wlr_subsurface *subsurface;
+
+  wl_list_for_each (subsurface, &surface->current.subsurfaces_below, current.link)
+    phoc_view_child_subsurface_create (self, subsurface);
+
+  wl_list_for_each (subsurface, &surface->current.subsurfaces_above, current.link)
+    phoc_view_child_subsurface_create (self, subsurface);
+}
+
+
 static bool
 phoc_view_child_is_mapped (PhocViewChild *self)
 {
@@ -146,6 +159,8 @@ phoc_view_child_constructed (GObject *object)
   wl_signal_add (&self->wlr_surface->events.new_subsurface, &self->new_subsurface);
 
   phoc_view_add_child (self->view, self);
+
+  phoc_view_child_init_subsurfaces (self, self->wlr_surface);
 }
 
 

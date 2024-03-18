@@ -168,8 +168,6 @@ phoc_xdg_popup_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_xdg_popup_parent_class)->constructed (object);
 
-  phoc_view_child_setup (PHOC_VIEW_CHILD (popup));
-
   popup->destroy.notify = popup_handle_destroy;
   wl_signal_add (&popup->wlr_popup->base->events.destroy, &popup->destroy);
 

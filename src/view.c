@@ -860,25 +860,6 @@ phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
     phoc_view_subsurface_create (view, subsurface);
 }
 
-static void
-phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surface)
-{
-  struct wlr_subsurface *subsurface;
-
-  wl_list_for_each (subsurface, &surface->current.subsurfaces_below, current.link)
-    phoc_view_child_subsurface_create (child, subsurface);
-
-  wl_list_for_each (subsurface, &surface->current.subsurfaces_above, current.link)
-    phoc_view_child_subsurface_create (child, subsurface);
-}
-
-
-void
-phoc_view_child_setup (PhocViewChild *child)
-{
-  phoc_view_child_init_subsurfaces (child, child->wlr_surface);
-}
-
 
 static void
 subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
@@ -952,7 +933,6 @@ phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurfa
   PhocSubsurface *subsurface = phoc_subsurface_new (view, wlr_subsurface->surface);
 
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_setup (PHOC_VIEW_CHILD (subsurface));
   PHOC_VIEW_CHILD (subsurface)->mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
@@ -969,7 +949,6 @@ phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *
   child->children = g_slist_prepend (child->children, subsurface);
 
   subsurface->wlr_subsurface = wlr_subsurface;
-  phoc_view_child_setup (PHOC_VIEW_CHILD (subsurface));
   PHOC_VIEW_CHILD (subsurface)->mapped = wlr_subsurface->surface->mapped;
 
   subsurface->destroy.notify = subsurface_handle_destroy;
