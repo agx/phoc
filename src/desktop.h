@@ -139,7 +139,6 @@ PhocPhoshPrivate    *phoc_desktop_get_phosh_private              (PhocDesktop *s
 void                 phoc_desktop_notify_activity                (PhocDesktop *self,
                                                                   PhocSeat    *seat);
 
-void handle_xdg_toplevel_decoration(struct wl_listener *listener, void *data);
 void handle_layer_shell_surface(struct wl_listener *listener, void *data);
 
 gboolean phoc_desktop_is_privileged_protocol (PhocDesktop            *self,

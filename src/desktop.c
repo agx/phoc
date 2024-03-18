@@ -51,6 +51,7 @@
 #include "layer-shell-effects.h"
 
 #include "xdg-surface.h"
+#include "xdg-toplevel-decoration.h"
 #include "xwayland-surface.h"
 
 /* Maximum protocol versions we support */
@@ -782,7 +783,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->xdg_decoration_manager->events.new_toplevel_decoration,
                  &self->xdg_toplevel_decoration);
 
-  self->xdg_toplevel_decoration.notify = handle_xdg_toplevel_decoration;
+  self->xdg_toplevel_decoration.notify = phoc_handle_xdg_toplevel_decoration;
   wlr_viewporter_create (wl_display);
   wlr_single_pixel_buffer_manager_v1_create (wl_display);
   wlr_fractional_scale_manager_v1_create (wl_display, PHOC_FRACTIONAL_SCALE_VERSION);

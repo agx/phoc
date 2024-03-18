@@ -1,14 +1,13 @@
-#define G_LOG_DOMAIN "phoc-xdg-shell"
+#define G_LOG_DOMAIN "phoc-xdg-toplevel-decoration"
 
 #include "phoc-config.h"
-#include "xdg-surface.h"
 #include "xdg-surface-private.h"
+#include "xdg-toplevel-decoration.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <wayland-server-core.h>
 #include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/util/box.h>
+#include "xdg-surface.h"
 #include "desktop.h"
 #include "server.h"
 #include "utils.h"
@@ -76,7 +75,7 @@ on_xdg_surface_destroy (PhocXdgSurface *surface, PhocXdgToplevelDecoration *deco
 
 
 void
-handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
+phoc_handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
   PhocXdgSurface *xdg_surface = PHOC_XDG_SURFACE (wlr_decoration->toplevel->base->data);

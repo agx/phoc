@@ -6,13 +6,12 @@
 
 #pragma once
 
+#include "xdg-surface.h"
+#include "xdg-toplevel-decoration.h"
+
 #include <glib-object.h>
 
-#include <wlr/types/wlr_xdg_shell.h>
-
 G_BEGIN_DECLS
-
-typedef struct _PhocXdgToplevelDecoration PhocXdgToplevelDecoration;
 
 void               phoc_xdg_surface_set_decoration (PhocXdgSurface            *self,
                                                     PhocXdgToplevelDecoration *decoration);

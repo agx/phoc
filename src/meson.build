@@ -102,9 +102,10 @@ sources = files(
   'xdg-activation-v1.h',
   'xdg-popup.c',
   'xdg-popup.h',
-  'xdg_shell.c',
   'xdg-surface.c',
   'xdg-surface.h',
+  'xdg-toplevel-decoration.c',
+  'xdg-toplevel-decoration.h',
 ) + phoc_anim_sources
 libphoc_generated_sources = [
   phoc_config_h,
