@@ -344,3 +344,19 @@ phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy)
 
   PHOC_VIEW_CHILD_GET_CLASS (self)->get_pos (self, sx, sy);
 }
+
+/**
+ * phoc_view_child_get_view:
+ * @self: A view child
+ *
+ * Get the view this child belongs to.
+ *
+ * Returns: (transfer none): The containing view
+ */
+PhocView *
+phoc_view_child_get_view (PhocViewChild *self)
+{
+  g_assert (PHOC_IS_VIEW_CHILD (self));
+
+  return self->view;
+}

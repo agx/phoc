@@ -67,7 +67,7 @@ popup_unconstrain (PhocXdgPopup* self)
   /* get the output of the popup's positioner anchor point and convert it to
    * the toplevel parent's coordinate system and then pass it to
    * wlr_xdg_popup_unconstrain_from_box */
-  PhocView *view = PHOC_VIEW_CHILD (self)->view;
+  PhocView *view = phoc_view_child_get_view (PHOC_VIEW_CHILD (self));
 
   PhocOutput *output = phoc_desktop_layout_get_output (view->desktop, view->box.x, view->box.y);
   if (output == NULL)
@@ -107,7 +107,7 @@ popup_handle_new_popup (struct wl_listener *listener, void *data)
   PhocXdgPopup *self = wl_container_of (listener, self, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
 
-  phoc_xdg_popup_new (PHOC_VIEW_CHILD (self)->view, wlr_popup);
+  phoc_xdg_popup_new (phoc_view_child_get_view (PHOC_VIEW_CHILD (self)), wlr_popup);
 }
 
 
@@ -118,7 +118,7 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
 
   /* clear the old popup positon */
   /* TODO: this is too much damage */
-  phoc_view_damage_whole (PHOC_VIEW_CHILD (self)->view);
+  phoc_view_damage_whole (phoc_view_child_get_view (PHOC_VIEW_CHILD (self)));
 
   popup_unconstrain (self);
 }
