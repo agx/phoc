@@ -831,26 +831,16 @@ view_center (PhocView *view, PhocOutput *output)
 }
 
 
-static void phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface);
-
-
 static void
 phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
 {
   struct wlr_subsurface *subsurface;
 
   wl_list_for_each(subsurface, &surface->current.subsurfaces_below, current.link)
-    phoc_view_subsurface_create (view, subsurface);
+    phoc_subsurface_new (view, subsurface);
 
   wl_list_for_each(subsurface, &surface->current.subsurfaces_above, current.link)
-    phoc_view_subsurface_create (view, subsurface);
-}
-
-
-static void
-phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)
-{
-  phoc_subsurface_new (view, wlr_subsurface);
+    phoc_subsurface_new (view, subsurface);
 }
 
 
@@ -861,7 +851,7 @@ phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *dat
   PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_subsurface *wlr_subsurface = data;
 
-  phoc_view_subsurface_create (self, wlr_subsurface);
+  phoc_subsurface_new (self, wlr_subsurface);
 }
 
 static gchar *
@@ -939,12 +929,11 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   self->wlr_surface = surface;
 
   struct wlr_subsurface *subsurface;
-  wl_list_for_each(subsurface, &self->wlr_surface->current.subsurfaces_below, current.link) {
-    phoc_view_subsurface_create(self, subsurface);
-  }
-  wl_list_for_each(subsurface, &self->wlr_surface->current.subsurfaces_above, current.link) {
-    phoc_view_subsurface_create(self, subsurface);
-  }
+  wl_list_for_each(subsurface, &self->wlr_surface->current.subsurfaces_below, current.link)
+    phoc_subsurface_new (self, subsurface);
+
+  wl_list_for_each(subsurface, &self->wlr_surface->current.subsurfaces_above, current.link)
+    phoc_subsurface_new (self, subsurface);
 
   phoc_view_init_subsurfaces (self, surface);
   priv->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
