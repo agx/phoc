@@ -12,6 +12,15 @@
 
 #include "subsurface.h"
 
+
+enum {
+  PROP_0,
+  PROP_WLR_SUBSURFACE,
+  PROP_LAST_PROP
+};
+static GParamSpec *props[PROP_LAST_PROP];
+
+
 G_DEFINE_FINAL_TYPE (PhocSubsurface, phoc_subsurface, PHOC_TYPE_VIEW_CHILD)
 
 static void
@@ -34,6 +43,44 @@ subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
 
 
 static void
+phoc_subsurface_set_property (GObject      *object,
+                              guint         property_id,
+                              const GValue *value,
+                              GParamSpec   *pspec)
+{
+  PhocSubsurface *self = PHOC_SUBSURFACE (object);
+
+  switch (property_id) {
+  case PROP_WLR_SUBSURFACE:
+    self->wlr_subsurface = g_value_get_pointer (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_subsurface_get_property (GObject    *object,
+                              guint       property_id,
+                              GValue     *value,
+                              GParamSpec *pspec)
+{
+  PhocSubsurface *self = PHOC_SUBSURFACE (object);
+
+  switch (property_id) {
+  case PROP_WLR_SUBSURFACE:
+    g_value_set_pointer (value, self->wlr_subsurface);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
 phoc_subsurface_finalize (GObject *object)
 {
   PhocSubsurface *self = PHOC_SUBSURFACE (object);
@@ -51,7 +98,16 @@ phoc_subsurface_class_init (PhocSubsurfaceClass *klass)
   PhocViewChildClass *view_child_class = PHOC_VIEW_CHILD_CLASS (klass);
 
   object_class->finalize = phoc_subsurface_finalize;
+  object_class->get_property = phoc_subsurface_get_property;
+  object_class->set_property = phoc_subsurface_set_property;
+
   view_child_class->get_pos = subsurface_get_pos;
+
+  props[PROP_WLR_SUBSURFACE] =
+    g_param_spec_pointer ("wlr-subsurface", "", "",
+                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
 
 
@@ -62,10 +118,11 @@ phoc_subsurface_init (PhocSubsurface *self)
 
 
 PhocSubsurface *
-phoc_subsurface_new (PhocView *view, struct wlr_surface *wlr_surface)
+phoc_subsurface_new (PhocView *view, struct wlr_subsurface *wlr_subsurface)
 {
   return g_object_new (PHOC_TYPE_SUBSURFACE,
                        "view", view,
-                       "wlr-surface", wlr_surface,
+                       "wlr-surface", wlr_subsurface->surface,
+                       "wlr-subsurface", wlr_subsurface,
                        NULL);
 }

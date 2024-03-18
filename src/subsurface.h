@@ -24,6 +24,6 @@ typedef struct _PhocSubsurface {
   struct wl_listener     destroy;
 } PhocSubsurface;
 
-PhocSubsurface *phoc_subsurface_new (PhocView *view, struct wlr_surface *wlr_surface);
+PhocSubsurface *phoc_subsurface_new (PhocView *view, struct wlr_subsurface *wlr_subsurface);
 
 G_END_DECLS
