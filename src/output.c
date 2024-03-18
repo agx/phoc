@@ -1599,7 +1599,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
 
 
 void
-handle_output_manager_apply (struct wl_listener *listener, void *data)
+phoc_handle_output_manager_apply (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
@@ -1609,7 +1609,7 @@ handle_output_manager_apply (struct wl_listener *listener, void *data)
 
 
 void
-handle_output_manager_test (struct wl_listener *listener, void *data)
+phoc_handle_output_manager_test (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;

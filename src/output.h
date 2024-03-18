@@ -112,8 +112,8 @@ GList *     phoc_output_get_layer_surfaces_for_layer (PhocOutput                
                                                       enum zwlr_layer_shell_v1_layer  layer);
 
 /* signal handlers */
-void        handle_output_manager_apply (struct wl_listener *listener, void *data);
-void        handle_output_manager_test (struct wl_listener *listener, void *data);
+void        phoc_handle_output_manager_apply (struct wl_listener *listener, void *data);
+void        phoc_handle_output_manager_test (struct wl_listener *listener, void *data);
 void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener,
                                                               void *data);
 void        phoc_output_handle_gamma_control_set_gamma (struct wl_listener *listener, void *data);

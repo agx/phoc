@@ -802,9 +802,9 @@ phoc_desktop_constructed (GObject *object)
   self->pointer_gestures = wlr_pointer_gestures_v1_create (wl_display);
 
   self->output_manager_v1 = wlr_output_manager_v1_create (wl_display);
-  self->output_manager_apply.notify = handle_output_manager_apply;
+  self->output_manager_apply.notify = phoc_handle_output_manager_apply;
   wl_signal_add (&self->output_manager_v1->events.apply, &self->output_manager_apply);
-  self->output_manager_test.notify = handle_output_manager_test;
+  self->output_manager_test.notify = phoc_handle_output_manager_test;
   wl_signal_add (&self->output_manager_v1->events.test, &self->output_manager_test);
 
   self->output_power_manager_v1 = wlr_output_power_manager_v1_create (wl_display);
