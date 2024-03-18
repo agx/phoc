@@ -1612,23 +1612,19 @@ void
 phoc_cursor_handle_request_set_cursor (PhocCursor                                       *self,
                                        struct wlr_seat_pointer_request_set_cursor_event *event)
 {
-  struct wlr_surface *focused_surface =
-    event->seat_client->seat->pointer_state.focused_surface;
-  bool has_focused =
-    focused_surface != NULL && focused_surface->resource != NULL;
+  struct wlr_surface *focused_surface = event->seat_client->seat->pointer_state.focused_surface;
+  bool has_focused = focused_surface != NULL && focused_surface->resource != NULL;
   struct wl_client *focused_client = NULL;
 
-  if (has_focused) {
+  if (has_focused)
     focused_client = wl_resource_get_client (focused_surface->resource);
-  }
-  if (event->seat_client->client != focused_client ||
-      self->mode != PHOC_CURSOR_PASSTHROUGH) {
+
+  if (event->seat_client->client != focused_client || self->mode != PHOC_CURSOR_PASSTHROUGH) {
     g_debug ("Denying request to set cursor from unfocused client");
     return;
   }
 
-  wlr_cursor_set_surface (self->cursor, event->surface, event->hotspot_x,
-                          event->hotspot_y);
+  wlr_cursor_set_surface (self->cursor, event->surface, event->hotspot_x, event->hotspot_y);
   self->cursor_client = event->seat_client->client;
 }
 
