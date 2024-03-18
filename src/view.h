@@ -1,5 +1,7 @@
 #pragma once
 
+#include "view-child-private.h"
+
 #include <stdbool.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -209,5 +211,6 @@ gboolean              phoc_view_get_tiled_box (PhocView             *self,
 void                  phoc_view_add_bling (PhocView *self, PhocBling *bling);
 void                  phoc_view_remove_bling (PhocView *self, PhocBling *bling);
 GSList               *phoc_view_get_blings (PhocView *self);
+void                  phoc_view_add_child (PhocView *self, PhocViewChild *child);
 
 G_END_DECLS

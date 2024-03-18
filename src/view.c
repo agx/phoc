@@ -876,10 +876,7 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
 void
 phoc_view_child_setup (PhocViewChild *child)
 {
-  PhocViewPrivate *priv;
-
-  priv = phoc_view_get_instance_private (child->view);
-  wl_list_insert (&priv->child_surfaces, &child->link);
+  phoc_view_add_child (child->view, child);
 
   phoc_view_child_init_subsurfaces (child, child->wlr_surface);
 }
@@ -2235,6 +2232,19 @@ phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center)
     view_center (self, output);
 }
 
+
+void
+phoc_view_add_child (PhocView *self, PhocViewChild *child)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_VIEW_CHILD (child));
+
+  priv = phoc_view_get_instance_private (child->view);
+  wl_list_insert (&priv->child_surfaces, &child->link);
+}
+
 /**
  * phoc_view_set_always_on_top:
  * @self: a view
@@ -2248,7 +2258,6 @@ phoc_view_set_always_on_top (PhocView *self, gboolean on_top)
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (self));
-
   priv = phoc_view_get_instance_private (self);
 
   priv->always_on_top = on_top;
@@ -2268,7 +2277,6 @@ phoc_view_is_always_on_top (PhocView *self)
   PhocViewPrivate *priv;
 
   g_assert (PHOC_IS_VIEW (self));
-
   priv = phoc_view_get_instance_private (self);
 
   return priv->always_on_top;
