@@ -700,12 +700,12 @@ phoc_handle_xdg_shell_surface (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_surface *surface = data;
 
-  g_assert (surface->role != WLR_XDG_SURFACE_ROLE_NONE);
   if (surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-    g_debug ("new xdg popup");
+    g_debug ("New xdg popup");
     return;
   }
 
+  g_assert (surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
   PhocDesktop *desktop = wl_container_of (listener, desktop, xdg_shell_surface);
   g_debug ("new xdg toplevel: title=%s, app_id=%s",
            surface->toplevel->title, surface->toplevel->app_id);
