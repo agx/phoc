@@ -144,6 +144,8 @@ phoc_view_child_constructed (GObject *object)
 
   self->new_subsurface.notify = phoc_view_child_handle_new_subsurface;
   wl_signal_add (&self->wlr_surface->events.new_subsurface, &self->new_subsurface);
+
+  phoc_view_add_child (self->view, self);
 }
 
 

@@ -876,8 +876,6 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
 void
 phoc_view_child_setup (PhocViewChild *child)
 {
-  phoc_view_add_child (child->view, child);
-
   phoc_view_child_init_subsurfaces (child, child->wlr_surface);
 }
 
