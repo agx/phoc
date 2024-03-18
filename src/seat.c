@@ -651,12 +651,10 @@ phoc_seat_init_cursor (PhocSeat *seat)
   wl_signal_add (&wlr_cursor->events.touch_up, &seat->cursor->touch_up);
   seat->cursor->touch_up.notify = handle_touch_up;
 
-  wl_signal_add (&wlr_cursor->events.touch_motion,
-                 &seat->cursor->touch_motion);
+  wl_signal_add (&wlr_cursor->events.touch_motion, &seat->cursor->touch_motion);
   seat->cursor->touch_motion.notify = handle_touch_motion;
 
-  wl_signal_add (&wlr_cursor->events.tablet_tool_axis,
-                 &seat->cursor->tool_axis);
+  wl_signal_add (&wlr_cursor->events.tablet_tool_axis, &seat->cursor->tool_axis);
   seat->cursor->tool_axis.notify = handle_tool_axis;
 
   wl_signal_add (&wlr_cursor->events.tablet_tool_tip, &seat->cursor->tool_tip);
@@ -668,12 +666,10 @@ phoc_seat_init_cursor (PhocSeat *seat)
   wl_signal_add (&wlr_cursor->events.tablet_tool_button, &seat->cursor->tool_button);
   seat->cursor->tool_button.notify = handle_tool_button;
 
-  wl_signal_add (&seat->seat->events.request_set_cursor,
-                 &seat->cursor->request_set_cursor);
+  wl_signal_add (&seat->seat->events.request_set_cursor, &seat->cursor->request_set_cursor);
   seat->cursor->request_set_cursor.notify = handle_request_set_cursor;
 
-  wl_signal_add (&seat->seat->pointer_state.events.focus_change,
-                 &seat->cursor->focus_change);
+  wl_signal_add (&seat->seat->pointer_state.events.focus_change, &seat->cursor->focus_change);
   seat->cursor->focus_change.notify = handle_pointer_focus_change;
 
   wl_list_init (&seat->cursor->constraint_commit.link);
