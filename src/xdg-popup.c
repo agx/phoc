@@ -42,6 +42,7 @@ typedef struct _PhocXdgPopup {
   struct wl_listener    destroy;
   struct wl_listener    new_popup;
   struct wl_listener    reposition;
+  struct wl_listener    surface_commit;
 } PhocXdgPopup;
 
 G_DEFINE_FINAL_TYPE (PhocXdgPopup, phoc_xdg_popup, PHOC_TYPE_VIEW_CHILD)
@@ -124,6 +125,16 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
 
 
 static void
+popup_handle_surface_commit (struct wl_listener *listener, void *data)
+{
+  PhocXdgPopup *self = wl_container_of (listener, self, surface_commit);
+
+  if (self->wlr_popup->base->initial_commit)
+    popup_unconstrain (self);
+}
+
+
+static void
 phoc_xdg_popup_set_property (GObject      *object,
                              guint         property_id,
                              const GValue *value,
@@ -165,6 +176,7 @@ static void
 phoc_xdg_popup_constructed (GObject *object)
 {
   PhocXdgPopup *self = PHOC_XDG_POPUP (object);
+  struct wlr_xdg_surface *xdg_surface = self->wlr_popup->base;
 
   G_OBJECT_CLASS (phoc_xdg_popup_parent_class)->constructed (object);
 
@@ -177,7 +189,8 @@ phoc_xdg_popup_constructed (GObject *object)
   self->reposition.notify = popup_handle_reposition;
   wl_signal_add (&self->wlr_popup->events.reposition, &self->reposition);
 
-  popup_unconstrain (self);
+  wl_signal_add (&xdg_surface->surface->events.commit, &self->surface_commit);
+  self->surface_commit.notify = popup_handle_surface_commit;
 }
 
 
@@ -186,6 +199,7 @@ phoc_xdg_popup_finalize (GObject *object)
 {
   PhocXdgPopup *self = PHOC_XDG_POPUP (object);
 
+  wl_list_remove (&self->surface_commit.link);
   wl_list_remove (&self->reposition.link);
   wl_list_remove (&self->new_popup.link);
   wl_list_remove (&self->destroy.link);
