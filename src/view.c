@@ -848,23 +848,9 @@ phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
 
 
 static void
-subsurface_handle_destroy (struct wl_listener *listener, void *data)
-{
-  PhocSubsurface *subsurface = wl_container_of(listener, subsurface, destroy);
-
-  g_object_unref (subsurface);
-}
-
-
-static void
 phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)
 {
-  PhocSubsurface *subsurface = phoc_subsurface_new (view, wlr_subsurface);
-
-  PHOC_VIEW_CHILD (subsurface)->mapped = wlr_subsurface->surface->mapped;
-
-  subsurface->destroy.notify = subsurface_handle_destroy;
-  wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
+  phoc_subsurface_new (view, wlr_subsurface);
 }
 
 
@@ -875,11 +861,6 @@ phoc_view_child_subsurface_create (PhocViewChild *child, struct wlr_subsurface *
 
   PHOC_VIEW_CHILD (subsurface)->parent = child;
   child->children = g_slist_prepend (child->children, subsurface);
-
-  PHOC_VIEW_CHILD (subsurface)->mapped = wlr_subsurface->surface->mapped;
-
-  subsurface->destroy.notify = subsurface_handle_destroy;
-  wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
 
   phoc_view_child_damage_whole (PHOC_VIEW_CHILD (subsurface));
 }
