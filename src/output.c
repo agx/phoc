@@ -1490,10 +1490,10 @@ phoc_output_damage_whole_drag_icon (PhocOutput *self, PhocDragIcon *icon)
 }
 
 void
-phoc_output_damage_whole_local_surface (PhocOutput         *self,
-                                        struct wlr_surface *surface,
-                                        double              ox,
-                                        double              oy)
+phoc_output_damage_whole_surface (PhocOutput         *self,
+                                  struct wlr_surface *surface,
+                                  double              ox,
+                                  double              oy)
 {
   bool whole = true;
 
@@ -1502,8 +1502,10 @@ phoc_output_damage_whole_local_surface (PhocOutput         *self,
 }
 
 void
-phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_surface
-                                       *surface, double ox, double oy)
+phoc_output_damage_from_surface (PhocOutput         *self,
+                                 struct wlr_surface *surface,
+                                 double              ox,
+                                 double              oy)
 {
   bool whole = false;
 

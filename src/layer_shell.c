@@ -401,13 +401,19 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     bool geo_changed =
       memcmp (&old_geo, &layer_surface->geo, sizeof (struct wlr_box)) != 0;
     if (geo_changed || layer_changed) {
-      phoc_output_damage_whole_local_surface (output, wlr_layer_surface->surface,
-                                              old_geo.x, old_geo.y);
-      phoc_output_damage_whole_local_surface (output, wlr_layer_surface->surface,
-                                              layer_surface->geo.x, layer_surface->geo.y);
+      phoc_output_damage_whole_surface (output,
+                                        wlr_layer_surface->surface,
+                                        old_geo.x,
+                                        old_geo.y);
+      phoc_output_damage_whole_surface (output,
+                                        wlr_layer_surface->surface,
+                                        layer_surface->geo.x,
+                                        layer_surface->geo.y);
     } else {
-      phoc_output_damage_from_local_surface (output, wlr_layer_surface->surface,
-                                             layer_surface->geo.x, layer_surface->geo.y);
+      phoc_output_damage_from_surface (output,
+                                       wlr_layer_surface->surface,
+                                       layer_surface->geo.x,
+                                       layer_surface->geo.y);
     }
   }
 }
@@ -490,9 +496,9 @@ popup_damage (PhocLayerPopup *layer_popup, bool whole)
     return;
 
   if (whole)
-    phoc_output_damage_whole_local_surface (output, surface, ox, oy);
+    phoc_output_damage_whole_surface (output, surface, ox, oy);
   else
-    phoc_output_damage_from_local_surface (output, surface, ox, oy);
+    phoc_output_damage_from_surface (output, surface, ox, oy);
 }
 
 
@@ -656,13 +662,13 @@ subsurface_damage (PhocLayerSubsurface *subsurface, bool whole)
   int ox = subsurface->wlr_subsurface->current.x + layer->geo.x;
   int oy = subsurface->wlr_subsurface->current.y + layer->geo.y;
   if (whole) {
-    phoc_output_damage_whole_local_surface (output,
-                                            subsurface->wlr_subsurface->surface,
-                                            ox, oy);
+    phoc_output_damage_whole_surface (output,
+                                      subsurface->wlr_subsurface->surface,
+                                      ox, oy);
   } else {
-    phoc_output_damage_from_local_surface (output,
-                                           subsurface->wlr_subsurface->surface,
-                                           ox, oy);
+    phoc_output_damage_from_surface (output,
+                                     subsurface->wlr_subsurface->surface,
+                                     ox, oy);
   }
 }
 
@@ -815,9 +821,10 @@ handle_map (struct wl_listener *listener, void *data)
   layer_surface->new_subsurface.notify = handle_new_subsurface;
   wl_signal_add (&wlr_layer_surface->surface->events.new_subsurface, &layer_surface->new_subsurface);
 
-  phoc_output_damage_whole_local_surface (output,
-                                          wlr_layer_surface->surface, layer_surface->geo.x,
-                                          layer_surface->geo.y);
+  phoc_output_damage_whole_surface (output,
+                                    wlr_layer_surface->surface,
+                                    layer_surface->geo.x,
+                                    layer_surface->geo.y);
 
   phoc_utils_wlr_surface_enter_output (wlr_layer_surface->surface, output->wlr_output);
 
