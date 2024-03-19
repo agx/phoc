@@ -1700,7 +1700,6 @@ phoc_cursor_constrain (PhocCursor *self,
 
   wlr_pointer_constraint_v1_send_activated (constraint);
 
-  wl_list_remove (&self->constraint_commit.link);
   wl_signal_add (&constraint->surface->events.commit, &self->constraint_commit);
   self->constraint_commit.notify = handle_constraint_commit;
 
