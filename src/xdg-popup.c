@@ -53,10 +53,11 @@ popup_get_pos (PhocViewChild *child, int *sx, int *sy)
 {
   PhocXdgPopup *self = PHOC_XDG_POPUP (child);
   struct wlr_xdg_popup *wlr_popup = self->wlr_popup;
+  struct wlr_xdg_surface *base = self->wlr_popup->base;
 
   wlr_xdg_popup_get_toplevel_coords (wlr_popup,
-                                     wlr_popup->current.geometry.x - wlr_popup->base->current.geometry.x,
-                                     wlr_popup->current.geometry.y - wlr_popup->base->current.geometry.y,
+                                     wlr_popup->current.geometry.x - base->current.geometry.x,
+                                     wlr_popup->current.geometry.y - base->current.geometry.y,
                                      sx, sy);
 }
 
