@@ -1184,91 +1184,86 @@ phoc_cursor_press_button (PhocCursor              *self,
 
 
 static void
+phoc_cursor_pointer_motion (PhocCursor              *self,
+                            struct wlr_input_device *device,
+                            double                   dx,
+                            double                   dy,
+                            double                   dx_unaccel,
+                            double                   dy_unaccel,
+                            guint32                  time_msec)
+{
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+
+  phoc_desktop_notify_activity (desktop, self->seat);
+
+  wlr_relative_pointer_manager_v1_send_relative_motion (desktop->relative_pointer_manager,
+                                                        self->seat->seat,
+                                                        (uint64_t)time_msec * 1000,
+                                                        dx, dy,
+                                                        dx_unaccel, dy_unaccel);
+
+  if (self->active_constraint && device->type == WLR_INPUT_DEVICE_POINTER) {
+    struct wlr_surface *wlr_surface;
+    double sx, sy, sx_out, sy_out;
+
+    wlr_surface = phoc_desktop_surface_at (desktop,
+                                           self->cursor->x, self->cursor->y,
+                                           &sx, &sy,
+                                           NULL);
+
+    if (self->active_constraint->surface != wlr_surface)
+      return;
+
+    if (!wlr_region_confine (&self->confine, sx, sy, sx + dx, sy + dy, &sx_out, &sy_out))
+      return;
+
+    dx = sx_out - sx;
+    dy = sy_out - sy;
+  }
+
+  wlr_cursor_move (self->cursor, device, dx, dy);
+  phoc_cursor_update_position (self, time_msec);
+}
+
+
+static void
 handle_pointer_motion_relative (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocCursor *self = wl_container_of (listener, self, motion);
   struct wlr_pointer_motion_event *event = data;
   double dx = event->delta_x;
   double dy = event->delta_y;
 
-  double dx_unaccel = event->unaccel_dx;
-  double dy_unaccel = event->unaccel_dy;
-
-  phoc_desktop_notify_activity (desktop, self->seat);
-
-  wlr_relative_pointer_manager_v1_send_relative_motion (
-    desktop->relative_pointer_manager,
-    self->seat->seat, (uint64_t)event->time_msec * 1000, dx, dy,
-    dx_unaccel, dy_unaccel);
-
-  if (self->active_constraint) {
-    PhocView *view = self->pointer_view->view;
-    g_assert (view);
-
-    double lx1 = self->cursor->x;
-    double ly1 = self->cursor->y;
-
-    double lx2 = lx1 + dx;
-    double ly2 = ly1 + dy;
-
-    double sx1 = lx1 - view->box.x;
-    double sy1 = ly1 - view->box.y;
-
-    double sx2 = lx2 - view->box.x;
-    double sy2 = ly2 - view->box.y;
-
-    double sx2_confined, sy2_confined;
-    if (!wlr_region_confine (&self->confine, sx1, sy1, sx2, sy2,
-                             &sx2_confined, &sy2_confined)) {
-      return;
-    }
-
-    dx = sx2_confined - sx1;
-    dy = sy2_confined - sy1;
-  }
-
-  wlr_cursor_move (self->cursor, &event->pointer->base, dx, dy);
-  phoc_cursor_update_position (self, event->time_msec);
+  phoc_cursor_pointer_motion (self,
+                              &event->pointer->base,
+                              dx,
+                              dy,
+                              event->unaccel_dx,
+                              event->unaccel_dy,
+                              event->time_msec);
 }
 
 
 static void
 handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 {
-  PhocServer *server = phoc_server_get_default ();
-  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocCursor *self = wl_container_of (listener, self, motion_absolute);
   struct wlr_pointer_motion_absolute_event *event = data;
-  double lx, ly;
+  double dx, dy, lx, ly;
 
-  phoc_desktop_notify_activity (desktop, self->seat);
-  wlr_cursor_absolute_to_layout_coords (self->cursor, &event->pointer->base, event->x,
-                                        event->y, &lx, &ly);
-
-  double dx = lx - self->cursor->x;
-  double dy = ly - self->cursor->y;
+  wlr_cursor_absolute_to_layout_coords (self->cursor,
+                                        &event->pointer->base,
+                                        event->x, event->y,
+                                        &lx, &ly);
 
   handle_gestures_for_event_at (self, lx, ly, PHOC_EVENT_MOTION_NOTIFY, event, sizeof (*event));
 
-  wlr_relative_pointer_manager_v1_send_relative_motion (
-    desktop->relative_pointer_manager,
-    self->seat->seat, (uint64_t)event->time_msec * 1000, dx, dy, dx, dy);
+  dx = lx - self->cursor->x;
+  dy = ly - self->cursor->y;
 
-  if (self->pointer_view) {
-    PhocView *view = self->pointer_view->view;
-
-    if (self->active_constraint &&
-        !pixman_region32_contains_point (&self->confine,
-                                         floor (lx - view->box.x), floor (ly - view->box.y), NULL)) {
-      return;
-    }
-  }
-
-  wlr_cursor_warp_closest (self->cursor, &event->pointer->base, lx, ly);
-  phoc_cursor_update_position (self, event->time_msec);
+  phoc_cursor_pointer_motion (self, &event->pointer->base, dx, dy, dx, dy, event->time_msec);
 }
+
 
 static void
 handle_pointer_button (struct wl_listener *listener, void *data)
