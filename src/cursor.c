@@ -1686,28 +1686,22 @@ phoc_cursor_constrain (PhocCursor *self,
   if (self->active_constraint == constraint)
     return;
 
-  g_debug ("phoc_cursor_constrain(%p, %p)",
-           self, constraint);
-  g_debug ("self->active_constraint: %p",
-           self->active_constraint);
+  g_debug ("cursor constrain: %p, new: %p, old: %p", self, constraint, self->active_constraint);
 
   wl_list_remove (&self->constraint_commit.link);
   wl_list_init (&self->constraint_commit.link);
-  if (self->active_constraint) {
-    wlr_pointer_constraint_v1_send_deactivated (
-      self->active_constraint);
-  }
+
+  if (self->active_constraint)
+    wlr_pointer_constraint_v1_send_deactivated (self->active_constraint);
 
   self->active_constraint = constraint;
-
   if (constraint == NULL)
     return;
 
   wlr_pointer_constraint_v1_send_activated (constraint);
 
   wl_list_remove (&self->constraint_commit.link);
-  wl_signal_add (&constraint->surface->events.commit,
-                 &self->constraint_commit);
+  wl_signal_add (&constraint->surface->events.commit, &self->constraint_commit);
   self->constraint_commit.notify = handle_constraint_commit;
 
   pixman_region32_clear (&self->confine);
@@ -1715,23 +1709,24 @@ phoc_cursor_constrain (PhocCursor *self,
   pixman_region32_t *region = &constraint->region;
 
   if (!pixman_region32_contains_point (region, floor (sx), floor (sy), NULL)) {
-    // Warp into region if possible
+    /* Warp into region if possible */
     int nboxes;
     pixman_box32_t *boxes = pixman_region32_rectangles (region, &nboxes);
+
     if (nboxes > 0) {
       PhocView *view = self->pointer_view->view;
 
-      double lx = view->box.x + (boxes[0].x1 + boxes[0].x2) / 2.;
-      double ly = view->box.y + (boxes[0].y1 + boxes[0].y2) / 2.;
+      double lx = view->box.x + (boxes[0].x1 + boxes[0].x2) / 2.0;
+      double ly = view->box.y + (boxes[0].y1 + boxes[0].y2) / 2.0;
 
       wlr_cursor_warp_closest (self->cursor, NULL, lx, ly);
     }
   }
 
-  // A locked pointer will result in an empty region, thus disallowing all movement
-  if (constraint->type == WLR_POINTER_CONSTRAINT_V1_CONFINED) {
+  /* A locked pointer will result in an empty region, thus disallowing
+   * all movement */
+  if (constraint->type == WLR_POINTER_CONSTRAINT_V1_CONFINED)
     pixman_region32_copy (&self->confine, region);
-  }
 }
 
 
