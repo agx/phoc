@@ -1570,18 +1570,20 @@ phoc_view_finalize (GObject *object)
   PhocView *self = PHOC_VIEW (object);
   PhocViewPrivate *priv = phoc_view_get_instance_private (self);
 
+  /* Unlink from our parent */
   if (self->parent) {
-    wl_list_remove(&self->parent_link);
-    wl_list_init(&self->parent_link);
+    wl_list_remove (&self->parent_link);
+    wl_list_init (&self->parent_link);
   }
+
+  /* Unlink our children */
   PhocView *child, *tmp;
-  wl_list_for_each_safe(child, tmp, &self->stack, parent_link) {
-    wl_list_remove(&child->parent_link);
-    wl_list_init(&child->parent_link);
+  wl_list_for_each_safe (child, tmp, &self->stack, parent_link) {
+    wl_list_remove (&child->parent_link);
+    wl_list_init (&child->parent_link);
     child->parent = self->parent;
-    if (child->parent) {
-      wl_list_insert(&child->parent->stack, &child->parent_link);
-    }
+    if (child->parent)
+      wl_list_insert (&child->parent->stack, &child->parent_link);
   }
 
   if (self->wlr_surface)

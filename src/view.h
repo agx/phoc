@@ -39,6 +39,9 @@ typedef enum _PhocViewDecoPart {
 
 /**
  * PhocView:
+ * @parent: The view's parent
+ * @stack: List of of views direct children
+ * @parent_link: The list link into stack
  *
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
@@ -49,7 +52,6 @@ struct _PhocView {
 
   PhocDesktop *desktop;
   struct wl_list link; // PhocDesktop::views
-  struct wl_list parent_link; // PhocView::stack
 
   struct wlr_box box;
   struct wlr_box saved;
@@ -61,8 +63,9 @@ struct _PhocView {
   } pending_move_resize;
   bool pending_centering;
 
-  PhocView *parent;
-  struct wl_list stack; // PhocView::link
+  PhocView       *parent;
+  struct wl_list  stack;
+  struct wl_list  parent_link;
 
   struct wlr_surface *wlr_surface; // set only when the surface is mapped
 };
