@@ -49,6 +49,7 @@ typedef struct _PhocCursorPrivate {
   /* The compositor tracked touch points */
   GHashTable       *touch_points;
 
+  /* State of the animated view when cursor touches a screen edge */
   struct {
     PhocColorRect         *rect;
     PhocView              *view;
@@ -1137,6 +1138,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
   }
 }
 
+
 static void
 phoc_cursor_press_button (PhocCursor              *self,
                           struct wlr_input_device *device,
@@ -1183,6 +1185,7 @@ phoc_cursor_press_button (PhocCursor              *self,
       break;
     }
   } else {
+    /* Mouse press inside server side window decoration */
     if (view && !surface && self->pointer_view)
       seat_view_deco_button (self->pointer_view, sx, sy, button, state);
 
