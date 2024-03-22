@@ -828,6 +828,42 @@ phoc_view_child_init_subsurfaces (PhocViewChild *child, struct wlr_surface *surf
     phoc_view_child_subsurface_create (child, subsurface);
 }
 
+
+void
+phoc_view_child_map (PhocViewChild *child, struct wlr_surface *wlr_surface)
+{
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
+  PhocView *view = child->view;
+
+  child->mapped = true;
+  phoc_view_child_damage_whole (child);
+
+  struct wlr_box box;
+  phoc_view_get_box (view, &box);
+
+  PhocOutput *output;
+  wl_list_for_each (output, &view->desktop->outputs, link) {
+    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
+                                                    output->wlr_output, &box);
+    if (intersects)
+      phoc_utils_wlr_surface_enter_output (wlr_surface, output->wlr_output);
+  }
+
+  phoc_input_update_cursor_focus (input);
+}
+
+
+void
+phoc_view_child_unmap (PhocViewChild *child)
+{
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
+
+  phoc_view_child_damage_whole (child);
+  phoc_input_update_cursor_focus (input);
+  child->mapped = false;
+}
+
+
 void
 phoc_view_child_init (PhocViewChild                *child,
                       const PhocViewChildInterface *impl,
@@ -906,39 +942,22 @@ subsurface_handle_destroy (struct wl_listener *listener, void *data)
 static void
 subsurface_handle_map (struct wl_listener *listener, void *data)
 {
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocSubsurface *subsurface = wl_container_of (listener, subsurface, map);
-  PhocView *view = subsurface->child.view;
 
-  subsurface->child.mapped = true;
-  phoc_view_child_damage_whole (&subsurface->child);
-  phoc_input_update_cursor_focus (input);
-
-  struct wlr_box box;
-  phoc_view_get_box (view, &box);
-
-  PhocOutput *output;
-  wl_list_for_each (output, &view->desktop->outputs, link) {
-    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
-                                                    output->wlr_output, &box);
-    if (intersects) {
-      phoc_utils_wlr_surface_enter_output (subsurface->wlr_subsurface->surface,
-                                           output->wlr_output);
-    }
-  }
+  /* Chain up to parent */
+  phoc_view_child_map (&subsurface->child, subsurface->wlr_subsurface->surface);
 }
+
 
 static void
 subsurface_handle_unmap (struct wl_listener *listener,void *data)
 {
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocSubsurface *subsurface = wl_container_of (listener, subsurface, unmap);
 
-  phoc_view_child_damage_whole (&subsurface->child);
-  phoc_input_update_cursor_focus (input);
-
-  subsurface->child.mapped = false;
+  /* Chain up to parent */
+  phoc_view_child_unmap (&subsurface->child);
 }
+
 
 static void
 phoc_view_subsurface_create (PhocView *view, struct wlr_subsurface *wlr_subsurface)

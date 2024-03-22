@@ -724,6 +724,29 @@ phoc_output_state_set_mode (PhocOutput *self, struct wlr_output_state *pending, 
   }
 }
 
+/**
+ * adjust_frac_scale:
+ * @scale: The input scale
+ *
+ * factional-scale-v1 sends increments of 120 to the client so we want
+ * the output scale to match that exactly as we otherwise use slightly
+ * different scales.
+ *
+ * Returns: The (possibly adjusted) output scale
+ */
+static double
+adjust_frac_scale (double scale)
+{
+  double adjusted_scale;
+
+  adjusted_scale = round (scale * 120) / 120;
+
+  if (!G_APPROX_VALUE (scale, adjusted_scale, DBL_EPSILON))
+    g_warning ("Adjusting output scale from %f to %f", scale, adjusted_scale);
+
+  return adjusted_scale;
+}
+
 
 static void
 phoc_output_fill_state (PhocOutput              *self,
@@ -742,6 +765,8 @@ phoc_output_fill_state (PhocOutput              *self,
   }
 
   if (output_config && enable) {
+    double scale;
+
     if (wlr_output_is_drm (self->wlr_output)) {
       for (GSList *l = output_config->modes; l; l = l->next) {
         PhocOutputModeConfig *mode_config = l->data;
@@ -756,10 +781,12 @@ phoc_output_fill_state (PhocOutput              *self,
     else if (preferred_mode != NULL)
       wlr_output_state_set_mode (pending, preferred_mode);
 
-    if (!output_config->scale)
-      wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
+    if (output_config->scale)
+      scale = output_config->scale;
     else
-      wlr_output_state_set_scale (pending, output_config->scale);
+      scale = phoc_output_compute_scale (self, pending);
+
+    wlr_output_state_set_scale (pending, adjust_frac_scale (scale));
 
     wlr_output_state_set_transform (pending, output_config->transform);
     priv->scale_filter = output_config->scale_filter;
@@ -1536,7 +1563,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
                                         config_head->state.custom_mode.refresh);
     }
     wlr_output_state_set_transform (&pending, config_head->state.transform);
-    wlr_output_state_set_scale (&pending, config_head->state.scale);
+    wlr_output_state_set_scale (&pending, adjust_frac_scale (config_head->state.scale));
 
     if (test_only) {
       ok &= wlr_output_test_state (wlr_output, &pending);
