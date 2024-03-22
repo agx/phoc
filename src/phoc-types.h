@@ -31,5 +31,6 @@ typedef struct _PhocColor {
 GType                   phoc_color_get_type                      (void) G_GNUC_CONST;
 PhocColor *             phoc_color_copy                          (const PhocColor *color);
 void                    phoc_color_free                          (PhocColor *color);
+gboolean                phoc_color_is_equal                      (PhocColor *c1, PhocColor *c2);
 
 G_END_DECLS
