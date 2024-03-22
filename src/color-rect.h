@@ -23,4 +23,8 @@ PhocBox             phoc_color_rect_get_box                     (PhocColorRect *
 PhocColor           phoc_color_rect_get_color                   (PhocColorRect *self) G_GNUC_WARN_UNUSED_RESULT;
 void                phoc_color_rect_set_color                   (PhocColorRect *self,
                                                                  PhocColor     *color);
+float               phoc_color_rect_get_alpha                   (PhocColorRect *self) G_GNUC_WARN_UNUSED_RESULT;
+void                phoc_color_rect_set_alpha                   (PhocColorRect *self,
+                                                                 float          alpha);
+
 G_END_DECLS
