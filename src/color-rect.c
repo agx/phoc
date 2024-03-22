@@ -115,7 +115,7 @@ phoc_color_rect_set_property (GObject      *object,
     phoc_color_rect_damage_box (self);
     break;
   case PROP_COLOR:
-    self->color = *(PhocColor*)g_value_get_boxed (value);
+    phoc_color_rect_set_color (self, g_value_get_boxed (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -299,7 +299,7 @@ phoc_color_rect_class_init (PhocColorRectClass *klass)
   props[PROP_COLOR] =
     g_param_spec_boxed ("color", "", "",
                         PHOC_TYPE_COLOR,
-                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                        G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
@@ -338,10 +338,31 @@ phoc_color_rect_get_box (PhocColorRect *self)
 }
 
 /**
+ * phoc_color_rect_set_color:
+ * @self: The color rectangle
+ * @color: The color
+ *
+ * Set the rectangle's color
+ */
+void
+phoc_color_rect_set_color (PhocColorRect *self, PhocColor *color)
+{
+  g_assert (PHOC_IS_COLOR_RECT (self));
+
+  if (phoc_color_is_equal (&self->color, color))
+    return;
+
+  self->color = *color;
+  phoc_color_rect_damage_box (self);
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COLOR]);
+}
+
+/**
  * phoc_color_rect_get_color:
  * @self: The color rectangle
  *
- * Get the rectangles color
+ * Get the rectangle's color
  *
  * Returns: the color
  */
