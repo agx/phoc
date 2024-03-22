@@ -174,6 +174,9 @@ bling_render (PhocBling *bling, PhocRenderContext *ctx)
   PhocColorRect *self = PHOC_COLOR_RECT (bling);
   pixman_region32_t damage;
 
+  if (!self->mapped)
+    return;
+
   struct wlr_box box = self->box;
   box.x -= ctx->output->lx;
   box.y -= ctx->output->ly;
