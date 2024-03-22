@@ -190,9 +190,9 @@ bling_render (PhocBling *bling, PhocRenderContext *ctx)
   wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
       .box = box,
       .color = {
-        .r = self->color.red,
-        .g = self->color.green,
-        .b = self->color.blue,
+        .r = self->color.red * self->color.alpha,
+        .g = self->color.green * self->color.alpha,
+        .b = self->color.blue * self->color.alpha,
         .a = self->color.alpha,
       },
       .clip = &damage,
