@@ -928,14 +928,7 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   g_assert (self->wlr_surface == NULL);
   self->wlr_surface = surface;
 
-  struct wlr_subsurface *subsurface;
-  wl_list_for_each(subsurface, &self->wlr_surface->current.subsurfaces_below, current.link)
-    phoc_subsurface_new (self, subsurface);
-
-  wl_list_for_each(subsurface, &self->wlr_surface->current.subsurfaces_above, current.link)
-    phoc_subsurface_new (self, subsurface);
-
-  phoc_view_init_subsurfaces (self, surface);
+  phoc_view_init_subsurfaces (self, self->wlr_surface);
   priv->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
   wl_signal_add (&self->wlr_surface->events.new_subsurface, &priv->surface_new_subsurface);
 
