@@ -395,9 +395,9 @@ phoc_device_state_init (PhocDeviceState *self)
 PhocDeviceState *
 phoc_device_state_new (PhocSeat *seat)
 {
-  return PHOC_DEVICE_STATE (g_object_new (PHOC_TYPE_DEVICE_STATE,
-                                          "seat", seat,
-                                          NULL));
+  return g_object_new (PHOC_TYPE_DEVICE_STATE,
+                       "seat", seat,
+                       NULL);
 }
 
 

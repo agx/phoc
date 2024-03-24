@@ -1742,9 +1742,9 @@ phoc_cursor_constrain (PhocCursor *self,
 PhocCursor *
 phoc_cursor_new (PhocSeat *seat)
 {
-  return PHOC_CURSOR (g_object_new (PHOC_TYPE_CURSOR,
-                                    "seat", seat,
-                                    NULL));
+  return g_object_new (PHOC_TYPE_CURSOR,
+                       "seat", seat,
+                       NULL);
 }
 
 

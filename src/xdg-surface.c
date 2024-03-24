@@ -654,9 +654,9 @@ phoc_xdg_surface_init (PhocXdgSurface *self)
 PhocXdgSurface *
 phoc_xdg_surface_new (struct wlr_xdg_surface *wlr_xdg_surface)
 {
-  return PHOC_XDG_SURFACE (g_object_new (PHOC_TYPE_XDG_SURFACE,
-                                         "wlr-xdg-surface", wlr_xdg_surface,
-                                         NULL));
+  return g_object_new (PHOC_TYPE_XDG_SURFACE,
+                       "wlr-xdg-surface", wlr_xdg_surface,
+                       NULL);
 }
 
 void

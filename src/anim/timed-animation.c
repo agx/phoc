@@ -371,7 +371,7 @@ phoc_timed_animation_init (PhocTimedAnimation *self)
 PhocTimedAnimation *
 phoc_timed_animation_new (void)
 {
-  return PHOC_TIMED_ANIMATION (g_object_new (PHOC_TYPE_TIMED_ANIMATION, NULL));
+  return g_object_new (PHOC_TYPE_TIMED_ANIMATION, NULL);
 }
 
 

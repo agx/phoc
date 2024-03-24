@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2023 Guido Günther <agx@sigxcpu.org>
+ * Copyright (C) 2023 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Author: Guido Günther <agx@sigxcpu.org>
  */
 
 #define G_LOG_DOMAIN "phoc-idle-inhibit"
