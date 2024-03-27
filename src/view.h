@@ -37,8 +37,18 @@ typedef enum _PhocViewDecoPart {
   PHOC_VIEW_DECO_PART_TITLEBAR      = 1 << 4,
 } PhocViewDecoPart;
 
+typedef enum {
+  PHOC_VIEW_CORNER_NORTH_WEST,
+  PHOC_VIEW_CORNER_NORTH_EAST,
+  PHOC_VIEW_CORNER_SOUTH_EAST,
+  PHOC_VIEW_CORNER_SOUTH_WEST,
+} PhocViewCorner;
+
 /**
  * PhocView:
+ * @parent: The view's parent
+ * @stack: List of of views direct children
+ * @parent_link: The list link into stack
  *
  * A `PhocView` represents a toplevel like an xdg-toplevel or a xwayland window.
  */
@@ -48,8 +58,6 @@ struct _PhocView {
   GObject parent_instance;
 
   PhocDesktop *desktop;
-  struct wl_list link; // PhocDesktop::views
-  struct wl_list parent_link; // PhocView::stack
 
   struct wlr_box box;
   struct wlr_box saved;
@@ -61,8 +69,9 @@ struct _PhocView {
   } pending_move_resize;
   bool pending_centering;
 
-  PhocView *parent;
-  struct wl_list stack; // PhocView::link
+  PhocView       *parent;
+  struct wl_list  stack;
+  struct wl_list  parent_link;
 
   struct wlr_surface *wlr_surface; // set only when the surface is mapped
 };
@@ -173,6 +182,7 @@ void                  phoc_view_get_box (PhocView *view, struct wlr_box *box);
 void                  phoc_view_get_geometry (PhocView *self, struct wlr_box *box);
 void                  phoc_view_move (PhocView *self, double x, double y);
 bool                  phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction);
+void                  phoc_view_move_to_corner (PhocView *self, PhocViewCorner corner);
 void                  phoc_view_move_resize (PhocView *view,
                                              double    x,
                                              double    y,
@@ -213,6 +223,8 @@ void                  phoc_view_flush_activation_token (PhocView *self);
 float                 phoc_view_get_alpha (PhocView *self);
 float                 phoc_view_get_scale (PhocView *self);
 gboolean              phoc_view_is_decorated (PhocView *self);
+void                  phoc_view_set_always_on_top (PhocView *self, gboolean on_top);
+bool                  phoc_view_is_always_on_top (PhocView *self);
 PhocOutput           *phoc_view_get_fullscreen_output (PhocView *self);
 bool                  phoc_view_want_auto_maximize (PhocView *self);
 void                  phoc_view_set_decorated (PhocView *self,

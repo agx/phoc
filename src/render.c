@@ -635,9 +635,10 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND, ctx);
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM, ctx);
 
-    PhocView *view;
-    // Render all views
-    wl_list_for_each_reverse(view, &desktop->views, link) {
+    /* Render all views */
+    for (GList *l = phoc_desktop_get_views (desktop)->tail; l; l = l->prev) {
+      PhocView *view = PHOC_VIEW (l->data);
+
       if (phoc_desktop_view_is_visible (desktop, view))
         render_view (output, view, ctx);
     }

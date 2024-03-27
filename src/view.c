@@ -21,6 +21,7 @@
 #include "view-private.h"
 
 #define PHOC_ANIM_DURATION_WINDOW_FADE 150
+#define PHOC_MOVE_TO_CORNER_MARGIN 12
 
 enum {
   PROP_0,
@@ -49,6 +50,7 @@ typedef struct _PhocViewPrivate {
   PhocViewDeco  *deco;
   PhocViewState  state;
   PhocViewTileDirection tile_direction;
+  gboolean       always_on_top;
 
   PhocOutput    *fullscreen_output;
 
@@ -520,6 +522,13 @@ phoc_view_auto_maximize (PhocView *view)
     phoc_view_maximize (view, NULL);
 }
 
+/**
+ * phoc_view_restore:
+ * @view: The view to restore
+ *
+ * Put a view back into floating state while restoring it's previous
+ * size and position.
+ */
 void
 phoc_view_restore (PhocView *view)
 {
@@ -685,6 +694,64 @@ phoc_view_move_to_next_output (PhocView *view, enum wlr_direction direction)
   phoc_view_arrange (view, output, TRUE);
   return true;
 }
+
+
+void
+phoc_view_move_to_corner (PhocView *self, PhocViewCorner corner)
+{
+  PhocViewPrivate *priv;
+  PhocOutput *output;
+  struct wlr_box usable_area, box, geom;
+  float x,y;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  output = phoc_view_get_output (self);
+  if (!output)
+    return;
+
+  /* TODO: Simplify saved vs actual state before enabling */
+  if (priv->state != PHOC_VIEW_STATE_FLOATING || phoc_view_is_fullscreen (self))
+    return;
+
+  /* TODO: Simplify scale-to-fit vs geom before enabling */
+  if (!G_APPROX_VALUE (priv->scale, 1.0, FLT_EPSILON)) {
+    g_warning_once ("move-to-center not allowed for scale-to-fit-views");
+    return;
+  }
+
+  usable_area = output->usable_area;
+  phoc_view_get_box (self, &box);
+  phoc_view_get_geometry (self, &geom);
+
+  x = output->lx + usable_area.x - geom.x;
+  y = output->ly + usable_area.y - geom.y;
+
+  switch (corner) {
+  case PHOC_VIEW_CORNER_NORTH_WEST:
+    x += PHOC_MOVE_TO_CORNER_MARGIN;
+    y += PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  case PHOC_VIEW_CORNER_NORTH_EAST:
+    x += usable_area.width - box.width - PHOC_MOVE_TO_CORNER_MARGIN;
+    y += PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  case PHOC_VIEW_CORNER_SOUTH_EAST:
+    x += usable_area.width - box.width - PHOC_MOVE_TO_CORNER_MARGIN;
+    y += usable_area.height - box.height - PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  case PHOC_VIEW_CORNER_SOUTH_WEST:
+    x += PHOC_MOVE_TO_CORNER_MARGIN;
+    y += usable_area.height - box.height - PHOC_MOVE_TO_CORNER_MARGIN;
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  phoc_view_move (self, x, y);
+}
+
 
 void
 phoc_view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)
@@ -1102,9 +1169,9 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   if (self->desktop->maximize) {
     phoc_view_appear_activated (self, true);
 
-    if (!wl_list_empty(&self->desktop->views)) {
+    if (phoc_desktop_has_views (self->desktop)) {
       // mapping a new stack may make the old stack disappear, so damage its area
-      PhocView *top_view = wl_container_of(self->desktop->views.next, self, link);
+      PhocView *top_view = phoc_desktop_get_view_by_index (self->desktop, 0);
       while (top_view) {
         phoc_view_damage_whole (top_view);
         top_view = top_view->parent;
@@ -1112,7 +1179,10 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
     }
   }
 
-  wl_list_insert(&self->desktop->views, &self->link);
+  if (self->parent && phoc_view_is_always_on_top (self->parent))
+    phoc_view_set_always_on_top (self, TRUE);
+
+  phoc_desktop_insert_view (self->desktop, self);
   phoc_view_damage_whole (self);
   phoc_input_update_cursor_focus (input);
   priv->pid = PHOC_VIEW_GET_CLASS (self)->get_pid (self);
@@ -1169,11 +1239,11 @@ phoc_view_unmap (PhocView *view)
     priv->fullscreen_output = NULL;
   }
 
-  wl_list_remove(&view->link);
+  phoc_desktop_remove_view (view->desktop, view);
 
-  if (was_visible && view->desktop->maximize && !wl_list_empty(&view->desktop->views)) {
-    // damage the newly activated stack as well since it may have just become visible
-    PhocView *top_view = wl_container_of(view->desktop->views.next, view, link);
+  if (was_visible && view->desktop->maximize && phoc_desktop_has_views (view->desktop)) {
+    /* Damage the newly activated stack as well since it may have just become visible */
+    PhocView *top_view = phoc_desktop_get_view_by_index (view->desktop, 0);
     while (top_view) {
       phoc_view_damage_whole (top_view);
       top_view = top_view->parent;
@@ -1570,18 +1640,20 @@ phoc_view_finalize (GObject *object)
   PhocView *self = PHOC_VIEW (object);
   PhocViewPrivate *priv = phoc_view_get_instance_private (self);
 
+  /* Unlink from our parent */
   if (self->parent) {
-    wl_list_remove(&self->parent_link);
-    wl_list_init(&self->parent_link);
+    wl_list_remove (&self->parent_link);
+    wl_list_init (&self->parent_link);
   }
+
+  /* Unlink our children */
   PhocView *child, *tmp;
-  wl_list_for_each_safe(child, tmp, &self->stack, parent_link) {
-    wl_list_remove(&child->parent_link);
-    wl_list_init(&child->parent_link);
+  wl_list_for_each_safe (child, tmp, &self->stack, parent_link) {
+    wl_list_remove (&child->parent_link);
+    wl_list_init (&child->parent_link);
     child->parent = self->parent;
-    if (child->parent) {
-      wl_list_insert(&child->parent->stack, &child->parent_link);
-    }
+    if (child->parent)
+      wl_list_insert (&child->parent->stack, &child->parent_link);
   }
 
   if (self->wlr_surface)
@@ -1811,9 +1883,10 @@ PhocView *
 phoc_view_from_wlr_surface (struct wlr_surface *wlr_surface)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-  PhocView *view;
 
-  wl_list_for_each(view, &desktop->views, link) {
+  for (GList *l = phoc_desktop_get_views (desktop)->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
+
     if (view->wlr_surface == wlr_surface)
       return view;
   }
@@ -2309,14 +2382,15 @@ phoc_view_get_blings (PhocView *self)
   return priv->blings;
 }
 
-
 /**
  * phoc_view_arrange:
  * @self: a view
  * @output:(nullable): the output to arrange the view on
  * @center: Whether to center the view as fallback
  *
- * Arrange a view based on it's current state (floating, tiled or maximized)
+ * Arrange a view based on it's current state (floating, tiled or
+ * maximized).  If the view is neither tiled nor maximized and
+ * `center` is `FALSE` this operation is a noop.
  */
 void
 phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center)
@@ -2330,4 +2404,43 @@ phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center)
     view_arrange_tiled (self, output);
   else if (center)
     view_center (self, output);
+}
+
+/**
+ * phoc_view_set_always_on_top:
+ * @self: a view
+ * @on_top: Whether the view should be rendered on top of other views
+ *
+ * Specifies whether the view should be rendered on top of other views.
+ */
+void
+phoc_view_set_always_on_top (PhocView *self, gboolean on_top)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  priv = phoc_view_get_instance_private (self);
+
+  priv->always_on_top = on_top;
+}
+
+/**
+ * phoc_view_is_always_on_top:
+ * @self: a view
+ *
+ * Whether a view is always rendered on top of all other views
+ *
+ * Returns: %TRUE if the view is marked as always-on-top
+ */
+bool
+phoc_view_is_always_on_top (PhocView *self)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  priv = phoc_view_get_instance_private (self);
+
+  return priv->always_on_top;
 }

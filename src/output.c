@@ -834,7 +834,7 @@ phoc_output_initable_init (GInitable    *initable,
   struct wlr_box output_box;
   int width, height;
 
-  PhocConfig *config = self->desktop->config;
+  PhocConfig *config = phoc_server_get_config (phoc_server_get_default ());
 
   g_message ("Output '%s' added ('%s'/'%s'/'%s'), "
              "%" PRId32 "mm x %" PRId32 "mm",
@@ -1327,8 +1327,9 @@ phoc_output_for_each_surface (PhocOutput          *self,
     }
 #endif
   } else {
-    PhocView *view;
-    wl_list_for_each_reverse (view, &desktop->views, link) {
+    for (GList *l = phoc_desktop_get_views (desktop)->tail; l; l = l->prev) {
+      PhocView *view = PHOC_VIEW (l->data);
+
       if (!visible_only || phoc_desktop_view_is_visible (desktop, view))
         phoc_output_view_for_each_surface (self, view, iterator, user_data);
     }

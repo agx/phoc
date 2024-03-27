@@ -1384,17 +1384,14 @@ static void
 seat_raise_view_stack (PhocSeat *seat, PhocView *view)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-
-  if (!view->wlr_surface) {
-    return;
-  }
-
-  wl_list_remove (&view->link);
-  wl_list_insert (&desktop->views, &view->link);
-  phoc_view_damage_whole (view);
-
   PhocView *child;
 
+  if (!view->wlr_surface)
+    return;
+
+  phoc_desktop_move_view_to_top (desktop, view);
+
+  /* Raise children recursively */
   wl_list_for_each_reverse (child, &view->stack, parent_link)
     seat_raise_view_stack (seat, child);
 }

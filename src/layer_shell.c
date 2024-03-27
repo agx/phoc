@@ -251,6 +251,7 @@ void
 phoc_layer_shell_arrange (PhocOutput *output)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocInput *input = phoc_server_get_input (server);
   struct wlr_box usable_area = { 0 };
   GSList *seats = phoc_input_get_seats (input);
@@ -273,9 +274,11 @@ phoc_layer_shell_arrange (PhocOutput *output)
     arrange_layer (output, seats, layers[i], &usable_area, true);
   output->usable_area = usable_area;
 
-  PhocView *view;
-  wl_list_for_each (view, &output->desktop->views, link)
+  for (GList *l = phoc_desktop_get_views (desktop)->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
+
     phoc_view_arrange (view, NULL, output->desktop->maximize);
+  }
 
   // Arrange non-exlusive surfaces from top->bottom
   for (size_t i = 0; i < G_N_ELEMENTS (layers); ++i)

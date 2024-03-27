@@ -437,7 +437,7 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   self->debug_flags = debug_flags;
   self->mainloop = mainloop;
   self->exit_status = 1;
-  self->desktop = phoc_desktop_new (self->config);
+  self->desktop = phoc_desktop_new ();
   self->input = phoc_input_new ();
   self->session_exec = g_strdup (exec);
   self->mainloop = mainloop;

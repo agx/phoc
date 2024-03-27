@@ -15,6 +15,7 @@
 #include "phoc-config.h"
 #include "keybindings.h"
 #include "seat.h"
+#include "server.h"
 #include "keyboard.h"
 
 #include <wlr/types/wlr_keyboard.h>
@@ -48,22 +49,43 @@ typedef struct _PhocKeybindings
 
 G_DEFINE_TYPE (PhocKeybindings, phoc_keybindings, G_TYPE_OBJECT);
 
+
+static void
+handle_always_on_top (PhocSeat *seat, GVariant *param)
+{
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocView *view = phoc_seat_get_focus_view (seat);
+  gboolean on_top;
+
+  if (!view)
+    return;
+
+  on_top = !phoc_view_is_always_on_top (view);
+  g_debug ("always-on-top for %s: %d", phoc_view_get_app_id (view), on_top);
+  phoc_desktop_set_view_always_on_top (desktop, view, on_top);
+}
+
+
 static void
 handle_maximize (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus != NULL)
-    phoc_view_maximize (focus, NULL);
+  if (!view)
+    return;
+
+  phoc_view_maximize (view, NULL);
 }
 
 static void
 handle_unmaximize (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus != NULL)
-    phoc_view_restore (focus);
+  if (!view)
+    return;
+
+  phoc_view_restore (view);
 }
 
 
@@ -87,24 +109,27 @@ handle_tile (PhocSeat *seat, GVariant *param)
 static void
 handle_toggle_maximized (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus != NULL) {
-    if (phoc_view_is_maximized (focus))
-      phoc_view_restore (focus);
-    else
-      phoc_view_maximize (focus, NULL);
-  }
+  if (!view)
+    return;
+
+  if (phoc_view_is_maximized (view))
+    phoc_view_restore (view);
+  else
+    phoc_view_maximize (view, NULL);
 }
+
 
 static void
 handle_toggle_fullscreen (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus) {
-    phoc_view_set_fullscreen(focus, !phoc_view_is_fullscreen (focus), NULL);
-  }
+  if (!view)
+    return;
+
+  phoc_view_set_fullscreen(view, !phoc_view_is_fullscreen (view), NULL);
 }
 
 
@@ -125,10 +150,12 @@ handle_cycle_windows_backwards (PhocSeat *seat, GVariant *param)
 static void
 handle_close (PhocSeat *seat, GVariant *param)
 {
-  PhocView *focus = phoc_seat_get_focus_view (seat);
+  PhocView *view = phoc_seat_get_focus_view (seat);
 
-  if (focus)
-    phoc_view_close (focus);
+  if (!view)
+    return;
+
+  phoc_view_close (view);
 }
 
 
@@ -138,9 +165,26 @@ handle_move_to_monitor (PhocSeat *seat, GVariant *param)
   PhocView *view = phoc_seat_get_focus_view (seat);
   enum wlr_direction dir;
 
+  if (!view)
+    return;
+
   dir = g_variant_get_int32 (param);
-  if (view)
-    phoc_view_move_to_next_output (view, dir);
+  phoc_view_move_to_next_output (view, dir);
+}
+
+
+static void
+handle_move_to_corner (PhocSeat *seat, GVariant *param)
+{
+  PhocView *view = phoc_seat_get_focus_view (seat);
+  PhocViewCorner corner;
+
+  corner = g_variant_get_int32 (param);
+
+  if (!view)
+    return;
+
+  phoc_view_move_to_corner (view, corner);
 }
 
 
@@ -532,6 +576,7 @@ phoc_keybindings_constructed (GObject *object)
   G_OBJECT_CLASS (phoc_keybindings_parent_class)->constructed (object);
 
   self->settings = g_settings_new (KEYBINDINGS_SCHEMA_ID);
+  phoc_add_keybinding (self, self->settings, "always-on-top", handle_always_on_top, NULL);
   phoc_add_keybinding (self, self->settings, "close", handle_close, NULL);
   phoc_add_keybinding (self, self->settings, "cycle-windows", handle_cycle_windows, NULL);
   phoc_add_keybinding (self, self->settings,
@@ -552,6 +597,18 @@ phoc_keybindings_constructed (GObject *object)
   phoc_add_keybinding (self, self->settings,
                        "move-to-monitor-left", handle_move_to_monitor,
                        g_variant_new_int32 (WLR_DIRECTION_LEFT));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-nw", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_NORTH_WEST));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-ne", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_NORTH_EAST));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-se", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_SOUTH_EAST));
+  phoc_add_keybinding (self, self->settings,
+                       "move-to-corner-sw", handle_move_to_corner,
+                       g_variant_new_int32 (PHOC_VIEW_CORNER_SOUTH_WEST));
   /* TODO: we need a real switch-applications but ALT-TAB should do s.th.
    * useful */
   phoc_add_keybinding (self, self->settings, "switch-applications", handle_cycle_windows, NULL);
