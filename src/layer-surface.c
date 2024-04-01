@@ -202,8 +202,10 @@ phoc_layer_surface_unmap (PhocLayerSurface *self)
 
   wlr_output = layer_surface->output;
   if (wlr_output != NULL) {
-    phoc_output_damage_whole_local_surface(wlr_output->data, layer_surface->surface,
-                                           self->geo.x, self->geo.y);
+    phoc_output_damage_whole_surface (wlr_output->data,
+                                      layer_surface->surface,
+                                      self->geo.x,
+                                      self->geo.y);
   }
 }
 

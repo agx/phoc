@@ -498,10 +498,10 @@ alpha_surface_handle_commit (struct wl_listener *listener, void *data)
 
   phoc_layer_surface_get_output (layer_surface);
   output = phoc_layer_surface_get_output (layer_surface);
-  phoc_output_damage_whole_local_surface (output,
-                                          layer_surface->layer_surface->surface,
-                                          layer_surface->geo.x, layer_surface->geo.y);
-
+  phoc_output_damage_whole_surface (output,
+                                    layer_surface->layer_surface->surface,
+                                    layer_surface->geo.x,
+                                    layer_surface->geo.y);
 }
 
 

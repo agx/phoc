@@ -112,8 +112,8 @@ GList *     phoc_output_get_layer_surfaces_for_layer (PhocOutput                
                                                       enum zwlr_layer_shell_v1_layer  layer);
 
 /* signal handlers */
-void        handle_output_manager_apply (struct wl_listener *listener, void *data);
-void        handle_output_manager_test (struct wl_listener *listener, void *data);
+void        phoc_handle_output_manager_apply (struct wl_listener *listener, void *data);
+void        phoc_handle_output_manager_test (struct wl_listener *listener, void *data);
 void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener *listener,
                                                               void *data);
 void        phoc_output_handle_gamma_control_set_gamma (struct wl_listener *listener, void *data);
@@ -123,10 +123,10 @@ void        phoc_output_damage_whole (PhocOutput *output);
 void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole);
 void        phoc_output_damage_whole_drag_icon (PhocOutput   *self,
                                                 PhocDragIcon *icon);
-void        phoc_output_damage_from_local_surface (PhocOutput *self, struct wlr_surface *surface, double
-                                                   ox, double oy);
-void        phoc_output_damage_whole_local_surface (PhocOutput *self, struct wlr_surface *surface,
-                                                    double ox, double oy);
+void        phoc_output_damage_from_surface (PhocOutput *self, struct wlr_surface *surface,
+                                             double ox, double oy);
+void        phoc_output_damage_whole_surface (PhocOutput *self, struct wlr_surface *surface,
+                                              double ox, double oy);
 
 void        phoc_output_update_shell_reveal (PhocOutput *self);
 void        phoc_output_force_shell_reveal (PhocOutput *self, gboolean force);

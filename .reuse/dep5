@@ -67,7 +67,7 @@ Files:
  src/virtual.c
  src/virtual.h
  src/xcursor.h
- src/xdg_shell.c
+ src/xdg-toplevel-decoration.c
 Copyright:
  The wlroots authors
  The Phoc authors

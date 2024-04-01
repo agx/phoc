@@ -1,5 +1,7 @@
 #pragma once
 
+#include "view-child-private.h"
+
 #include <stdbool.h>
 #include <wlr/config.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -12,7 +14,6 @@
 G_BEGIN_DECLS
 
 typedef struct _PhocBling PhocBling;
-typedef struct _PhocView PhocView;
 typedef struct _PhocDesktop PhocDesktop;
 typedef struct _PhocOutput PhocOutput;
 
@@ -54,6 +55,7 @@ typedef enum {
  */
 /* TODO: we keep the struct public for now due to the list links but we should
    avoid other member access */
+typedef struct _PhocView PhocView;
 struct _PhocView {
   GObject parent_instance;
 
@@ -139,36 +141,6 @@ static inline gboolean PHOC_IS_VIEW_CLASS (gpointer ptr) {
 static inline PhocViewClass * PHOC_VIEW_GET_CLASS (gpointer ptr) {
   return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_get_type (), PhocViewClass); }
 
-typedef struct _PhocViewChild PhocViewChild;
-
-typedef struct _PhocViewChildInterface {
-  void (*get_pos)(PhocViewChild *child, int *sx, int *sy);
-  void (*destroy)(PhocViewChild *child);
-} PhocViewChildInterface;
-
-/**
- * PhocViewChild:
- * @link: Link to PhocView::child_surfaces
- * @view: The [type@PhocView] this child belongs to
- * @parent: (nullable): The parent of this child if another child
- * @children: (nullable): children of this child
- *
- * A child of a [type@PhocView], e.g. a popup or subsurface
- */
-typedef struct _PhocViewChild {
-  const PhocViewChildInterface *impl;
-
-  PhocView                     *view;
-  PhocViewChild                *parent;
-  GSList                       *children;
-  struct wlr_surface           *wlr_surface;
-  struct wl_list                link;
-  bool                          mapped;
-
-  struct wl_listener            commit;
-  struct wl_listener            new_subsurface;
-} PhocViewChild;
-
 void                  phoc_view_appear_activated (PhocView *view, bool activated);
 void                  phoc_view_activate (PhocView *self, bool activate);
 void                  phoc_view_damage_whole (PhocView *view);
@@ -239,15 +211,6 @@ gboolean              phoc_view_get_tiled_box (PhocView             *self,
 void                  phoc_view_add_bling (PhocView *self, PhocBling *bling);
 void                  phoc_view_remove_bling (PhocView *self, PhocBling *bling);
 GSList               *phoc_view_get_blings (PhocView *self);
-
-void                  phoc_view_child_init (PhocViewChild                *child,
-                                            const PhocViewChildInterface *impl,
-                                            PhocView                     *view,
-                                            struct wlr_surface           *wlr_surface);
-void                  phoc_view_child_destroy (PhocViewChild *child);
-void                  phoc_view_child_apply_damage (PhocViewChild *child);
-void                  phoc_view_child_damage_whole (PhocViewChild *child);
-void                  phoc_view_child_map (PhocViewChild *child, struct wlr_surface *wlr_surface);
-void                  phoc_view_child_unmap (PhocViewChild *child);
+void                  phoc_view_add_child (PhocView *self, PhocViewChild *child);
 
 G_END_DECLS

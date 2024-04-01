@@ -51,6 +51,7 @@
 #include "layer-shell-effects.h"
 
 #include "xdg-surface.h"
+#include "xdg-toplevel-decoration.h"
 #include "xwayland-surface.h"
 
 /* Maximum protocol versions we support */
@@ -719,11 +720,11 @@ phoc_desktop_constructed (GObject *object)
 
   self->xdg_shell = wlr_xdg_shell_create(wl_display, PHOC_XDG_SHELL_VERSION);
   wl_signal_add(&self->xdg_shell->events.new_surface, &self->xdg_shell_surface);
-  self->xdg_shell_surface.notify = handle_xdg_shell_surface;
+  self->xdg_shell_surface.notify = phoc_handle_xdg_shell_surface;
 
   self->layer_shell = wlr_layer_shell_v1_create (wl_display, PHOC_LAYER_SHELL_VERSION);
   wl_signal_add(&self->layer_shell->events.new_surface, &self->layer_shell_surface);
-  self->layer_shell_surface.notify = handle_layer_shell_surface;
+  self->layer_shell_surface.notify = phoc_handle_layer_shell_surface;
   priv->layer_shell_effects = phoc_layer_shell_effects_new ();
 
   self->tablet_v2 = wlr_tablet_v2_create (wl_display);
@@ -782,7 +783,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->xdg_decoration_manager->events.new_toplevel_decoration,
                  &self->xdg_toplevel_decoration);
 
-  self->xdg_toplevel_decoration.notify = handle_xdg_toplevel_decoration;
+  self->xdg_toplevel_decoration.notify = phoc_handle_xdg_toplevel_decoration;
   wlr_viewporter_create (wl_display);
   wlr_single_pixel_buffer_manager_v1_create (wl_display);
   wlr_fractional_scale_manager_v1_create (wl_display, PHOC_FRACTIONAL_SCALE_VERSION);
@@ -801,9 +802,9 @@ phoc_desktop_constructed (GObject *object)
   self->pointer_gestures = wlr_pointer_gestures_v1_create (wl_display);
 
   self->output_manager_v1 = wlr_output_manager_v1_create (wl_display);
-  self->output_manager_apply.notify = handle_output_manager_apply;
+  self->output_manager_apply.notify = phoc_handle_output_manager_apply;
   wl_signal_add (&self->output_manager_v1->events.apply, &self->output_manager_apply);
-  self->output_manager_test.notify = handle_output_manager_test;
+  self->output_manager_test.notify = phoc_handle_output_manager_test;
   wl_signal_add (&self->output_manager_v1->events.test, &self->output_manager_test);
 
   self->output_power_manager_v1 = wlr_output_power_manager_v1_create (wl_display);
