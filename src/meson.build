@@ -128,6 +128,7 @@ phoc_deps = [
   gsettings_desktop_schemas_dep,
   math,
   pixman,
+  udev,
   wayland_server,
   wlroots,
   xkbcommon,
