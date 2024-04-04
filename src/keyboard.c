@@ -765,6 +765,8 @@ phoc_keyboard_constructed (GObject *object)
   struct wlr_input_device *device = phoc_input_device_get_device (input_device);
   struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device (device);
 
+  G_OBJECT_CLASS (phoc_keyboard_parent_class)->constructed (object);
+
   /* By default, all inputs from this keyboard will trigger activity events, unless there's a udev
    * property that explicitly prevents that. */
   self->wakeup_key_default = TRUE;
@@ -800,8 +802,6 @@ phoc_keyboard_constructed (GObject *object)
     "swapped-signal::changed::delay", G_CALLBACK (on_keyboard_setting_changed), self,
     NULL);
   on_keyboard_setting_changed (self, NULL, self->keyboard_settings);
-
-  G_OBJECT_CLASS (phoc_keyboard_parent_class)->constructed (object);
 }
 
 
