@@ -156,7 +156,7 @@ pressed_keysyms_update (xkb_keysym_t              *pressed_keysyms,
       continue;
     if (state == WL_KEYBOARD_KEY_STATE_PRESSED)
       pressed_keysyms_add (pressed_keysyms, keysyms[i]);
-    else     // WL_KEYBOARD_KEY_STATE_RELEASED
+    else /* WL_KEYBOARD_KEY_STATE_RELEASED */
       pressed_keysyms_remove (pressed_keysyms, keysyms[i]);
   }
 }
@@ -375,7 +375,7 @@ phoc_keyboard_get_grab (PhocKeyboard *self)
   if (!input_method || !input_method->keyboard_grab)
     return NULL;
 
-  // Do not forward virtual events back to the client that generated them
+  /* Do not forward virtual events back to the client that generated them */
   if (virtual_keyboard
       && wl_resource_get_client (input_method->keyboard_grab->resource)
       == wl_resource_get_client (virtual_keyboard->resource))
@@ -394,7 +394,7 @@ phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_keyboard_key_event *eve
   const xkb_keysym_t *keysyms;
   size_t keysyms_len;
 
-  // Handle translated keysyms
+  /* Handle translated keysyms */
   keysyms_len = keyboard_keysyms_translated (self, keycode, &keysyms, &modifiers);
   pressed_keysyms_update (self->pressed_keysyms_translated, keysyms, keysyms_len, event->state);
   handled = keyboard_execute_binding (self,
@@ -404,19 +404,19 @@ phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_keyboard_key_event *eve
   keysyms_len = keyboard_keysyms_raw (self, keycode, &keysyms, &modifiers);
   pressed_keysyms_update (self->pressed_keysyms_raw, keysyms, keysyms_len,
                           event->state);
-  // Handle raw keysyms
+  /*  Handle raw keysyms */
   if (!handled) {
     handled = keyboard_execute_binding (self,
                                         self->pressed_keysyms_raw, modifiers, keysyms,
                                         keysyms_len, event->state);
   }
 
-  // Check for the super key
+  /* Check for the super key */
   if (!handled)
     handled = keyboard_execute_super_key (self, keysyms, keysyms_len, modifiers, event->time_msec,
                                           event->state);
 
-  // Handle subscribed keysyms
+  /* Handle subscribed keysyms */
   if (!handled) {
     handled = keyboard_execute_subscribed_binding (self,
                                                    self->pressed_keysyms_raw, modifiers,
