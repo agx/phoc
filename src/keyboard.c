@@ -53,26 +53,26 @@ typedef enum {
  * to the seat, it tracks keybindings and the keymap.
  */
 struct _PhocKeyboard {
-  PhocInputDevice parent;
+  PhocInputDevice    parent;
 
   struct wl_listener keyboard_key;
   struct wl_listener keyboard_modifiers;
 
-  GSettings *input_settings;
-  GSettings *keyboard_settings;
+  GSettings         *input_settings;
+  GSettings         *keyboard_settings;
   struct xkb_keymap *keymap;
-  GnomeXkbInfo *xkbinfo;
+  GnomeXkbInfo      *xkbinfo;
 
-  gboolean    wakeup_key_default;
-  GHashTable *wakeup_keys;
+  gboolean           wakeup_key_default;
+  GHashTable        *wakeup_keys;
 
-  xkb_keysym_t pressed_keysyms_translated[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
-  xkb_keysym_t pressed_keysyms_raw[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
+  xkb_keysym_t       pressed_keysyms_translated[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
+  xkb_keysym_t       pressed_keysyms_raw[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
 
-  uint32_t meta_key;
-  bool     meta_press_valid;
+  uint32_t           meta_key;
+  bool               meta_press_valid;
 };
-G_DEFINE_TYPE(PhocKeyboard, phoc_keyboard, PHOC_TYPE_INPUT_DEVICE)
+G_DEFINE_TYPE (PhocKeyboard, phoc_keyboard, PHOC_TYPE_INPUT_DEVICE)
 
 
 enum {
@@ -83,16 +83,15 @@ static guint signals[N_SIGNALS];
 
 
 static ssize_t
-pressed_keysyms_index(const xkb_keysym_t *pressed_keysyms,
-                      xkb_keysym_t keysym)
+pressed_keysyms_index (const xkb_keysym_t *pressed_keysyms, xkb_keysym_t keysym)
 {
   for (size_t i = 0; i < PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP; ++i) {
-    if (pressed_keysyms[i] == keysym) {
+    if (pressed_keysyms[i] == keysym)
       return i;
-    }
   }
   return -1;
 }
+
 
 static size_t
 pressed_keysyms_length (const xkb_keysym_t *pressed_keysyms)
@@ -100,38 +99,36 @@ pressed_keysyms_length (const xkb_keysym_t *pressed_keysyms)
   size_t n = 0;
 
   for (size_t i = 0; i < PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP; ++i) {
-    if (pressed_keysyms[i] != XKB_KEY_NoSymbol) {
+    if (pressed_keysyms[i] != XKB_KEY_NoSymbol)
       ++n;
-    }
   }
   return n;
 }
 
+
 static void
-pressed_keysyms_add(xkb_keysym_t *pressed_keysyms,
-                    xkb_keysym_t keysym)
+pressed_keysyms_add (xkb_keysym_t *pressed_keysyms, xkb_keysym_t keysym)
 {
-  ssize_t i = pressed_keysyms_index(pressed_keysyms, keysym);
+  ssize_t i = pressed_keysyms_index (pressed_keysyms, keysym);
   if (i < 0) {
-    i = pressed_keysyms_index(pressed_keysyms, XKB_KEY_NoSymbol);
-    if (i >= 0) {
+    i = pressed_keysyms_index (pressed_keysyms, XKB_KEY_NoSymbol);
+    if (i >= 0)
       pressed_keysyms[i] = keysym;
-    }
   }
 }
 
+
 static void
-pressed_keysyms_remove(xkb_keysym_t *pressed_keysyms,
-                       xkb_keysym_t keysym)
+pressed_keysyms_remove (xkb_keysym_t *pressed_keysyms, xkb_keysym_t keysym)
 {
-  ssize_t i = pressed_keysyms_index(pressed_keysyms, keysym);
-  if (i >= 0) {
+  ssize_t i = pressed_keysyms_index (pressed_keysyms, keysym);
+  if (i >= 0)
     pressed_keysyms[i] = XKB_KEY_NoSymbol;
-  }
 }
+
 
 static bool
-keysym_is_modifier(xkb_keysym_t keysym)
+keysym_is_modifier (xkb_keysym_t keysym)
 {
   switch (keysym) {
   case XKB_KEY_Shift_L: case XKB_KEY_Shift_R:
@@ -149,19 +146,18 @@ keysym_is_modifier(xkb_keysym_t keysym)
 }
 
 static void
-pressed_keysyms_update(xkb_keysym_t *pressed_keysyms,
-                       const xkb_keysym_t *keysyms, size_t keysyms_len,
-                       enum wl_keyboard_key_state state)
+pressed_keysyms_update (xkb_keysym_t              *pressed_keysyms,
+                        const xkb_keysym_t        *keysyms,
+                        size_t                     keysyms_len,
+                        enum wl_keyboard_key_state state)
 {
   for (size_t i = 0; i < keysyms_len; ++i) {
-    if (keysym_is_modifier(keysyms[i])) {
+    if (keysym_is_modifier (keysyms[i]))
       continue;
-    }
-    if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-      pressed_keysyms_add(pressed_keysyms, keysyms[i]);
-    } else { // WL_KEYBOARD_KEY_STATE_RELEASED
-      pressed_keysyms_remove(pressed_keysyms, keysyms[i]);
-    }
+    if (state == WL_KEYBOARD_KEY_STATE_PRESSED)
+      pressed_keysyms_add (pressed_keysyms, keysyms[i]);
+    else     // WL_KEYBOARD_KEY_STATE_RELEASED
+      pressed_keysyms_remove (pressed_keysyms, keysyms[i]);
   }
 }
 
@@ -191,10 +187,10 @@ keyboard_execute_compositor_binding (PhocKeyboard *self, xkb_keysym_t keysym)
   if (keysym == XKB_KEY_Escape) {
     PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (self));
 
-    wlr_seat_pointer_end_grab(seat->seat);
-    wlr_seat_keyboard_end_grab(seat->seat);
+    wlr_seat_pointer_end_grab (seat->seat);
+    wlr_seat_keyboard_end_grab (seat->seat);
     wlr_seat_touch_end_grab (seat->seat);
-    phoc_seat_end_compositor_grab(seat);
+    phoc_seat_end_compositor_grab (seat);
   }
 
   return false;
@@ -216,7 +212,7 @@ keyboard_execute_super_key (PhocKeyboard              *self,
                             uint32_t                   time,
                             enum wl_keyboard_key_state state)
 {
-  uint32_t super_mod = 1 << xkb_map_mod_get_index(self->keymap, "Mod4");
+  uint32_t super_mod = 1 << xkb_map_mod_get_index (self->keymap, "Mod4");
 
   if (modifiers > 0 && modifiers != super_mod) {
     /* Check if other modifiers have been pressed e.g. <ctrl><super> */
@@ -268,13 +264,12 @@ keyboard_execute_binding (PhocKeyboard              *self,
   PhocSeat *seat = phoc_input_device_get_seat (PHOC_INPUT_DEVICE (self));
 
   if (state != WL_KEYBOARD_KEY_STATE_PRESSED)
-      return false;
+    return false;
 
   /* TODO: should be handled via PhocKeybindings as well */
   for (size_t i = 0; i < keysyms_len; ++i) {
-    if (keyboard_execute_compositor_binding(self, keysyms[i])) {
+    if (keyboard_execute_compositor_binding (self, keysyms[i]))
       return true;
-    }
   }
 
   size_t n = pressed_keysyms_length (pressed_keysyms);
@@ -321,21 +316,22 @@ keyboard_execute_subscribed_binding (PhocKeyboard              *self,
  * On US layout, pressing Alt+Shift+2 will trigger Alt+@.
  */
 static size_t
-keyboard_keysyms_translated(PhocKeyboard *self,
-                            xkb_keycode_t keycode, const xkb_keysym_t **keysyms,
-                            uint32_t *modifiers)
+keyboard_keysyms_translated (PhocKeyboard        *self,
+                             xkb_keycode_t        keycode,
+                             const xkb_keysym_t **keysyms,
+                             uint32_t            *modifiers)
 {
   PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
   struct wlr_input_device *device = phoc_input_device_get_device (input_device);
   struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device (device);
 
-  *modifiers = wlr_keyboard_get_modifiers(wlr_keyboard);
-  xkb_mod_mask_t consumed = xkb_state_key_get_consumed_mods2(
+  *modifiers = wlr_keyboard_get_modifiers (wlr_keyboard);
+  xkb_mod_mask_t consumed = xkb_state_key_get_consumed_mods2 (
     wlr_keyboard->xkb_state, keycode, XKB_CONSUMED_MODE_XKB);
   *modifiers = *modifiers & ~consumed;
 
-  return xkb_state_key_get_syms(wlr_keyboard->xkb_state,
-                                keycode, keysyms);
+  return xkb_state_key_get_syms (wlr_keyboard->xkb_state,
+                                 keycode, keysyms);
 }
 
 /*
@@ -348,21 +344,23 @@ keyboard_keysyms_translated(PhocKeyboard *self,
  * This will trigger keybinds such as Alt+Shift+2.
  */
 static size_t
-keyboard_keysyms_raw(PhocKeyboard *self,
-                     xkb_keycode_t keycode, const xkb_keysym_t **keysyms,
-                     uint32_t *modifiers)
+keyboard_keysyms_raw (PhocKeyboard        *self,
+                      xkb_keycode_t        keycode,
+                      const xkb_keysym_t **keysyms,
+                      uint32_t            *modifiers)
 {
   PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
   struct wlr_input_device *device = phoc_input_device_get_device (input_device);
   struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device (device);
 
-  *modifiers = wlr_keyboard_get_modifiers(wlr_keyboard);
+  *modifiers = wlr_keyboard_get_modifiers (wlr_keyboard);
 
-  xkb_layout_index_t layout_index = xkb_state_key_get_layout(wlr_keyboard->xkb_state,
-                                                             keycode);
-  return xkb_keymap_key_get_syms_by_level(wlr_keyboard->keymap,
-                                          keycode, layout_index, 0, keysyms);
+  xkb_layout_index_t layout_index = xkb_state_key_get_layout (wlr_keyboard->xkb_state,
+                                                              keycode);
+  return xkb_keymap_key_get_syms_by_level (wlr_keyboard->keymap,
+                                           keycode, layout_index, 0, keysyms);
 }
+
 
 static struct wlr_input_method_keyboard_grab_v2 *
 phoc_keyboard_get_grab (PhocKeyboard *self)
@@ -380,15 +378,15 @@ phoc_keyboard_get_grab (PhocKeyboard *self)
   // Do not forward virtual events back to the client that generated them
   if (virtual_keyboard
       && wl_resource_get_client (input_method->keyboard_grab->resource)
-      == wl_resource_get_client (virtual_keyboard->resource)) {
+      == wl_resource_get_client (virtual_keyboard->resource))
     return NULL;
-  }
 
   return input_method->keyboard_grab;
 }
 
+
 static void
-phoc_keyboard_handle_key(PhocKeyboard *self, struct wlr_keyboard_key_event *event)
+phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_keyboard_key_event *event)
 {
   xkb_keycode_t keycode = event->keycode + 8;
   bool handled = false;
@@ -399,9 +397,9 @@ phoc_keyboard_handle_key(PhocKeyboard *self, struct wlr_keyboard_key_event *even
   // Handle translated keysyms
   keysyms_len = keyboard_keysyms_translated (self, keycode, &keysyms, &modifiers);
   pressed_keysyms_update (self->pressed_keysyms_translated, keysyms, keysyms_len, event->state);
-  handled = keyboard_execute_binding(self,
-                                     self->pressed_keysyms_translated, modifiers, keysyms,
-                                     keysyms_len, event->state);
+  handled = keyboard_execute_binding (self,
+                                      self->pressed_keysyms_translated, modifiers, keysyms,
+                                      keysyms_len, event->state);
 
   keysyms_len = keyboard_keysyms_raw (self, keycode, &keysyms, &modifiers);
   pressed_keysyms_update (self->pressed_keysyms_raw, keysyms, keysyms_len,
@@ -414,9 +412,9 @@ phoc_keyboard_handle_key(PhocKeyboard *self, struct wlr_keyboard_key_event *even
   }
 
   // Check for the super key
-  if (!handled) {
-    handled = keyboard_execute_super_key (self, keysyms, keysyms_len, modifiers, event->time_msec, event->state);
-  }
+  if (!handled)
+    handled = keyboard_execute_super_key (self, keysyms, keysyms_len, modifiers, event->time_msec,
+                                          event->state);
 
   // Handle subscribed keysyms
   if (!handled) {
@@ -432,14 +430,15 @@ phoc_keyboard_handle_key(PhocKeyboard *self, struct wlr_keyboard_key_event *even
     struct wlr_input_method_keyboard_grab_v2 *grab = phoc_keyboard_get_grab (self);
 
     if (grab) {
-      wlr_input_method_keyboard_grab_v2_set_keyboard (grab, wlr_keyboard_from_input_device (device));
+      wlr_input_method_keyboard_grab_v2_set_keyboard (grab,
+                                                      wlr_keyboard_from_input_device (device));
       wlr_input_method_keyboard_grab_v2_send_key (grab,
                                                   event->time_msec,
                                                   event->keycode,
                                                   event->state);
     } else {
       PhocSeat *seat = phoc_input_device_get_seat (input_device);
-      wlr_seat_set_keyboard(seat->seat, wlr_keyboard_from_input_device (device));
+      wlr_seat_set_keyboard (seat->seat, wlr_keyboard_from_input_device (device));
       wlr_seat_keyboard_notify_key (seat->seat,
                                     event->time_msec,
                                     event->keycode,
@@ -448,8 +447,9 @@ phoc_keyboard_handle_key(PhocKeyboard *self, struct wlr_keyboard_key_event *even
   }
 }
 
+
 static void
-phoc_keyboard_handle_modifiers(PhocKeyboard *self)
+phoc_keyboard_handle_modifiers (PhocKeyboard *self)
 {
   PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
   struct wlr_input_device *device = phoc_input_device_get_device (input_device);
@@ -476,16 +476,15 @@ set_fallback_keymap (PhocKeyboard *self)
   struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device (device);
 
   context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
-  if (context == NULL) {
+  if (context == NULL)
     return;
-  }
 
   xkb_keymap_unref (self->keymap);
   self->keymap = xkb_keymap_new_from_names (context, NULL,
                                             XKB_KEYMAP_COMPILE_NO_FLAGS);
   xkb_context_unref (context);
 
-  wlr_keyboard_set_keymap(wlr_keyboard, self->keymap);
+  wlr_keyboard_set_keymap (wlr_keyboard, self->keymap);
 }
 
 
@@ -505,20 +504,19 @@ set_xkb_keymap (PhocKeyboard *self, const gchar *layout, const gchar *variant, c
   rules.variant = variant;
   rules.options = options;
 
-  context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+  context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
   if (context == NULL) {
     g_warning ("Cannot create XKB context");
     goto out;
   }
 
-  keymap = xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
-  if (keymap == NULL) {
+  keymap = xkb_map_new_from_names (context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
+  if (keymap == NULL)
     g_warning ("Cannot create XKB keymap");
-  }
 
  out:
   if (context)
-    xkb_context_unref(context);
+    xkb_context_unref (context);
 
   if (keymap) {
     xkb_keymap_unref (self->keymap);
@@ -528,7 +526,7 @@ set_xkb_keymap (PhocKeyboard *self, const gchar *layout, const gchar *variant, c
     return;
   }
 
-  wlr_keyboard_set_keymap(wlr_keyboard, self->keymap);
+  wlr_keyboard_set_keymap (wlr_keyboard, self->keymap);
 }
 
 
@@ -537,8 +535,8 @@ on_input_setting_changed (PhocKeyboard *self,
                           const gchar  *key,
                           GSettings    *settings)
 {
-  g_auto(GStrv) xkb_options = NULL;
-  g_autoptr(GVariant) sources = NULL;
+  g_auto (GStrv) xkb_options = NULL;
+  g_autoptr (GVariant) sources = NULL;
   GVariantIter iter;
   g_autofree gchar *id = NULL;
   g_autofree gchar *type = NULL;
@@ -556,12 +554,12 @@ on_input_setting_changed (PhocKeyboard *self,
 
   g_debug ("Setting changed, reloading input settings");
 
-  if (wlr_input_device_get_virtual_keyboard(device) != NULL) {
-          g_debug ("Virtual keyboard in use, not switching layout");
-          return;
+  if (wlr_input_device_get_virtual_keyboard (device) != NULL) {
+    g_debug ("Virtual keyboard in use, not switching layout");
+    return;
   }
 
-  sources = g_settings_get_value(settings, "sources");
+  sources = g_settings_get_value (settings, "sources");
 
   g_variant_iter_init (&iter, sources);
   g_variant_iter_next (&iter, "(ss)", &type, &id);
@@ -586,6 +584,7 @@ on_input_setting_changed (PhocKeyboard *self,
 
   set_xkb_keymap (self, layout, variant, xkb_options_string);
 }
+
 
 static void
 on_keyboard_setting_changed (PhocKeyboard *self,
@@ -620,7 +619,7 @@ on_keyboard_setting_changed (PhocKeyboard *self,
   }
 
   g_debug ("Setting repeat rate to %d, delay %d", rate, delay);
-  wlr_keyboard_set_repeat_info(wlr_keyboard, rate, delay);
+  wlr_keyboard_set_repeat_info (wlr_keyboard, rate, delay);
 }
 
 
@@ -650,7 +649,7 @@ handle_keyboard_modifiers (struct wl_listener *listener, void *data)
 
 
 static void
-phoc_keyboard_dispose(GObject *object)
+phoc_keyboard_dispose (GObject *object)
 {
   PhocKeyboard *self = PHOC_KEYBOARD (object);
 
@@ -663,7 +662,7 @@ phoc_keyboard_dispose(GObject *object)
 
 
 static void
-phoc_keyboard_finalize(GObject *object)
+phoc_keyboard_finalize (GObject *object)
 {
   PhocKeyboard *self = PHOC_KEYBOARD (object);
 
@@ -783,8 +782,7 @@ phoc_keyboard_constructed (GObject *object)
 
   /* Keyboard settings */
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
-  self->keyboard_settings = g_settings_new (
-    "org.gnome.desktop.peripherals.keyboard");
+  self->keyboard_settings = g_settings_new ("org.gnome.desktop.peripherals.keyboard");
   self->meta_key = WLR_MODIFIER_LOGO;
 
   set_fallback_keymap (self);
@@ -830,10 +828,12 @@ phoc_keyboard_class_init (PhocKeyboardClass *klass)
                                     G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
+
 static void
 phoc_keyboard_init (PhocKeyboard *self)
 {
 }
+
 
 PhocKeyboard *
 phoc_keyboard_new (struct wlr_input_device *device, PhocSeat *seat)
@@ -853,14 +853,14 @@ phoc_keyboard_new (struct wlr_input_device *device, PhocSeat *seat)
 void
 phoc_keyboard_next_layout (PhocKeyboard *self)
 {
-  g_autoptr(GVariant) sources = NULL;
+  g_autoptr (GVariant) sources = NULL;
   GVariantIter iter;
   gchar *type, *id, *cur_type, *cur_id;
   GVariantBuilder builder;
   gboolean next;
 
   g_return_if_fail (PHOC_IS_KEYBOARD (self));
-  sources = g_settings_get_value(self->input_settings, "sources");
+  sources = g_settings_get_value (self->input_settings, "sources");
 
   if (g_variant_n_children (sources) < 2)
     return;
@@ -876,7 +876,7 @@ phoc_keyboard_next_layout (PhocKeyboard *self)
   }
   g_variant_builder_add (&builder, "(ss)", cur_type, cur_id);
 
-  g_settings_set_value(self->input_settings, "sources", g_variant_builder_end(&builder));
+  g_settings_set_value (self->input_settings, "sources", g_variant_builder_end (&builder));
 }
 
 /**
