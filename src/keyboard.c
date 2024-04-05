@@ -52,6 +52,14 @@ typedef enum {
  * It's responsible for forwarding keys press and modifier changes
  * to the seat, it tracks keybindings and the keymap.
  */
+
+enum {
+  ACTIVITY,
+  N_SIGNALS
+};
+static guint signals[N_SIGNALS];
+
+
 struct _PhocKeyboard {
   PhocInputDevice    parent;
 
@@ -73,13 +81,6 @@ struct _PhocKeyboard {
   bool               meta_press_valid;
 };
 G_DEFINE_TYPE (PhocKeyboard, phoc_keyboard, PHOC_TYPE_INPUT_DEVICE)
-
-
-enum {
-  ACTIVITY,
-  N_SIGNALS
-};
-static guint signals[N_SIGNALS];
 
 
 static ssize_t
