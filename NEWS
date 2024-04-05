@@ -1,3 +1,22 @@
+phoc 0.38.0
+-----------
+Released April 2024
+* Allow views to be always-on-top
+* Allow move-to-corner via keybindings
+* Allow clients to check if there's a hardware keyboard
+* Update to wlroots 0.17.2
+* Fractional scale fixes
+* Bump layer-shell version to 3
+* Make Subsurfaces and Popups GObjects
+* More internal cleanups and fixes
+* Validate more files during build
+* Issues fixed:
+  * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/98
+  * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/364
+  * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/342
+* Contributors:
+    * Guido Günther
+
 phoc 0.37.0
 -----------
 Released March 2024

@@ -1,3 +1,193 @@
+phoc (0.38.0) experimental; urgency=medium
+
+  * input-device: Add a helper to detect keyboards.
+    Should this prove inefficient we can look at ID_INPUT_KEYBOARD
+    udev property.
+  * seat: Check for keyboard more thoroughly.
+    We only want to announce keyboard capabilities if there's actually
+    a hw keyboard (and not just buttons).
+  * protocols/device-state: Add keyboard capability
+  * device-state: Report hw keyboard capability.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/98
+  * example/device-state: Use protocol version 2
+  * packaging: Use pkgconf
+    pkg-config is deprecated
+  * manpage: Fix typos
+  * build: Validate desktop file
+  * build: Validate schema
+  * treewide: Move to mobi.phosh prefix.
+    We don't change the schema id's to not break existing installations.
+  * wlroots: Update to 0.17.2
+  * output: Simplify condition.
+    No need to for inverse logic.
+  * output: Adjust scale to fractional-scale-v1.
+    When reading scale form configuration or updated heads make sure we use
+    a scale that works for the fractional-scale-v1 protocol.
+  * xdg-shell: Notify popups about fractional/buffer scale changes.
+    Otherwise the popup might see outdated fractional scale information and
+    become blurry.
+    To reproduce:
+      - Start at scale 100%,
+      - scale to 200 via g-c-c (GNOME Settings)
+      - open the scale popup again: The scaled numbers in there are blurry
+        while the main window has sharp text.
+    Note: tiling the window after changing scale hides the problem as the
+    move ensures updated scale information is sent to the view and all
+    children.
+  * view: Add common map function for ViewChilds.
+    Consolidate in one place to avoid errors fixed in the previous commit.
+    Once ViewChild is a GObject we can chain up "naturally".
+  * view: Add common unmap function for ViewChilds.
+    Once ViewChild is a GObject we can chain up "naturally".
+  * treewide: Use "Phosh Developers" insteady of myself as copyright holders
+  * treewide: Remove unneeded cast around g_object_new()
+    It gives us the right type anyway. Turns out our yasnippet
+    had that wrong and so it ended up in about all classes.
+  * desktop: Bump layer shell version to 3.
+    Version 3 adds the layer_shell object destructor only.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/364
+  * view: Better document parent child relationship
+    parent, parent_link and stack are all concerned with the view stack.
+    Cleanup indent while at that.
+  * view: Improve docstring
+  * view: Add docstring for phoc_view_restore()
+  * seat: Indent seat_raise_view_stack
+  * keybindings: Return early without a view.
+    Use the same pattern in all view related keybinding handlers
+  * desktop: Get config from server singleton.
+    No need to maintain this as extra property. We did this for some initial
+    uncluttering but that's long fixed.
+  * desktop: Turn list of views into a queue and make it private.
+    This will allow for some upcoming changes and also improves readability
+    a bit as we get function names instead of just list manipulation.
+    We need to take the indirection via `priv` for the moment until we made
+    all of desktop private.
+  * desktop: Handle always-on-top.
+    This allows views to stay on top (e.g. video players).
+    When a view is raised it's already mapped as well as new children are
+    raised too to avoid a parent hiding it's children. We don't raise any
+    parents in order to e.g. allow to raise a single window of an
+    application.
+    To activate you need to bind a keyboard shortcut
+      gsettings set org.gnome.desktop.wm.keybindings always-on-top "['<super>t']"
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/342
+  * desktop: Damage view when raising it.
+    This frees the seat from any view related damage handling.
+  * view: Implement move-to-corner.
+    These are unbound by default, test with e.g.
+      gsettings set org.gnome.desktop.wm.keybindings move-to-corner-nw "['<super>y']"
+      gsettings set org.gnome.desktop.wm.keybindings move-to-corner-ne "['<super>u']"
+      gsettings set org.gnome.desktop.wm.keybindings move-to-corner-sw "['<super>i']"
+      gsettings set org.gnome.desktop.wm.keybindings move-to-corner-se "['<super>o']"
+    We currently reject scale-to-fit, maximized and fullscreened views for
+    that as we want to simplify the scale-to-fit vs saved geometry handling
+    first. See https://gitlab.gnome.org/World/Phosh/phoc/-/issues/362
+  * view: Make view-child a GObject.
+    We use the same pattern as with PhocView and allow for public struct
+    members so derived classes can access them easily. Since PhocView and
+    PhocViewChild are still entangled we leave most of the member functions
+    in PhocView for the moment. They'll be moved in follow up commits.
+    We need to rename phoc_view_child_init() to not clash with the GObject
+    init function.
+  * view-child: Add view and surface properties.
+    We don't take ref on the view yet as the current code doesn't transfer
+    ownership either. We can improve on that once we have the objects in
+    place.
+  * xdg-shell: Make xdg-popup a minimal GObject.
+    The code will move into xdg-suface later.
+  * xdg-shell: Create/destroy popup as GObject
+  * view: Make subsurface a minimal GObject
+  * view: Create/destroy subsurfaces as GOjects
+  * view: Move PhocViewChild's public functions over too.
+    We skip phoc_view_child_setup() for now as it accesses view's
+    private data.
+    Since we now have our own compilation unit we can rename `child`
+    to `self` to ease readability.
+  * view-child: Move most of phoc_view_child_destroy into finalize.
+    For that we pull the `g_object_unref` from the custom destroy handlers
+    into `phoc_view_child_destroy`.
+  * view-child: Use GObject virtual functions for destroy and get_pos.
+    This allows us to drop the ViewChildInterface.
+  * view-child: Move most of the ViewChild's setup into constructed.
+    This allows us to drop more arguments from phoc_view_child_setup() as
+    those are already passed to the object constructor.
+  * view-child: Add map / unmap virtual methods.
+    This allows us to drop the implementation in the derived classes
+    completely (while we could still override them if needed).
+  * xdg-shell: Use popup constructor.
+    Thus we can drop phoc_xdg_popup_create().
+    The phoc_xdg_popup_new() invocations without consuming the return value
+    look a bit odd but the ref is dropped in handle_destroy. This is the
+    same pattern we use for other surface types.
+  * view-child: Drop phoc_view_child_destroy()
+    We can simply drop the only reference.
+  * subsurface: Use casts instead of accessing `child` directly.
+    This improves readability and allows us to rename to parent_instance.
+  * xdg-popup: Move popup class into it's own file.
+    We might want to merge xdg-surface and xdg-popup back into an
+    xdg-shell at some point as they serve the originate from the same
+    Wayland protocol but let's have this split for now to disentangle
+    xdg_shell.
+  * xdg-popup: Use GObject generated casts consistently
+  * xdg-shell: Move surface creation handler to xdg-surface
+  * xdg-surface: Tighten role check
+  * xdg-shell: Rename to xdg-toplevel-decoration.
+    That's the only bit handled in there now. This allows us to move
+    decoration related bits into the matching header too.
+  * layer-shell: Move handler into layer-shell related header.
+    We ought to rename the header too at some point but there's outstanding
+    MRs we don't want to break.
+  * output: Prefix handlers.
+    Now all public functions are properly namespaced.
+  * doc-check: Drop namespace exception.
+    Public methods are now properly prefixed.
+  * docs: Enable fatal warnings during doc build.
+    This makes sure we no longer ignore links that became stale or are
+    mistyped.
+    See phosh commit 8c4724e44c6727f36bed4fd67e853bddf17b6ccd
+  * view: Add and use phoc_view_add_child()
+    This ensures the child doesn't access the view's private data.
+  * view-child: Move adding to parent's list into constructed.
+    One more bit to get rid of phoc_view_child_setup().
+  * view-child: Move subsurface creation to constructed too.
+    This allows us to drop phoc_view_child_setup(). The only view child
+    private method left in view.c is phoc_view_child_subsurface_create()
+    which we can remove once subsurface creation becomes public.
+  * subsurface: Move into it's own file.
+    This disentangles subsurface handling from view handling (positioning,
+    window state, etc)
+  * subsurface: Add and use wlr-subsurface property
+  * subsurface: Move setup into constructed.
+    This makes subsurface creation for views and view-children more alike.
+  * view-child: Move subsurface creation out of view.
+    With subsurface being it's own class we can now move this bit
+    over to PhocViewChild too.
+  * subsurface: Make struct private.
+    Neither view nor view-child require direct member access anymore.
+  * view: Use subsurface constructor directly.
+    The fact that we don't store the ref isn't ideal. At some point we want
+    to move the `handle_destroy` handlers to their containers and drop the
+    ref there. This isn't worse than before though, it's just more visible.
+  * popup: Use self consistently.
+    When these bits were part of view.c we used `popup` to not confuse with
+    `self` meaning `view`. This can be fixed now.
+    Let's do this now since there can't be any outstanding MRs touching
+    this file.
+  * popup: Wait for commit before unconstraining popup.
+    This fixes a critical:
+      [types/xdg_shell/wlr_xdg_surface.c:169] A configure is scheduled for an uninitialized xdg_surface [address]
+  * view-child: Add and use view property getter.
+    This looks a bit nicer.
+  * output: Drop superfluous 'local' from damage helpers.
+    The names are long enough already
+  * view: Don't init subsurfaces twice.
+    The code in phoc_view_init_subsurfaces() does as same things the code in
+    map() just above the invocation does.
+    Fixes: c2e903e6 ("view: Move subsurface initialization to separate function")
+    which added the function but didn't remove the code in _map().
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 02 Apr 2024 14:12:22 +0200
+
 phoc (0.37.0) experimental; urgency=medium
 
   [ Guido Günther ]
