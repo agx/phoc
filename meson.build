@@ -45,14 +45,15 @@ wayland_protos = dependency('wayland-protocols', version: '>=1.15')
 wayland_server = dependency('wayland-server')
 xkbcommon      = dependency('xkbcommon')
 math           = cc.find_library('m')
-gmobile        = subproject('gmobile',
-                   default_options: [
-                   'examples=false',
-                   'gtk_doc=false',
-                   'tests=false',
-                 ])
-gmobile_dep    = gmobile.get_variable('gmobile_dep')
-
+gmobile_dep    = dependency('gmobile',
+  version: '>= 0.1.0',
+  fallback: ['gmobile', 'gmobile_dep'],
+  default_options: [
+    'examples=false',
+    'introspection=false',
+    'gtk_doc=false',
+    'tests=false',
+  ])
 embed_wlroots = get_option('embed-wlroots')
 
 if not embed_wlroots.disabled()
