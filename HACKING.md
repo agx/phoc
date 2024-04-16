@@ -7,7 +7,7 @@ Pull requests
 Before filing a pull request run the tests:
 
 ```sh
-ninja -C _build test
+meson test -C _build
 ```
 
 Use descriptive commit messages, see
