@@ -1281,7 +1281,15 @@ phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
   return g_hash_table_lookup (self->drag_surfaces_by_layer_surface, layer_surface);
 }
 
-
+/**
+ * phoc_layer_shell_effects_get_alpha_layer_surface_from_layer_surface: (skip)
+ * @self: The layer shell effects interface
+ * @layer_surface: The layer surface that should get the alpha effect
+ *
+ * Creates an object to handle alpha blending of layer surfaces
+ *
+ * Returns: A new alpha handing object
+ */
 PhocAlphaLayerSurface *
 phoc_layer_shell_effects_get_alpha_layer_surface_from_layer_surface (
   PhocLayerShellEffects *self,

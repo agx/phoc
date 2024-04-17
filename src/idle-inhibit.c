@@ -246,7 +246,13 @@ on_proxy_new_for_bus_finish (GObject *object, GAsyncResult *res, gpointer data)
   wl_signal_add (&self->wlr_idle_inhibit->events.new_inhibitor, &self->new_idle_inhibitor_v1);
 }
 
-
+/**
+ * phoc_idle_inhibit_create: (skip)
+ *
+ * Create new object to proxy Wayland's idle protocol to GNOME Session
+ *
+ * Returns: A new idle-inhibit object
+ */
 PhocIdleInhibit *
 phoc_idle_inhibit_create (void)
 {

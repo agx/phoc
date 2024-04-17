@@ -32,6 +32,11 @@ struct _PhocGtkShell {
   GSList *surfaces;
 };
 
+/**
+ * PhocGtkSurface:
+ *
+ * A surface in the gtk_shell1 protocol
+ */
 struct _PhocGtkSurface {
   struct wl_resource *resource;
   struct wlr_surface *wlr_surface;
@@ -401,8 +406,16 @@ gtk_shell_bind(struct wl_client *client, void *data, uint32_t version, uint32_t 
   return;
 }
 
+/**
+ * phoc_gtk_shell_create: (skip)
+ * @display: The Wayland display
+ *
+ * Create a new [type@GtkSurface].
+ *
+ * Returns: The new `PhocGtkSurface`
+ */
 PhocGtkShell*
-phoc_gtk_shell_create(PhocDesktop *desktop, struct wl_display *display)
+phoc_gtk_shell_create (PhocDesktop *desktop, struct wl_display *display)
 {
   PhocGtkShell *gtk_shell = g_new0 (PhocGtkShell, 1);
   if (!gtk_shell)
@@ -426,6 +439,13 @@ phoc_gtk_shell_destroy (PhocGtkShell *gtk_shell)
   g_free (gtk_shell);
 }
 
+/**
+ * phoc_gtk_shell_get_gtk_surface_from_wlr_surface: (skip)
+ *
+ * Get the [type@GtkSurface] from the given WLR surface
+ *
+ * Returns: (nullable): The `PhocGtkSurface` or `NULL`
+ */
 PhocGtkSurface *
 phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell *self, struct wlr_surface *wlr_surface)
 {

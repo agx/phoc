@@ -8,8 +8,7 @@ LOG="${DIR}/doc/doc-build.log"
 meson compile -C "${DIR}" doc/phoc-doc |& tee "${LOG}"
 
 if grep -vE  '('\
-'register as boxed type or \(skip\)'\
-'|wayland-server-core.h:.* syntax error, unexpected'\
+'wayland-server-core.h:.* syntax error, unexpected'\
 '|argument pressed_keysyms: Unresolved type:'\
 '|argument iterator: Unresolved type: .wlr_surface_iterator_func_t.'\
 '|argument .*damage: Unresolved type: .pixman_region32_t.'\

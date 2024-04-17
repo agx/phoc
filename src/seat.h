@@ -41,11 +41,11 @@ typedef struct _PhocSeat {
   struct wlr_seat                *seat;
   PhocCursor                     *cursor;
 
-  // coordinates of the first touch point if it exists
+  /* Coordinates of the first touch point if it exists */
   int32_t                         touch_id;
   double                          touch_x, touch_y;
 
-  // If the focused layer is set, views cannot receive keyboard focus
+  /*  If the focused layer is set, views cannot receive keyboard focus */
   struct wlr_layer_surface_v1    *focused_layer;
 
   PhocInputMethodRelay            im_relay;
@@ -53,13 +53,13 @@ typedef struct _PhocSeat {
   struct wl_list                  views; // PhocSeatView::link
   bool                            has_focus;
 
-  PhocDragIcon                   *drag_icon; // can be NULL
+  PhocDragIcon                   *drag_icon; /* (nullable) */
 
-  GSList                         *keyboards; /* PhocKeyboard */
-  GSList                         *pointers;  /* PhocPointer */
-  GSList                         *switches;  /* PhocSwitch */
-  GSList                         *touch;     /* PhocTouch */
-  GSList                         *tablets;   /* PhocTablet */
+  GSList                         *keyboards; /* (element-type PhocKeyboard) */
+  GSList                         *pointers;  /* (element-type PhocPointer) */
+  GSList                         *switches;  /* (element-type PhocSwitch) */
+  GSList                         *touch;     /* (element-type PhocTouch) */
+  GSList                         *tablets;   /* (element-type PhocTablet) */
   struct wl_list                  tablet_pads;
 
   struct wl_listener              request_set_selection;
@@ -69,7 +69,12 @@ typedef struct _PhocSeat {
   struct wl_listener              destroy;
 } PhocSeat;
 
-
+/**
+ * PhocSeatView:
+ *
+ * Structure used by [type@Seat] and [type@Cursor] to track its
+ * views.
+ */
 typedef struct _PhocSeatView {
   PhocSeat          *seat;
   PhocView          *view;
