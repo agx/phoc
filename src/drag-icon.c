@@ -14,7 +14,11 @@
 
 #include <wlr/types/wlr_compositor.h>
 
-
+/**
+ * PhocDragIcon:
+ *
+ * The icon used during drag and drop operations
+ */
 struct _PhocDragIcon {
   PhocSeat             *seat;
   struct wlr_drag_icon *wlr_drag_icon;
@@ -120,7 +124,15 @@ phoc_drag_icon_handle_destroy (struct wl_listener *listener, void *data)
   free (self);
 }
 
-
+/**
+ * phoc_drag_icon_create: (skip)
+ * @seat: The seat the drag icon is on
+ * @icon: The WLR drag icon this icon should be created from
+ *
+ * Create a new drag icon.
+ *
+ * Return: The new drag icon
+ */
 PhocDragIcon *
 phoc_drag_icon_create (PhocSeat *seat, struct wlr_drag_icon *wlr_drag_icon)
 {
