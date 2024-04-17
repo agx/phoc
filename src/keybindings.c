@@ -27,7 +27,12 @@
 
 typedef void (*PhocKeyHandlerFunc) (PhocSeat *seat, GVariant *param);
 
-
+/**
+ * PhocKeybinding:
+ *
+ * A keybinding represents a handler with params that will be
+ * invoked on the given keybinding combinations.
+ */
 typedef struct
 {
   gchar              *name;
@@ -328,6 +333,12 @@ is_keycode (const gchar *string)
           g_ascii_isxdigit (string[3]));
 }
 
+/**
+ * phoc_parse_accelerator: (skip)
+ *
+ * Parse strings representing keybindings into modifier
+ * and symbols.
+ */
 PhocKeyCombo *
 phoc_parse_accelerator (const gchar *accelerator)
 {
