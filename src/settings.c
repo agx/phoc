@@ -256,7 +256,7 @@ phoc_config_new_from_keyfile (GKeyFile *keyfile)
 }
 
 /**
- * phoc_config_new_from_file:
+ * phoc_config_new_from_file: (skip)
  * @config_path: (nullable): The config file location
  *
  * Parse the file at the given location into a configuration.
@@ -301,7 +301,7 @@ phoc_config_new_from_file (const char *config_path)
 
 
 /**
- * phoc_config_new_from_data:
+ * phoc_config_new_from_data: (skip)
  * @data: (nullable): The config data
  *
  * Parse the given config data
@@ -368,7 +368,7 @@ output_is_match (PhocOutputConfig *oc, PhocOutput *output)
 }
 
 /**
- * phoc_config_get_output:
+ * phoc_config_get_output: (skip)
  * config: The #PhocConfig
  * output: The output to get the configuration for
  *
