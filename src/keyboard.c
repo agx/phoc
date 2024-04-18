@@ -32,7 +32,8 @@
  *
  * A keyboard input device
  *
- * It tracks keybindings and it's keymap.
+ * It's responsible for forwarding keys press and modifier changes
+ * to the seat, it tracks keybindings and the keymap.
  */
 struct _PhocKeyboard {
   PhocInputDevice parent;
@@ -182,7 +183,7 @@ keyboard_execute_compositor_binding (PhocKeyboard *self, xkb_keysym_t keysym)
 /*
  * Execute super key. This function will detect if the super key has been pressed
  * or released. If between a press and release no other keys are press then a
- * keysym will be forwarded to phoc. Otherwise nothing happens.
+ * keysym will be forwarded to phosh. Otherwise nothing happens.
  *
  * Returns `true` if the keysym was handled by a binding and `false` if the event
  * should be propagated further.
@@ -668,11 +669,10 @@ phoc_keyboard_constructed (GObject *object)
 
   /* wlr listeners */
   self->keyboard_key.notify = handle_keyboard_key;
-  wl_signal_add (&wlr_keyboard->events.key,
-                 &self->keyboard_key);
+  wl_signal_add (&wlr_keyboard->events.key, &self->keyboard_key);
+
   self->keyboard_modifiers.notify = handle_keyboard_modifiers;
-  wl_signal_add (&wlr_keyboard->events.modifiers,
-                 &self->keyboard_modifiers);
+  wl_signal_add (&wlr_keyboard->events.modifiers, &self->keyboard_modifiers);
 
   /* Keyboard settings */
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
