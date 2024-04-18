@@ -134,21 +134,21 @@ handle_toggle_fullscreen (PhocSeat *seat, GVariant *param)
   if (!view)
     return;
 
-  phoc_view_set_fullscreen(view, !phoc_view_is_fullscreen (view), NULL);
+  phoc_view_set_fullscreen (view, !phoc_view_is_fullscreen (view), NULL);
 }
 
 
 static void
 handle_cycle_windows (PhocSeat *seat, GVariant *param)
 {
-  phoc_seat_cycle_focus(seat, TRUE);
+  phoc_seat_cycle_focus (seat, TRUE);
 }
 
 
 static void
 handle_cycle_windows_backwards (PhocSeat *seat, GVariant *param)
 {
-  phoc_seat_cycle_focus(seat, FALSE);
+  phoc_seat_cycle_focus (seat, FALSE);
 }
 
 
@@ -458,8 +458,7 @@ phoc_keybinding_free (PhocKeybinding *keybinding)
 static gboolean
 key_combo_eq (const PhocKeyCombo *sym1, const PhocKeyCombo *sym2)
 {
-  return (sym1->modifiers == sym2->modifiers &&
-          sym1->keysym == sym2->keysym);
+  return (sym1->modifiers == sym2->modifiers && sym1->keysym == sym2->keysym);
 }
 
 
@@ -479,7 +478,7 @@ keybinding_by_key_combo (const PhocKeybinding *keybinding, const PhocKeyCombo *c
     if (key_combo_eq (elem->data, combo))
       return FALSE;
     elem = elem->next;
-  };
+  }
   return TRUE;
 }
 
@@ -667,6 +666,11 @@ phoc_keybindings_new (void)
 
 /**
  * phoc_keybindings_handle_pressed:
+ * @self: The keybindings
+ * @modifiers: The currently pressed modifiers
+ * @pressed_keysyms: The currently pressed keysyms
+ * @length: The number of pressed keysyms
+ * @seat: The seat this is happening on
  *
  * Check if a keybinding is known and run the associated action
  *
@@ -674,10 +678,10 @@ phoc_keybindings_new (void)
  */
 gboolean
 phoc_keybindings_handle_pressed (PhocKeybindings *self,
-                                 guint32 modifiers,
-                                 xkb_keysym_t *pressed_keysyms,
-                                 guint32 length,
-                                 PhocSeat *seat)
+                                 guint32          modifiers,
+                                 xkb_keysym_t    *pressed_keysyms,
+                                 guint32          length,
+                                 PhocSeat        *seat)
 {
   PhocKeybinding *keybinding;
   GSList *elem;
