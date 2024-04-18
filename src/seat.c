@@ -49,6 +49,8 @@ typedef struct _PhocSeatPrivate {
   PhocDeviceState       *device_state;
   char                  *name;
 
+  /* The first element in the queue is the currently focused view, the
+   * one after that the view that was previously focused and so on */
   GQueue                *views; /* (element-type: PhocSeatView) */
   /* Whether a view on this seat has focus */
   bool                   has_focus;
@@ -1676,18 +1678,17 @@ phoc_seat_cycle_focus (PhocSeat *seat, gboolean forward)
     return;
 
   if (forward) {
-    /* Focus the next view */
-    seat_view = g_queue_peek_nth (priv->views, 1);
-  } else {
-    /* Focus the last view in the list */
     seat_view = g_queue_peek_tail (priv->views);
+  } else {
+    /* Focus the view that previously had focus */
+    seat_view = g_queue_peek_nth (priv->views, 1);
   }
 
   g_assert (PHOC_IS_VIEW (seat_view->view));
   /* Pushes the new view to the front of the queue */
   phoc_seat_set_focus_view (seat, seat_view->view);
 
-  if (forward) {
+  if (!forward) {
     GList *l;
     /* Move the former first view to the end */
     l = g_queue_pop_nth_link (priv->views, 1);
