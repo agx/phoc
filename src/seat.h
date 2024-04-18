@@ -50,7 +50,6 @@ typedef struct _PhocSeat {
 
   PhocInputMethodRelay            im_relay;
 
-  struct wl_list                  views; // PhocSeatView::link
   bool                            has_focus;
 
   PhocDragIcon                   *drag_icon; /* (nullable) */
@@ -82,8 +81,6 @@ typedef struct _PhocSeatView {
   bool               has_button_grab;
   double             grab_sx;
   double             grab_sy;
-
-  struct wl_list     link;   // PhocSeat::views
 } PhocSeatView;
 
 
