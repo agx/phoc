@@ -487,9 +487,9 @@ phoc_timed_animation_skip (PhocTimedAnimation *self)
 
   g_signal_emit (self, signals[DONE], 0);
   if (self->dispose_on_done) {
-    g_object_unref (self);
     /* Only do this once */
     self->dispose_on_done = FALSE;
+    g_object_unref (self);
   }
 }
 
