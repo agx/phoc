@@ -43,13 +43,15 @@ on_xcb_fd (int fd, GIOCondition condition, gpointer user_data)
 
   if ((event->response_type & 0x7f) == XCB_MAP_NOTIFY) {
     g_debug ("Xcb Window mapped, taking screenshot");
-    phoc_assert_screenshot (cdata->globals, "test-xwayland-simple-1.png");
     cdata->mapped = TRUE;
+    usleep (20 * 1000);
+    phoc_assert_screenshot (cdata->globals, "test-xwayland-simple-1.png");
     g_main_loop_quit (cdata->loop);
   } else if ((event->response_type & 0x7f) == XCB_UNMAP_NOTIFY) {
     g_debug ("Xcb Window unmapped, taking screenshot");
-    phoc_assert_screenshot (cdata->globals, "empty.png");
     cdata->unmapped = TRUE;
+    usleep (20 * 1000);
+    phoc_assert_screenshot (cdata->globals, "empty.png");
     g_main_loop_quit (cdata->loop);
   }
 
