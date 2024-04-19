@@ -50,6 +50,8 @@ typedef struct _PhocSeatPrivate {
   char                  *name;
 
   GQueue                *views; /* (element-type: PhocSeatView) */
+  /* Whether a view on this seat has focus */
+  bool                   has_focus;
 
   struct wl_client      *exclusive_client;
 
@@ -1266,7 +1268,7 @@ phoc_seat_get_focus_view (PhocSeat *self)
   g_assert (PHOC_IS_SEAT (self));
   priv = phoc_seat_get_instance_private (self);
 
-  if (!self->has_focus || g_queue_is_empty (priv->views))
+  if (!priv->has_focus || g_queue_is_empty (priv->views))
     return NULL;
 
   return ((PhocSeatView *)g_queue_peek_head (priv->views))->view;
@@ -1284,7 +1286,7 @@ seat_view_destroy (PhocSeatView *seat_view)
   g_assert (PHOC_IS_VIEW (view));
 
   if (view == phoc_seat_get_focus_view (seat)) {
-    seat->has_focus = false;
+    priv->has_focus = false;
     seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
   }
 
@@ -1488,7 +1490,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
       return;
   }
 
-  seat->has_focus = false;
+  priv->has_focus = false;
 
   // Deactivate the old view if it is not focused by some other seat
   if (prev_focus != NULL && !phoc_input_view_has_focus (priv->input, prev_focus))
@@ -1513,7 +1515,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     return;
 
   phoc_view_activate (view, true);
-  seat->has_focus = true;
+  priv->has_focus = true;
 
   // An existing keyboard grab might try to deny setting focus, so cancel it
   wlr_seat_keyboard_end_grab (seat->seat);
@@ -1576,12 +1578,12 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   if (!phoc_seat_allow_input (seat, layer->resource))
     return;
 
-  if (seat->has_focus) {
+  if (priv->has_focus) {
     PhocView *prev_focus = phoc_seat_get_focus_view (seat);
     wlr_seat_keyboard_clear_focus (seat->seat);
     phoc_view_activate (prev_focus, false);
   }
-  seat->has_focus = false;
+  priv->has_focus = false;
   if (layer->current.layer >= ZWLR_LAYER_SHELL_V1_LAYER_TOP)
     seat->focused_layer = layer;
 
@@ -1623,7 +1625,7 @@ phoc_seat_set_exclusive_client (PhocSeat *seat, struct wl_client *client)
     if (wl_resource_get_client (seat->focused_layer->resource) != client)
       phoc_seat_set_focus_layer (seat, NULL);
   }
-  if (seat->has_focus) {
+  if (priv->has_focus) {
     PhocView *focus = phoc_seat_get_focus_view (seat);
     if (!focus || wl_resource_get_client (focus->wlr_surface->resource) != client)
       phoc_seat_set_focus_view (seat, NULL);
@@ -1664,7 +1666,7 @@ phoc_seat_cycle_focus (PhocSeat *seat, gboolean forward)
   if (g_queue_is_empty (priv->views))
     return;
 
-  if (!seat->has_focus) {
+  if (!priv->has_focus) {
     seat_view = g_queue_peek_head (priv->views);
     phoc_seat_set_focus_view (seat, seat_view->view);
     return;

@@ -50,8 +50,6 @@ typedef struct _PhocSeat {
 
   PhocInputMethodRelay            im_relay;
 
-  bool                            has_focus;
-
   PhocDragIcon                   *drag_icon; /* (nullable) */
 
   GSList                         *keyboards; /* (element-type PhocKeyboard) */
