@@ -152,15 +152,13 @@ pressed_keysyms_update(xkb_keysym_t *pressed_keysyms,
  * should be propagated further.
  */
 static bool
-keyboard_execute_compositor_binding(PhocKeyboard *self,
-                                    xkb_keysym_t keysym)
+keyboard_execute_compositor_binding (PhocKeyboard *self, xkb_keysym_t keysym)
 {
   PhocServer *server = phoc_server_get_default ();
 
-  if (keysym >= XKB_KEY_XF86Switch_VT_1 &&
-      keysym <= XKB_KEY_XF86Switch_VT_12) {
-
+  if (keysym >= XKB_KEY_XF86Switch_VT_1 && keysym <= XKB_KEY_XF86Switch_VT_12) {
     struct wlr_session *session = phoc_server_get_session (server);
+
     if (session) {
       unsigned vt = keysym - XKB_KEY_XF86Switch_VT_1 + 1;
       wlr_session_change_vt (session, vt);

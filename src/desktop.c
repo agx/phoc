@@ -445,54 +445,59 @@ input_inhibit_deactivate (struct wl_listener *listener, void *data)
 static void
 handle_constraint_destroy (struct wl_listener *listener, void *data)
 {
-  PhocPointerConstraint *constraint = wl_container_of(listener, constraint, destroy);
+  PhocPointerConstraint *constraint = wl_container_of (listener, constraint, destroy);
   struct wlr_pointer_constraint_v1 *wlr_constraint = data;
-  PhocSeat *seat = wlr_constraint->seat->data;
+  PhocSeat *seat = PHOC_SEAT (wlr_constraint->seat->data);
   PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
-  wl_list_remove(&constraint->destroy.link);
+  wl_list_remove (&constraint->destroy.link);
 
   if (cursor->active_constraint == wlr_constraint) {
-    wl_list_remove(&cursor->constraint_commit.link);
-    wl_list_init(&cursor->constraint_commit.link);
+    wl_list_remove (&cursor->constraint_commit.link);
+    wl_list_init (&cursor->constraint_commit.link);
     cursor->active_constraint = NULL;
 
-    if (wlr_constraint->current.committed &
-        WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT &&
+    if (wlr_constraint->current.committed & WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT &&
         cursor->pointer_view) {
       PhocView *view = cursor->pointer_view->view;
       double lx = view->box.x + wlr_constraint->current.cursor_hint.x;
       double ly = view->box.y + wlr_constraint->current.cursor_hint.y;
 
-      wlr_cursor_warp(cursor->cursor, NULL, lx, ly);
+      wlr_cursor_warp (cursor->cursor, NULL, lx, ly);
     }
   }
 
-  free(constraint);
+  g_free (constraint);
 }
+
 
 static void
 handle_pointer_constraint (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_pointer_constraint_v1 *wlr_constraint = data;
-  PhocSeat *seat = wlr_constraint->seat->data;
+  PhocSeat *seat = PHOC_SEAT (wlr_constraint->seat->data);
   PhocCursor *cursor = phoc_seat_get_cursor (seat);
-
-  PhocPointerConstraint *constraint = g_new0 (PhocPointerConstraint, 1);
-  constraint->destroy.notify = handle_constraint_destroy;
-  wl_signal_add(&wlr_constraint->events.destroy, &constraint->destroy);
-
+  PhocPointerConstraint *constraint;
+  struct wlr_surface *surface;
   double sx, sy;
-  struct wlr_surface *surface = phoc_desktop_surface_at(
-    desktop,
-    cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
+
+  constraint = g_new0 (PhocPointerConstraint, 1);
+  constraint->destroy.notify = handle_constraint_destroy;
+  wl_signal_add (&wlr_constraint->events.destroy, &constraint->destroy);
+
+  surface = phoc_desktop_surface_at (desktop,
+                                     cursor->cursor->x,
+                                     cursor->cursor->y,
+                                     &sx, &sy,
+                                     NULL);
 
   if (surface == wlr_constraint->surface) {
     g_assert (!cursor->active_constraint);
-    phoc_cursor_constrain(cursor, wlr_constraint, sx, sy);
+    phoc_cursor_constrain (cursor, wlr_constraint, sx, sy);
   }
 }
+
 
 static void
 auto_maximize_changed_cb (PhocDesktop *self,
