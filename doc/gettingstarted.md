@@ -1,20 +1,17 @@
-Title: Getting started with Phoc development
-Slug: gettingstarted
-
-# Getting started with Phosh development
+# Getting started with Phoc development
 
 ## Overview
-Phoc is a [Wayland](https://wayland.freedesktop.org/) based on the
+Phoc is a [Wayland](https://wayland.freedesktop.org/) compositor based on the
 [wlroots](https://gitlab.freedesktop.org/wlroots) library. It's often
 used as a compositor for
-[phosh](https://gitlab.gnome.org/World/Phosh/phosh) but works
-perfectly well on it's own.
+[phosh](https://gitlab.gnome.org/World/Phosh/phosh), but works
+perfectly well on its own.
 
 ## Running
 
 After
 [building](https://gitlab.gnome.org/World/Phosh/phosh/-/blob/main/README.md)
-phoc it can be run in several ways.
+phoc, it can be run in several ways.
 
 ### Running nested
 
@@ -64,6 +61,6 @@ To start an appplication in the running phoc run:
 
     WAYLAND_DISPLAY=wayland-0 gnome-terminal
 
-Make sure you do this as the same user phoc runs with (uid 1000 by default). If
+Make sure you do this as the same user phoc runs with (uid 1000 by default).
 
-Note that the systemd unit is not meant for development purposes only.
+Note that the systemd unit is meant for development purposes only.
