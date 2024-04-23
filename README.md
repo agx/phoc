@@ -1,6 +1,6 @@
 Phone compositor
 ================
-[![Code coverage](https://source.puri.sm/Librem5/phoc/badges/main/coverage.svg)](https://source.puri.sm/Librem5/phoc/commits/main)
+[![Code coverage](https://gitlab.gnome.org/World/Phosh/phoc/badges/main/coverage.svg)](https://gitlab.gnome.org/World/Phosh/phoc/-/commits/main)
 
 [wlroots][1] based Phone compositor as used on the Librem5.
 
@@ -15,7 +15,7 @@ On a Debian based system run:
 ```
 
 For an explicit list of dependencies check the `Build-Depends` entry in the
-[debian/control][] file.
+[debian/control][2] file.
 
 ## Building
 
@@ -65,7 +65,7 @@ directory.
 
         helpers/auto-maximize off
 
-Outputs are configured via `phoc.ini` config file - see `src/phoc.ini.example`
+Outputs are configured via `phoc.ini` config file - see [`src/phoc.ini.example`][3]
 for more information.
 
 # Debugging
@@ -75,8 +75,7 @@ used to enable more log messages and `G_DEBUG` to assert on warnings
 and criticals. The log domains all start with `phoc-` and are usally
 `phoc-<sourcefile>`. All wlroots related messages are logged with
 `phoc-wlroots`.
-See https://developer.gnome.org/glib/stable/glib-running.html for more
-details on these environment variables.
+For more details on these environment variables, read the [documentation for GLib][4].
 
 There's also a `PHOC_DEBUG` enviroment variable to turn on some debugging
 features. Use `PHOC_DEBUG=help phoc` to see supported flags.
@@ -85,4 +84,7 @@ features. Use `PHOC_DEBUG=help phoc` to see supported flags.
 
 API documentation is available at https://world.pages.gitlab.gnome.org/Phosh/phoc/
 
-[1]: https://github.com/swaywm/wlroots
+[1]: https://gitlab.freedesktop.org/wlroots/
+[2]: debian/control
+[3]: src/phoc.ini.example
+[4]: https://docs.gtk.org/glib/running.html#environment-variables
