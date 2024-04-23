@@ -22,15 +22,19 @@ For an explicit list of dependencies check the `Build-Depends` entry in the
 We use the meson (and thereby Ninja) build system for phoc. The quickest
 way to get going is to do the following:
 
+```sh
     meson setup _build
     meson compile -C _build
     meson install -C _build --skip-subprojects
+```
 
 This assumes you have wlroots installed on your system. If you don't have that
 and/or want to build from source run:
 
+```sh
     meson -Dembed-wlroots=enabled --default-library=static _build
     meson compile -C _build
+```
 
 This will fetch a matching version of wlroots and build that as well.
 
@@ -38,12 +42,16 @@ This will fetch a matching version of wlroots and build that as well.
 
 To run from the source tree use
 
+```sh
     ./_build/run
+```
 
 ## Test
 After making source changes run
 
+```sh
     xvfb-run meson test -C _build
+```
 
 to see if anything broke.
 
