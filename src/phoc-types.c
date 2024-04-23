@@ -51,8 +51,27 @@ phoc_color_copy (const PhocColor *color)
   return g_memdup2 (color, sizeof (PhocColor));
 }
 
+
 void
 phoc_color_free (PhocColor *rgba)
 {
   g_free (rgba);
+}
+
+/**
+ * phoc_color_is_equal:
+ * @c1: A color
+ * @c2: Another color
+ *
+ * Compare two colors for equality
+ *
+ * Returns: %TRUE if both colors are equal, otherwise %FALSE
+ */
+gboolean
+phoc_color_is_equal (PhocColor *c1, PhocColor *c2)
+{
+  g_assert (c1);
+  g_assert (c2);
+
+  return !memcmp (c1, c2, sizeof (PhocColor));
 }

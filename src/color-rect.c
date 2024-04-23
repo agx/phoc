@@ -17,6 +17,8 @@
 
 #include "render-private.h"
 
+#include <glib.h>
+
 /**
  * PhocColorRect:
  *
@@ -35,6 +37,7 @@ enum {
   PROP_HEIGHT,
   PROP_BOX,
   PROP_COLOR,
+  PROP_ALPHA,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -115,7 +118,10 @@ phoc_color_rect_set_property (GObject      *object,
     phoc_color_rect_damage_box (self);
     break;
   case PROP_COLOR:
-    self->color = *(PhocColor*)g_value_get_boxed (value);
+    phoc_color_rect_set_color (self, g_value_get_boxed (value));
+    break;
+  case PROP_ALPHA:
+    phoc_color_rect_set_alpha (self, g_value_get_float (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -151,6 +157,9 @@ phoc_color_rect_get_property (GObject    *object,
   case PROP_COLOR:
     g_value_set_boxed (value, &self->color);
     break;
+  case PROP_ALPHA:
+    g_value_set_float (value, phoc_color_rect_get_alpha (self));
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     break;
@@ -174,6 +183,9 @@ bling_render (PhocBling *bling, PhocRenderContext *ctx)
   PhocColorRect *self = PHOC_COLOR_RECT (bling);
   pixman_region32_t damage;
 
+  if (!self->mapped)
+    return;
+
   struct wlr_box box = self->box;
   box.x -= ctx->output->lx;
   box.y -= ctx->output->ly;
@@ -190,9 +202,9 @@ bling_render (PhocBling *bling, PhocRenderContext *ctx)
   wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
       .box = box,
       .color = {
-        .r = self->color.red,
-        .g = self->color.green,
-        .b = self->color.blue,
+        .r = self->color.red * self->color.alpha,
+        .g = self->color.green * self->color.alpha,
+        .b = self->color.blue * self->color.alpha,
         .a = self->color.alpha,
       },
       .clip = &damage,
@@ -291,12 +303,21 @@ phoc_color_rect_class_init (PhocColorRectClass *klass)
   /**
    * PhocColorRect:color:
    *
-   * The rectangle's color.
+   * The rectangle's color
    */
   props[PROP_COLOR] =
     g_param_spec_boxed ("color", "", "",
                         PHOC_TYPE_COLOR,
-                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                        G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PhocColorRect:alpha:
+   *
+   * The rectangle's alpha channel
+   */
+  props[PROP_ALPHA] =
+    g_param_spec_float ("alpha", "", "",
+                        0.0, 1.0, 0.0,
+                        G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
@@ -335,10 +356,36 @@ phoc_color_rect_get_box (PhocColorRect *self)
 }
 
 /**
+ * phoc_color_rect_set_color:
+ * @self: The color rectangle
+ * @color: The color
+ *
+ * Set the rectangle's color
+ */
+void
+phoc_color_rect_set_color (PhocColorRect *self, PhocColor *color)
+{
+  float alpha;
+
+  g_assert (PHOC_IS_COLOR_RECT (self));
+
+  if (phoc_color_is_equal (&self->color, color))
+    return;
+
+  alpha = self->color.alpha;
+  self->color = *color;
+  phoc_color_rect_damage_box (self);
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COLOR]);
+  if (!G_APPROX_VALUE (self->color.alpha, alpha, FLT_EPSILON))
+    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ALPHA]);
+}
+
+/**
  * phoc_color_rect_get_color:
  * @self: The color rectangle
  *
- * Get the rectangles color
+ * Get the rectangle's color
  *
  * Returns: the color
  */
@@ -348,4 +395,29 @@ phoc_color_rect_get_color (PhocColorRect *self)
   g_assert (PHOC_IS_COLOR_RECT (self));
 
   return self->color;
+}
+
+
+void
+phoc_color_rect_set_alpha (PhocColorRect *self, float alpha)
+{
+  g_assert (PHOC_IS_COLOR_RECT (self));
+
+  if (G_APPROX_VALUE (self->color.alpha, alpha, FLT_EPSILON))
+    return;
+
+  self->color.alpha = alpha;
+  phoc_color_rect_damage_box (self);
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ALPHA]);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COLOR]);
+}
+
+
+float
+phoc_color_rect_get_alpha (PhocColorRect *self)
+{
+  g_assert (PHOC_IS_COLOR_RECT (self));
+
+  return self->color.alpha;
 }

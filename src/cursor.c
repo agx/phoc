@@ -30,7 +30,7 @@
 #include "view.h"
 #include "xcursor.h"
 
-#define PHOC_ANIM_SUGGEST_STATE_CHANGE_COLOR    (PhocColor){0.0f, 0.3f, 0.5f, 0.5f}
+#define PHOC_ANIM_SUGGEST_STATE_CHANGE_COLOR    (PhocColor){0.0f, 0.6f, 1.0f, 0.5f}
 #define PHOC_ANIM_DURATION_SUGGEST_STATE_CHANGE 200
 
 enum {

@@ -31,9 +31,9 @@
 #include <wlr/types/wlr_xdg_foreign_v1.h>
 #include <wlr/types/wlr_xdg_foreign_v2.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
-#include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
+
 #include "cursor.h"
 #include "device-state.h"
 #include "idle-inhibit.h"
@@ -41,6 +41,8 @@
 #include "output.h"
 #include "seat.h"
 #include "server.h"
+#include "color-rect.h"
+#include "timed-animation.h"
 #include "utils.h"
 #include "view.h"
 #include "virtual.h"
@@ -49,7 +51,6 @@
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 #include "gesture-swipe.h"
 #include "layer-shell-effects.h"
-
 #include "xdg-surface.h"
 #include "xdg-toplevel-decoration.h"
 #include "xwayland-surface.h"
@@ -58,6 +59,11 @@
 #define PHOC_FRACTIONAL_SCALE_VERSION 1
 #define PHOC_XDG_SHELL_VERSION 5
 #define PHOC_LAYER_SHELL_VERSION 3
+
+#define PHOC_ANIM_ALWAYS_ON_TOP_DURATION  300
+#define PHOC_ANIM_ALWAYS_ON_TOP_COLOR_ON  (PhocColor){0.5f, 0.0f, 0.3f, 0.5f}
+#define PHOC_ANIM_ALWAYS_ON_TOP_COLOR_OFF (PhocColor){0.3f, 0.5f, 0.3f, 0.5f}
+#define PHOC_ANIM_ALWAYS_ON_TOP_WIDTH     10
 
 /**
  * PhocDesktop:
@@ -1424,6 +1430,22 @@ phoc_desktop_remove_view (PhocDesktop *self, PhocView *view)
   return g_queue_remove (priv->views, view);
 }
 
+
+static void
+on_always_on_top_animation_done (PhocTimedAnimation *anim, PhocColorRect *rect)
+{
+  PhocView *view;
+
+  g_assert (PHOC_IS_TIMED_ANIMATION (anim));
+  g_assert (PHOC_IS_COLOR_RECT (rect));
+
+  view = g_object_get_data (G_OBJECT (rect), "view");
+  g_assert (PHOC_IS_VIEW (view));
+
+  phoc_view_remove_bling (view, PHOC_BLING (rect));
+}
+
+
 /**
  * phoc_desktop_set_view_always_on_top:
  * @self: The desktop singleton
@@ -1441,6 +1463,47 @@ phoc_desktop_set_view_always_on_top (PhocDesktop *self, PhocView *view, gboolean
 
   g_assert (PHOC_IS_DESKTOP (self));
   g_assert (PHOC_IS_VIEW (view));
+
+  if (phoc_desktop_get_enable_animations (self)) {
+    g_autoptr (PhocTimedAnimation) fade_anim = NULL;
+    g_autoptr (PhocPropertyEaser) easer = NULL;
+    g_autoptr (PhocColorRect) rect = NULL;
+    PhocColor color;
+    struct wlr_box rect_box, geom_box;
+
+    color = on_top ? PHOC_ANIM_ALWAYS_ON_TOP_COLOR_ON : PHOC_ANIM_ALWAYS_ON_TOP_COLOR_OFF;
+
+    /* Grow the rect around the view a bit */
+    phoc_view_get_box (view, &rect_box);
+    phoc_view_get_geometry (view, &geom_box);
+    rect_box.x -= PHOC_ANIM_ALWAYS_ON_TOP_WIDTH - geom_box.x;
+    rect_box.y -= PHOC_ANIM_ALWAYS_ON_TOP_WIDTH - geom_box.y;
+    rect_box.width += 2 * PHOC_ANIM_ALWAYS_ON_TOP_WIDTH;
+    rect_box.height += 2 * PHOC_ANIM_ALWAYS_ON_TOP_WIDTH;
+    rect = phoc_color_rect_new ((PhocBox *)&rect_box, &color);
+
+    /* Make sure we end up in the render tree */
+    phoc_view_add_bling (view, PHOC_BLING (rect));
+
+    easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
+                          "target", rect,
+                          "easing", PHOC_EASING_EASE_OUT_QUAD,
+                          NULL);
+    phoc_property_easer_set_props (easer, "alpha", 1.0, 0.0, NULL);
+    fade_anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
+                              "animatable", phoc_view_get_output (view),
+                              "duration", PHOC_ANIM_ALWAYS_ON_TOP_DURATION,
+                              "property-easer", easer,
+                              "dispose-on-done", TRUE,
+                              NULL);
+    phoc_bling_map (PHOC_BLING (rect));
+    g_object_set_data (G_OBJECT (rect), "view", view);
+    g_signal_connect (fade_anim,
+                      "done",
+                      G_CALLBACK (on_always_on_top_animation_done),
+                      rect);
+    phoc_timed_animation_play (fade_anim);
+  }
 
   phoc_view_set_always_on_top (view, on_top);
   phoc_desktop_move_view_to_top (self, view);
