@@ -18,7 +18,7 @@ phoc, it can be run in several ways.
 The easiest way is to run it nested within another graphical session. The
 supplied run script is able to detect that:
 
-    _build/run -E gnome-terminal
+    ./_build/run -E gnome-terminal
 
 This will launch phoc with either the X11 or Wayland backend rendering
 everything within a window in your current graphical session. The `-E`
@@ -30,7 +30,7 @@ gnome-terminal but any other application that opens a window will do.
 The simplest way is to log into a terminal and use the same invocation as
 above:
 
-    _build/run -E gnome-terminal
+    ./_build/run -E gnome-terminal
 
 The script will notice that neither `$DISPLAY` nor `$WAYLAND_DISPLAY` is set
 and hence use the DRM backend.
