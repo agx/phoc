@@ -944,10 +944,10 @@ phoc_output_finalize (GObject *object)
 
   wl_list_init (&self->layer_surfaces);
 
+  g_clear_signal_handler (&priv->render_cutouts_id, priv->renderer);
   g_clear_object (&priv->renderer);
   g_clear_object (&priv->cutouts);
   g_clear_pointer (&priv->cutouts_texture, wlr_texture_destroy);
-  g_clear_signal_handler (&priv->render_cutouts_id, self);
   g_clear_object (&priv->shield);
   g_clear_object (&self->desktop);
 
