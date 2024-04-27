@@ -908,9 +908,9 @@ phoc_output_initable_init (GInitable    *initable,
     if (priv->cutouts) {
       g_message ("Adding cutouts overlay");
       priv->cutouts_texture = phoc_cutouts_overlay_get_cutouts_texture (priv->cutouts, self);
-      priv->render_cutouts_id =  g_signal_connect_swapped (renderer, "render-end",
-                                                           G_CALLBACK (render_cutouts),
-                                                           self);
+      priv->render_cutouts_id = g_signal_connect_swapped (renderer, "render-end",
+                                                          G_CALLBACK (render_cutouts),
+                                                          self);
     } else {
       g_warning ("Could not create cutout overlay");
     }
