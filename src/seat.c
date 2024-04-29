@@ -49,6 +49,12 @@ typedef struct _PhocSeatPrivate {
   PhocDeviceState       *device_state;
   char                  *name;
 
+  /* The first element in the queue is the currently focused view, the
+   * one after that the view that was previously focused and so on */
+  GQueue                *views; /* (element-type: PhocSeatView) */
+  /* Whether a view on this seat has focus */
+  bool                   has_focus;
+
   struct wl_client      *exclusive_client;
 
   GHashTable            *input_mapping_settings;
@@ -736,17 +742,16 @@ static void seat_view_destroy (PhocSeatView *seat_view);
 static void
 phoc_seat_handle_destroy (struct wl_listener *listener, void *data)
 {
-  PhocSeat *seat = wl_container_of (listener, seat, destroy);
+  PhocSeat *self = wl_container_of (listener, self, destroy);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   // TODO: probably more to be freed here
-  wl_list_remove (&seat->destroy.link);
+  wl_list_remove (&self->destroy.link);
 
-  phoc_input_method_relay_destroy (&seat->im_relay);
+  phoc_input_method_relay_destroy (&self->im_relay);
 
-  PhocSeatView *seat_view, *nview;
-
-  wl_list_for_each_safe (seat_view, nview, &seat->views, link)
-    seat_view_destroy (seat_view);
+  g_queue_free_full (priv->views, (GDestroyNotify)seat_view_destroy);
+  priv->views = NULL;
 }
 
 
@@ -1258,13 +1263,17 @@ phoc_seat_grab_meta_press (PhocSeat *seat)
  * Returns: (nullable)(transfer none): The currently focused view
  */
 PhocView *
-phoc_seat_get_focus_view (PhocSeat *seat)
+phoc_seat_get_focus_view (PhocSeat *self)
 {
-  if (!seat->has_focus || wl_list_empty (&seat->views))
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (self));
+  priv = phoc_seat_get_instance_private (self);
+
+  if (!priv->has_focus || g_queue_is_empty (priv->views))
     return NULL;
 
-  PhocSeatView *seat_view = wl_container_of (seat->views.next, seat_view, link);
-  return seat_view->view;
+  return ((PhocSeatView *)g_queue_peek_head (priv->views))->view;
 }
 
 
@@ -1272,13 +1281,14 @@ static void
 seat_view_destroy (PhocSeatView *seat_view)
 {
   PhocSeat *seat = seat_view->seat;
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
   PhocView *view = seat_view->view;
 
   g_assert (PHOC_IS_SEAT (seat));
   g_assert (PHOC_IS_VIEW (view));
 
   if (view == phoc_seat_get_focus_view (seat)) {
-    seat->has_focus = false;
+    priv->has_focus = false;
     seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
   }
 
@@ -1287,14 +1297,15 @@ seat_view_destroy (PhocSeatView *seat_view)
   }
 
   g_signal_handlers_disconnect_by_data (view, seat_view);
-  wl_list_remove (&seat_view->link);
-  free (seat_view);
+  if (!g_queue_remove (priv->views, seat_view))
+    g_critical ("Tried to remove inexistent view %p", seat_view);
+  g_free (seat_view);
 
   if (view && view->parent) {
     phoc_seat_set_focus_view (seat, view->parent);
-  } else if (!wl_list_empty (&seat->views)) {
-    // Focus first view
-    PhocSeatView *first_seat_view = wl_container_of (seat->views.next, first_seat_view, link);
+  } else if (!g_queue_is_empty (priv->views)) {
+    /* Focus first view */
+    PhocSeatView *first_seat_view = g_queue_peek_head (priv->views);
     phoc_seat_set_focus_view (seat, first_seat_view->view);
   }
 }
@@ -1322,12 +1333,14 @@ on_view_surface_destroy (PhocView *view, PhocSeatView *seat_view)
 static PhocSeatView *
 seat_add_view (PhocSeat *seat, PhocView *view)
 {
-  PhocSeatView *seat_view = g_new0 (PhocSeatView, 1);
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
+  PhocSeatView *seat_view;
 
+  seat_view = g_new0 (PhocSeatView, 1);
   seat_view->seat = seat;
   seat_view->view = view;
 
-  wl_list_insert (seat->views.prev, &seat_view->link);
+  g_queue_push_tail (priv->views, seat_view);
 
   g_signal_connect (view, "notify::is-mapped", G_CALLBACK (on_view_is_mapped_changed), seat_view);
   g_signal_connect (view, "surface-destroy", G_CALLBACK (on_view_surface_destroy), seat_view);
@@ -1340,23 +1353,33 @@ seat_add_view (PhocSeat *seat, PhocView *view)
  * @seat: The seat
  * @view: A view
  *
- * Returns: (nullable)(transfer none): The seat view belonging to the given view.
+ * Looks up the seat view tracking the given view. If no seat view is found a new one
+ * is created.
+ *
+ * Returns: (nullable)(transfer none): The seat view pointing to the given view.
  */
 PhocSeatView *
 phoc_seat_view_from_view (PhocSeat *seat, PhocView *view)
 {
-  if (view == NULL)
-    return NULL;
-
+  PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
   bool found = false;
   PhocSeatView *seat_view = NULL;
 
-  wl_list_for_each (seat_view, &seat->views, link) {
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
+  if (view == NULL)
+    return NULL;
+
+  for (GList *l = priv->views->head; l; l = l->next) {
+    seat_view = l->data;
+
     if (seat_view->view == view) {
       found = true;
       break;
     }
   }
+
   if (!found)
     seat_view = seat_add_view (seat, view);
 
@@ -1469,7 +1492,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
       return;
   }
 
-  seat->has_focus = false;
+  priv->has_focus = false;
 
   // Deactivate the old view if it is not focused by some other seat
   if (prev_focus != NULL && !phoc_input_view_has_focus (priv->input, prev_focus))
@@ -1483,8 +1506,8 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   }
 
   /* Next view to receive focus */
-  wl_list_remove (&seat_view->link);
-  wl_list_insert (&seat->views, &seat_view->link);
+  g_queue_remove (priv->views, seat_view);
+  g_queue_push_head (priv->views, seat_view);
 
   /* Flush the token early as a layer surface might have focus */
   if (phoc_view_get_activation_token (view))
@@ -1494,7 +1517,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     return;
 
   phoc_view_activate (view, true);
-  seat->has_focus = true;
+  priv->has_focus = true;
 
   // An existing keyboard grab might try to deny setting focus, so cancel it
   wlr_seat_keyboard_end_grab (seat->seat);
@@ -1527,13 +1550,18 @@ void
 phoc_seat_set_focus_layer (PhocSeat                    *seat,
                            struct wlr_layer_surface_v1 *layer)
 {
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
+
   if (!layer) {
     if (seat->focused_layer) {
       PhocOutput *output = PHOC_OUTPUT (seat->focused_layer->output->data);
       seat->focused_layer = NULL;
-      if (!wl_list_empty (&seat->views)) {
-        // Focus first view
-        PhocSeatView *first_seat_view = wl_container_of (seat->views.next, first_seat_view, link);
+      if (!g_queue_is_empty (priv->views)) {
+        /* Focus first view */
+        PhocSeatView *first_seat_view = g_queue_peek_head (priv->views);
         phoc_seat_set_focus_view (seat, first_seat_view->view);
       } else {
         phoc_seat_set_focus_view (seat, NULL);
@@ -1552,12 +1580,12 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   if (!phoc_seat_allow_input (seat, layer->resource))
     return;
 
-  if (seat->has_focus) {
+  if (priv->has_focus) {
     PhocView *prev_focus = phoc_seat_get_focus_view (seat);
     wlr_seat_keyboard_clear_focus (seat->seat);
     phoc_view_activate (prev_focus, false);
   }
-  seat->has_focus = false;
+  priv->has_focus = false;
   if (layer->current.layer >= ZWLR_LAYER_SHELL_V1_LAYER_TOP)
     seat->focused_layer = layer;
 
@@ -1599,7 +1627,7 @@ phoc_seat_set_exclusive_client (PhocSeat *seat, struct wl_client *client)
     if (wl_resource_get_client (seat->focused_layer->resource) != client)
       phoc_seat_set_focus_layer (seat, NULL);
   }
-  if (seat->has_focus) {
+  if (priv->has_focus) {
     PhocView *focus = phoc_seat_get_focus_view (seat);
     if (!focus || wl_resource_get_client (focus->wlr_surface->resource) != client)
       phoc_seat_set_focus_view (seat, NULL);
@@ -1631,40 +1659,40 @@ phoc_seat_set_exclusive_client (PhocSeat *seat, struct wl_client *client)
 void
 phoc_seat_cycle_focus (PhocSeat *seat, gboolean forward)
 {
-  PhocSeatView *first_seat_view;
+  PhocSeatPrivate *priv;
   PhocSeatView *seat_view;
 
-  if (wl_list_empty (&seat->views))
-    return;
-  first_seat_view = wl_container_of (seat->views.next, first_seat_view, link);
+  g_assert (PHOC_IS_SEAT (seat));
+  priv = phoc_seat_get_instance_private (seat);
 
-  if (!seat->has_focus) {
-    phoc_seat_set_focus_view (seat, first_seat_view->view);
+  if (g_queue_is_empty (priv->views))
+    return;
+
+  if (!priv->has_focus) {
+    seat_view = g_queue_peek_head (priv->views);
+    phoc_seat_set_focus_view (seat, seat_view->view);
     return;
   }
 
-  if (wl_list_length (&seat->views) < 2)
+  if (g_queue_get_length (priv->views) < 2)
     return;
 
   if (forward) {
-    /* Focus the next view */
-    seat_view = wl_container_of (first_seat_view->link.next, seat_view, link);
+    seat_view = g_queue_peek_tail (priv->views);
   } else {
-    /* Focus the last view in the list */
-    seat_view = wl_container_of (seat->views.prev, seat_view, link);
+    /* Focus the view that previously had focus */
+    seat_view = g_queue_peek_nth (priv->views, 1);
   }
 
   g_assert (PHOC_IS_VIEW (seat_view->view));
+  /* Pushes the new view to the front of the queue */
   phoc_seat_set_focus_view (seat, seat_view->view);
 
-  if (forward) {
-    /* Move the first view to the end */
-    wl_list_remove (&first_seat_view->link);
-    wl_list_insert (seat->views.prev, &first_seat_view->link);
-  } else {
-    /* Move the new seat view to the start of the list */
-    wl_list_remove (&seat_view->link);
-    wl_list_insert (&seat->views, &seat_view->link);
+  if (!forward) {
+    GList *l;
+    /* Move the former first view to the end */
+    l = g_queue_pop_nth_link (priv->views, 1);
+    g_queue_push_tail_link (priv->views, l);
   }
 }
 
@@ -1920,7 +1948,7 @@ phoc_seat_init (PhocSeat *self)
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   wl_list_init (&self->tablet_pads);
-  wl_list_init (&self->views);
+  priv->views = g_queue_new ();
 
   self->touch_id = -1;
 
