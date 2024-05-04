@@ -825,7 +825,7 @@ phoc_desktop_constructed (GObject *object)
 
   priv->data_control_manager_v1 = wlr_data_control_manager_v1_create (wl_display);
 
-  /* sm.puri.phosh settings */
+  /* sm.puri.phoc settings */
   priv->settings = g_settings_new ("sm.puri.phoc");
   g_signal_connect_swapped (priv->settings, "changed::auto-maximize",
                             G_CALLBACK (auto_maximize_changed_cb), self);
