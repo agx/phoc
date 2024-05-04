@@ -109,13 +109,20 @@ sources = files(
   'xdg-toplevel-decoration.c',
   'xdg-toplevel-decoration.h',
 ) + phoc_anim_sources
+
 libphoc_generated_sources = [
-  phoc_config_h,
-  phoc_anim_enum_sources,
-  phoc_enum_sources,
-  phoc_marshalers,
-  server_protos_headers,
+  phoc_anim_enum_sources[0],
+  phoc_enum_sources[0],
+  phoc_marshalers[0],
   protos_sources,
+]
+
+libphoc_generated_headers = [
+  phoc_config_h,
+  phoc_anim_enum_sources[1],
+  phoc_enum_sources[1],
+  phoc_marshalers[1],
+  server_protos_headers,
 ]
 
 phoc_deps = [
@@ -145,6 +152,7 @@ phoc_lib = both_libraries(
   'phoc',
   sources,
   libphoc_generated_sources,
+  libphoc_generated_headers,
   include_directories: phoc_anim_inc,
   dependencies: phoc_deps,
   install: false,
@@ -156,7 +164,7 @@ libphoc_dep = declare_dependency(
                         protocol_inc],
   link_with: phoc_lib,
   dependencies: phoc_deps,
-  sources: libphoc_generated_sources)
+  sources: libphoc_generated_headers)
 
 libphoc_static_dep = declare_dependency(
   include_directories: [include_directories('.'),
@@ -164,7 +172,7 @@ libphoc_static_dep = declare_dependency(
                         protocol_inc],
   link_with: phoc_lib.get_static_lib(),
   dependencies: phoc_deps,
-  sources: libphoc_generated_sources)
+  sources: libphoc_generated_headers)
 
 if get_option('gtk_doc')
   phoc_gir_extra_args = [
