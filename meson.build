@@ -192,6 +192,7 @@ summary({
      'Documentation': get_option('gtk_doc'),
      'Manual pages': get_option('man'),
      'Tracing': use_dtrace,
+     'Tests': get_option('tests'),
   },
   bool_yn: true,
   section: 'Build',
