@@ -26,6 +26,23 @@
 
 #include <glib.h>
 #include <glib/gprintf.h>
+#include <wlr/backend/libinput.h>
+
+#define WAKEUP_KEY_UDEV_PREFIX "GM_WAKEUP_KEY_"
+
+/**
+ * PhocWakeupKey:
+ * @PHOC_WAKEUP_KEY_IGNORE: The key should not trigger activity notifications.
+ * @PHOC_WAKEUP_KEY_USE: The key should trigger activity notifications.
+ *
+ * Describes whether a particular key should trigger activity notifications.
+ *
+ * 0 is intentionally skipped as it's the same as NULL (use default) when stored in a GHashTable.
+ */
+typedef enum {
+  PHOC_WAKEUP_KEY_IGNORE = 1,
+  PHOC_WAKEUP_KEY_USE = 2,
+} PhocWakeupKey;
 
 /**
  * PhocKeyboard:
@@ -45,6 +62,9 @@ struct _PhocKeyboard {
   GSettings *keyboard_settings;
   struct xkb_keymap *keymap;
   GnomeXkbInfo *xkbinfo;
+
+  gboolean    wakeup_key_default;
+  GHashTable *wakeup_keys;
 
   xkb_keysym_t pressed_keysyms_translated[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
   xkb_keysym_t pressed_keysyms_raw[PHOC_KEYBOARD_PRESSED_KEYSYMS_CAP];
@@ -613,7 +633,7 @@ handle_keyboard_key (struct wl_listener *listener, void *data)
   g_assert (PHOC_IS_KEYBOARD (self));
 
   phoc_keyboard_handle_key (self, event);
-  g_signal_emit (self, signals[ACTIVITY], 0);
+  g_signal_emit (self, signals[ACTIVITY], 0, event->keycode);
 }
 
 
@@ -653,9 +673,90 @@ phoc_keyboard_finalize(GObject *object)
   xkb_keymap_unref (self->keymap);
   self->keymap = NULL;
 
+  g_hash_table_destroy (self->wakeup_keys);
+
   G_OBJECT_CLASS (phoc_keyboard_parent_class)->finalize (object);
 }
 
+
+/**
+ * parse_udev_wakeup_keys:
+ * @keyboard: PhocKeyboard to update with wakeup keycode config
+ * @input_device: device to check for wakeup keys udev properties
+ *
+ * If the provided input_device has an underlying udev device, the properties are checked for any
+ * that are prefixed with WAKEUP_KEY_UDEV_PREFIX.
+ *
+ * All properties with this prefix must have a value of either "0" (ignored) or "1" (used).
+ *
+ * For each property with a valid (positive non-zero int) keycode suffix, the appropriate
+ * PhocWakeupKey (based on value) is inserted into @keyboard->wakeup_keys for that keycode.
+ *
+ * If the suffix is "DEFAULT", @keyboard->wakeup_key_default is set.
+ */
+static void
+parse_udev_wakeup_keys (PhocKeyboard *keyboard, PhocInputDevice *input_device)
+{
+  struct wlr_input_device *device;
+  struct libinput_device *dev_handle;
+  struct udev_device *udev_dev;
+  struct udev_list_entry *props, *prop_list_entry;
+  const char *prop_name, *prop_value, *wakeup_prop_name;
+  PhocWakeupKey key_state;
+  gint64 val;
+  char *endptr;
+
+  device = phoc_input_device_get_device (input_device);
+
+  if (!wlr_input_device_is_libinput (device))
+    return;
+
+  dev_handle = phoc_input_device_get_libinput_device_handle (input_device);
+  udev_dev = libinput_device_get_udev_device (dev_handle);
+
+  if (!udev_dev)
+    return;
+
+  props = udev_device_get_properties_list_entry (udev_dev);
+
+  udev_list_entry_foreach (prop_list_entry, props) {
+    prop_name = udev_list_entry_get_name (prop_list_entry);
+
+    if (!g_str_has_prefix (prop_name, WAKEUP_KEY_UDEV_PREFIX))
+      continue;
+
+    wakeup_prop_name = prop_name + strlen (WAKEUP_KEY_UDEV_PREFIX);
+    if (!strlen (wakeup_prop_name))
+      continue;
+
+    prop_value = udev_list_entry_get_value (prop_list_entry);
+    key_state = PHOC_WAKEUP_KEY_IGNORE;
+    if (g_str_equal (prop_value, "1"))
+      key_state = PHOC_WAKEUP_KEY_USE;
+    else if (!g_str_equal (prop_value, "0")) {
+      g_warning ("udev property '%s' has invalid value '%s': should be '0' or '1'",
+                 prop_name, prop_value);
+      continue;
+    }
+
+    if (g_str_equal (wakeup_prop_name, "DEFAULT")) {
+      keyboard->wakeup_key_default = key_state == PHOC_WAKEUP_KEY_USE;
+      continue;
+    }
+
+    val = g_ascii_strtoll (wakeup_prop_name, &endptr, 10);
+    if (wakeup_prop_name == endptr || val >= G_MAXUINT32 || val <= 0) {
+      g_warning ("udev property '%s' has invalid keycode '%s': should be a positive non-zero int",
+                 prop_name, wakeup_prop_name);
+      continue;
+    }
+
+    g_hash_table_insert (keyboard->wakeup_keys, GUINT_TO_POINTER (val),
+                         GUINT_TO_POINTER (key_state));
+  }
+
+  udev_device_unref (udev_dev);
+}
 
 static void
 phoc_keyboard_constructed (GObject *object)
@@ -664,6 +765,12 @@ phoc_keyboard_constructed (GObject *object)
   PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
   struct wlr_input_device *device = phoc_input_device_get_device (input_device);
   struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device (device);
+
+  /* By default, all inputs from this keyboard will trigger activity events, unless there's a udev
+   * property that explicitly prevents that. */
+  self->wakeup_key_default = TRUE;
+  self->wakeup_keys = g_hash_table_new (g_direct_hash, g_direct_equal);
+  parse_udev_wakeup_keys (self, input_device);
 
   wlr_keyboard->data = self;
 
@@ -711,6 +818,8 @@ phoc_keyboard_class_init (PhocKeyboardClass *klass)
 
   /**
    * PhocKeyboard::activity
+   * @keyboard: The keyboard that originated the signal.
+   * @keycode: Raw scancode of the keypress that triggered the signal.
    *
    * Emitted whenever there is input activity on this device
    */
@@ -718,7 +827,7 @@ phoc_keyboard_class_init (PhocKeyboardClass *klass)
                                     G_TYPE_FROM_CLASS (klass),
                                     G_SIGNAL_RUN_LAST,
                                     0, NULL, NULL, NULL,
-                                    G_TYPE_NONE, 0);
+                                    G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 static void
@@ -796,4 +905,26 @@ phoc_keyboard_grab_meta_press (PhocKeyboard *self)
   }
 
   return FALSE;
+}
+
+
+/**
+ * phoc_keyboard_is_wakeup_key:
+ * @keycode: scancode of key to check
+ *
+ * Returns: Whether or not the specified key should trigger activity events.
+ */
+gboolean
+phoc_keyboard_is_wakeup_key (PhocKeyboard *self, uint32_t keycode)
+{
+  g_assert (PHOC_IS_KEYBOARD (self));
+
+  switch (GPOINTER_TO_UINT (g_hash_table_lookup (self->wakeup_keys, GUINT_TO_POINTER (keycode)))) {
+  case PHOC_WAKEUP_KEY_USE:
+    return true;
+  case PHOC_WAKEUP_KEY_IGNORE:
+    return false;
+  default:
+    return self->wakeup_key_default;
+  }
 }

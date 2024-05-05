@@ -858,12 +858,25 @@ on_keyboard_destroy (PhocSeat *self, PhocKeyboard *keyboard)
 
 
 static void
-on_keyboard_activity (PhocSeat *self, PhocKeyboard *keyboard)
+on_keyboard_activity (PhocSeat *self, uint32_t keycode, PhocKeyboard *keyboard)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocOutput *output;
+  gboolean is_wakeup;
 
   g_assert (PHOC_IS_SEAT (self));
   g_assert (PHOC_IS_KEYBOARD (keyboard));
+
+  output = phoc_desktop_get_builtin_output (desktop);
+  is_wakeup = phoc_keyboard_is_wakeup_key (keyboard, keycode);
+
+  if (output && !output->wlr_output->enabled && !is_wakeup) {
+    g_debug ("Activity notify skipped: output '%s' is disabled and keycode %d is not a wakeup key.",
+             output->wlr_output->name, keycode);
+    return;
+  }
+
+  g_debug ("Keycode %d pressed. is_wakeup=%d", keycode, is_wakeup);
 
   phoc_desktop_notify_activity (desktop, self);
 }
