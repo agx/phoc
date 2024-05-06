@@ -18,6 +18,8 @@
 #include <gio/gio.h>
 #include <glib/gi18n.h>
 
+#include <locale.h>
+
 #include <wayland-server-core.h>
 #include <wlr/backend.h>
 #include <wlr/backend/headless.h>

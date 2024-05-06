@@ -908,9 +908,9 @@ phoc_output_initable_init (GInitable    *initable,
     if (priv->cutouts) {
       g_message ("Adding cutouts overlay");
       priv->cutouts_texture = phoc_cutouts_overlay_get_cutouts_texture (priv->cutouts, self);
-      priv->render_cutouts_id =  g_signal_connect_swapped (renderer, "render-end",
-                                                           G_CALLBACK (render_cutouts),
-                                                           self);
+      priv->render_cutouts_id = g_signal_connect_swapped (renderer, "render-end",
+                                                          G_CALLBACK (render_cutouts),
+                                                          self);
     } else {
       g_warning ("Could not create cutout overlay");
     }
@@ -944,10 +944,10 @@ phoc_output_finalize (GObject *object)
 
   wl_list_init (&self->layer_surfaces);
 
+  g_clear_signal_handler (&priv->render_cutouts_id, priv->renderer);
   g_clear_object (&priv->renderer);
   g_clear_object (&priv->cutouts);
   g_clear_pointer (&priv->cutouts_texture, wlr_texture_destroy);
-  g_clear_signal_handler (&priv->render_cutouts_id, self);
   g_clear_object (&priv->shield);
   g_clear_object (&self->desktop);
 
