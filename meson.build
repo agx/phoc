@@ -58,28 +58,28 @@ gmobile_dep    = dependency('gmobile',
 embed_wlroots = get_option('embed-wlroots')
 
 if not embed_wlroots.disabled()
-   # Try first to find wlroots as a subproject, then as a system dependency
-   wlroots_proj = subproject(
-        'wlroots',
-        default_options: ['examples=false', 'renderers=gles2'],
-        required: false,
-   )
+  # Try first to find wlroots as a subproject, then as a system dependency
+  wlroots_proj = subproject(
+    'wlroots',
+    default_options: ['examples=false', 'renderers=gles2'],
+    required: false,
+  )
 
-   if embed_wlroots.enabled() and not wlroots_proj.found()
-        error('Wlroots subproject not found but enabled')
-   endif
+  if embed_wlroots.enabled() and not wlroots_proj.found()
+    error('Wlroots subproject not found but enabled')
+  endif
 endif
 
 if not embed_wlroots.disabled() and wlroots_proj.found()
-        wlroots = wlroots_proj.get_variable('wlroots')
+  wlroots = wlroots_proj.get_variable('wlroots')
 else
-        wlroots = dependency('wlroots', version: ['>= 0.17.0', '< 0.18.0'])
+  wlroots = dependency('wlroots', version: ['>= 0.17.0', '< 0.18.0'])
 endif
 wlroots_has_xwayland = wlroots.get_variable(pkgconfig: 'have_xwayland',
                                             internal: 'have_xwayland') == 'true'
 
 if get_option('xwayland').enabled() and not wlroots_has_xwayland
-        error('Cannot enable Xwayland in phoc: wlroots has been built without Xwayland support')
+  error('Cannot enable Xwayland in phoc: wlroots has been built without Xwayland support')
 endif
 have_xwayland = get_option('xwayland').enabled()
 
@@ -187,11 +187,12 @@ configure_file(
 
 summary({
      'wlroots version': wlroots.version(),
-     'wlroots as submodule': not embed_wlroots.disabled() and wlroots_proj.found(),
+     'wlroots as subproject': not embed_wlroots.disabled() and wlroots_proj.found(),
      'Xwayland': have_xwayland,
      'Documentation': get_option('gtk_doc'),
      'Manual pages': get_option('man'),
      'Tracing': use_dtrace,
+     'Tests': get_option('tests'),
   },
   bool_yn: true,
   section: 'Build',

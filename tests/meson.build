@@ -56,7 +56,12 @@ phoctest_sources = [
   'testlib-layer-shell.c',
 ]
 
-phoctest_lib = static_library('phoctest', phoctest_sources, client_protos_headers,
+phoctest_lib = static_library('phoctest',
+  [
+    phoctest_sources,
+    client_protos_headers,
+    protos_sources,
+  ],
   c_args: test_cflags,
   dependencies: [libphoc_dep, wayland_client])
 
