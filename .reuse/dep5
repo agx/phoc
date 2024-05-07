@@ -100,6 +100,7 @@ Files:
  data/sm.puri.phoc.gschema.xml
  debian/*
  doc/gettingstarted.md
+ doc/phoc.gsettings.rst
  doc/phoc.ini.rst
  doc/phoc.rst
  doc/phoc.toml.in

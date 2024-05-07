@@ -36,6 +36,14 @@ OPTIONS
 ``--version``
    Show version information
 
+CONFIGURATON
+------------
+
+Configuration is read from ``phoc.ini``, ``hwdb`` and ``gsettings``.
+For details on output configuration see ``phoc.ini(5)``, for details
+on wakeup key configuration via ``hwdb`` see ``gmobile.udev(5)``, for details
+on the gsettings handled by phoc see ``phoc.gsettings(5)``.
+
 ENVIRONMENT VARIABLES
 ---------------------
 
@@ -46,7 +54,7 @@ ENVIRONMENT VARIABLES
 - ``WLR_RENDERER``: The renderer the wlroots library should use when phoc launches. See
   https://gitlab.freedesktop.org/wlroots/wlroots/-/blob/master/docs/env_vars.md
 - ``G_MESSAGES_DEBUG``, ``G_DEBUG`` and other environment variables supported
-  by glib. https://docs.gtk.org/glib/running.html  
+  by glib. https://docs.gtk.org/glib/running.html
 - ``PHOC_DEBUG``: Comma separated list of debugging flags:
 
       - ``auto-maximize``: Maximize toplevels
@@ -59,4 +67,4 @@ ENVIRONMENT VARIABLES
 See also
 --------
 
-``phoc.ini(5)`` ``phosh(1)``
+``phoc.ini(5)`` ``phoc.gsettings(5)`` ``gmobile.udev(5)`` ``phosh(1)``

@@ -49,6 +49,7 @@ endif
 if get_option('man')
   manpages = [
     ['phoc', 1],
+    ['phoc.gsettings', 5],
     ['phoc.ini', 5],
   ]
 
