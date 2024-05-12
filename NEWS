@@ -1,3 +1,19 @@
+phoc 0.39.0
+-----------
+Released May 2024
+* Allow to configure what unidles / unblanks the screen via GM_WAKUP_KEY_* udev
+  attributes
+* Animate always-on-top toggling
+* Fix window cycle order
+* Speed up build by separating generated sources and headers
+* Documentation improvements
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/363
+* Contributors:
+    * Guido Günther
+    * MoonlightWave-12
+    * Sam Day
+
 phoc 0.38.0
 -----------
 Released April 2024
