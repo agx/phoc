@@ -10,6 +10,23 @@
 #include "settings.h"
 #include "utils.h"
 
+
+static bool
+parse_boolean (const char *s, bool default_)
+{
+  g_return_val_if_fail (s, default_);
+
+  if (strcasecmp (s, "true") == 0)
+    return true;
+
+  if (strcasecmp (s, "false") == 0)
+    return false;
+
+  g_critical ("got invalid output enable value: %s", s);
+  return default_;
+}
+
+
 static bool
 parse_modeline (const char *s, drmModeModeInfo *mode)
 {
@@ -142,13 +159,7 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
     }
 
     if (strcmp (name, "enable") == 0) {
-      if (strcasecmp (value, "true") == 0) {
-        oc->enable = true;
-      } else if (strcasecmp (value, "false") == 0) {
-        oc->enable = false;
-      } else {
-        g_critical ("got invalid output enable value: %s", value);
-      }
+      oc->enable = parse_boolean (value, oc->enable);
     } else if (strcmp (name, "x") == 0) {
       oc->x = strtol (value, NULL, 10);
     } else if (strcmp (name, "y") == 0) {
