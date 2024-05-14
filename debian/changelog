@@ -1,3 +1,101 @@
+phoc (0.39.0) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * gitlab-ci: Update base image to 2024-04-04.
+    Otherwise gcovr fails on us when a submodule has tests disabled.
+  * build: Update to gmobile 0.1.0
+  * build: Allow to use shared gmobile.
+    This makes it a bit simpler to keep notch information up to date.
+  * packaging: Ignore gmobile related files
+  * doc: Add --skip-subprojects to install.
+    This avoids putting gmobile headers and shared objects into the system.
+    Switch to using meson while at it
+  * settings: Mark some functions as skip.
+    This avoids warnings when creating introspection data
+  * doc-check: Be more strict
+  * tests/xwayland: Wait a bit.
+    Wait until the frame got rendered as we otherwise might snapshot
+    the previous frame
+  * keyboard: Fix indent of keyboard_execute_compositor_binding
+  * desktop: Reindent pointer_constraint helpers.
+    We move the g_new0 to it's separate line to not hide an allocation in a
+    variable declaration, use casts where appropriate.
+  * cursor: Don't unlink constraint_commit twice.
+    It's unlinked a couple of lines above already.
+  * cursor: Deduplicate pointer motion.
+    Absolute and relative motion were doing very similar things but
+    differently. Use a single function for the common bits.
+  * desktop: Drop duplicate include.
+    Fixes: c960805d ("Initial commit")
+  * color-rect: Premultiply the alpha value.
+    This is how render_pass expects it. Fixup the existing animations using
+    alpha for that.
+  * color-rect: Don't render if unmapped.
+    Otherwise we might end up with changed screen state although the
+    rect is unmapped.
+  * types: Make it simple to compare colors
+  * color-rect: Add setter for color.
+    This allows us to use g_notify_by_psepc()
+  * color-rect: Allow to set alpha.
+    So far we only allowed setting the full color, allow to set
+    alpha so we can drive the animation.
+  * desktop: Add animation when always-on-top is toggled on/off
+  * time-animation: Fix use after free
+  * main: Include locale.h.
+    Needed for LC_MESSAGES
+    Fixes the -Dbuildtype=debug build
+  * seat: Make seat-views a queue and private.
+    Queues are a bit easier on the eyes.
+  * seat: Make has_focus private
+  * seat: Reverse window cycle focus order.
+    Cycling "backward" now means to focus the view that previously had focus
+    while moving forward means to focus the view that was out of focus for
+    the longest time.
+    With this we correctly focus the last focused view when cycling via
+    keyboard shortcuts and then closing a window.
+    It also fixes the case where opening an application and cycling backward
+    would not get one back to the previous application.
+  * main: Include locale.h to fix -Dbuildtype=debug build
+  * output: Disconnect render_outputs signal from the correct object.
+    Otherwise we might try to access an already gone output in render_cutouts
+  * build: Indent by two spaces
+  * build: The wlroots library is a subproject wrap.
+    Fixes: e9b9ef02 ("build: Use meson wrap for the wlroots submodule")
+  * build: Add tests to summary
+  * build: Separate generated sources and headers.
+    This reduces the  number of build steps from 465 to 222 (when linking
+    against a shared wlroots).
+  * desktop: Fix typo.
+    We're looking at phosh's schema here
+  * docs: Expand on configuration.
+    Mention where we read configuration from and list the schemas and keys
+    phoc currently uses.
+
+  [ MoonlightWave-12 ]
+  * docs: Update links in README.md.
+    The links were outdated and some did not work anymore.
+    The link to the documentation for GLib now links directly
+    to the relevant part about environment-variables.
+    Also add links to the files `debian/control` and
+    `src/phoc.ini.example`, to make those easier to open.
+  * docs: Update link to libhandy in HACKING.md
+    and remove an unused and outdated link.
+  * docs: Fix typos in doc/gettingstarted.md.
+    Also add a few commas for better readability.
+  * docs: Add `./` to commands for running scripts from source-tree.
+    To make it clearer that those have to be entered as paths to the scripts.
+  * docs: Add more syntax-highlighting
+
+  [ Sam Day ]
+  * keyboard: Udev configuration for "wakeup keys"
+    If a keyboard has an underlying udev device, and that device has
+    properties matching PHOC_WAKEUP_KEY_, these properties are used to
+    determine whether a particular key (or all keys) from that device will
+    trigger activity events or not.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/363
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 12 May 2024 13:12:32 +0200
+
 phoc (0.38.0) experimental; urgency=medium
 
   * input-device: Add a helper to detect keyboards.
