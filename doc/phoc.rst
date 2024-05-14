@@ -36,8 +36,8 @@ OPTIONS
 ``--version``
    Show version information
 
-CONFIGURATON
-------------
+CONFIGURATION
+-------------
 
 Configuration is read from ``phoc.ini``, ``hwdb`` and ``gsettings``.
 For details on output configuration see ``phoc.ini(5)``, for details
