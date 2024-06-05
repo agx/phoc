@@ -21,6 +21,7 @@
 #define DRAG_ACCEPT_THRESHOLD_DISTANCE 16
 #define DRAG_REJECT_THRESHOLD_DISTANCE 24
 #define SLIDE_ANIM_DURATION_MS 300 /* ms */
+#define FLING_V_MIN 1500
 
 typedef enum {
   PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP = (ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
@@ -1287,6 +1288,82 @@ phoc_draggable_layer_surface_is_unfolded (PhocDraggableLayerSurface *drag_surfac
   return drag_surface->drag.last_state == ZPHOC_DRAGGABLE_LAYER_SURFACE_V1_DRAG_END_STATE_UNFOLDED;
 }
 
+/**
+ * phoc_draggable_layer_surface_fling:
+ * @drag_surface: The drag surface
+ * @lx: The location where the fling happened
+ * @ly: The location where the fling happened
+ * @vx: The fling velocity in x direction
+ * @vy: The fling velocity in y direction
+ *
+ * Determine whether a fling should move the drag surface, if so
+ * animate the move to folded or unfolded position.
+ *
+ * Returns: `TRUE` if the fling was accepted, otherwise `FALSE`
+ */
+gboolean
+phoc_draggable_layer_surface_fling (PhocDraggableLayerSurface *drag_surface,
+                                    double                     lx,
+                                    double                     ly,
+                                    double                     vx,
+                                    double                     vy)
+{
+  PhocAnimDir dir;
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
+  double v;
+  int32_t margin;
+
+  g_assert (PHOC_IS_LAYER_SURFACE (drag_surface->layer_surface));
+  wlr_layer_surface = drag_surface->layer_surface->layer_surface;
+
+  /* Only accept fling in the drag area */
+  if (!point_is_handle (drag_surface, lx, ly))
+    return FALSE;
+
+  /* Reject too low velocity */
+  v = phoc_draggable_surface_is_vertical (drag_surface) ? vy : vx;
+  if (fabs (v) < FLING_V_MIN)
+    return FALSE;
+
+  switch (wlr_layer_surface->current.anchor) {
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
+    margin = (int32_t)wlr_layer_surface->current.margin.top;
+    /* Reject fling down when unfolded */
+    if (margin == drag_surface->current.unfolded && v > 0)
+      return FALSE;
+    dir = v > 0 ? ANIM_DIR_OUT : ANIM_DIR_IN;
+    break;
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_BOTTOM:
+    margin = (int32_t)wlr_layer_surface->current.margin.bottom;
+    /* Reject fling up when unfolded */
+    if (margin == drag_surface->current.unfolded && v < 0)
+      return FALSE;
+    dir = v > 0 ? ANIM_DIR_IN : ANIM_DIR_OUT;
+    break;
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_RIGHT:
+    margin = (int32_t)wlr_layer_surface->current.margin.right;
+    /* Reject fling left when unfolded */
+    if (margin == drag_surface->current.unfolded && v > 0)
+      return FALSE;
+    dir = v > 0 ? ANIM_DIR_IN : ANIM_DIR_OUT;
+    break;
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_LEFT:
+    margin = (int32_t)wlr_layer_surface->current.margin.left;
+    /* Reject fling right when unfolded */
+    if (margin == drag_surface->current.unfolded && v < 0)
+      return FALSE;
+    dir = v > 0 ? ANIM_DIR_OUT : ANIM_DIR_IN;
+    break;
+  default:
+    g_assert_not_reached ();
+    break;
+  }
+
+  g_debug ("Fling surface with %f",vy);
+  phoc_draggable_layer_surface_slide (drag_surface, dir);
+
+  return TRUE;
+}
 
 /**
  * phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface:
