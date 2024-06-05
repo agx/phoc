@@ -545,27 +545,6 @@ phoc_cursor_get_property (GObject    *object,
 }
 
 /**
- * cursor_gestures_handle_event:
- *
- * Let gestures associated with a cursor handle an event.
- */
-static void
-cursor_gestures_handle_event (PhocCursor *cursor, const PhocEvent *event, double lx, double ly)
-{
-  GSList *gestures = phoc_cursor_get_gestures (cursor);
-
-  if (gestures == NULL)
-    return;
-
-  for (GSList *elem = gestures; elem; elem = elem->next) {
-    PhocGesture *gesture = PHOC_GESTURE (elem->data);
-
-    g_assert (PHOC_IS_GESTURE (gesture));
-    phoc_gesture_handle_event (gesture, event, lx, ly);
-  }
-}
-
-/**
  * handle_gestures_for_event_at:
  *
  * Feed an event that has layout coordinates into the gesture system.
@@ -579,8 +558,17 @@ handle_gestures_for_event_at (PhocCursor   *self,
                               gsize         size)
 {
   g_autoptr (PhocEvent) event = phoc_event_new (type, wlr_event, size);
+  GSList *gestures = phoc_cursor_get_gestures (self);
 
-  cursor_gestures_handle_event (self, event, lx, ly);
+  if (gestures == NULL)
+    return;
+
+  for (GSList *elem = gestures; elem; elem = elem->next) {
+    PhocGesture *gesture = PHOC_GESTURE (elem->data);
+
+    g_assert (PHOC_IS_GESTURE (gesture));
+    phoc_gesture_handle_event (gesture, event, lx, ly);
+  }
 }
 
 
