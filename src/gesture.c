@@ -985,6 +985,26 @@ phoc_gesture_get_sequences (PhocGesture *self)
 }
 
 /**
+ * phoc_gesture_get_last_updated_sequence:
+ * @self: a #PhocGesture
+ *
+ * Returns the #PhocEventSequence that was last updated on @self.
+ *
+ * Returns: (transfer none) (nullable): The last updated sequence
+ **/
+PhocEventSequence *
+phoc_gesture_get_last_updated_sequence (PhocGesture *self)
+{
+  PhocGesturePrivate *priv;
+
+  g_return_val_if_fail (PHOC_IS_GESTURE (self), NULL);
+
+  priv = phoc_gesture_get_instance_private (self);
+
+  return priv->last_sequence;
+}
+
+/**
  * phoc_gesture_get_last_event:
  * @self: a #PhocGesture
  * @sequence: (nullable): a #PhocEventSequence

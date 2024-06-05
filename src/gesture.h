@@ -72,6 +72,7 @@ gboolean         phoc_gesture_get_point              (PhocGesture            *se
                                                       PhocEventSequence      *sequence,
                                                       double                 *lx,
                                                       double                 *ly);
+PhocEventSequence *phoc_gesture_get_last_updated_sequence (PhocGesture       *self);
 gboolean         phoc_gesture_get_last_update_time  (PhocGesture             *self,
                                                      PhocEventSequence       *sequence,
                                                      guint32                 *evtime);
