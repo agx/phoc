@@ -989,7 +989,7 @@ on_drag_cancel (PhocGesture *gesture, gpointer sequence, PhocCursor *self)
 static void
 phoc_cursor_init (PhocCursor *self)
 {
-  g_autoptr (PhocGesture) gesture = NULL;
+  g_autoptr (PhocGestureDrag) drag_gesture = NULL;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   self->cursor = wlr_cursor_create ();
@@ -1002,14 +1002,14 @@ phoc_cursor_init (PhocCursor *self)
   /*
    * Drag gesture starting at the current cursor position
    */
-  gesture = PHOC_GESTURE (phoc_gesture_drag_new ());
-  g_object_connect (gesture,
+  drag_gesture = phoc_gesture_drag_new ();
+  g_object_connect (drag_gesture,
                     "signal::drag-begin", on_drag_begin, self,
                     "signal::drag-update", on_drag_update, self,
                     "signal::drag-end", on_drag_end, self,
                     "signal::cancel", on_drag_cancel, self,
                     NULL);
-  phoc_cursor_add_gesture (self, gesture);
+  phoc_cursor_add_gesture (self, PHOC_GESTURE (drag_gesture));
 }
 
 
