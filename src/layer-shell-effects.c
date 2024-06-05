@@ -1015,15 +1015,45 @@ accept_drag (PhocDraggableLayerSurface *drag_surface,
 }
 
 
-PhocDraggableSurfaceState
-phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface, double lx, double ly)
+static gboolean
+point_is_handle (PhocDraggableLayerSurface *drag_surface, double lx, double ly)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
   struct wlr_box output_box;
+  double sx, sy;
+
   wlr_output_layout_get_box (desktop->layout, wlr_layer_surface->output, &output_box);
-  double sx = lx - drag_surface->geo.x - output_box.x;
-  double sy = ly - drag_surface->geo.y - output_box.y;
+
+  sx = lx - drag_surface->geo.x - output_box.x;
+  sy = ly - drag_surface->geo.y - output_box.y;
+
+  switch (wlr_layer_surface->current.anchor) {
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
+    return sy > drag_surface->current.drag_handle;
+    break;
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_BOTTOM:
+    return sy < drag_surface->current.drag_handle;
+    break;
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_LEFT:
+    return sx > drag_surface->current.drag_handle;
+    break;
+  case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_RIGHT:
+    return sx < drag_surface->current.drag_handle;
+    break;
+  default:
+    g_assert_not_reached ();
+    break;
+  }
+
+  return FALSE;
+}
+
+
+PhocDraggableSurfaceState
+phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface, double lx, double ly)
+{
+  struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
   bool is_handle = false;
   int32_t start_margin;
 
@@ -1033,24 +1063,21 @@ phoc_draggable_layer_surface_drag_start (PhocDraggableLayerSurface *drag_surface
   switch (wlr_layer_surface->current.anchor) {
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_TOP:
     start_margin = (int32_t)wlr_layer_surface->current.margin.top;
-    is_handle = sy > drag_surface->current.drag_handle;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_BOTTOM:
     start_margin = (int32_t)wlr_layer_surface->current.margin.bottom;
-    is_handle = sy < drag_surface->current.drag_handle;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_LEFT:
     start_margin = (int32_t)wlr_layer_surface->current.margin.left;
-    is_handle = sx > drag_surface->current.drag_handle;
     break;
   case PHOC_LAYER_SHELL_EFFECT_DRAG_FROM_RIGHT:
     start_margin = (int32_t)wlr_layer_surface->current.margin.right;
-    is_handle = sx < drag_surface->current.drag_handle;
     break;
   default:
     g_assert_not_reached ();
     break;
   }
+  is_handle = point_is_handle (drag_surface, lx, ly);
 
   /* The user "caught" the surface during an animation */
   if (drag_surface->state == PHOC_DRAGGABLE_SURFACE_STATE_ANIMATING) {
