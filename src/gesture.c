@@ -42,12 +42,12 @@ typedef struct _PointData PointData;
 struct _PointData {
   PhocEvent *event;
 
-  double    lx;
-  double    ly;
+  double     lx;
+  double     ly;
 
   /* Acummulators for touchpad events */
-  double    accum_dx;
-  double    accum_dy;
+  double     accum_dx;
+  double     accum_dy;
 
   guint      press_handled : 1;
   guint      state : 2;
@@ -498,8 +498,8 @@ phoc_gesture_cancel_sequence (PhocGesture       *self,
 
 
 static gboolean
-phoc_gesture_filter_event_impl (PhocGesture      *gesture,
-                                const PhocEvent  *event)
+phoc_gesture_filter_event_impl (PhocGesture     *gesture,
+                                const PhocEvent *event)
 {
   return FALSE;
 }
@@ -860,7 +860,7 @@ phoc_gesture_get_sequence_state (PhocGesture       *self,
  * ]|
  *
  * If both gestures are in the same group, just set the state on
- * the gesture emitting the event, the sequence will be already
+ * the gesture emitting the event, the sequence will already
  * be initialized to the group's global state when the second
  * gesture processes the event.
  *
@@ -972,13 +972,13 @@ phoc_gesture_get_sequences (PhocGesture *gesture)
   g_hash_table_iter_init (&iter, priv->points);
 
   while (g_hash_table_iter_next (&iter, (gpointer *) &sequence, (gpointer *) &data)) {
-      if (data->state == PHOC_EVENT_SEQUENCE_DENIED)
-        continue;
-      if (data->event->type == PHOC_EVENT_TOUCH_END ||
-          data->event->type == PHOC_EVENT_BUTTON_RELEASE)
-        continue;
+    if (data->state == PHOC_EVENT_SEQUENCE_DENIED)
+      continue;
+    if (data->event->type == PHOC_EVENT_TOUCH_END ||
+        data->event->type == PHOC_EVENT_BUTTON_RELEASE)
+      continue;
 
-      sequences = g_list_prepend (sequences, sequence);
+    sequences = g_list_prepend (sequences, sequence);
   }
 
   return sequences;
@@ -1032,9 +1032,9 @@ phoc_gesture_get_last_event (PhocGesture *gesture, PhocEventSequence *sequence)
  */
 gboolean
 phoc_gesture_get_point (PhocGesture       *gesture,
-                       PhocEventSequence  *sequence,
-                       double             *lx,
-                       double             *ly)
+                        PhocEventSequence *sequence,
+                        double            *lx,
+                        double            *ly)
 {
   PhocGesturePrivate *priv;
   PointData *data;
@@ -1075,7 +1075,7 @@ phoc_gesture_get_last_update_time (PhocGesture       *gesture,
     *evtime = phoc_event_get_time (data->event);
 
   return TRUE;
-};
+}
 
 /**
  * phoc_gesture_is_recognized:
