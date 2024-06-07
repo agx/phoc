@@ -5,9 +5,6 @@
 # stap -v helpers/tracing/activation.stp /usr/bin/phoc /usr/libexec/phosh
 #
 
-global scanning_out
-global was_scanning_out
-
 probe begin
 {
   printf("Tracking activation tokens, press ctrl-C to stop...\n")
