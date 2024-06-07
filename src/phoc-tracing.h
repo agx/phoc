@@ -13,7 +13,7 @@
 # include <sys/sdt.h>
 
 /**
- * HOC_TRACE_NO_INLINE:
+ * PHOC_TRACE_NO_INLINE:
  *
  * Disable inlineing of this function when tracing is enabled
  */
