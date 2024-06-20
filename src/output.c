@@ -285,8 +285,6 @@ phoc_output_handle_destroy (struct wl_listener *listener, void *data)
   if (self->fullscreen_view)
     phoc_view_set_fullscreen (self->fullscreen_view, false, NULL);
 
-  update_output_manager_config (self->desktop);
-
   g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
@@ -930,6 +928,8 @@ phoc_output_finalize (GObject *object)
   self->wlr_output = NULL;
 
   wl_list_remove (&self->link);
+
+  update_output_manager_config (self->desktop);
 
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);

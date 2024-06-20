@@ -627,6 +627,8 @@ on_output_destroyed (PhocDesktop *self, PhocOutput *destroyed_output)
   g_assert (PHOC_IS_DESKTOP (self));
   g_assert (PHOC_IS_OUTPUT (destroyed_output));
 
+  wlr_output_layout_remove (self->layout, phoc_output_get_wlr_output (destroyed_output));
+
   g_hash_table_iter_init (&iter, self->input_output_map);
   while (g_hash_table_iter_next (&iter, (gpointer) &input_name,
                                  (gpointer) &output)) {
