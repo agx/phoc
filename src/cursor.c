@@ -12,6 +12,7 @@
 #include "timed-animation.h"
 #include "gesture.h"
 #include "gesture-drag.h"
+#include "gesture-swipe.h"
 #include "layer-shell-effects.h"
 
 #define _XOPEN_SOURCE 700
@@ -545,27 +546,6 @@ phoc_cursor_get_property (GObject    *object,
 }
 
 /**
- * cursor_gestures_handle_event:
- *
- * Let gestures associated with a cursor handle an event.
- */
-static void
-cursor_gestures_handle_event (PhocCursor *cursor, const PhocEvent *event, double lx, double ly)
-{
-  GSList *gestures = phoc_cursor_get_gestures (cursor);
-
-  if (gestures == NULL)
-    return;
-
-  for (GSList *elem = gestures; elem; elem = elem->next) {
-    PhocGesture *gesture = PHOC_GESTURE (elem->data);
-
-    g_assert (PHOC_IS_GESTURE (gesture));
-    phoc_gesture_handle_event (gesture, event, lx, ly);
-  }
-}
-
-/**
  * handle_gestures_for_event_at:
  *
  * Feed an event that has layout coordinates into the gesture system.
@@ -579,8 +559,17 @@ handle_gestures_for_event_at (PhocCursor   *self,
                               gsize         size)
 {
   g_autoptr (PhocEvent) event = phoc_event_new (type, wlr_event, size);
+  GSList *gestures = phoc_cursor_get_gestures (self);
 
-  cursor_gestures_handle_event (self, event, lx, ly);
+  if (gestures == NULL)
+    return;
+
+  for (GSList *elem = gestures; elem; elem = elem->next) {
+    PhocGesture *gesture = PHOC_GESTURE (elem->data);
+
+    g_assert (PHOC_IS_GESTURE (gesture));
+    phoc_gesture_handle_event (gesture, event, lx, ly);
+  }
 }
 
 
@@ -987,9 +976,43 @@ on_drag_cancel (PhocGesture *gesture, gpointer sequence, PhocCursor *self)
 
 
 static void
+on_swipe (PhocGestureSwipe *swipe_gesture, double vx, double vy, gpointer data)
+{
+  PhocCursor *self = PHOC_CURSOR (data);
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocLayerSurface *layer_surface;
+  PhocDraggableLayerSurface *drag_surface;
+  PhocEventSequence *sequence;
+  double lx, ly;
+
+  g_assert (PHOC_IS_GESTURE_SWIPE (swipe_gesture));
+
+  sequence = phoc_gesture_get_last_updated_sequence (PHOC_GESTURE (swipe_gesture));
+  if (!phoc_gesture_get_point (PHOC_GESTURE (swipe_gesture), sequence, &lx, &ly)) {
+    g_warning ("Failed to get event point for %p", sequence);
+    return;
+  }
+
+  layer_surface = phoc_desktop_layer_surface_at (desktop, lx, ly, NULL, NULL);
+  if (!layer_surface)
+    return;
+
+  drag_surface = phoc_desktop_get_draggable_layer_surface (desktop, layer_surface);
+  if (!drag_surface)
+    return;
+
+  if (!phoc_draggable_layer_surface_fling (drag_surface, lx, ly, vx, vy))
+    return;
+
+  send_touch_cancel (self->seat, layer_surface->layer_surface->surface);
+}
+
+
+static void
 phoc_cursor_init (PhocCursor *self)
 {
-  g_autoptr (PhocGesture) gesture = NULL;
+  g_autoptr (PhocGestureDrag) drag_gesture = NULL;
+  g_autoptr (PhocGestureSwipe) swipe_gesture = NULL;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   self->cursor = wlr_cursor_create ();
@@ -1002,14 +1025,18 @@ phoc_cursor_init (PhocCursor *self)
   /*
    * Drag gesture starting at the current cursor position
    */
-  gesture = PHOC_GESTURE (phoc_gesture_drag_new ());
-  g_object_connect (gesture,
+  drag_gesture = phoc_gesture_drag_new ();
+  g_object_connect (drag_gesture,
                     "signal::drag-begin", on_drag_begin, self,
                     "signal::drag-update", on_drag_update, self,
                     "signal::drag-end", on_drag_end, self,
                     "signal::cancel", on_drag_cancel, self,
                     NULL);
-  phoc_cursor_add_gesture (self, gesture);
+  phoc_cursor_add_gesture (self, PHOC_GESTURE (drag_gesture));
+
+  swipe_gesture = phoc_gesture_swipe_new ();
+  g_signal_connect (swipe_gesture, "swipe", G_CALLBACK (on_swipe), self);
+  phoc_cursor_add_gesture (self, PHOC_GESTURE (swipe_gesture));
 }
 
 
