@@ -282,12 +282,12 @@ handle_tablet_tool_position (PhocCursor             *cursor,
   }
 
   double sx, sy;
-  struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
-                                                         cursor->cursor->x,
-                                                         cursor->cursor->y,
-                                                         &sx,
-                                                         &sy,
-                                                         NULL);
+  struct wlr_surface *surface = phoc_desktop_wlr_surface_at (desktop,
+                                                             cursor->cursor->x,
+                                                             cursor->cursor->y,
+                                                             &sx,
+                                                             &sy,
+                                                             NULL);
   PhocTabletTool *phoc_tool = tool->data;
 
   if (!surface) {

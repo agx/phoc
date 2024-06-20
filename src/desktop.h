@@ -121,9 +121,12 @@ PhocOutput *phoc_desktop_find_output_by_name (PhocDesktop *self, const char *nam
 PhocOutput *phoc_desktop_get_builtin_output (PhocDesktop *self);
 PhocOutput *phoc_desktop_layout_get_output (PhocDesktop *self, double lx, double ly);
 
-struct wlr_surface *phoc_desktop_surface_at(PhocDesktop *desktop,
-                                            double lx, double ly, double *sx, double *sy,
-                                            PhocView **view);
+struct wlr_surface *phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
+                                                 double       lx,
+                                                 double       ly,
+                                                 double      *sx,
+                                                 double      *sy,
+                                                 PhocView   **view);
 gboolean phoc_desktop_view_is_visible (PhocDesktop *desktop, PhocView *view);
 void     phoc_desktop_set_view_always_on_top (PhocDesktop *self, PhocView *view, gboolean on_top);
 

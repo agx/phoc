@@ -251,7 +251,7 @@ layer_surface_at (PhocOutput                     *output,
 }
 
 /**
- * phoc_desktop_surface_at:
+ * phoc_desktop_wlr_surface_at:
  * @desktop: The `PhocDesktop` to look the surface up for
  * @lx: X coordinate the surface to look up at in layout coordinates
  * @ly: Y coordinate the surface to look up at in layout coordinates
@@ -266,9 +266,12 @@ layer_surface_at (PhocOutput                     *output,
  * Returns: (nullable): The `struct wlr_surface`
  */
 struct wlr_surface *
-phoc_desktop_surface_at(PhocDesktop *desktop,
-                        double lx, double ly, double *sx, double *sy,
-                        PhocView **view)
+phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
+                             double       lx,
+                             double       ly,
+                             double      *sx,
+                             double      *sy,
+                             PhocView   **view)
 {
   struct wlr_surface *surface = NULL;
   PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
@@ -276,10 +279,11 @@ phoc_desktop_surface_at(PhocDesktop *desktop,
   if (view)
     *view = NULL;
 
+  if (output)
+    wlr_output_layout_output_coords (desktop->layout, output->wlr_output, &ox, &oy);
+
   /* Layers above regular views */
   if (output) {
-    wlr_output_layout_output_coords(desktop->layout, output->wlr_output, &ox, &oy);
-
     surface = layer_surface_at (output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, ox, oy, sx, sy);
     if (surface)
       return surface;
@@ -488,11 +492,11 @@ handle_pointer_constraint (struct wl_listener *listener, void *data)
   constraint->destroy.notify = handle_constraint_destroy;
   wl_signal_add (&wlr_constraint->events.destroy, &constraint->destroy);
 
-  surface = phoc_desktop_surface_at (desktop,
-                                     cursor->cursor->x,
-                                     cursor->cursor->y,
-                                     &sx, &sy,
-                                     NULL);
+  surface = phoc_desktop_wlr_surface_at (desktop,
+                                         cursor->cursor->x,
+                                         cursor->cursor->y,
+                                         &sx, &sy,
+                                         NULL);
 
   if (surface == wlr_constraint->surface) {
     g_assert (!cursor->active_constraint);
@@ -1115,7 +1119,7 @@ phoc_desktop_layer_surface_at (PhocDesktop *self, double lx, double ly, double *
 
   g_assert (PHOC_IS_DESKTOP (self));
 
-  wlr_surface = phoc_desktop_surface_at (self, lx, ly, &sx_, &sy_, NULL);
+  wlr_surface = phoc_desktop_wlr_surface_at (self, lx, ly, &sx_, &sy_, NULL);
 
   if (!wlr_surface)
     return NULL;

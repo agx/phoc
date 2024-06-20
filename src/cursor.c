@@ -730,7 +730,7 @@ phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
   struct wl_client *client = NULL;
   struct wlr_surface *surface;
 
-  surface = phoc_desktop_surface_at (desktop, self->cursor->x, self->cursor->y, &sx, &sy, &view);
+  surface = phoc_desktop_wlr_surface_at (desktop, self->cursor->x, self->cursor->y, &sx, &sy, &view);
   if (surface)
     client = wl_resource_get_client (surface->resource);
 
@@ -1154,7 +1154,7 @@ phoc_cursor_press_button (PhocCursor              *self,
   PhocView *view;
   struct wlr_surface *surface;
 
-  surface = phoc_desktop_surface_at (desktop, lx, ly, &sx, &sy, &view);
+  surface = phoc_desktop_wlr_surface_at (desktop, lx, ly, &sx, &sy, &view);
   if (state == WLR_BUTTON_PRESSED && view && phoc_seat_grab_meta_press (seat)) {
     phoc_seat_set_focus_view (seat, view);
 
@@ -1233,10 +1233,10 @@ phoc_cursor_pointer_motion (PhocCursor              *self,
     struct wlr_surface *wlr_surface;
     double sx, sy, sx_out, sy_out;
 
-    wlr_surface = phoc_desktop_surface_at (desktop,
-                                           self->cursor->x, self->cursor->y,
-                                           &sx, &sy,
-                                           NULL);
+    wlr_surface = phoc_desktop_wlr_surface_at (desktop,
+                                               self->cursor->x, self->cursor->y,
+                                               &sx, &sy,
+                                               NULL);
 
     if (self->active_constraint->surface != wlr_surface)
       return;
@@ -1382,7 +1382,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
 
   double sx, sy;
   PhocView *view;
-  struct wlr_surface *surface = phoc_desktop_surface_at (desktop, lx, ly, &sx, &sy, &view);
+  struct wlr_surface *surface = phoc_desktop_wlr_surface_at (desktop, lx, ly, &sx, &sy, &view);
   bool shell_revealed = phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_TOUCH_THRESHOLD);
 
   if (!shell_revealed && surface && phoc_seat_allow_input (seat, surface->resource)) {
@@ -1536,7 +1536,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
         found = true;
       } else {
         // FIXME: buggy fallback, but at least handles xdg_popups for now...
-        surface = phoc_desktop_surface_at (desktop, lx, ly, &sx, &sy, NULL);
+        surface = phoc_desktop_wlr_surface_at (desktop, lx, ly, &sx, &sy, NULL);
       }
     }
 
@@ -1677,10 +1677,10 @@ phoc_cursor_handle_constraint_commit (PhocCursor *self)
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   double sx, sy;
-  struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
-                                                         self->cursor->x,
-                                                         self->cursor->y,
-                                                         &sx, &sy, NULL);
+  struct wlr_surface *surface = phoc_desktop_wlr_surface_at (desktop,
+                                                             self->cursor->x,
+                                                             self->cursor->y,
+                                                             &sx, &sy, NULL);
 
   // This should never happen but views move around right when they're
   // created from (0, 0) to their actual coordinates.

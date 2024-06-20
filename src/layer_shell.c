@@ -102,10 +102,10 @@ update_cursors (PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */)
     PhocCursor *cursor = phoc_seat_get_cursor (seat);
     double sx, sy;
 
-    struct wlr_surface *surface = phoc_desktop_surface_at (
-      desktop,
-      cursor->cursor->x, cursor->cursor->y, &sx, &sy, NULL);
-
+    struct wlr_surface *surface = phoc_desktop_wlr_surface_at (desktop,
+                                                               cursor->cursor->x,
+                                                               cursor->cursor->y,
+                                                               &sx, &sy, NULL);
     if (surface == layer_surface->layer_surface->surface) {
       struct timespec time;
       if (clock_gettime (CLOCK_MONOTONIC, &time) == 0) {
