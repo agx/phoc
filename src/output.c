@@ -1957,6 +1957,10 @@ phoc_output_update_shell_reveal (PhocOutput *self)
 {
   PhocOutputPrivate *priv;
   gboolean old;
+
+  if (self == NULL)
+    return;
+
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
 
