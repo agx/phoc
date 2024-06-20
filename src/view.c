@@ -522,37 +522,37 @@ phoc_view_auto_maximize (PhocView *view)
  * size and position.
  */
 void
-phoc_view_restore (PhocView *view)
+phoc_view_restore (PhocView *self)
 {
   PhocViewPrivate *priv;
 
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
-  if (!phoc_view_is_maximized (view) && !phoc_view_is_tiled (view))
+  if (!phoc_view_is_maximized (self) && !phoc_view_is_tiled (self))
     return;
 
-  if (phoc_view_want_auto_maximize (view))
+  if (phoc_view_want_auto_maximize (self))
     return;
 
   struct wlr_box geom;
-  phoc_view_get_geometry (view, &geom);
+  phoc_view_get_geometry (self, &geom);
 
   priv->state = PHOC_VIEW_STATE_FLOATING;
-  if (!wlr_box_empty(&view->saved)) {
-    phoc_view_move_resize (view, view->saved.x - geom.x * priv->scale,
-                           view->saved.y - geom.y * priv->scale,
-                           view->saved.width, view->saved.height);
+  if (!wlr_box_empty(&self->saved)) {
+    phoc_view_move_resize (self, self->saved.x - geom.x * priv->scale,
+                           self->saved.y - geom.y * priv->scale,
+                           self->saved.width, self->saved.height);
   } else {
-    phoc_view_resize (view, 0, 0);
-    view->pending_centering = true;
+    phoc_view_resize (self, 0, 0);
+    self->pending_centering = true;
   }
 
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle, false);
 
-  PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
-  PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
+  PHOC_VIEW_GET_CLASS (self)->set_maximized (self, false);
+  PHOC_VIEW_GET_CLASS (self)->set_tiled (self, false);
 }
 
 /**
