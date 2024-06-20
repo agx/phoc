@@ -2109,3 +2109,12 @@ phoc_output_get_texture_filter_mode (PhocOutput *self)
 
   return WLR_SCALE_FILTER_BILINEAR;
 }
+
+
+struct wlr_output *
+phoc_output_get_wlr_output (PhocOutput *self)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  return self->wlr_output;
+}

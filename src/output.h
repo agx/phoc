@@ -119,6 +119,8 @@ void        phoc_output_handle_output_power_manager_set_mode (struct wl_listener
 void        phoc_output_handle_gamma_control_set_gamma (struct wl_listener *listener, void *data);
 
 /* methods */
+struct wlr_output *
+            phoc_output_get_wlr_output (PhocOutput *output);
 void        phoc_output_damage_whole (PhocOutput *output);
 void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole);
 void        phoc_output_damage_whole_drag_icon (PhocOutput   *self,
