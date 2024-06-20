@@ -926,6 +926,9 @@ phoc_output_finalize (GObject *object)
   PhocOutput *self = PHOC_OUTPUT (object);
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
 
+  self->wlr_output->data = NULL;
+  self->wlr_output = NULL;
+
   wl_list_remove (&self->link);
 
   wl_list_remove (&self->commit.link);
