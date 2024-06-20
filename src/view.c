@@ -476,29 +476,29 @@ view_arrange_tiled (PhocView *self, PhocOutput *output)
 
 
 void
-phoc_view_maximize (PhocView *view, PhocOutput *output)
+phoc_view_maximize (PhocView *self, PhocOutput *output)
 {
   PhocViewPrivate *priv;
 
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
-  if (phoc_view_is_maximized (view) && phoc_view_get_output (view) == output)
+  if (phoc_view_is_maximized (self) && phoc_view_get_output (self) == output)
     return;
 
-  if (phoc_view_is_fullscreen (view))
+  if (phoc_view_is_fullscreen (self))
     return;
 
-  PHOC_VIEW_GET_CLASS (view)->set_tiled (view, false);
-  PHOC_VIEW_GET_CLASS (view)->set_maximized (view, true);
+  PHOC_VIEW_GET_CLASS (self)->set_tiled (self, false);
+  PHOC_VIEW_GET_CLASS (self)->set_maximized (self, true);
 
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_maximized(priv->toplevel_handle, true);
 
-  view_save (view);
+  view_save (self);
 
   priv->state = PHOC_VIEW_STATE_MAXIMIZED;
-  view_arrange_maximized (view, output);
+  view_arrange_maximized (self, output);
 }
 
 /**
