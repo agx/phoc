@@ -31,6 +31,7 @@ enum {
   PROP_ACTIVATION_TOKEN,
   PROP_IS_MAPPED,
   PROP_ALPHA,
+  PROP_DECORATED,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -50,6 +51,7 @@ typedef struct _PhocViewPrivate {
   float          alpha;
   float          scale;
   PhocViewDeco  *deco;
+  gboolean       decorated;
   PhocViewState  state;
   PhocViewTileDirection tile_direction;
   gboolean       always_on_top;
@@ -78,6 +80,31 @@ G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
 #define PHOC_VIEW_SELF(p) PHOC_PRIV_CONTAINER(PHOC_VIEW, PhocView, (p))
 
 static bool view_center (PhocView *view, PhocOutput *output);
+
+
+static void
+toggle_decoration (PhocView *self)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
+  gboolean needs_decoration;
+
+  needs_decoration = priv->decorated;
+
+  if (!!needs_decoration == !!priv->deco)
+    return;
+
+  if (needs_decoration) {
+    priv->deco = phoc_view_deco_new (self);
+    phoc_view_add_bling (self, PHOC_BLING (priv->deco));
+    phoc_bling_map (PHOC_BLING (priv->deco));
+  } else {
+    if (priv->deco) {
+      phoc_bling_unmap (PHOC_BLING (priv->deco));
+      phoc_view_remove_bling (self, PHOC_BLING (priv->deco));
+    }
+    g_clear_object (&priv->deco);
+  }
+}
 
 
 static struct wlr_foreign_toplevel_handle_v1 *
@@ -1363,6 +1390,9 @@ phoc_view_set_property (GObject      *object,
   case PROP_ALPHA:
     phoc_view_set_alpha (self, g_value_get_float (value));
     break;
+  case PROP_DECORATED:
+    phoc_view_set_decorated (self, g_value_get_boolean (value));
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     break;
@@ -1391,6 +1421,9 @@ phoc_view_get_property (GObject    *object,
     break;
   case PROP_ALPHA:
     g_value_set_float (value, phoc_view_get_alpha (self));
+    break;
+  case PROP_DECORATED:
+    g_value_set_boolean (value, phoc_view_is_decorated (self));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1597,6 +1630,15 @@ phoc_view_class_init (PhocViewClass *klass)
     g_param_spec_float ("alpha", "", "",
                         0.0, 1.0, 1.0,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+  /**
+   * PhocView:decorated:
+   *
+   * Whether the view should have server side window decorations drawn.
+   */
+  props[PROP_DECORATED] =
+    g_param_spec_boolean ("decorated", "", "",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
@@ -1631,6 +1673,8 @@ phoc_view_init (PhocView *self)
   wl_list_init(&self->stack);
 
   self->desktop = phoc_server_get_desktop (phoc_server_get_default ());
+
+  g_signal_connect (self, "notify::decorated", G_CALLBACK (toggle_decoration), NULL);
 }
 
 /**
@@ -1865,8 +1909,8 @@ phoc_view_get_scale (PhocView *self)
  * @self: The view
  * @decorated: Whether the compositor should draw window decorations
  *
- * Sets whether the compositor should draw window decorations for
- * the view.
+ * Sets whether the compositor should draw server side decorations for
+ * this window.
  */
 void
 phoc_view_set_decorated (PhocView *self, gboolean decorated)
@@ -1876,23 +1920,20 @@ phoc_view_set_decorated (PhocView *self, gboolean decorated)
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  if (!!priv->deco == !!decorated)
+  if (decorated == priv->decorated)
     return;
 
-  if (decorated) {
-    priv->deco = phoc_view_deco_new (self);
-    phoc_view_add_bling (self, PHOC_BLING (priv->deco));
-    phoc_bling_map (PHOC_BLING (priv->deco));
-  } else {
-    if (priv->deco) {
-      phoc_bling_unmap (PHOC_BLING (priv->deco));
-      phoc_view_remove_bling (self, PHOC_BLING (priv->deco));
-    }
-    g_clear_object (&priv->deco);
-  }
+  priv->decorated = decorated;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DECORATED]);
 }
 
-
+/**
+ * phoc_view_is_decorated:
+ *
+ * Gets whether the view should be decorated server side.
+ *
+ * Return: `TRUE` if the view should be decorated.
+ */
 gboolean
 phoc_view_is_decorated (PhocView *self)
 {
@@ -1901,7 +1942,7 @@ phoc_view_is_decorated (PhocView *self)
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  return !!priv->deco;
+  return priv->decorated;
 }
 
 
