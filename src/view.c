@@ -9,6 +9,9 @@
 #include <string.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_output_layout.h>
+
+#include "phoc-enums.h"
+
 #include "bling.h"
 #include "cursor.h"
 #include "view-deco.h"
@@ -32,6 +35,7 @@ enum {
   PROP_IS_MAPPED,
   PROP_ALPHA,
   PROP_DECORATED,
+  PROP_STATE,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -525,6 +529,8 @@ phoc_view_maximize (PhocView *self, PhocOutput *output)
   view_save (self);
 
   priv->state = PHOC_VIEW_STATE_MAXIMIZED;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_STATE]);
+
   view_arrange_maximized (self, output);
 }
 
@@ -566,6 +572,8 @@ phoc_view_restore (PhocView *self)
   phoc_view_get_geometry (self, &geom);
 
   priv->state = PHOC_VIEW_STATE_FLOATING;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_STATE]);
+
   if (!wlr_box_empty(&self->saved)) {
     phoc_view_move_resize (self, self->saved.x - geom.x * priv->scale,
                            self->saved.y - geom.y * priv->scale,
@@ -789,6 +797,7 @@ phoc_view_tile (PhocView *self, PhocViewTileDirection direction, PhocOutput *out
   priv->tile_direction = direction;
 
   PHOC_VIEW_GET_CLASS (self)->set_maximized (self, false);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_STATE]);
   PHOC_VIEW_GET_CLASS (self)->set_tiled (self, true);
 
   view_arrange_tiled (self, output);
@@ -1425,6 +1434,9 @@ phoc_view_get_property (GObject    *object,
   case PROP_DECORATED:
     g_value_set_boolean (value, phoc_view_is_decorated (self));
     break;
+  case PROP_STATE:
+    g_value_set_enum (value, priv->state);
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     break;
@@ -1639,6 +1651,16 @@ phoc_view_class_init (PhocViewClass *klass)
     g_param_spec_boolean ("decorated", "", "",
                           FALSE,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+  /**
+   * PhocView:state:
+   *
+   * The window is maximized, tiled or floating.
+   */
+  props[PROP_STATE] =
+    g_param_spec_enum ("state", "", "",
+                       PHOC_TYPE_VIEW_STATE,
+                       PHOC_VIEW_STATE_FLOATING,
+                       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
@@ -1675,6 +1697,7 @@ phoc_view_init (PhocView *self)
   self->desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
   g_signal_connect (self, "notify::decorated", G_CALLBACK (toggle_decoration), NULL);
+  g_signal_connect (self, "notify::state", G_CALLBACK (toggle_decoration), NULL);
 }
 
 /**
