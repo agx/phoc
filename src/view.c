@@ -746,25 +746,25 @@ phoc_view_move_to_corner (PhocView *self, PhocViewCorner corner)
 
 
 void
-phoc_view_tile (PhocView *view, PhocViewTileDirection direction, PhocOutput *output)
+phoc_view_tile (PhocView *self, PhocViewTileDirection direction, PhocOutput *output)
 {
   PhocViewPrivate *priv;
 
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
-  if (phoc_view_is_fullscreen (view))
+  if (phoc_view_is_fullscreen (self))
     return;
 
-  view_save (view);
+  view_save (self);
 
   priv->state = PHOC_VIEW_STATE_TILED;
   priv->tile_direction = direction;
 
-  PHOC_VIEW_GET_CLASS (view)->set_maximized (view, false);
-  PHOC_VIEW_GET_CLASS (view)->set_tiled (view, true);
+  PHOC_VIEW_GET_CLASS (self)->set_maximized (self, false);
+  PHOC_VIEW_GET_CLASS (self)->set_tiled (self, true);
 
-  view_arrange_tiled (view, output);
+  view_arrange_tiled (self, output);
 }
 
 
