@@ -94,6 +94,10 @@ toggle_decoration (PhocView *self)
 
   needs_decoration = priv->decorated;
 
+  /* TODO: only in auto-moximize mode */
+  if (priv->state == PHOC_VIEW_STATE_MAXIMIZED)
+    needs_decoration = FALSE;
+
   if (!!needs_decoration == !!priv->deco)
     return;
 
