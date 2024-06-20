@@ -1571,6 +1571,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   if (!layer) {
     if (seat->focused_layer) {
       PhocOutput *output = PHOC_OUTPUT (seat->focused_layer->output->data);
+
       seat->focused_layer = NULL;
       if (!g_queue_is_empty (priv->views)) {
         /* Focus first view */
@@ -1579,8 +1580,11 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
       } else {
         phoc_seat_set_focus_view (seat, NULL);
       }
-      phoc_layer_shell_arrange (output);
-      phoc_output_update_shell_reveal (output);
+
+      if (output) {
+        phoc_layer_shell_arrange (output);
+        phoc_output_update_shell_reveal (output);
+      }
     }
     return;
   }
