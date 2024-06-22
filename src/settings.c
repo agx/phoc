@@ -206,9 +206,9 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
         oc->mode.refresh_rate = strtof (end, &end);
         g_assert (strcmp ("Hz", end) == 0);
       }
-      g_debug ("Configured output %s with mode %dx%d@%f",
-               oc->name, oc->mode.width, oc->mode.height,
-               oc->mode.refresh_rate);
+      g_debug ("Parsed mode %dx%d@%f for output %s",
+               oc->mode.width, oc->mode.height,
+               oc->mode.refresh_rate, oc->name);
     } else if (strcmp (name, "modeline") == 0) {
       g_autofree PhocOutputModeConfig *mode = g_new0 (PhocOutputModeConfig, 1);
 
@@ -220,6 +220,12 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
       oc->scale_filter = parse_scale_filter (value);
     } else if (strcmp (name, "drm-panel-orientation") == 0) {
       oc->drm_panel_orientation = parse_boolean (value, true);
+    } else if (g_str_equal (name, "phys_width")) {
+      oc->phys_width = strtol (value, NULL, 10);
+    } else if (g_str_equal (name, "phys_height")) {
+      oc->phys_height = strtol (value, NULL, 10);
+    } else {
+      g_warning ("Unknown key '%s' in section '%s'", name, section);
     }
   } else {
     g_critical ("Found unknown config section: %s", section);

@@ -782,6 +782,12 @@ phoc_output_fill_state (PhocOutput              *self,
       g_warning ("Can only add modes for DRM backend");
     }
 
+    if (output_config->phys_width)
+      self->wlr_output->phys_width = output_config->phys_width;
+
+    if (output_config->phys_width)
+      self->wlr_output->phys_height = output_config->phys_height;
+
     if (output_config->mode.width)
       phoc_output_state_set_mode (self, pending, output_config);
     else if (preferred_mode != NULL)

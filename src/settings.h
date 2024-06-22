@@ -29,6 +29,8 @@ typedef struct _PhocOutputConfig {
     float refresh_rate;
   } mode;
   GSList                  *modes;
+
+  guint                    phys_width, phys_height;
 } PhocOutputConfig;
 
 typedef struct _PhocConfig {
