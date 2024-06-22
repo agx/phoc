@@ -855,15 +855,6 @@ phoc_output_initable_init (GInitable    *initable,
 
   PhocConfig *config = phoc_server_get_config (phoc_server_get_default ());
 
-  g_message ("Output '%s' added ('%s'/'%s'/'%s'), "
-             "%" PRId32 "mm x %" PRId32 "mm",
-             self->wlr_output->name,
-             self->wlr_output->make,
-             self->wlr_output->model,
-             self->wlr_output->serial,
-             self->wlr_output->phys_width,
-             self->wlr_output->phys_height);
-
   self->wlr_output->data = self;
   wl_list_insert (&self->desktop->outputs, &self->link);
 
@@ -936,6 +927,16 @@ phoc_output_initable_init (GInitable    *initable,
   }
 
   wlr_output_state_finish (&pending);
+
+  g_message ("Output '%s' added ('%s'/'%s'/'%s'), "
+             "%" PRId32 "mm x %" PRId32 "mm",
+             self->wlr_output->name,
+             self->wlr_output->make,
+             self->wlr_output->model,
+             self->wlr_output->serial,
+             self->wlr_output->phys_width,
+             self->wlr_output->phys_height);
+
   return TRUE;
 }
 
