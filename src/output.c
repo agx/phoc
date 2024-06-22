@@ -267,13 +267,10 @@ update_output_manager_config (PhocDesktop *desktop)
   PhocOutput *output;
 
   wl_list_for_each (output, &desktop->outputs, link) {
-    struct wlr_output_configuration_head_v1 *config_head =
-      wlr_output_configuration_head_v1_create (config, output->wlr_output);
+    struct wlr_output_configuration_head_v1 *config_head;
     struct wlr_box output_box;
 
-    config_head->state.enabled = output->wlr_output->enabled;
-    config_head->state.mode = output->wlr_output->current_mode;
-
+    config_head = wlr_output_configuration_head_v1_create (config, output->wlr_output);
     wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
     if (!wlr_box_empty (&output_box)) {
       config_head->state.x = output_box.x;
