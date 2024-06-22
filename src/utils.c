@@ -49,6 +49,19 @@ phoc_utils_fix_transform (enum wl_output_transform *transform)
   }
 }
 
+/* Some manufacturers hardcode the aspect-ratio of the output in the physical
+ * size field. */
+static gboolean
+phys_size_is_aspect_ratio (guint phys_width, guint phys_height)
+{
+  return (phys_width == 1600 && phys_height == 900) ||
+    (phys_width == 1600 && phys_height == 1000) ||
+    (phys_width == 160 && phys_height == 90) ||
+    (phys_width == 160 && phys_height == 100) ||
+    (phys_width == 16 && phys_height == 9) ||
+    (phys_width == 16 && phys_height == 10);
+}
+
 #define MIN_WIDTH       360.0
 #define MIN_HEIGHT      540.0
 #define MAX_DPI_TARGET  180.0
@@ -71,7 +84,10 @@ phoc_utils_compute_scale (int32_t phys_width, int32_t phys_height,
 {
   float dpi, max_scale, scale;
 
-  // Ensure scaled resolution won't be inferior to minimum values
+  if (phys_size_is_aspect_ratio (phys_width, phys_height))
+      return 1.0;
+
+  /* Ensure scaled resolution won't be inferior to minimum values */
   max_scale = fminf (height / MIN_HEIGHT, width / MIN_WIDTH);
 
   /*
