@@ -1,3 +1,14 @@
+phoc 0.40.0~rc1
+---------------
+Released June 2024
+* Detect fling gesture on layer surfaces
+* Update to wlroots 0.17.3
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/284
+    * https://gitlab.gnome.org/World/Phosh/phosh/-/issues/792
+* Contributors:
+    * Guido Günther
+
 phoc 0.39.0
 -----------
 Released May 2024
