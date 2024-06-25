@@ -1,3 +1,36 @@
+phoc (0.40.0~rc1) experimental; urgency=medium
+
+  * keyboard: Modernize indent.
+    PhocKeyboard is one of the earlier GObjects. Let it catch up with
+    current indent.
+  * keyboard: Use C style comments
+  * keyboard: Chain up to parent's constructed first.
+    We want to initialize the parent first. The other children of
+    PhocInputDevice to that correctly already.
+  * keyboard: Move signals above class
+  * subprojects: Update wlroots to 0.17.3
+  * tracing: Drop unused variables
+  * gesture: Fix indent
+  * cursor: Name drag gesture accordingly.
+    This makes it distinguishable from other gestures.
+  * cursor: Drop cursor_gestures_handle_event.
+    We can fold it into handle_gestures_for_event_at
+  * layer-shell-effects: Reduce time for fold/unfold animation.
+    Feels more snappy without being too hectic.
+  * gesture: Allow to retrieve last event sequence
+  * layer-shell-effects: Split out is_handle check.
+    Will be useful in a follow up commit
+  * layer-shell-effects: Allow to fling fold/unfold a draggable surface.
+    When the velocity is high enough the surface fold/unfold is animated.
+    We don't take the velocity into account for the animation.
+  * cursor: Detect swipe gestures.
+    Apply them to draggable layer surfaces if present. This allows to
+    fling them away with a high velocity swipe gesture.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/284
+    Closes: https://gitlab.gnome.org/World/Phosh/phosh/-/issues/792
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 25 Jun 2024 13:55:01 +0200
+
 phoc (0.39.0) experimental; urgency=medium
 
   [ Guido Günther ]
