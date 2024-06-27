@@ -285,8 +285,6 @@ phoc_output_handle_destroy (struct wl_listener *listener, void *data)
   if (self->fullscreen_view)
     phoc_view_set_fullscreen (self->fullscreen_view, false, NULL);
 
-  update_output_manager_config (self->desktop);
-
   g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
@@ -926,7 +924,12 @@ phoc_output_finalize (GObject *object)
   PhocOutput *self = PHOC_OUTPUT (object);
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
 
+  self->wlr_output->data = NULL;
+  self->wlr_output = NULL;
+
   wl_list_remove (&self->link);
+
+  update_output_manager_config (self->desktop);
 
   wl_list_remove (&self->commit.link);
   wl_list_remove (&self->output_destroy.link);
@@ -1957,6 +1960,10 @@ phoc_output_update_shell_reveal (PhocOutput *self)
 {
   PhocOutputPrivate *priv;
   gboolean old;
+
+  if (self == NULL)
+    return;
+
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
 
@@ -2104,4 +2111,13 @@ phoc_output_get_texture_filter_mode (PhocOutput *self)
     return WLR_SCALE_FILTER_NEAREST;
 
   return WLR_SCALE_FILTER_BILINEAR;
+}
+
+
+struct wlr_output *
+phoc_output_get_wlr_output (PhocOutput *self)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+
+  return self->wlr_output;
 }

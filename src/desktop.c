@@ -251,7 +251,7 @@ layer_surface_at (PhocOutput                     *output,
 }
 
 /**
- * phoc_desktop_surface_at:
+ * phoc_desktop_wlr_surface_at:
  * @desktop: The `PhocDesktop` to look the surface up for
  * @lx: X coordinate the surface to look up at in layout coordinates
  * @ly: Y coordinate the surface to look up at in layout coordinates
@@ -266,68 +266,68 @@ layer_surface_at (PhocOutput                     *output,
  * Returns: (nullable): The `struct wlr_surface`
  */
 struct wlr_surface *
-phoc_desktop_surface_at(PhocDesktop *desktop,
-                        double lx, double ly, double *sx, double *sy,
-                        PhocView **view)
+phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
+                             double       lx,
+                             double       ly,
+                             double      *sx,
+                             double      *sy,
+                             PhocView   **view)
 {
   struct wlr_surface *surface = NULL;
   PhocOutput *output = phoc_desktop_layout_get_output (desktop, lx, ly);
   double ox = lx, oy = ly;
-  if (view) {
+  if (view)
     *view = NULL;
-  }
 
+  if (output)
+    wlr_output_layout_output_coords (desktop->layout, output->wlr_output, &ox, &oy);
+
+  /* Layers above regular views */
   if (output) {
-    wlr_output_layout_output_coords(desktop->layout, output->wlr_output, &ox, &oy);
-
-    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
-                                    ox, oy, sx, sy))) {
+    surface = layer_surface_at (output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, ox, oy, sx, sy);
+    if (surface)
       return surface;
-    }
 
-    if (output->fullscreen_view != NULL) {
-
+    if (output->fullscreen_view) {
       if (phoc_output_has_shell_revealed (output)) {
-        if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-                                        ox, oy, sx, sy))) {
+        surface = layer_surface_at (output, ZWLR_LAYER_SHELL_V1_LAYER_TOP, ox, oy, sx, sy);
+        if (surface)
           return surface;
-        }
       }
 
-      if (view_at(output->fullscreen_view, lx, ly, &surface, sx, sy)) {
-        if (view) {
+      if (view_at (output->fullscreen_view, lx, ly, &surface, sx, sy)) {
+        if (view)
           *view = output->fullscreen_view;
-        }
         return surface;
       } else {
         return NULL;
       }
     }
 
-    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-                                    ox, oy, sx, sy))) {
+    surface = layer_surface_at (output, ZWLR_LAYER_SHELL_V1_LAYER_TOP, ox, oy, sx, sy);
+    if (surface)
       return surface;
-    }
   }
 
-  PhocView *_view;
-  if ((_view = desktop_view_at(desktop, lx, ly, &surface, sx, sy))) {
-    if (view) {
+  PhocView *_view = desktop_view_at (desktop, lx, ly, &surface, sx, sy);
+  if (_view) {
+    if (view)
       *view = _view;
-    }
+
     return surface;
   }
 
+  /* Layers below regular views */
   if (output) {
-    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM,
-                                    ox, oy, sx, sy))) {
+    surface = layer_surface_at (output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM, ox, oy, sx, sy);
+    if (surface)
       return surface;
-    }
-    if ((surface = layer_surface_at(output, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND,
-                                    ox, oy, sx, sy))) {
+
+    surface = layer_surface_at (output, ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND, ox, oy, sx, sy);
+    if (surface)
       return surface;
-    }
   }
+
   return NULL;
 }
 
@@ -492,11 +492,11 @@ handle_pointer_constraint (struct wl_listener *listener, void *data)
   constraint->destroy.notify = handle_constraint_destroy;
   wl_signal_add (&wlr_constraint->events.destroy, &constraint->destroy);
 
-  surface = phoc_desktop_surface_at (desktop,
-                                     cursor->cursor->x,
-                                     cursor->cursor->y,
-                                     &sx, &sy,
-                                     NULL);
+  surface = phoc_desktop_wlr_surface_at (desktop,
+                                         cursor->cursor->x,
+                                         cursor->cursor->y,
+                                         &sx, &sy,
+                                         NULL);
 
   if (surface == wlr_constraint->surface) {
     g_assert (!cursor->active_constraint);
@@ -626,6 +626,8 @@ on_output_destroyed (PhocDesktop *self, PhocOutput *destroyed_output)
 
   g_assert (PHOC_IS_DESKTOP (self));
   g_assert (PHOC_IS_OUTPUT (destroyed_output));
+
+  wlr_output_layout_remove (self->layout, phoc_output_get_wlr_output (destroyed_output));
 
   g_hash_table_iter_init (&iter, self->input_output_map);
   while (g_hash_table_iter_next (&iter, (gpointer) &input_name,
@@ -1119,7 +1121,7 @@ phoc_desktop_layer_surface_at (PhocDesktop *self, double lx, double ly, double *
 
   g_assert (PHOC_IS_DESKTOP (self));
 
-  wlr_surface = phoc_desktop_surface_at (self, lx, ly, &sx_, &sy_, NULL);
+  wlr_surface = phoc_desktop_wlr_surface_at (self, lx, ly, &sx_, &sy_, NULL);
 
   if (!wlr_surface)
     return NULL;

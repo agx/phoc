@@ -282,12 +282,12 @@ handle_tablet_tool_position (PhocCursor             *cursor,
   }
 
   double sx, sy;
-  struct wlr_surface *surface = phoc_desktop_surface_at (desktop,
-                                                         cursor->cursor->x,
-                                                         cursor->cursor->y,
-                                                         &sx,
-                                                         &sy,
-                                                         NULL);
+  struct wlr_surface *surface = phoc_desktop_wlr_surface_at (desktop,
+                                                             cursor->cursor->x,
+                                                             cursor->cursor->y,
+                                                             &sx,
+                                                             &sy,
+                                                             NULL);
   PhocTabletTool *phoc_tool = tool->data;
 
   if (!surface) {
@@ -1571,6 +1571,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   if (!layer) {
     if (seat->focused_layer) {
       PhocOutput *output = PHOC_OUTPUT (seat->focused_layer->output->data);
+
       seat->focused_layer = NULL;
       if (!g_queue_is_empty (priv->views)) {
         /* Focus first view */
@@ -1579,8 +1580,11 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
       } else {
         phoc_seat_set_focus_view (seat, NULL);
       }
-      phoc_layer_shell_arrange (output);
-      phoc_output_update_shell_reveal (output);
+
+      if (output) {
+        phoc_layer_shell_arrange (output);
+        phoc_output_update_shell_reveal (output);
+      }
     }
     return;
   }
