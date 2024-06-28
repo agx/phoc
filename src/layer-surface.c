@@ -125,6 +125,9 @@ phoc_layer_surface_finalize (GObject *object)
     phoc_layer_surface_unmap (self);
 
   wl_list_remove (&self->link);
+  if (output)
+    phoc_output_set_layer_dirty (output, self->layer);
+
   wl_list_remove (&self->destroy.link);
   wl_list_remove (&self->map.link);
   wl_list_remove (&self->unmap.link);
@@ -270,4 +273,20 @@ phoc_layer_surface_get_alpha (PhocLayerSurface *self)
   g_assert (PHOC_IS_LAYER_SURFACE (self));
 
   return self->alpha;
+}
+
+/**
+ * phoc_layer_surface_get_layer:
+ * @self: The layer surface
+ *
+ * Get the layer surface's current layer
+ *
+ * Returns: the current layer
+ */
+enum zwlr_layer_shell_v1_layer
+phoc_layer_surface_get_layer (PhocLayerSurface *self)
+{
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  return self->layer;
 }

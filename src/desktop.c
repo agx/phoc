@@ -204,45 +204,19 @@ layer_surface_at (PhocOutput                     *output,
                   double                         *sx,
                   double                         *sy)
 {
-  PhocLayerSurface *layer_surface;
+  GQueue *layer_surfaces = phoc_output_get_layer_surfaces_for_layer (output, layer);
 
-  /* TODO: use phoc_output_get_layer_surfaces_for_layer */
-  wl_list_for_each_reverse(layer_surface, &output->layer_surfaces, link) {
+  for (GList *l = layer_surfaces->tail; l; l = l->prev) {
+    PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);
+    struct wlr_surface *sub;
+
     if (!layer_surface->mapped)
-      continue;
-
-    if (layer_surface->layer != layer)
-      continue;
-
-    if (layer_surface->layer_surface->current.exclusive_zone <= 0)
       continue;
 
     double _sx = ox - layer_surface->geo.x;
     double _sy = oy - layer_surface->geo.y;
 
-    struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
-      layer_surface->layer_surface, _sx, _sy, sx, sy);
-
-    if (sub)
-      return sub;
-  }
-
-  wl_list_for_each(layer_surface, &output->layer_surfaces, link) {
-    if (!layer_surface->mapped)
-      continue;
-
-    if (layer_surface->layer != layer)
-      continue;
-
-    if (layer_surface->layer_surface->current.exclusive_zone > 0)
-      continue;
-
-    double _sx = ox - layer_surface->geo.x;
-    double _sy = oy - layer_surface->geo.y;
-
-    struct wlr_surface *sub = wlr_layer_surface_v1_surface_at(
-      layer_surface->layer_surface, _sx, _sy, sx, sy);
-
+    sub = wlr_layer_surface_v1_surface_at (layer_surface->layer_surface, _sx, _sy, sx, sy);
     if (sub)
       return sub;
   }
@@ -1210,6 +1184,25 @@ phoc_desktop_get_draggable_layer_surface (PhocDesktop *self, PhocLayerSurface *l
   priv = phoc_desktop_get_instance_private (self);
   return phoc_layer_shell_effects_get_draggable_layer_surface_from_layer_surface (
     priv->layer_shell_effects, layer_surface);
+}
+
+/**
+ * phoc_desktop_get_layer_surface_stacks:
+ * @self: The desktop
+ *
+ * Get the list of currently known stacks
+ *
+ * Returns:(transfer none)(element-type PhocStackedLayerSurface): The layer surface stacks
+ */
+GSList *
+phoc_desktop_get_layer_surface_stacks (PhocDesktop *self)
+{
+  PhocDesktopPrivate *priv;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  priv = phoc_desktop_get_instance_private (self);
+  return phoc_layer_shell_effects_get_layer_surface_stacks (priv->layer_shell_effects);
 }
 
 /**
