@@ -1,4 +1,4 @@
-phoc (0.40.0~rc1) experimental; urgency=medium
+phoc (0.40.0) experimental; urgency=medium
 
   * keyboard: Modernize indent.
     PhocKeyboard is one of the earlier GObjects. Let it catch up with
@@ -28,8 +28,74 @@ phoc (0.40.0~rc1) experimental; urgency=medium
     fling them away with a high velocity swipe gesture.
     Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/284
     Closes: https://gitlab.gnome.org/World/Phosh/phosh/-/issues/792
+  * output: Handle NULL output gracefully.
+    It's a bit simpler than adding `if (!output)` at the call sites
+  * seat: Handle NULL output gracefully.
+    We can't arrange layers on gone outputs.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/257
+  * desktop: Simplify phoc_desktop_surface_at.
+    The function becomes quick to parse if we remove the assignments
+    out of the if() clauses and get the output coordinates upfront
+    as they apply to both layer surface blocks.
+  * desktop: Add wlr to desktop_surface_at.
+    Makes it consistent with phoc_view_get_wlr_surface_at
+  * output: Get getter for wlr_output.
+    We catch lots of errors via type asserts so add a getter with
+    that.
+  * output: Clear wlr_output->data pointer.
+    This points to self which is about to be finalized, clear it out so
+    other parts don't access the gone output.
+  * desktop: Don't forget to remove the gone output from the layout.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/155
+  * tests: Use MALLOC_PERTURB_
+  * layer-surface: Add layer getter
+  * layer-shell-effects: Drop hash table for alpha layer surfaces.
+    We don't need to look up by layer surface so no need to maintain the
+    hash.
+  * output: Make phoc_output_for_each_surface private
+  * output: Clarify phoc_output_get_layer_surfaces_for_layer
+  * output: Use a GQueue for the layer surfaces.
+    This allows us to go forward and backwards easily.
+  * desktop: Use phoc_output_get_layer_surfaces_for_layer.
+    This makes sure we confine the layer surface iteration to
+    PhocOutput.
+  * output: Unify layer surface iteration logic.
+    Use phoc_output_get_layer_surfaces_for_layer to iterate the
+    surfaces in phoc_output_layer_for_each_surface. This unifies
+    layer surface iteration in one place.
+  * output: Move queue ownership to output.
+    This will allow us to cache it
+  * output: Cache layer surface ordering.
+    Instead of recalculating on each access cache the ordering
+    and make bits that might change the ordering (such as committing
+    a layer surface) invalidate the cache.
+    This also works towards removing more double accounting in this area.
+  * layer-shell-effects: Allow to tweak stacking.
+    The stacked-layer-surface protocol allows to stack a layer surface
+    directly above or below another layer surface.
+  * desktop: Allow to get layer surface stacks
+  * output: Process layer surface stackings
+  * ci: Fix drm backend build on alpine.
+    It needs libdisplay-panel-info
+  * doc: Document help and disable-animations flag
+  * settings: Split out boolean option parsing
+  * output: Simplify update_output_manager_config
+    wlr_output_configuration_head_v1_create already sets the values from
+    the passed in output.
+  * output: Apply drm panel orientation.
+    If `drm-panel-orientation` is set to `true` in phoc.ini apply the panel
+    orientation transform by default.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/192
+  * utils: Ignore displays that encode aspect ratio rather than size.
+    This is based on sway's 2f84d6e349d12f3293c44268bc5c8551340e5787 which
+    in turn got inspired by mutter.
+  * output: Allow to configure physical width and height.
+    This can be useful in case edid is off or if we're on a nested
+    display (like Wayland or X11)
+  * output: Print output info at the very end.
+    This allows us to see (possibly overridden) physical size.
 
- -- Guido Günther <agx@sigxcpu.org>  Tue, 25 Jun 2024 13:55:01 +0200
+ -- Guido Günther <agx@sigxcpu.org>  Sat, 29 Jun 2024 19:30:02 +0200
 
 phoc (0.39.0) experimental; urgency=medium
 
