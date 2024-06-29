@@ -57,12 +57,14 @@ ENVIRONMENT VARIABLES
   by glib. https://docs.gtk.org/glib/running.html
 - ``PHOC_DEBUG``: Comma separated list of debugging flags:
 
+      - ``help``: Show a list of available debug flags
       - ``auto-maximize``: Maximize toplevels
       - ``damage-tracking``: Debug damage tracking
       - ``no-quit``: Don't quit when session ends
       - ``touch-points``: Debug touch points
       - ``layer-shell``: Debug layer shell
       - ``cutouts``: Debug display cutouts and notches
+      - ``disable-animations``: Disable animations
 
 See also
 --------

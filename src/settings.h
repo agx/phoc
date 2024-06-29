@@ -22,12 +22,15 @@ typedef struct _PhocOutputConfig {
   int                      x, y;
   float                    scale;
   PhocOutputScaleFilter    scale_filter;
+  bool                     drm_panel_orientation;
 
   struct PhocMode {
     int   width, height;
     float refresh_rate;
   } mode;
   GSList                  *modes;
+
+  guint                    phys_width, phys_height;
 } PhocOutputConfig;
 
 typedef struct _PhocConfig {

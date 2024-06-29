@@ -10,6 +10,23 @@
 #include "settings.h"
 #include "utils.h"
 
+
+static bool
+parse_boolean (const char *s, bool default_)
+{
+  g_return_val_if_fail (s, default_);
+
+  if (strcasecmp (s, "true") == 0)
+    return true;
+
+  if (strcasecmp (s, "false") == 0)
+    return false;
+
+  g_critical ("got invalid output enable value: %s", s);
+  return default_;
+}
+
+
 static bool
 parse_modeline (const char *s, drmModeModeInfo *mode)
 {
@@ -91,6 +108,7 @@ phoc_output_config_new (const char *name)
   oc->x = -1;
   oc->y = -1;
   oc->scale_filter = PHOC_OUTPUT_SCALE_FILTER_AUTO;
+  oc->drm_panel_orientation = false;
 
   return oc;
 }
@@ -142,13 +160,7 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
     }
 
     if (strcmp (name, "enable") == 0) {
-      if (strcasecmp (value, "true") == 0) {
-        oc->enable = true;
-      } else if (strcasecmp (value, "false") == 0) {
-        oc->enable = false;
-      } else {
-        g_critical ("got invalid output enable value: %s", value);
-      }
+      oc->enable = parse_boolean (value, oc->enable);
     } else if (strcmp (name, "x") == 0) {
       oc->x = strtol (value, NULL, 10);
     } else if (strcmp (name, "y") == 0) {
@@ -194,9 +206,9 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
         oc->mode.refresh_rate = strtof (end, &end);
         g_assert (strcmp ("Hz", end) == 0);
       }
-      g_debug ("Configured output %s with mode %dx%d@%f",
-               oc->name, oc->mode.width, oc->mode.height,
-               oc->mode.refresh_rate);
+      g_debug ("Parsed mode %dx%d@%f for output %s",
+               oc->mode.width, oc->mode.height,
+               oc->mode.refresh_rate, oc->name);
     } else if (strcmp (name, "modeline") == 0) {
       g_autofree PhocOutputModeConfig *mode = g_new0 (PhocOutputModeConfig, 1);
 
@@ -206,6 +218,14 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
         g_critical ("Invalid modeline: %s", value);
     } else if (strcmp (name, "scale-filter") == 0) {
       oc->scale_filter = parse_scale_filter (value);
+    } else if (strcmp (name, "drm-panel-orientation") == 0) {
+      oc->drm_panel_orientation = parse_boolean (value, true);
+    } else if (g_str_equal (name, "phys_width")) {
+      oc->phys_width = strtol (value, NULL, 10);
+    } else if (g_str_equal (name, "phys_height")) {
+      oc->phys_height = strtol (value, NULL, 10);
+    } else {
+      g_warning ("Unknown key '%s' in section '%s'", name, section);
     }
   } else {
     g_critical ("Found unknown config section: %s", section);
