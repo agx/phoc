@@ -1,11 +1,19 @@
-phoc 0.40.0~rc1
----------------
+phoc 0.40.0
+-----------
 Released June 2024
 * Detect fling gesture on layer surfaces
 * Update to wlroots 0.17.3
+* Apply drm panel orientation. This can be disabled via
+  phoc.ini. This might require adjustments to the mount matrix to make sensor
+  orientation match screen orientation.
+* Fix assertions and crashes related to output removal
+* Allow to tweak layer surface stacking
 * Issues fixed:
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/284
     * https://gitlab.gnome.org/World/Phosh/phosh/-/issues/792
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/257
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/155
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/192
 * Contributors:
     * Guido Günther
 
