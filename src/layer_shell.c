@@ -854,7 +854,7 @@ handle_unmap (struct wl_listener *listener, void *data)
 
   wl_list_remove (&layer_surface->new_subsurface.link);
 
-  phoc_layer_surface_unmap (layer_surface);
+  phoc_layer_surface_damage (layer_surface);
   phoc_input_update_cursor_focus (input);
 
   if (output)
