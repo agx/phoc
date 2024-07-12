@@ -1,3 +1,10 @@
+phoc 0.40.1
+-----------
+Released July 2024
+* Fix crash when OSK changes layers
+* Contributors:
+    * Guido Günther
+
 phoc 0.40.0
 -----------
 Released June 2024

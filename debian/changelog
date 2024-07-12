@@ -1,3 +1,15 @@
+phoc (0.40.1) experimental; urgency=medium
+
+  * layer-surface: Rename helper.
+    The actual unmap happens in `handle_unmap`.
+  * layer-shell: Mark layer cache dirty when OSK changes layers.
+    Fixes: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1075857
+    Fixes: 109b0afe9 ("output: Cache layer surface ordering")
+    Tested-by: Andrey Skvortsov <andrej.skvortzov@gmail.com>
+  * ci: Add version number consistency check.
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 09 Jul 2024 06:57:49 +0200
+
 phoc (0.40.0) experimental; urgency=medium
 
   * keyboard: Modernize indent.
