@@ -450,20 +450,28 @@ send_pointer_button (PhocSeat             *seat,
 
 
 static void
-send_pointer_axis (PhocSeat                 *seat,
-                   struct wlr_surface       *surface,
-                   uint32_t                  time,
-                   enum wlr_axis_orientation orientation,
-                   double                    value,
-                   int32_t                   value_discrete,
-                   enum wlr_axis_source      source)
+send_pointer_axis (PhocSeat                      *seat,
+                   struct wlr_surface            *surface,
+                   struct wlr_pointer_axis_event *event)
 {
   if (should_ignore_pointer_grab (seat, surface)) {
-    wlr_seat_pointer_send_axis (seat->seat, time, orientation, value, value_discrete, source);
+    wlr_seat_pointer_send_axis (seat->seat,
+                                event->time_msec,
+                                event->orientation,
+                                event->delta,
+                                event->delta_discrete,
+                                event->source,
+                                event->relative_direction);
     return;
   }
 
-  wlr_seat_pointer_notify_axis (seat->seat, time, orientation, value, value_discrete, source);
+  wlr_seat_pointer_notify_axis (seat->seat,
+                                event->time_msec,
+                                event->orientation,
+                                event->delta,
+                                event->delta_discrete,
+                                event->source,
+                                event->relative_direction);
 }
 
 
@@ -1490,8 +1498,7 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
   }
   phoc_desktop_notify_activity (desktop, self->seat);
 
-  send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event->time_msec,
-                     event->orientation, event->delta, event->delta_discrete, event->source);
+  send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event);
 }
 
 
