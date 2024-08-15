@@ -1,5 +1,5 @@
-phoc 0.41.0~rc1
----------------
+phoc 0.41.0
+-----------
 Released August 2024
 * Don't crash when idle-inhibit changes frequently
 * Don't accept fling gesture when swiping in a non
