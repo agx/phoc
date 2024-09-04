@@ -744,10 +744,8 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
     }
   }
 
-  PhocLayerSurface *layer_surface = phoc_layer_surface_new (wlr_layer_surface);
-
+  phoc_layer_surface_new (wlr_layer_surface);
   PhocOutput *output = PHOC_OUTPUT (wlr_layer_surface->output->data);
-  wl_list_insert (&output->layer_surfaces, &layer_surface->link);
 
   // Temporarily set the layer's current state to pending
   // So that we can easily arrange it

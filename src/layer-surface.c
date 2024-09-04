@@ -306,6 +306,7 @@ static void
 phoc_layer_surface_constructed (GObject *object)
 {
   PhocLayerSurface *self = PHOC_LAYER_SURFACE (object);
+  PhocOutput *output;
 
   G_OBJECT_CLASS (phoc_layer_surface_parent_class)->constructed (object);
 
@@ -327,6 +328,10 @@ phoc_layer_surface_constructed (GObject *object)
 
   self->surface_commit.notify = handle_surface_commit;
   wl_signal_add (&self->layer_surface->surface->events.commit, &self->surface_commit);
+
+  /* Add to the list of layer surfaces on the output */
+  output = PHOC_OUTPUT (self->layer_surface->output->data);
+  wl_list_insert (&output->layer_surfaces, &self->link);
 }
 
 
