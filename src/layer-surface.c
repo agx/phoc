@@ -14,6 +14,19 @@
 #include "layers.h"
 #include "output.h"
 
+
+/**
+ * PhocLayerSurface:
+ *
+ * A Layer surface backed by the wlr-layer-surface wayland protocol.
+ *
+ * For details on how to setup a layer surface see `phoc_handle_layer_shell_surface`.
+ *
+ * This handles the events concerning individual surfaces like mapping
+ * and unmapping.  For the actual layout of surfaces on a
+ * [class@Output] see [func@layer_shell_arrange].
+ */
+
 enum {
   PROP_0,
   PROP_WLR_LAYER_SURFACE,
