@@ -47,5 +47,6 @@ void              phoc_layer_surface_set_alpha (PhocLayerSurface *self, float al
 float             phoc_layer_surface_get_alpha (PhocLayerSurface *self);
 enum zwlr_layer_shell_v1_layer
                   phoc_layer_surface_get_layer (PhocLayerSurface *self);
+gboolean          phoc_layer_surface_get_mapped (PhocLayerSurface *self);
 
 G_END_DECLS

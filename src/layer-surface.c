@@ -486,3 +486,19 @@ phoc_layer_surface_get_layer (PhocLayerSurface *self)
 
   return self->layer;
 }
+
+/**
+ * phoc_layer_surface_get_mapped:
+ * @self: The layer surface
+ *
+ * Get whether the layer surface is currently mapped
+ *
+ * Returns: `TRUE` if the surface is currently mapped, otherwise `FALSE`
+ */
+gboolean
+phoc_layer_surface_get_mapped (PhocLayerSurface *self)
+{
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  return self->mapped;
+}

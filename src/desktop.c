@@ -210,7 +210,7 @@ layer_surface_at (PhocOutput                     *output,
     PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);
     struct wlr_surface *sub;
 
-    if (!layer_surface->mapped)
+    if (!phoc_layer_surface_get_mapped (layer_surface))
       continue;
 
     double _sx = ox - layer_surface->geo.x;

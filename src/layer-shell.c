@@ -302,7 +302,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
       g_message ("layer-surface: %-20s, l: %d, m: %d, cm: %4d,%4d,%4d,%4d, e: %4d",
                  layer_surface->layer_surface->namespace,
                  layer_surface->layer,
-                 layer_surface->mapped,
+                 phoc_layer_surface_get_mapped (layer_surface),
                  layer_surface->layer_surface->current.margin.top,
                  layer_surface->layer_surface->current.margin.right,
                  layer_surface->layer_surface->current.margin.bottom,
