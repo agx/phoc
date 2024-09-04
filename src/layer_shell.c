@@ -425,15 +425,6 @@ handle_surface_commit (struct wl_listener *listener, void *data)
 
 
 static void
-handle_destroy (struct wl_listener *listener, void *data)
-{
-  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, destroy);
-
-  g_object_unref (layer_surface);
-}
-
-
-static void
 phoc_layer_subsurface_destroy (PhocLayerSubsurface *subsurface)
 {
   wl_list_remove (&subsurface->map.link);
@@ -904,8 +895,6 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
   layer_surface->surface_commit.notify = handle_surface_commit;
   wl_signal_add (&wlr_layer_surface->surface->events.commit, &layer_surface->surface_commit);
 
-  layer_surface->destroy.notify = handle_destroy;
-  wl_signal_add (&wlr_layer_surface->events.destroy, &layer_surface->destroy);
   layer_surface->map.notify = handle_map;
   wl_signal_add (&wlr_layer_surface->surface->events.map, &layer_surface->map);
   layer_surface->unmap.notify = handle_unmap;

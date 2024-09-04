@@ -67,6 +67,15 @@ phoc_layer_surface_remove_frame_callback (PhocAnimatable *iface, guint id)
 
 
 static void
+handle_destroy (struct wl_listener *listener, void *data)
+{
+  PhocLayerSurface *self = wl_container_of (listener, self, destroy);
+
+  g_object_unref (self);
+}
+
+
+static void
 handle_output_destroy (struct wl_listener *listener, void *data)
 {
   PhocLayerSurface *self = wl_container_of (listener, self, output_destroy);
@@ -125,6 +134,9 @@ phoc_layer_surface_constructed (GObject *object)
   /* wlr signals */
   self->output_destroy.notify = handle_output_destroy;
   wl_signal_add (&self->layer_surface->output->events.destroy, &self->output_destroy);
+
+  self->destroy.notify = handle_destroy;
+  wl_signal_add (&self->layer_surface->events.destroy, &self->destroy);
 }
 
 
