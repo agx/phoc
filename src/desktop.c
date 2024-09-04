@@ -922,7 +922,6 @@ phoc_desktop_new (void)
   return g_object_new (PHOC_TYPE_DESKTOP, NULL);
 }
 
-
 /**
  * phoc_desktop_set_auto_maximize:
  *

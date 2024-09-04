@@ -1790,12 +1790,12 @@ phoc_cursor_add_gesture (PhocCursor   *self,
   priv->gestures = g_slist_append (priv->gestures, g_object_ref (gesture));
 }
 
-
 /**
  * phoc_cursor_get_gestures:
- * @self: The Cursor
+ * @self: The cursor
  *
- * Gets the currently registered gestures @self.
+ * Gets the currently registered gestures of @self.
+ *
  * Returns: (transfer none) (nullable) (element-type PhocGesture): The cursor's gestures
  */
 GSList *
@@ -1809,11 +1809,13 @@ phoc_cursor_get_gestures (PhocCursor *self)
   return priv->gestures;
 }
 
-
 /**
  * phoc_cursor_is_active_touch_id:
- * @self: The Cursor
+ * @self: The cursor
  * @touch_id: touch point ID
+ *
+ * Checks whether the given touch is is in the list of active
+ * touch points.
  *
  * Returns: %TRUE if the touch point is active, otherwise %FALSE
  */
@@ -1821,5 +1823,6 @@ gboolean
 phoc_cursor_is_active_touch_id (PhocCursor *self, int touch_id)
 {
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
-  return !!g_hash_table_lookup(priv->touch_points, GINT_TO_POINTER (touch_id));
+
+  return !!g_hash_table_lookup (priv->touch_points, GINT_TO_POINTER (touch_id));
 }
