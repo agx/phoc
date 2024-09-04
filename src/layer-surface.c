@@ -15,6 +15,7 @@
 #include "layers.h"
 #include "output.h"
 #include "server.h"
+#include "utils.h"
 
 
 /**
@@ -86,6 +87,65 @@ phoc_layer_surface_remove_frame_callback (PhocAnimatable *iface, guint id)
   /* Only remove frame callback if output is not inert */
   if (self->layer_surface->output)
     phoc_output_remove_frame_callback (output, id);
+}
+
+
+static void
+handle_new_subsurface (struct wl_listener *listener, void *data)
+{
+  PhocLayerSurface *self = wl_container_of (listener, self, new_subsurface);
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
+  subsurface->parent_type = LAYER_PARENT_LAYER;
+  subsurface->parent_layer = self;
+  wl_list_insert (&self->subsurfaces, &subsurface->link);
+}
+
+
+
+static void
+handle_map (struct wl_listener *listener, void *data)
+{
+  PhocLayerSurface *self = wl_container_of (listener, self, map);
+  struct wlr_layer_surface_v1 *wlr_layer_surface = self->layer_surface;
+  PhocOutput *output = phoc_layer_surface_get_output (self);
+
+  if (!output)
+    return;
+
+  self->mapped = true;
+
+  struct wlr_subsurface *wlr_subsurface;
+  wl_list_for_each (wlr_subsurface,
+                    &wlr_layer_surface->surface->current.subsurfaces_below,
+                    current.link) {
+    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
+    subsurface->parent_type = LAYER_PARENT_LAYER;
+    subsurface->parent_layer = self;
+    wl_list_insert (&self->subsurfaces, &subsurface->link);
+  }
+  wl_list_for_each (wlr_subsurface,
+                    &wlr_layer_surface->surface->current.subsurfaces_above,
+                    current.link) {
+    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
+    subsurface->parent_type = LAYER_PARENT_LAYER;
+    subsurface->parent_layer = self;
+    wl_list_insert (&self->subsurfaces, &subsurface->link);
+  }
+
+  self->new_subsurface.notify = handle_new_subsurface;
+  wl_signal_add (&wlr_layer_surface->surface->events.new_subsurface, &self->new_subsurface);
+
+  phoc_output_damage_whole_surface (output,
+                                    wlr_layer_surface->surface,
+                                    self->geo.x,
+                                    self->geo.y);
+
+  phoc_utils_wlr_surface_enter_output (wlr_layer_surface->surface, output->wlr_output);
+
+  phoc_layer_shell_arrange (output);
+  phoc_layer_shell_update_focus ();
 }
 
 
@@ -184,6 +244,9 @@ phoc_layer_surface_constructed (GObject *object)
 
   self->destroy.notify = handle_destroy;
   wl_signal_add (&self->layer_surface->events.destroy, &self->destroy);
+
+  self->map.notify = handle_map;
+  wl_signal_add (&self->layer_surface->surface->events.map, &self->map);
 
   self->unmap.notify = handle_unmap;
   wl_signal_add (&self->layer_surface->surface->events.unmap, &self->unmap);

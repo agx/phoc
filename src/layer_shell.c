@@ -778,63 +778,6 @@ phoc_layer_subsurface_create (struct wlr_subsurface *wlr_subsurface)
   return subsurface;
 }
 
-static void
-handle_new_subsurface (struct wl_listener *listener, void *data)
-{
-  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, new_subsurface);
-  struct wlr_subsurface *wlr_subsurface = data;
-
-  PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
-  subsurface->parent_type = LAYER_PARENT_LAYER;
-  subsurface->parent_layer = layer_surface;
-  wl_list_insert (&layer_surface->subsurfaces, &subsurface->link);
-}
-
-
-static void
-handle_map (struct wl_listener *listener, void *data)
-{
-  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, map);
-  struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
-  PhocOutput *output = phoc_layer_surface_get_output (layer_surface);
-
-  if (!output)
-    return;
-
-  layer_surface->mapped = true;
-
-  struct wlr_subsurface *wlr_subsurface;
-  wl_list_for_each (wlr_subsurface,
-                    &wlr_layer_surface->surface->current.subsurfaces_below,
-                    current.link) {
-    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
-    subsurface->parent_type = LAYER_PARENT_LAYER;
-    subsurface->parent_layer = layer_surface;
-    wl_list_insert (&layer_surface->subsurfaces, &subsurface->link);
-  }
-  wl_list_for_each (wlr_subsurface,
-                    &wlr_layer_surface->surface->current.subsurfaces_above,
-                    current.link) {
-    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
-    subsurface->parent_type = LAYER_PARENT_LAYER;
-    subsurface->parent_layer = layer_surface;
-    wl_list_insert (&layer_surface->subsurfaces, &subsurface->link);
-  }
-
-  layer_surface->new_subsurface.notify = handle_new_subsurface;
-  wl_signal_add (&wlr_layer_surface->surface->events.new_subsurface, &layer_surface->new_subsurface);
-
-  phoc_output_damage_whole_surface (output,
-                                    wlr_layer_surface->surface,
-                                    layer_surface->geo.x,
-                                    layer_surface->geo.y);
-
-  phoc_utils_wlr_surface_enter_output (wlr_layer_surface->surface, output->wlr_output);
-
-  phoc_layer_shell_arrange (output);
-  phoc_layer_shell_update_focus ();
-}
-
 
 void
 phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
@@ -877,8 +820,6 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
   layer_surface->surface_commit.notify = handle_surface_commit;
   wl_signal_add (&wlr_layer_surface->surface->events.commit, &layer_surface->surface_commit);
 
-  layer_surface->map.notify = handle_map;
-  wl_signal_add (&wlr_layer_surface->surface->events.map, &layer_surface->map);
   layer_surface->new_popup.notify = handle_new_popup;
   wl_signal_add (&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
 
