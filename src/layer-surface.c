@@ -43,6 +43,27 @@ G_DEFINE_TYPE_WITH_CODE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (PHOC_TYPE_ANIMATABLE,
                                                 phoc_animatable_interface_init))
 
+
+static void
+phoc_layer_surface_damage (PhocLayerSurface *self)
+{
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
+  struct wlr_output *wlr_output;
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+  wlr_layer_surface = self->layer_surface;
+
+  wlr_output = wlr_layer_surface->output;
+  if (!wlr_output)
+    return;
+
+  phoc_output_damage_whole_surface (PHOC_OUTPUT (wlr_output->data),
+                                    wlr_layer_surface->surface,
+                                    self->geo.x,
+                                    self->geo.y);
+}
+
+
 static guint
 phoc_layer_surface_add_frame_callback (PhocAnimatable    *iface,
                                        PhocFrameCallback  callback,
@@ -240,33 +261,6 @@ phoc_layer_surface_new (struct wlr_layer_surface_v1 *layer_surface)
                        "wlr-layer-surface", layer_surface,
                        NULL);
 }
-
-
-/**
- * phoc_layer_surface_damage:
- * @self: The layer surface to damage
- *
- * Damage a layer surface
- */
-void
-phoc_layer_surface_damage (PhocLayerSurface *self)
-{
-  struct wlr_layer_surface_v1 *wlr_layer_surface;
-  struct wlr_output *wlr_output;
-
-  g_assert (PHOC_IS_LAYER_SURFACE (self));
-  wlr_layer_surface = self->layer_surface;
-
-  wlr_output = wlr_layer_surface->output;
-  if (!wlr_output)
-    return;
-
-  phoc_output_damage_whole_surface (PHOC_OUTPUT (wlr_output->data),
-                                    wlr_layer_surface->surface,
-                                    self->geo.x,
-                                    self->geo.y);
-}
-
 
 /**
  * phoc_layer_surface_get_namespace:
