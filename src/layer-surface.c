@@ -103,6 +103,18 @@ handle_new_subsurface (struct wl_listener *listener, void *data)
 }
 
 
+static void
+handle_new_popup (struct wl_listener *listener, void *data)
+{
+  PhocLayerSurface *self = wl_container_of (listener, self, new_popup);
+  struct wlr_xdg_popup *wlr_popup = data;
+  PhocLayerPopup *popup = phoc_layer_popup_create (wlr_popup);
+
+  popup->parent_type = LAYER_PARENT_LAYER;
+  popup->parent_layer = self;
+  phoc_layer_popup_unconstrain (popup);
+}
+
 
 static void
 handle_map (struct wl_listener *listener, void *data)
@@ -250,6 +262,9 @@ phoc_layer_surface_constructed (GObject *object)
 
   self->unmap.notify = handle_unmap;
   wl_signal_add (&self->layer_surface->surface->events.unmap, &self->unmap);
+
+  self->new_popup.notify = handle_new_popup;
+  wl_signal_add (&self->layer_surface->events.new_popup, &self->new_popup);
 }
 
 

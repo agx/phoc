@@ -630,17 +630,6 @@ phoc_layer_popup_create (struct wlr_xdg_popup *wlr_popup)
   return popup;
 }
 
-static void
-handle_new_popup (struct wl_listener *listener, void *data)
-{
-  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, new_popup);
-  struct wlr_xdg_popup *wlr_popup = data;
-  PhocLayerPopup *popup = phoc_layer_popup_create (wlr_popup);
-
-  popup->parent_type = LAYER_PARENT_LAYER;
-  popup->parent_layer = layer_surface;
-  phoc_layer_popup_unconstrain (popup);
-}
 
 static PhocLayerSurface *
 subsurface_get_root_layer (PhocLayerSubsurface *subsurface)
@@ -819,9 +808,6 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
 
   layer_surface->surface_commit.notify = handle_surface_commit;
   wl_signal_add (&wlr_layer_surface->surface->events.commit, &layer_surface->surface_commit);
-
-  layer_surface->new_popup.notify = handle_new_popup;
-  wl_signal_add (&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
 
   PhocOutput *output = PHOC_OUTPUT (wlr_layer_surface->output->data);
   wl_list_insert (&output->layer_surfaces, &layer_surface->link);
