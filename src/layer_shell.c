@@ -836,30 +836,6 @@ handle_map (struct wl_listener *listener, void *data)
 }
 
 
-static void
-handle_unmap (struct wl_listener *listener, void *data)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, unmap);
-  PhocOutput *output = phoc_layer_surface_get_output (layer_surface);
-
-  layer_surface->mapped = false;
-
-  PhocLayerSubsurface *subsurface, *tmp;
-  wl_list_for_each_safe (subsurface, tmp, &layer_surface->subsurfaces, link)
-    phoc_layer_subsurface_destroy (subsurface);
-
-  wl_list_remove (&layer_surface->new_subsurface.link);
-
-  phoc_layer_surface_damage (layer_surface);
-  phoc_input_update_cursor_focus (input);
-
-  if (output)
-    phoc_layer_shell_arrange (output);
-  phoc_layer_shell_update_focus ();
-}
-
-
 void
 phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
 {
@@ -903,8 +879,6 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
 
   layer_surface->map.notify = handle_map;
   wl_signal_add (&wlr_layer_surface->surface->events.map, &layer_surface->map);
-  layer_surface->unmap.notify = handle_unmap;
-  wl_signal_add (&wlr_layer_surface->surface->events.unmap, &layer_surface->unmap);
   layer_surface->new_popup.notify = handle_new_popup;
   wl_signal_add (&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
 
