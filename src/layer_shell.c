@@ -16,6 +16,7 @@
 #include "cursor.h"
 #include "desktop.h"
 #include "layers.h"
+#include "layer-shell-private.h"
 #include "output.h"
 #include "seat.h"
 #include "server.h"
@@ -88,8 +89,15 @@ apply_exclusive (struct wlr_box *usable_area,
   }
 }
 
-static void
-update_cursors (PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */)
+/**
+ * phoc_layer_shell_update_cursors:
+ * @layer_surface: The layer surface
+ * @seats:(element-type PhocSeat): List of seats
+ *
+ * Updates the cursor position for the given layer surface
+ */
+void
+phoc_layer_shell_update_cursors (PhocLayerSurface *layer_surface, GSList *seats)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = phoc_server_get_desktop (server);
@@ -117,6 +125,7 @@ update_cursors (PhocLayerSurface *layer_surface, GSList *seats /* PhocSeat */)
     }
   }
 }
+
 
 static void
 arrange_layer (PhocOutput                     *output,
@@ -220,7 +229,7 @@ arrange_layer (PhocOutput                     *output,
     // same, because those with resized buffers will be handled separately.
 
     if (layer_surface->geo.x != old_geo.x || layer_surface->geo.y != old_geo.y)
-      update_cursors (layer_surface, seats);
+      phoc_layer_shell_update_cursors (layer_surface, seats);
   }
 }
 
@@ -398,7 +407,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     struct wlr_surface *surface = wlr_layer_surface->surface;
     if (surface->previous.width != surface->current.width ||
         surface->previous.height != surface->current.height) {
-      update_cursors (layer_surface, phoc_input_get_seats (input));
+      phoc_layer_shell_update_cursors (layer_surface, phoc_input_get_seats (input));
     }
 
     bool geo_changed =
@@ -424,7 +433,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
 }
 
 
-static void
+void
 phoc_layer_subsurface_destroy (PhocLayerSubsurface *subsurface)
 {
   wl_list_remove (&subsurface->map.link);
@@ -436,9 +445,6 @@ phoc_layer_subsurface_destroy (PhocLayerSubsurface *subsurface)
 }
 
 
-static PhocLayerPopup *popup_create (struct wlr_xdg_popup *wlr_popup);
-static PhocLayerSubsurface *phoc_layer_subsurface_create (struct wlr_subsurface *wlr_subsurface);
-
 static PhocLayerSurface *
 popup_get_root_layer (PhocLayerPopup *popup)
 {
@@ -449,8 +455,8 @@ popup_get_root_layer (PhocLayerPopup *popup)
 }
 
 
-static void
-popup_unconstrain (PhocLayerPopup *popup)
+void
+phoc_layer_popup_unconstrain (PhocLayerPopup *popup)
 {
   PhocLayerSurface *layer = popup_get_root_layer (popup);
   struct wlr_xdg_popup *wlr_popup = popup->wlr_popup;
@@ -504,11 +510,11 @@ popup_new_popup (struct wl_listener *listener, void *data)
 {
   PhocLayerPopup *popup = wl_container_of (listener, popup, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
-  PhocLayerPopup *new_popup = popup_create (wlr_popup);
+  PhocLayerPopup *new_popup = phoc_layer_popup_create (wlr_popup);
 
   new_popup->parent_type = LAYER_PARENT_POPUP;
   new_popup->parent_popup = popup;
-  popup_unconstrain (new_popup);
+  phoc_layer_popup_unconstrain (new_popup);
 }
 
 
@@ -599,8 +605,8 @@ popup_handle_destroy (struct wl_listener *listener, void *data)
   free (popup);
 }
 
-static PhocLayerPopup *
-popup_create (struct wlr_xdg_popup *wlr_popup)
+PhocLayerPopup *
+phoc_layer_popup_create (struct wlr_xdg_popup *wlr_popup)
 {
   PhocLayerPopup *popup = calloc (1, sizeof (PhocLayerPopup));
 
@@ -629,11 +635,11 @@ handle_new_popup (struct wl_listener *listener, void *data)
 {
   PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
-  PhocLayerPopup *popup = popup_create (wlr_popup);
+  PhocLayerPopup *popup = phoc_layer_popup_create (wlr_popup);
 
   popup->parent_type = LAYER_PARENT_LAYER;
   popup->parent_layer = layer_surface;
-  popup_unconstrain (popup);
+  phoc_layer_popup_unconstrain (popup);
 }
 
 static PhocLayerSurface *
@@ -747,7 +753,7 @@ subsurface_handle_destroy (struct wl_listener *listener, void *data)
   phoc_layer_subsurface_destroy (subsurface);
 }
 
-static PhocLayerSubsurface *
+PhocLayerSubsurface *
 phoc_layer_subsurface_create (struct wlr_subsurface *wlr_subsurface)
 {
   PhocLayerSubsurface *subsurface = calloc (1, sizeof (PhocLayerSubsurface));
