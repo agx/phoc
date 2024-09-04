@@ -373,66 +373,6 @@ phoc_layer_shell_update_focus (void)
 }
 
 
-static void
-handle_surface_commit (struct wl_listener *listener, void *data)
-{
-  PhocServer *server = phoc_server_get_default ();
-  PhocInput *input = phoc_server_get_input (server);
-  PhocLayerSurface *layer_surface = wl_container_of (listener, layer_surface, surface_commit);
-  struct wlr_layer_surface_v1 *wlr_layer_surface = layer_surface->layer_surface;
-  struct wlr_output *wlr_output = wlr_layer_surface->output;
-
-  if (wlr_output != NULL) {
-    PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
-    struct wlr_box old_geo = layer_surface->geo;
-
-    bool layer_changed = false;
-    if (wlr_layer_surface->current.committed != 0) {
-      layer_changed = layer_surface->layer != wlr_layer_surface->current.layer;
-
-      phoc_output_set_layer_dirty (output, layer_surface->layer);
-
-      layer_surface->layer = wlr_layer_surface->current.layer;
-      phoc_layer_shell_arrange (output);
-      phoc_layer_shell_update_focus ();
-    }
-
-    // Cursor changes which happen as a consequence of resizing a layer
-    // surface are applied in phoc_layer_shell_arrange. Because the resize happens
-    // before the underlying surface changes, it will only receive a cursor
-    // update if the new cursor position crosses the *old* sized surface in
-    // the *new* layer surface.
-    // Another cursor move event is needed when the surface actually
-    // changes.
-    struct wlr_surface *surface = wlr_layer_surface->surface;
-    if (surface->previous.width != surface->current.width ||
-        surface->previous.height != surface->current.height) {
-      phoc_layer_shell_update_cursors (layer_surface, phoc_input_get_seats (input));
-    }
-
-    bool geo_changed =
-      memcmp (&old_geo, &layer_surface->geo, sizeof (struct wlr_box)) != 0;
-    if (geo_changed || layer_changed) {
-      phoc_output_damage_whole_surface (output,
-                                        wlr_layer_surface->surface,
-                                        old_geo.x,
-                                        old_geo.y);
-      phoc_output_damage_whole_surface (output,
-                                        wlr_layer_surface->surface,
-                                        layer_surface->geo.x,
-                                        layer_surface->geo.y);
-    } else {
-      phoc_output_damage_from_surface (output,
-                                       wlr_layer_surface->surface,
-                                       layer_surface->geo.x,
-                                       layer_surface->geo.y);
-    }
-
-    phoc_output_set_layer_dirty (output, layer_surface->layer);
-  }
-}
-
-
 void
 phoc_layer_subsurface_destroy (PhocLayerSubsurface *subsurface)
 {
@@ -805,9 +745,6 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
   }
 
   PhocLayerSurface *layer_surface = phoc_layer_surface_new (wlr_layer_surface);
-
-  layer_surface->surface_commit.notify = handle_surface_commit;
-  wl_signal_add (&wlr_layer_surface->surface->events.commit, &layer_surface->surface_commit);
 
   PhocOutput *output = PHOC_OUTPUT (wlr_layer_surface->output->data);
   wl_list_insert (&output->layer_surfaces, &layer_surface->link);
