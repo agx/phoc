@@ -49,8 +49,8 @@ Files:
  src/desktop.h
  src/input.c
  src/input.h
- src/layer_shell.c
- src/layers.h
+ src/layer-shell.c
+ src/layer-shell.h
  src/output.c
  src/output.h
  src/pointer.c

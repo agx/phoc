@@ -12,7 +12,7 @@
 #include "anim/animatable.h"
 #include "layer-shell-private.h"
 #include "layer-surface.h"
-#include "layers.h"
+#include "layer-shell.h"
 #include "output.h"
 #include "server.h"
 #include "utils.h"

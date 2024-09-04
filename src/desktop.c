@@ -37,7 +37,7 @@
 #include "cursor.h"
 #include "device-state.h"
 #include "idle-inhibit.h"
-#include "layers.h"
+#include "layer-shell.h"
 #include "output.h"
 #include "seat.h"
 #include "server.h"

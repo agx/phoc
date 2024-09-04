@@ -22,7 +22,7 @@
 #include "bling.h"
 #include "cutouts-overlay.h"
 #include "settings.h"
-#include "layers.h"
+#include "layer-shell.h"
 #include "layer-shell-effects.h"
 #include "output.h"
 #include "output-shield.h"

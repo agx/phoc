@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "layers.h"
+#include "layer-shell.h"
 
 G_BEGIN_DECLS
 

@@ -15,7 +15,7 @@
 #include <wlr/util/box.h>
 #include "cursor.h"
 #include "desktop.h"
-#include "layers.h"
+#include "layer-shell.h"
 #include "layer-shell-private.h"
 #include "output.h"
 #include "seat.h"
