@@ -285,6 +285,8 @@ phoc_layer_surface_finalize (GObject *object)
   wl_list_remove (&self->map.link);
   wl_list_remove (&self->unmap.link);
   wl_list_remove (&self->surface_commit.link);
+  wl_list_remove (&self->new_popup.link);
+
   if (output) {
     g_assert (PHOC_IS_OUTPUT (output));
     phoc_output_remove_frame_callbacks_by_animatable (output, PHOC_ANIMATABLE (self));
