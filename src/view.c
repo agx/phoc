@@ -1739,6 +1739,8 @@ phoc_view_set_scale_to_fit (PhocView *self, gboolean enable)
  * phoc_view_get_scale_to_fit:
  * @self: The view
  *
+ * Returns the `scale-to-fit` if active for this view.
+ *
  * Returns: %TRUE if scaling of oversized surfaces is enabled, %FALSE otherwise
  */
 gboolean
