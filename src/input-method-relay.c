@@ -1,4 +1,4 @@
-#define G_LOG_DOMAIN "phoc-text-input"
+#define G_LOG_DOMAIN "phoc-input-method-relay"
 
 #include "phoc-config.h"
 
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "seat.h"
 #include "server.h"
-#include "text_input.h"
+#include "input-method-relay.h"
 
 /**
  * PhocTextInput:

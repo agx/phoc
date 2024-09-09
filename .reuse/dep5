@@ -59,8 +59,8 @@ Files:
  src/settings.h
  src/switch.c
  src/tablet.c
- src/text_input.c
- src/text_input.h
+ src/text-input-relay.c
+ src/text-input-relay.h
  src/touch.c
  src/view.c
  src/view.h
