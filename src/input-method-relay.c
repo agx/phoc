@@ -277,8 +277,31 @@ relay_disable_text_input (PhocInputMethodRelay *relay, PhocTextInput *text_input
 
 
 static void
+submit_preedit (PhocInputMethodRelay *self, PhocTextInput *text_input)
+{
+  struct wlr_input_method_v2_preedit_string *preedit;
+
+  if (!self->input_method)
+    return;
+
+  preedit = &self->input_method->current.preedit;
+
+  if (!preedit->text)
+    return;
+
+  g_debug ("Submitting preedit: %s", preedit->text);
+  wlr_text_input_v3_send_commit_string (text_input->input, preedit->text);
+  g_clear_pointer (&preedit->text, g_free);
+  wlr_text_input_v3_send_done (text_input->input);
+}
+
+
+static void
 text_input_relay_unset_focus (PhocInputMethodRelay *self, PhocTextInput *text_input)
 {
+  /* Submit preedit so it doesn't get lost on focus change */
+  submit_preedit (self, text_input);
+
   relay_disable_text_input (self, text_input);
   wlr_text_input_v3_send_leave (text_input->input);
 }
