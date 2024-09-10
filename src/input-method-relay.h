@@ -45,5 +45,8 @@ void phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay,
                                         struct wlr_surface   *surface);
 bool phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay,
                                          struct wlr_surface   *surface);
+void phoc_input_method_relay_im_submit  (PhocInputMethodRelay *self,
+                                         struct wlr_surface   *surface);
+
 
 G_END_DECLS

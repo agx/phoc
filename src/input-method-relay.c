@@ -535,3 +535,32 @@ phoc_input_method_relay_is_enabled (PhocInputMethodRelay *relay, struct wlr_surf
   }
   return false;
 }
+
+/**
+ * phoc_input_method_relay_im_submit:
+ * @self: The relay
+ *
+ * Submit the input method's state if the given surface has focus.
+ * This allows to e.g. submit any preedit when needed.
+ */
+void
+phoc_input_method_relay_im_submit (PhocInputMethodRelay *self,
+                                   struct wlr_surface   *surface)
+{
+  PhocTextInput *text_input;
+
+  g_assert (self);
+  g_assert (surface);
+
+  if (!self->input_method)
+    return;
+
+  text_input = relay_get_focused_text_input (self);
+  if (!text_input)
+    return;
+
+  if (text_input->input->focused_surface != surface)
+    return;
+
+  submit_preedit (self, text_input);
+}
