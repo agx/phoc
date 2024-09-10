@@ -277,6 +277,14 @@ relay_disable_text_input (PhocInputMethodRelay *relay, PhocTextInput *text_input
 
 
 static void
+text_input_relay_unset_focus (PhocInputMethodRelay *self, PhocTextInput *text_input)
+{
+  relay_disable_text_input (self, text_input);
+  wlr_text_input_v3_send_leave (text_input->input);
+}
+
+
+static void
 handle_text_input_disable (struct wl_listener *listener, void *data)
 {
   PhocTextInput *text_input = wl_container_of (listener, text_input, disable);
@@ -449,17 +457,15 @@ phoc_input_method_relay_set_focus (PhocInputMethodRelay *relay, struct wlr_surfa
   PhocTextInput *text_input;
 
   wl_list_for_each (text_input, &relay->text_inputs, link) {
+
     if (text_input->pending_focused_surface) {
       g_assert (text_input->input->focused_surface == NULL);
       if (surface != text_input->pending_focused_surface)
         text_input_clear_pending_focused_surface (text_input);
-
     } else if (text_input->input->focused_surface) {
       g_assert (text_input->pending_focused_surface == NULL);
-      if (surface != text_input->input->focused_surface) {
-        relay_disable_text_input (relay, text_input);
-        wlr_text_input_v3_send_leave (text_input->input);
-      }
+      if (surface != text_input->input->focused_surface)
+        text_input_relay_unset_focus (relay, text_input);
     }
 
     if (surface
