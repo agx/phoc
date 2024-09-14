@@ -501,7 +501,7 @@ phoc_view_maximize (PhocView *view, PhocOutput *output)
   view_arrange_maximized (view, output);
 }
 
-/*
+/**
  * phoc_view_auto_maximize:
  * @view: a view
  *
@@ -1570,7 +1570,6 @@ phoc_view_class_init (PhocViewClass *klass)
     g_param_spec_boolean ("scale-to-fit", "", "",
                           FALSE,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
-
   /**
    * PhocView:activation-token:
    *
@@ -1589,7 +1588,6 @@ phoc_view_class_init (PhocViewClass *klass)
     g_param_spec_boolean ("is-mapped", "", "",
                           FALSE,
                           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
-
   /**
    * PhocView:alpha:
    *
@@ -1603,7 +1601,7 @@ phoc_view_class_init (PhocViewClass *klass)
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
   /**
-   * PhocView:surface-destroy:
+   * PhocView::surface-destroy:
    *
    * Derived classes emit this signal just before dropping their ref so reference holders
    * can react.
@@ -1634,7 +1632,6 @@ phoc_view_init (PhocView *self)
 
   self->desktop = phoc_server_get_desktop (phoc_server_get_default ());
 }
-
 
 /**
  * phoc_view_from_wlr_surface:
@@ -1683,7 +1680,6 @@ phoc_view_get_tile_direction (PhocView *self)
 
   return priv->tile_direction;
 }
-
 
 /**
  * phoc_view_get_output:
@@ -1743,6 +1739,8 @@ phoc_view_set_scale_to_fit (PhocView *self, gboolean enable)
  * phoc_view_get_scale_to_fit:
  * @self: The view
  *
+ * Returns the `scale-to-fit` if active for this view.
+ *
  * Returns: %TRUE if scaling of oversized surfaces is enabled, %FALSE otherwise
  */
 gboolean
@@ -1755,7 +1753,6 @@ phoc_view_get_scale_to_fit (PhocView *self)
 
   return priv->scale_to_fit;
 }
-
 
 /**
  * phoc_view_set_activation_token:
@@ -1826,7 +1823,7 @@ phoc_view_flush_activation_token (PhocView *self)
 }
 
 /**
- * phoc_view_get_alpha
+ * phoc_view_get_alpha:
  * @self: The view
  *
  * Get the surface's transparency
@@ -1845,7 +1842,7 @@ phoc_view_get_alpha (PhocView *self)
 }
 
 /**
- * phoc_view_get_scale
+ * phoc_view_get_scale:
  * @self: The view
  *
  * Get the surface's scale
@@ -1864,12 +1861,12 @@ phoc_view_get_scale (PhocView *self)
 }
 
 /**
- * phoc_view_set_decorated
+ * phoc_view_set_decorated:
  * @self: The view
  * @decorated: Whether the compositor should draw window decorations
  *
- * Sets whether the window is decorated. If %TRUE also specifies the
- * decoration.
+ * Sets whether the compositor should draw window decorations for
+ * the view.
  */
 void
 phoc_view_set_decorated (PhocView *self, gboolean decorated)
@@ -1958,11 +1955,14 @@ phoc_view_get_wlr_surface_at (PhocView *self, double sx, double sy, double *sub_
   return PHOC_VIEW_GET_CLASS (self)->get_wlr_surface_at (self, sx, sy, sub_x, sub_y);
 }
 
-/*
- * phoc_view_want_automaximize:
+/**
+ * phoc_view_want_auto_maximize:
+ * @self: The view
  *
  * Check if a view needs to be auto-maximized. In phoc's auto-maximize
  * mode only toplevels should be maximized.
+ *
+ * Returns: `true` if the view wants to be auto maximized
  */
 bool
 phoc_view_want_auto_maximize (PhocView *view)
@@ -1975,7 +1975,14 @@ phoc_view_want_auto_maximize (PhocView *view)
   return PHOC_VIEW_GET_CLASS (view)->want_auto_maximize(view);
 }
 
-
+/**
+ * phoc_view_get_app_id:
+ * @self: The view
+ *
+ * Get the view's app_id (if any)
+ *
+ * Returns:(nullable): The app_id
+ */
 const char *
 phoc_view_get_app_id (PhocView *self)
 {
