@@ -1578,15 +1578,10 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
   if (!layer) {
     if (seat->focused_layer) {
       PhocOutput *output = PHOC_OUTPUT (seat->focused_layer->output->data);
+      PhocSeatView *seat_view = g_queue_peek_head (priv->views);
 
       seat->focused_layer = NULL;
-      if (!g_queue_is_empty (priv->views)) {
-        /* Focus first view */
-        PhocSeatView *first_seat_view = g_queue_peek_head (priv->views);
-        phoc_seat_set_focus_view (seat, first_seat_view->view);
-      } else {
-        phoc_seat_set_focus_view (seat, NULL);
-      }
+      phoc_seat_set_focus_view (seat, seat_view ? seat_view->view : NULL);
 
       if (output) {
         phoc_layer_shell_arrange (output);
