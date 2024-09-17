@@ -1309,7 +1309,9 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
       continue;
 
     if (phoc_layer_surface_get_layer (target) != phoc_layer_surface_get_layer (stacked)) {
-      g_critical ("Stacked surface and target surface not in same layer");
+      g_critical ("Stacked surface %s and target %s surface not in same layer",
+                  phoc_layer_surface_get_namespace (stacked),
+                  phoc_layer_surface_get_namespace (target));
       continue;
     }
 
