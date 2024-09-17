@@ -1438,24 +1438,26 @@ seat_raise_view_stack (PhocSeat *seat, PhocView *view)
  *
  * If possible it will unfocus the currently focused view and focus
  * the given %view, raise it if necessary and make it appear
- * activated. If %NULL is passed only the current view is unfocsed.
+ * activated. If %NULL is passed only the current view is unfocused.
  */
 void
 phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
 {
   PhocSeatPrivate *priv;
+  bool unfullscreen = true;
 
   g_assert (PHOC_IS_SEAT (seat));
   priv = phoc_seat_get_instance_private (seat);
 
+  g_debug ("Trying to focus view %p", view);
   if (view && !phoc_seat_allow_input (seat, view->wlr_surface->resource))
     return;
 
-  // Make sure the view will be rendered on top of others, even if it's
-  // already focused in this seat
-  if (view != NULL) {
+  /* Make sure the view will be rendered on top of others, even if it's
+   * already focused in this seat */
+  if (view) {
     PhocView *parent = view;
-    // reorder stack
+    /* reorder stack */
     while (parent->parent) {
       wl_list_remove (&parent->parent_link);
       wl_list_insert (&parent->parent->stack, &parent->parent_link);
@@ -1463,8 +1465,6 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     }
     seat_raise_view_stack (seat, parent);
   }
-
-  bool unfullscreen = true;
 
 #ifdef PHOC_XWAYLAND
   if (view && PHOC_IS_XWAYLAND_SURFACE (view)) {
@@ -1479,6 +1479,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     PhocDesktop *desktop = view->desktop;
     PhocOutput *output;
     struct wlr_box box;
+
     phoc_view_get_box (view, &box);
     wl_list_for_each (output, &desktop->outputs, link) {
       if (output->fullscreen_view &&
@@ -1490,8 +1491,10 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   }
 
   PhocView *prev_focus = phoc_seat_get_focus_view (seat);
-  if (view && view == prev_focus)
+  if (view && view == prev_focus) {
+    g_debug ("View %p already focused", view);
     return;
+  }
 
 #ifdef PHOC_XWAYLAND
   if (view && PHOC_IS_XWAYLAND_SURFACE (view)) {
@@ -1506,10 +1509,9 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     seat_view = phoc_seat_view_from_view (seat, view);
     g_assert (seat_view);
   }
-
   priv->has_focus = false;
 
-  // Deactivate the old view if it is not focused by some other seat
+  /* Deactivate the old view if it is not focused by some other seat */
   if (prev_focus != NULL && !phoc_input_view_has_focus (priv->input, prev_focus))
     phoc_view_activate (prev_focus, false);
 
@@ -1520,7 +1522,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     return;
   }
 
-  /* Next view to receive focus */
+  /* Set next seat view to receive focus */
   g_queue_remove (priv->views, seat_view);
   g_queue_push_head (priv->views, seat_view);
 
@@ -1528,17 +1530,19 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   if (phoc_view_get_activation_token (view))
     phoc_view_flush_activation_token (view);
 
-  if (seat->focused_layer)
+  if (seat->focused_layer) {
+    g_debug ("Layer surface has focus, not focusing view %p yet", view);
     return;
+  }
 
   phoc_view_activate (view, true);
   priv->has_focus = true;
 
-  // An existing keyboard grab might try to deny setting focus, so cancel it
+  /* An existing keyboard grab might try to deny setting focus, so cancel it */
   wlr_seat_keyboard_end_grab (seat->seat);
 
   struct wlr_keyboard *keyboard = wlr_seat_get_keyboard (seat->seat);
-  if (keyboard != NULL) {
+  if (keyboard) {
     wlr_seat_keyboard_notify_enter (seat->seat, view->wlr_surface,
                                     keyboard->keycodes, keyboard->num_keycodes,
                                     &keyboard->modifiers);
@@ -1552,6 +1556,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     wlr_seat_keyboard_notify_enter (seat->seat, view->wlr_surface, NULL, 0, NULL);
   }
 
+  g_debug ("Focused view %p", view);
   phoc_cursor_update_focus (seat->cursor);
   phoc_input_method_relay_set_focus (&seat->im_relay, view->wlr_surface);
 }
