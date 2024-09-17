@@ -319,17 +319,16 @@ phoc_view_activate (PhocView *self, bool activate)
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  if (!self->desktop->maximize) {
+  if (!self->desktop->maximize)
     phoc_view_appear_activated (self, activate);
-  }
 
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_activated (priv->toplevel_handle, activate);
 
-  if (activate && phoc_view_is_fullscreen (self)) {
+  if (activate && phoc_view_is_fullscreen (self))
     phoc_output_force_shell_reveal (priv->fullscreen_output, false);
-  }
 }
+
 
 static void
 phoc_view_resize (PhocView *self, uint32_t width, uint32_t height)
