@@ -1065,13 +1065,15 @@ phoc_view_unmap (PhocView *view)
   g_object_notify_by_pspec (G_OBJECT (view), props[PROP_IS_MAPPED]);
 }
 
+
 void
-phoc_view_set_initial_focus (PhocView *view)
+phoc_view_set_initial_focus (PhocView *self)
 {
   PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
 
   /* This also submits any pending activation tokens */
-  phoc_seat_set_focus_view (seat, view);
+  g_debug ("Initial focus view %p, token %s", self, phoc_view_get_activation_token (self));
+  phoc_seat_set_focus_view (seat, self);
 }
 
 /**
