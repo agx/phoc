@@ -1504,8 +1504,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   PhocSeatView *seat_view = NULL;
   if (view != NULL) {
     seat_view = phoc_seat_view_from_view (seat, view);
-    if (seat_view == NULL)
-      return;
+    g_assert (seat_view);
   }
 
   priv->has_focus = false;
