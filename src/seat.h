@@ -8,8 +8,8 @@
 
 #include "drag-icon.h"
 #include "input.h"
+#include "input-method-relay.h"
 #include "layer-shell.h"
-#include "text_input.h"
 
 #include <wlr/types/wlr_switch.h>
 
