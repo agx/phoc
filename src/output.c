@@ -1305,7 +1305,7 @@ phoc_output_get_layer_surfaces_for_layer (PhocOutput *self, enum zwlr_layer_shel
     if (!target)
       continue;
 
-    if (phoc_layer_surface_get_output (stacked) != self)
+    if (phoc_layer_surface_get_output (target) != self)
       continue;
 
     if (phoc_layer_surface_get_layer (target) != phoc_layer_surface_get_layer (stacked)) {
