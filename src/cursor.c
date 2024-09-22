@@ -1220,7 +1220,8 @@ phoc_cursor_press_button (PhocCursor              *self,
   if (!phoc_handle_shell_reveal (surface, lx, ly, PHOC_SHELL_REVEAL_POINTER_THRESHOLD) && !is_touch)
     send_pointer_button (seat, surface, time, button, state);
 
-  phoc_input_method_relay_im_submit (&seat->im_relay, surface);
+  if (surface)
+    phoc_input_method_relay_im_submit (&seat->im_relay, surface);
 }
 
 
