@@ -94,8 +94,7 @@ handle_new_input (struct wl_listener *listener, void *data)
     return;
   }
 
-  g_debug ("New input device: %s (%d:%d) %s seat:%s", device->name,
-           device->vendor, device->product,
+  g_debug ("New input device: %s %s seat:%s", device->name,
            phoc_input_get_device_type (device->type), seat_name);
 
   phoc_seat_add_device (seat, device);
