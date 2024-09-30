@@ -1,9 +1,14 @@
-Building
-========
+# Contributing to Phoc
+
+Below are some basic guidelines on coding style and merge requests
+that hopefully makes it easier for you to land your code.
+
+## Building
+
 For build instructions see the README.md
 
-Pull requests
-=============
+### Merge requests
+
 Before filing a pull request run the tests:
 
 ```sh
@@ -12,16 +17,18 @@ meson test -C _build
 
 Use descriptive commit messages, see
 
-   https://wiki.gnome.org/Git/CommitMessages
+   <https://wiki.gnome.org/Git/CommitMessages>
 
 and check
 
-   https://wiki.openstack.org/wiki/GitCommitMessages
+   <https://wiki.openstack.org/wiki/GitCommitMessages>
 
 for good examples.
 
-Coding Style
-============
+## Coding Patterns
+
+### Coding Style
+
 We're mostly using [libhandy's Coding Style][1].
 
 These are the differences:
