@@ -246,6 +246,13 @@ check-license:
     variables:
       - $PKG_ONLY == "1"
 
+check-markdown:
+  stage: style-checks
+  variables:
+    PHOSH_MARKDOWN_PATHS: "*.md doc/*.md"
+  extends:
+    - .phosh-check-markdown
+
 package-deb-debian-trixie:arm64:
   stage: package
   variables:
