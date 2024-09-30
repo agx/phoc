@@ -64,4 +64,18 @@ Callbacks for GObject signals should be prefixed with `on_`.
                             seat);
 ```
 
+## Examples
+
+The `examples/` folder contains Wayland clients that exercise certain
+protocols.  This is similar in spirit to [Westons clients][2] or
+[wlr-clients][3].
+
+- phosh-private: A client for the [phosh-private protocol](./protocols/phosh-private.xml)
+- device-state: A client for the [phoc-device-state-unstable-v1 protocol](./protocols/phoc-device-state-unstable-v1.xml)
+- layer-shell-effects: A client for the [phoc-layer-shell-effects-unstable-v1 protocol](./protocols/phoc-layer-shell-effects-unstable-v1.xml)
+
+You can run them against any phoc instance.
+
 [1]: https://gitlab.gnome.org/GNOME/libhandy/-/blob/main/HACKING.md
+[2]: https://gitlab.freedesktop.org/wayland/weston/-/tree/main/clients
+[3]: https://gitlab.freedesktop.org/wlroots/wlr-clients
