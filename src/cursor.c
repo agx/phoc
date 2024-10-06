@@ -2030,3 +2030,22 @@ phoc_cursor_get_mode (PhocCursor *self)
 
   return priv->mode;
 }
+
+/**
+ * phoc_cursor_set_xcursor_theme:
+ * @self: The cursor
+ * @theme: The theme to set
+ *
+ * Set the current cursor theme
+ */
+void
+phoc_cursor_set_xcursor_theme (PhocCursor *self, const char *theme, uint32_t size)
+{
+  g_assert (PHOC_IS_CURSOR (self));
+
+  g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
+  self->xcursor_manager = wlr_xcursor_manager_create (theme, size);
+  g_assert (self->xcursor_manager);
+
+  phoc_seat_configure_xcursor (self->seat);
+}

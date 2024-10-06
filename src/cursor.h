@@ -154,5 +154,6 @@ void        phoc_cursor_set_image (PhocCursor         *self,
 
 PhocCursorMode phoc_cursor_get_mode (PhocCursor *self);
 void        phoc_cursor_set_mode (PhocCursor *self, PhocCursorMode mode);
+void        phoc_cursor_set_xcursor_theme (PhocCursor *self, const char *theme, uint32_t size);
 
 G_END_DECLS
