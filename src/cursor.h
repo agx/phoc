@@ -64,8 +64,6 @@ typedef struct _PhocCursor {
   struct wlr_pointer_constraint_v1 *active_constraint;
   pixman_region32_t                 confine; // invalid if active_constraint == NULL
 
-  PhocCursorMode                    mode;
-
   struct wlr_xcursor_manager       *xcursor_manager;
 
   /* For moving and resizing surfaces */

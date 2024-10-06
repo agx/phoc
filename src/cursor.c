@@ -62,6 +62,7 @@ typedef struct _PhocCursorPrivate {
   } view_state;
 
   /* The cursor */
+  PhocCursorMode             mode;
   struct wl_client          *cursor_client;
 } PhocCursorPrivate;
 
@@ -1069,10 +1070,11 @@ void
 phoc_cursor_update_position (PhocCursor *self, uint32_t time)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   PhocSeat *seat = self->seat;
   PhocView *view;
 
-  switch (self->mode) {
+  switch (priv->mode) {
   case PHOC_CURSOR_PASSTHROUGH:
     phoc_passthrough_cursor (self, time);
     break;
@@ -1148,7 +1150,7 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
     }
     break;
   default:
-    g_error ("Invalid cursor mode %d", self->mode);
+    g_error ("Invalid cursor mode %d", priv->mode);
   }
 }
 
@@ -1203,10 +1205,10 @@ phoc_cursor_press_button (PhocCursor              *self,
     if (view && !surface && self->pointer_view)
       seat_view_deco_button (self->pointer_view, sx, sy, button, state);
 
-    if (state == WLR_BUTTON_RELEASED && self->mode != PHOC_CURSOR_PASSTHROUGH) {
+    if (state == WLR_BUTTON_RELEASED && priv->mode != PHOC_CURSOR_PASSTHROUGH) {
       if (priv->view_state.view)
         phoc_cursor_submit_pending_view_state_change (self);
-      self->mode = PHOC_CURSOR_PASSTHROUGH;
+      priv->mode = PHOC_CURSOR_PASSTHROUGH;
       phoc_cursor_update_focus (self);
     }
 
@@ -1385,6 +1387,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = phoc_server_get_desktop (server);
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   PhocSeat *seat = self->seat;
   PhocTouchPoint *touch_point;
   double lx, ly;
@@ -1394,7 +1397,7 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
   ly = touch_point->ly;
   handle_gestures_for_event_at (self, lx, ly, PHOC_EVENT_TOUCH_BEGIN, event, sizeof (*event));
 
-  if (seat->touch_id == -1 && self->mode == PHOC_CURSOR_PASSTHROUGH) {
+  if (seat->touch_id == -1 && priv->mode == PHOC_CURSOR_PASSTHROUGH) {
     seat->touch_id = event->touch_id;
     seat->touch_x = lx;
     seat->touch_y = ly;
@@ -1472,11 +1475,11 @@ phoc_cursor_handle_touch_up (PhocCursor                *self,
   if (!point)
     return;
 
-  if (self->mode != PHOC_CURSOR_PASSTHROUGH) {
+  if (priv->mode != PHOC_CURSOR_PASSTHROUGH) {
     if (priv->view_state.view)
       phoc_cursor_submit_pending_view_state_change (self);
 
-    self->mode = PHOC_CURSOR_PASSTHROUGH;
+    priv->mode = PHOC_CURSOR_PASSTHROUGH;
     phoc_cursor_update_focus (self);
   }
 
@@ -1489,6 +1492,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
                                  struct wlr_touch_motion_event *event)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   struct wlr_touch_point *point;
   PhocTouchPoint *touch_point;
   double lx, ly;
@@ -1583,7 +1587,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
     self->seat->touch_x = lx;
     self->seat->touch_y = ly;
 
-    if (self->mode != PHOC_CURSOR_PASSTHROUGH) {
+    if (priv->mode != PHOC_CURSOR_PASSTHROUGH) {
       wlr_cursor_warp (self->cursor, NULL, lx, ly);
       phoc_cursor_update_position (self, event->time_msec);
     }
@@ -1664,7 +1668,7 @@ phoc_cursor_handle_request_set_cursor (PhocCursor                               
   if (has_focused)
     focused_client = wl_resource_get_client (focused_surface->resource);
 
-  if (event->seat_client->client != focused_client || self->mode != PHOC_CURSOR_PASSTHROUGH) {
+  if (event->seat_client->client != focused_client || priv->mode != PHOC_CURSOR_PASSTHROUGH) {
     g_debug ("Denying request to set cursor from unfocused client");
     return;
   }
@@ -1871,9 +1875,12 @@ phoc_cursor_set_name (PhocCursor *self, const char *name)
 void
 phoc_cursor_set_mode (PhocCursor *self, PhocCursorMode mode)
 {
-  g_assert (PHOC_IS_CURSOR (self));
+  PhocCursorPrivate *priv;
 
-  self->mode = mode;
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  priv->mode = mode;
 }
 
 /**
@@ -1887,7 +1894,10 @@ phoc_cursor_set_mode (PhocCursor *self, PhocCursorMode mode)
 PhocCursorMode
 phoc_cursor_get_mode (PhocCursor *self)
 {
-  g_assert (PHOC_IS_CURSOR (self));
+  PhocCursorPrivate *priv;
 
-  return self->mode;
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  return priv->mode;
 }
