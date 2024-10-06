@@ -109,6 +109,28 @@ handle_image_surface_destroy (struct wl_listener *listener, void *data)
 }
 
 
+static void
+handle_request_set_cursor (struct wl_listener *listener,
+                           void               *data)
+{
+  PhocCursor *self = wl_container_of (listener, self, request_set_cursor);
+  struct wlr_seat_pointer_request_set_cursor_event *event = data;
+  struct wlr_surface *focused_surface = event->seat_client->seat->pointer_state.focused_surface;
+  bool has_focused = focused_surface != NULL && focused_surface->resource != NULL;
+  struct wl_client *focused_client = NULL;
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
+
+  if (has_focused)
+    focused_client = wl_resource_get_client (focused_surface->resource);
+
+  if (event->seat_client->client != focused_client || priv->mode != PHOC_CURSOR_PASSTHROUGH) {
+    g_debug ("Denying request to set cursor from unfocused client");
+    return;
+  }
+
+  phoc_cursor_set_image (self, focused_client, event->surface, event->hotspot_x, event->hotspot_y);
+}
+
 /* {{{ Animated view */
 
 static void
@@ -856,9 +878,12 @@ phoc_cursor_constructed (GObject *object)
   wl_signal_add (&wlr_cursor->events.frame, &self->frame);
   self->frame.notify = handle_pointer_frame;
 
-  wl_signal_add (&wlr_cursor->events.touch_frame,
-                 &self->touch_frame);
+  wl_signal_add (&wlr_cursor->events.touch_frame, &self->touch_frame);
   self->touch_frame.notify = handle_touch_frame;
+
+  g_assert (PHOC_IS_SEAT (self->seat));
+  wl_signal_add (&self->seat->seat->events.request_set_cursor, &self->request_set_cursor);
+  self->request_set_cursor.notify = handle_request_set_cursor;
 
   wl_list_init (&priv->image_surface_destroy.link);
   priv->image_surface_destroy.notify = handle_image_surface_destroy;
@@ -885,6 +910,7 @@ phoc_cursor_finalize (GObject *object)
   g_clear_pointer (&priv->gestures, free_gestures);
 
   phoc_cursor_set_image_surface (self, NULL);
+  wl_list_remove (&self->request_set_cursor.link);
 
   wl_list_remove (&self->motion.link);
   wl_list_remove (&self->motion_absolute.link);
@@ -905,7 +931,6 @@ phoc_cursor_finalize (GObject *object)
   wl_list_remove (&self->tool_tip.link);
   wl_list_remove (&self->tool_proximity.link);
   wl_list_remove (&self->tool_button.link);
-  wl_list_remove (&self->request_set_cursor.link);
   wl_list_remove (&self->focus_change.link);
 
   g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
@@ -1698,27 +1723,6 @@ phoc_cursor_handle_tool_tip (PhocCursor                       *self,
   phoc_cursor_press_button (self, &event->tablet->base,
                             event->time_msec, BTN_LEFT, event->state, self->cursor->x,
                             self->cursor->y);
-}
-
-
-void
-phoc_cursor_handle_request_set_cursor (PhocCursor                                       *self,
-                                       struct wlr_seat_pointer_request_set_cursor_event *event)
-{
-  struct wlr_surface *focused_surface = event->seat_client->seat->pointer_state.focused_surface;
-  bool has_focused = focused_surface != NULL && focused_surface->resource != NULL;
-  struct wl_client *focused_client = NULL;
-  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
-
-  if (has_focused)
-    focused_client = wl_resource_get_client (focused_surface->resource);
-
-  if (event->seat_client->client != focused_client || priv->mode != PHOC_CURSOR_PASSTHROUGH) {
-    g_debug ("Denying request to set cursor from unfocused client");
-    return;
-  }
-
-  phoc_cursor_set_image (self, focused_client, event->surface, event->hotspot_x, event->hotspot_y);
 }
 
 

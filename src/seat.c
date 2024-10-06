@@ -488,17 +488,6 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
 
 
 static void
-handle_request_set_cursor (struct wl_listener *listener,
-                           void               *data)
-{
-  PhocCursor *cursor = wl_container_of (listener, cursor, request_set_cursor);
-  struct wlr_seat_pointer_request_set_cursor_event *event = data;
-
-  phoc_cursor_handle_request_set_cursor (cursor, event);
-}
-
-
-static void
 handle_pointer_focus_change (struct wl_listener *listener,
                              void               *data)
 {
@@ -684,10 +673,6 @@ phoc_seat_init_cursor (PhocSeat *seat)
 
   wl_signal_add (&wlr_cursor->events.tablet_tool_button, &seat->cursor->tool_button);
   seat->cursor->tool_button.notify = handle_tool_button;
-
-  /* TODO: move setup to PhocCursor */
-  wl_signal_add (&seat->seat->events.request_set_cursor, &seat->cursor->request_set_cursor);
-  seat->cursor->request_set_cursor.notify = handle_request_set_cursor;
 
   wl_signal_add (&seat->seat->pointer_state.events.focus_change, &seat->cursor->focus_change);
   seat->cursor->focus_change.notify = handle_pointer_focus_change;
