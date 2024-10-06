@@ -71,6 +71,7 @@ typedef struct _PhocCursorPrivate {
   int32_t                     hotspot_x;
   int32_t                     hotspot_y;
   struct wlr_xcursor_manager *xcursor_manager;
+  GSettings                  *interface_settings;
 } PhocCursorPrivate;
 
 
@@ -151,6 +152,24 @@ handle_request_set_cursor (struct wl_listener *listener,
   }
 
   phoc_cursor_set_image (self, focused_client, event->surface, event->hotspot_x, event->hotspot_y);
+}
+
+
+static void
+on_cursor_theme_changed (PhocCursor *self, const char *key, GSettings *settings)
+{
+  g_autofree char* theme = NULL;
+  int size;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  g_assert (G_IS_SETTINGS (settings));
+
+  theme = g_settings_get_string (settings, "cursor-theme");
+  size = g_settings_get_int (settings, "cursor-size");
+  size = size > 0 ? size : PHOC_XCURSOR_SIZE;
+  g_debug ("Setting cursor theme to %s, size: %d", theme, size);
+
+  phoc_cursor_set_xcursor_theme (self, theme, size);
 }
 
 /* {{{ Animated view */
@@ -885,8 +904,6 @@ phoc_cursor_constructed (GObject *object)
   G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 
   g_assert (self->cursor);
-  priv->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
-  g_assert (priv->xcursor_manager);
 
   wl_signal_add (&wlr_cursor->events.motion, &self->motion);
   self->motion.notify = handle_pointer_motion_relative;
@@ -914,6 +931,13 @@ phoc_cursor_constructed (GObject *object)
   priv->image_surface_destroy.notify = handle_image_surface_destroy;
 
   wlr_cursor_attach_output_layout (wlr_cursor, desktop->layout);
+
+  priv->interface_settings = g_settings_new ("org.gnome.desktop.interface");
+  g_signal_connect_swapped (priv->interface_settings, "changed::cursor-size",
+                              G_CALLBACK (on_cursor_theme_changed), self);
+  g_signal_connect_swapped (priv->interface_settings, "changed::cursor-theme",
+                              G_CALLBACK (on_cursor_theme_changed), self);
+  on_cursor_theme_changed (self, NULL, priv->interface_settings);
 }
 
 
@@ -934,6 +958,7 @@ phoc_cursor_finalize (GObject *object)
   g_clear_pointer (&priv->touch_points, g_hash_table_destroy);
   g_clear_pointer (&priv->gestures, free_gestures);
 
+  g_clear_object (&priv->interface_settings);
   phoc_cursor_set_image_surface (self, NULL);
   wl_list_remove (&self->request_set_cursor.link);
 
