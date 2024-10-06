@@ -798,7 +798,7 @@ seat_update_capabilities (PhocSeat *self)
 
   wlr_seat_set_capabilities (self->seat, caps);
 
-  phoc_cursor_set_name (self->cursor, self->cursor->default_xcursor);
+  phoc_cursor_set_name (self->cursor, PHOC_XCURSOR_DEFAULT);
 
   phoc_device_state_update_capabilities (priv->device_state);
 }
@@ -1255,7 +1255,7 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
     }
   }
 
-  phoc_cursor_set_name (seat->cursor, seat->cursor->default_xcursor);
+  phoc_cursor_set_name (seat->cursor, PHOC_XCURSOR_DEFAULT);
   wlr_cursor_warp (seat->cursor->cursor, NULL, seat->cursor->cursor->x,
                    seat->cursor->cursor->y);
 }

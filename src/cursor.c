@@ -624,7 +624,7 @@ seat_view_deco_motion (PhocSeatView *view, double deco_sx, double deco_sy)
     view->has_button_grab = false;
   } else {
     if (is_titlebar) {
-      phoc_cursor_set_name (self, NULL);
+      phoc_cursor_set_name (self, PHOC_XCURSOR_DEFAULT);
     } else if (edges) {
       const char *resize_name = wlr_xcursor_get_resize_name (edges);
       phoc_cursor_set_name (self, resize_name);
@@ -637,7 +637,7 @@ seat_view_deco_leave (PhocSeatView *view)
 {
   PhocCursor *self = phoc_seat_get_cursor (view->seat);
 
-  phoc_cursor_set_name (self, NULL);
+  phoc_cursor_set_name (self, PHOC_XCURSOR_DEFAULT);
   view->has_button_grab = false;
 }
 
@@ -658,7 +658,7 @@ seat_view_deco_button (PhocSeatView *view, double sx,
   PhocViewDecoPart parts = phoc_view_get_deco_part (view->view, sx, sy);
 
   if (state == WLR_BUTTON_RELEASED && (parts & PHOC_VIEW_DECO_PART_TITLEBAR))
-    phoc_cursor_set_name (self, NULL);
+    phoc_cursor_set_name (self, PHOC_XCURSOR_DEFAULT);
 }
 
 static bool
@@ -754,7 +754,7 @@ phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
     return;
 
   if (priv->cursor_client != client || !client) {
-    phoc_cursor_set_name (self, NULL);
+    phoc_cursor_set_name (self, PHOC_XCURSOR_DEFAULT);
     priv->cursor_client = client;
   }
 
@@ -1032,7 +1032,6 @@ phoc_cursor_init (PhocCursor *self)
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   self->cursor = wlr_cursor_create ();
-  self->default_xcursor = PHOC_XCURSOR_DEFAULT;
 
   priv->touch_points = g_hash_table_new_full (g_direct_hash,
                                               g_direct_equal,
@@ -1850,12 +1849,14 @@ phoc_cursor_is_active_touch_id (PhocCursor *self, int touch_id)
 void
 phoc_cursor_set_name (PhocCursor *self, const char *name)
 {
+  g_assert (PHOC_IS_CURSOR (self));
+
   if (phoc_seat_has_pointer (self->seat) == FALSE) {
     wlr_cursor_unset_image (self->cursor);
     return;
   }
 
   if (!name)
-    name = self->default_xcursor;
+    name = PHOC_XCURSOR_DEFAULT;
   wlr_cursor_set_xcursor (self->cursor, self->xcursor_manager, name);
 }
