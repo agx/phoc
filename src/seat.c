@@ -277,7 +277,7 @@ handle_tablet_tool_position (PhocCursor             *cursor,
 
   switch (tool->type) {
   case WLR_TABLET_TOOL_TYPE_MOUSE:
-    // They are 0 either way when they weren't modified
+    /* They are 0 either way when they weren't modified */
     wlr_cursor_move (cursor->cursor, device, dx, dy);
     break;
   default:
@@ -321,7 +321,7 @@ handle_tool_axis (struct wl_listener *listener, void *data)
   struct wlr_tablet_tool_axis_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
 
-  if (!phoc_tool) {       // Should this be an assert?
+  if (!phoc_tool) { // TODO: Should this be an assert?
     g_debug ("Tool Axis, before proximity");
     return;
   }
@@ -604,13 +604,13 @@ phoc_seat_configure_cursor (PhocSeat *seat)
 {
   struct wlr_cursor *cursor = seat->cursor->cursor;
 
-  // reset mappings
+  /* Reset mappings */
   wlr_cursor_map_to_output (cursor, NULL);
 
   g_slist_foreach (seat->touch, reset_device_mappings, seat);
   g_slist_foreach (seat->tablets, reset_device_mappings, seat);
 
-  // configure device to output mappings
+  /* Configure device to output mappings */
   for (GSList *elem = seat->tablets; elem; elem = elem->next) {
     PhocInputDevice *input_device = PHOC_INPUT_DEVICE (elem->data);
     seat_set_device_output_mappings (seat, input_device);
@@ -635,7 +635,7 @@ phoc_seat_init_cursor (PhocSeat *seat)
   phoc_seat_configure_cursor (seat);
   phoc_seat_configure_xcursor (seat);
 
-  // add input signals
+  /* Add input signals */
   wl_signal_add (&wlr_cursor->events.swipe_begin, &seat->cursor->swipe_begin);
   seat->cursor->swipe_begin.notify = handle_swipe_begin;
 
@@ -1591,7 +1591,7 @@ phoc_seat_set_focus_layer (PhocSeat                    *seat,
     return;
   }
 
-  // An existing keyboard grab might try to deny setting focus, so cancel it
+  /* An existing keyboard grab might try to deny setting focus, so cancel it */
   wlr_seat_keyboard_end_grab (seat->seat);
 
   struct wlr_keyboard *keyboard = wlr_seat_get_keyboard (seat->seat);
@@ -1638,7 +1638,7 @@ phoc_seat_set_exclusive_client (PhocSeat *seat, struct wl_client *client)
 
   if (!client) {
     priv->exclusive_client = client;
-    // Triggers a refocus of the topmost surface layer if necessary
+    /* Triggers a refocus of the topmost surface layer if necessary */
     phoc_layer_shell_update_focus ();
     return;
   }
@@ -1733,8 +1733,8 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
 
   phoc_view_get_geometry (view, &geom);
   if (phoc_view_is_maximized (view) || phoc_view_is_tiled (view)) {
-    // calculate normalized (0..1) position of cursor in maximized window
-    // and make it stay the same after restoring saved size
+    /* Calculate normalized (0..1) position of cursor in maximized window
+     * and make it stay the same after restoring saved size */
     double x = (cursor->cursor->x - view->box.x) / view->box.width;
     double y = (cursor->cursor->y - view->box.y) / view->box.height;
     cursor->view_x = cursor->cursor->x - x * (view->saved.width ?: view->box.width);
