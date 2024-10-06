@@ -50,6 +50,8 @@ typedef struct _PhocCursorPrivate {
   /* The compositor tracked touch points */
   GHashTable                *touch_points;
 
+  gboolean                   has_pointer_motion;
+
   /* State of the animated view when cursor touches a screen edge */
   struct {
     PhocColorRect         *rect;
@@ -83,6 +85,26 @@ static void handle_pointer_frame (struct wl_listener *listener, void *data);
 static void handle_touch_frame (struct wl_listener *listener, void *data);
 
 /* {{{ Cursor image */
+
+static void
+phoc_cursor_show (PhocCursor *self)
+{
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
+
+  if (!phoc_seat_has_pointer (self->seat) || !priv->has_pointer_motion)
+    return;
+
+  if (priv->image_surface) {
+    phoc_cursor_set_image (self,
+                           priv->image_client,
+                           priv->image_surface,
+                           priv->hotspot_x,
+                           priv->hotspot_y);
+  } else {
+    phoc_cursor_set_name (self, priv->image_client, priv->image_name);
+  }
+}
+
 
 static void
 phoc_cursor_set_image_surface (PhocCursor *self, struct wlr_surface *surface)
@@ -1307,7 +1329,12 @@ phoc_cursor_pointer_motion (PhocCursor              *self,
                             guint32                  time_msec)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
+  if (!priv->has_pointer_motion) {
+    priv->has_pointer_motion = TRUE;
+    phoc_cursor_show (self);
+  }
   phoc_desktop_notify_activity (desktop, self->seat);
 
   wlr_relative_pointer_manager_v1_send_relative_motion (desktop->relative_pointer_manager,
@@ -1426,7 +1453,12 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = wl_container_of (listener, self, axis);
   struct wlr_pointer_axis_event *event = data;
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
+  if (!priv->has_pointer_motion) {
+    priv->has_pointer_motion = TRUE;
+    phoc_cursor_show (self);
+  }
   phoc_desktop_notify_activity (desktop, self->seat);
 
   send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event->time_msec,
@@ -1913,7 +1945,7 @@ phoc_cursor_set_name (PhocCursor *self, struct wl_client *client, const char *na
   priv->image_client = client;
 
   /* Seat does not have a usable pointing device */
-  if (!phoc_seat_has_pointer (self->seat)) {
+  if (!phoc_seat_has_pointer (self->seat) || !priv->has_pointer_motion) {
     wlr_cursor_unset_image (self->cursor);
     return;
   }
@@ -1956,7 +1988,7 @@ phoc_cursor_set_image (PhocCursor         *self,
   priv->image_client = client;
 
   /* Seat does not have a usable pointing device */
-  if (!phoc_seat_has_pointer (self->seat))
+  if (!phoc_seat_has_pointer (self->seat) || !priv->has_pointer_motion)
     return;
 
   wlr_cursor_set_surface (self->cursor, surface, hotspot_x, hotspot_y);
