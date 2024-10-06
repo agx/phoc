@@ -419,18 +419,27 @@ handle_tablet_tool_set_cursor (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocTabletTool *tool = wl_container_of (listener, tool, set_cursor);
-  struct wlr_tablet_v2_event_cursor *evt = data;
-
-  struct wlr_seat_pointer_request_set_cursor_event event = {
-    .surface = evt->surface,
-    .hotspot_x = evt->hotspot_x,
-    .hotspot_y = evt->hotspot_y,
-    .serial = evt->serial,
-    .seat_client = evt->seat_client,
-  };
+  struct wlr_tablet_v2_event_cursor *event = data;
+  struct wlr_surface *focused_surface = event->seat_client->seat->pointer_state.focused_surface;
+  struct wl_client *focused_client = NULL;
+  gboolean has_focused = focused_surface != NULL && focused_surface->resource != NULL;
 
   phoc_desktop_notify_activity (desktop, tool->seat);
-  phoc_cursor_handle_request_set_cursor (tool->seat->cursor, &event);
+
+  if (has_focused)
+    focused_client = wl_resource_get_client (focused_surface->resource);
+
+  if (event->seat_client->client != focused_client ||
+      phoc_cursor_get_mode (tool->seat->cursor) != PHOC_CURSOR_PASSTHROUGH) {
+    g_debug ("Denying request to set cursor from unfocused client");
+    return;
+  }
+
+  phoc_cursor_set_image (tool->seat->cursor,
+                         focused_client,
+                         event->surface,
+                         event->hotspot_x,
+                         event->hotspot_y);
 }
 
 static void
@@ -468,7 +477,7 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
 
     /* Clear cursor image if there's no pointing device. */
     if (phoc_seat_has_pointer (cursor->seat) == FALSE)
-      phoc_cursor_set_name (cursor, NULL);
+      phoc_cursor_set_name (cursor, NULL, NULL);
 
     return;
   }
@@ -676,6 +685,7 @@ phoc_seat_init_cursor (PhocSeat *seat)
   wl_signal_add (&wlr_cursor->events.tablet_tool_button, &seat->cursor->tool_button);
   seat->cursor->tool_button.notify = handle_tool_button;
 
+  /* TODO: move setup to PhocCursor */
   wl_signal_add (&seat->seat->events.request_set_cursor, &seat->cursor->request_set_cursor);
   seat->cursor->request_set_cursor.notify = handle_request_set_cursor;
 
@@ -798,7 +808,7 @@ seat_update_capabilities (PhocSeat *self)
 
   wlr_seat_set_capabilities (self->seat, caps);
 
-  phoc_cursor_set_name (self->cursor, PHOC_XCURSOR_DEFAULT);
+  phoc_cursor_set_name (self->cursor, NULL, PHOC_XCURSOR_DEFAULT);
 
   phoc_device_state_update_capabilities (priv->device_state);
 }
@@ -1255,7 +1265,7 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
     }
   }
 
-  phoc_cursor_set_name (seat->cursor, PHOC_XCURSOR_DEFAULT);
+  phoc_cursor_set_name (seat->cursor, NULL, PHOC_XCURSOR_DEFAULT);
   wlr_cursor_warp (seat->cursor->cursor, NULL, seat->cursor->cursor->x,
                    seat->cursor->cursor->y);
 }
@@ -1749,7 +1759,7 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
   }
   wlr_seat_pointer_clear_focus (seat->seat);
 
-  phoc_cursor_set_name (seat->cursor, PHOC_XCURSOR_MOVE);
+  phoc_cursor_set_name (seat->cursor, NULL, PHOC_XCURSOR_MOVE);
 }
 
 void
@@ -1789,7 +1799,7 @@ phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
 
   const char *resize_name = wlr_xcursor_get_resize_name (edges);
 
-  phoc_cursor_set_name (seat->cursor, resize_name);
+  phoc_cursor_set_name (seat->cursor, NULL, resize_name);
 }
 
 void

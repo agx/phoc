@@ -141,7 +141,12 @@ GSList     *phoc_cursor_get_gestures             (PhocCursor                    
 
 gboolean    phoc_cursor_is_active_touch_id       (PhocCursor                             *self,
                                                   int                                     touch_id);
-void        phoc_cursor_set_name (PhocCursor *self, const char *name);
+void        phoc_cursor_set_name (PhocCursor *self, struct wl_client *client, const char *name);
+void        phoc_cursor_set_image (PhocCursor         *self,
+                                   struct wl_client   *client,
+                                   struct wlr_surface *surface,
+                                   int32_t             hotspot_x,
+                                   int32_t             hotspot_y);
 
 PhocCursorMode phoc_cursor_get_mode (PhocCursor *self);
 void        phoc_cursor_set_mode (PhocCursor *self, PhocCursorMode mode);
