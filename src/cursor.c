@@ -63,7 +63,7 @@ typedef struct _PhocCursorPrivate {
 
   /* The cursor */
   PhocCursorMode             mode;
-  struct wl_client          *cursor_client;
+  struct wl_client          *image_client;
   struct wlr_surface        *image_surface;
   struct wl_listener         image_surface_destroy;
   const char                *image_name;
@@ -105,7 +105,7 @@ handle_image_surface_destroy (struct wl_listener *listener, void *data)
   PhocCursorPrivate *priv = wl_container_of (listener, priv, image_surface_destroy);
   PhocCursor *self = PHOC_CURSOR_SELF (priv);
 
-  phoc_cursor_set_name (self, priv->cursor_client, priv->image_name);
+  phoc_cursor_set_name (self, priv->image_client, priv->image_name);
 }
 
 
@@ -811,9 +811,9 @@ phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
   if (surface && !phoc_seat_allow_input (seat, surface->resource))
     return;
 
-  if (priv->cursor_client != client || !client) {
+  if (priv->image_client != client || !client) {
     phoc_cursor_set_name (self, NULL, PHOC_XCURSOR_DEFAULT);
-    priv->cursor_client = client;
+    priv->image_client = client;
   }
 
   if (view) {
@@ -1911,7 +1911,7 @@ phoc_cursor_set_name (PhocCursor *self, struct wl_client *client, const char *na
   phoc_cursor_set_image_surface (self, NULL);
   priv->hotspot_x = priv->hotspot_y = 0;
   priv->image_name = name;
-  priv->cursor_client = client;
+  priv->image_client = client;
 
   /* Seat does not have a usable pointing device */
   if (!phoc_seat_has_pointer (self->seat)) {
@@ -1954,7 +1954,7 @@ phoc_cursor_set_image (PhocCursor         *self,
   priv->image_name = NULL;
   priv->hotspot_x = hotspot_x;
   priv->hotspot_y = hotspot_y;
-  priv->cursor_client = client;
+  priv->image_client = client;
 
   /* Seat does not have a usable pointing device */
   if (!phoc_seat_has_pointer (self->seat))
