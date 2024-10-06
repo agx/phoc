@@ -63,13 +63,14 @@ typedef struct _PhocCursorPrivate {
   } view_state;
 
   /* The cursor */
-  PhocCursorMode             mode;
-  struct wl_client          *image_client;
-  struct wlr_surface        *image_surface;
-  struct wl_listener         image_surface_destroy;
-  const char                *image_name;
-  int32_t                    hotspot_x;
-  int32_t                    hotspot_y;
+  PhocCursorMode              mode;
+  struct wl_client           *image_client;
+  struct wlr_surface         *image_surface;
+  struct wl_listener          image_surface_destroy;
+  const char                 *image_name;
+  int32_t                     hotspot_x;
+  int32_t                     hotspot_y;
+  struct wlr_xcursor_manager *xcursor_manager;
 } PhocCursorPrivate;
 
 
@@ -881,8 +882,8 @@ phoc_cursor_constructed (GObject *object)
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   g_assert (self->cursor);
-  self->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
-  g_assert (self->xcursor_manager);
+  priv->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
+  g_assert (priv->xcursor_manager);
 
   wl_signal_add (&wlr_cursor->events.motion, &self->motion);
   self->motion.notify = handle_pointer_motion_relative;
@@ -954,7 +955,7 @@ phoc_cursor_finalize (GObject *object)
   wl_list_remove (&self->tool_button.link);
   wl_list_remove (&self->focus_change.link);
 
-  g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
+  g_clear_pointer (&priv->xcursor_manager, wlr_xcursor_manager_destroy);
   g_clear_pointer (&self->cursor, wlr_cursor_destroy);
 
   G_OBJECT_CLASS (phoc_cursor_parent_class)->finalize (object);
@@ -1955,7 +1956,7 @@ phoc_cursor_set_name (PhocCursor *self, struct wl_client *client, const char *na
     return;
   }
 
-  wlr_cursor_set_xcursor (self->cursor, self->xcursor_manager, priv->image_name);
+  wlr_cursor_set_xcursor (self->cursor, priv->xcursor_manager, priv->image_name);
 }
 
 /**
@@ -2041,11 +2042,14 @@ phoc_cursor_get_mode (PhocCursor *self)
 void
 phoc_cursor_set_xcursor_theme (PhocCursor *self, const char *theme, uint32_t size)
 {
-  g_assert (PHOC_IS_CURSOR (self));
+  PhocCursorPrivate *priv;
 
-  g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
-  self->xcursor_manager = wlr_xcursor_manager_create (theme, size);
-  g_assert (self->xcursor_manager);
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  g_clear_pointer (&priv->xcursor_manager, wlr_xcursor_manager_destroy);
+  priv->xcursor_manager = wlr_xcursor_manager_create (theme, size);
+  g_assert (priv->xcursor_manager);
 
   phoc_cursor_configure_xcursor (self);
 }
@@ -2060,14 +2064,16 @@ phoc_cursor_set_xcursor_theme (PhocCursor *self, const char *theme, uint32_t siz
 void
 phoc_cursor_configure_xcursor (PhocCursor *self)
 {
+  PhocCursorPrivate *priv;
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocOutput *output;
 
   g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
 
   wl_list_for_each (output, &desktop->outputs, link) {
     float scale = phoc_output_get_scale (output);
-    if (!wlr_xcursor_manager_load (self->xcursor_manager, scale)) {
+    if (!wlr_xcursor_manager_load (priv->xcursor_manager, scale)) {
       g_critical ("Cannot load xcursor theme for output '%s' "
                   "with scale %f", output->wlr_output->name, scale);
     }
