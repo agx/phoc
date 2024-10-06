@@ -881,6 +881,8 @@ phoc_cursor_constructed (GObject *object)
   struct wlr_cursor *wlr_cursor = self->cursor;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
+  G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
+
   g_assert (self->cursor);
   priv->xcursor_manager = wlr_xcursor_manager_create (NULL, PHOC_XCURSOR_SIZE);
   g_assert (priv->xcursor_manager);
@@ -910,7 +912,6 @@ phoc_cursor_constructed (GObject *object)
   wl_list_init (&priv->image_surface_destroy.link);
   priv->image_surface_destroy.notify = handle_image_surface_destroy;
 
-  G_OBJECT_CLASS (phoc_cursor_parent_class)->constructed (object);
 }
 
 
