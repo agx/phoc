@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
+ *               2023-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later or MIT
  */
@@ -467,7 +468,7 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
 
     /* Clear cursor image if there's no pointing device. */
     if (phoc_seat_has_pointer (cursor->seat) == FALSE)
-      phoc_seat_maybe_set_cursor (cursor->seat, cursor->default_xcursor);
+      phoc_cursor_set_name (cursor, NULL);
 
     return;
   }
@@ -797,7 +798,7 @@ seat_update_capabilities (PhocSeat *self)
 
   wlr_seat_set_capabilities (self->seat, caps);
 
-  phoc_seat_maybe_set_cursor (self, self->cursor->default_xcursor);
+  phoc_cursor_set_name (self->cursor, self->cursor->default_xcursor);
 
   phoc_device_state_update_capabilities (priv->device_state);
 }
@@ -1254,7 +1255,7 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
     }
   }
 
-  phoc_seat_maybe_set_cursor (seat, seat->cursor->default_xcursor);
+  phoc_cursor_set_name (seat->cursor, seat->cursor->default_xcursor);
   wlr_cursor_warp (seat->cursor->cursor, NULL, seat->cursor->cursor->x,
                    seat->cursor->cursor->y);
 }
@@ -1748,7 +1749,7 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
   }
   wlr_seat_pointer_clear_focus (seat->seat);
 
-  phoc_seat_maybe_set_cursor (seat, PHOC_XCURSOR_MOVE);
+  phoc_cursor_set_name (seat->cursor, PHOC_XCURSOR_MOVE);
 }
 
 void
@@ -1788,7 +1789,7 @@ phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
 
   const char *resize_name = wlr_xcursor_get_resize_name (edges);
 
-  phoc_seat_maybe_set_cursor (seat, resize_name);
+  phoc_cursor_set_name (seat->cursor, resize_name);
 }
 
 void
@@ -1819,25 +1820,6 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
 
   cursor->mode = PHOC_CURSOR_PASSTHROUGH;
   phoc_cursor_update_focus (seat->cursor);
-}
-
-/**
- * phoc_seat_maybe_set_cursor:
- * @self: a PhocSeat
- * @name: (nullable): a cursor name or %NULL for the themes default cursor
- *
- * Show a cursor if the seat has pointer capabilities
- */
-void
-phoc_seat_maybe_set_cursor (PhocSeat *self, const char *name)
-{
-  if (phoc_seat_has_pointer (self) == FALSE) {
-    wlr_cursor_unset_image (self->cursor->cursor);
-  } else {
-    if (!name)
-      name = self->cursor->default_xcursor;
-    wlr_cursor_set_xcursor (self->cursor->cursor, self->cursor->xcursor_manager, name);
-  }
 }
 
 /**

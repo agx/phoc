@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
+ *               2023-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later or MIT
  */
@@ -623,10 +624,10 @@ seat_view_deco_motion (PhocSeatView *view, double deco_sx, double deco_sy)
     view->has_button_grab = false;
   } else {
     if (is_titlebar) {
-      phoc_seat_maybe_set_cursor (self->seat, NULL);
+      phoc_cursor_set_name (self, NULL);
     } else if (edges) {
       const char *resize_name = wlr_xcursor_get_resize_name (edges);
-      phoc_seat_maybe_set_cursor (self->seat, resize_name);
+      phoc_cursor_set_name (self, resize_name);
     }
   }
 }
@@ -636,7 +637,7 @@ seat_view_deco_leave (PhocSeatView *view)
 {
   PhocCursor *self = phoc_seat_get_cursor (view->seat);
 
-  phoc_seat_maybe_set_cursor (self->seat, NULL);
+  phoc_cursor_set_name (self, NULL);
   view->has_button_grab = false;
 }
 
@@ -644,6 +645,8 @@ static void
 seat_view_deco_button (PhocSeatView *view, double sx,
                        double sy, uint32_t button, uint32_t state)
 {
+  PhocCursor *self = phoc_seat_get_cursor (view->seat);
+
   if (button == BTN_LEFT && state == WLR_BUTTON_PRESSED) {
     view->has_button_grab = true;
     view->grab_sx = sx;
@@ -654,9 +657,8 @@ seat_view_deco_button (PhocSeatView *view, double sx,
 
   PhocViewDecoPart parts = phoc_view_get_deco_part (view->view, sx, sy);
 
-  if (state == WLR_BUTTON_RELEASED && (parts & PHOC_VIEW_DECO_PART_TITLEBAR)) {
-    phoc_seat_maybe_set_cursor (view->seat, NULL);
-  }
+  if (state == WLR_BUTTON_RELEASED && (parts & PHOC_VIEW_DECO_PART_TITLEBAR))
+    phoc_cursor_set_name (self, NULL);
 }
 
 static bool
@@ -752,7 +754,7 @@ phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
     return;
 
   if (priv->cursor_client != client || !client) {
-    phoc_seat_maybe_set_cursor (seat, NULL);
+    phoc_cursor_set_name (self, NULL);
     priv->cursor_client = client;
   }
 
@@ -1836,4 +1838,23 @@ phoc_cursor_is_active_touch_id (PhocCursor *self, int touch_id)
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   return !!g_hash_table_lookup (priv->touch_points, GINT_TO_POINTER (touch_id));
+}
+
+/**
+ * phoc_cursor_set_name:
+ * @self: The cursor
+ * @name: (nullable): a cursor name or %NULL for the themes default cursor
+ *
+ * Select a cursor from the cursor theme by its name.
+ */
+void
+phoc_cursor_set_name (PhocCursor *self, const char *name)
+{
+  if (phoc_seat_has_pointer (self->seat) == FALSE) {
+    wlr_cursor_unset_image (self->cursor);
+  } else {
+    if (!name)
+      name = self->default_xcursor;
+    wlr_cursor_set_xcursor (self->cursor, self->xcursor_manager, name);
+  }
 }
