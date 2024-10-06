@@ -877,6 +877,7 @@ timespec_to_msec (const struct timespec *a)
 static void
 phoc_cursor_constructed (GObject *object)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = PHOC_CURSOR (object);
   struct wlr_cursor *wlr_cursor = self->cursor;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
@@ -912,6 +913,7 @@ phoc_cursor_constructed (GObject *object)
   wl_list_init (&priv->image_surface_destroy.link);
   priv->image_surface_destroy.notify = handle_image_surface_destroy;
 
+  wlr_cursor_attach_output_layout (wlr_cursor, desktop->layout);
 }
 
 

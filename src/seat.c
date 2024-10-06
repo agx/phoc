@@ -622,13 +622,9 @@ phoc_seat_configure_cursor (PhocSeat *seat)
 static void
 phoc_seat_init_cursor (PhocSeat *seat)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-
   seat->cursor = phoc_cursor_new (seat);
 
   struct wlr_cursor *wlr_cursor = seat->cursor->cursor;
-
-  wlr_cursor_attach_output_layout (wlr_cursor, desktop->layout);
 
   phoc_seat_configure_cursor (seat);
   phoc_cursor_configure_xcursor (seat->cursor);
