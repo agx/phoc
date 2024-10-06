@@ -631,7 +631,7 @@ phoc_seat_init_cursor (PhocSeat *seat)
   wlr_cursor_attach_output_layout (wlr_cursor, desktop->layout);
 
   phoc_seat_configure_cursor (seat);
-  phoc_seat_configure_xcursor (seat);
+  phoc_cursor_configure_xcursor (seat->cursor);
 
   /* Add input signals */
   wl_signal_add (&wlr_cursor->events.swipe_begin, &seat->cursor->swipe_begin);
@@ -1235,24 +1235,6 @@ phoc_seat_add_device (PhocSeat *seat, struct wlr_input_device *device)
   seat_update_capabilities (seat);
 }
 
-void
-phoc_seat_configure_xcursor (PhocSeat *seat)
-{
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-  PhocOutput *output;
-
-  wl_list_for_each (output, &desktop->outputs, link) {
-    float scale = phoc_output_get_scale (output);
-    if (!wlr_xcursor_manager_load (seat->cursor->xcursor_manager, scale)) {
-      g_critical ("Cannot load xcursor theme for output '%s' "
-                  "with scale %f", output->wlr_output->name, scale);
-    }
-  }
-
-  phoc_cursor_set_name (seat->cursor, NULL, PHOC_XCURSOR_DEFAULT);
-  wlr_cursor_warp (seat->cursor->cursor, NULL, seat->cursor->cursor->x,
-                   seat->cursor->cursor->y);
-}
 
 bool
 phoc_seat_grab_meta_press (PhocSeat *seat)

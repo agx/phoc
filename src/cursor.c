@@ -2047,5 +2047,32 @@ phoc_cursor_set_xcursor_theme (PhocCursor *self, const char *theme, uint32_t siz
   self->xcursor_manager = wlr_xcursor_manager_create (theme, size);
   g_assert (self->xcursor_manager);
 
-  phoc_seat_configure_xcursor (self->seat);
+  phoc_cursor_configure_xcursor (self);
+}
+
+/**
+ * phoc_cursor_configure_xcursor:
+ * @self: The cursor
+ *
+ * Load cursor theme for the current output scales and set a default
+ * cursor.
+ */
+void
+phoc_cursor_configure_xcursor (PhocCursor *self)
+{
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_CURSOR (self));
+
+  wl_list_for_each (output, &desktop->outputs, link) {
+    float scale = phoc_output_get_scale (output);
+    if (!wlr_xcursor_manager_load (self->xcursor_manager, scale)) {
+      g_critical ("Cannot load xcursor theme for output '%s' "
+                  "with scale %f", output->wlr_output->name, scale);
+    }
+  }
+
+  phoc_cursor_set_name (self, NULL, PHOC_XCURSOR_DEFAULT);
+  wlr_cursor_warp (self->cursor, NULL, self->cursor->x, self->cursor->y);
 }

@@ -20,6 +20,7 @@
 
 #include "anim/animatable.h"
 #include "bling.h"
+#include "cursor.h"
 #include "cutouts-overlay.h"
 #include "settings.h"
 #include "layer-shell.h"
@@ -901,7 +902,7 @@ phoc_output_initable_init (GInitable    *initable,
 
     g_assert (PHOC_IS_SEAT (seat));
     phoc_seat_configure_cursor (seat);
-    phoc_seat_configure_xcursor (seat);
+    phoc_cursor_configure_xcursor (seat->cursor);
   }
 
   phoc_layer_shell_arrange (self);
