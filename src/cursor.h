@@ -17,6 +17,12 @@
 
 G_BEGIN_DECLS
 
+#define PHOC_XCURSOR_SIZE 24
+
+#define PHOC_XCURSOR_DEFAULT "left_ptr"
+#define PHOC_XCURSOR_MOVE "grabbing"
+#define PHOC_XCURSOR_ROTATE "grabbing"
+
 #define PHOC_TYPE_CURSOR (phoc_cursor_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocCursor, phoc_cursor, PHOC, CURSOR, GObject)

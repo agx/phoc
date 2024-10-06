@@ -34,7 +34,6 @@
 #include "tablet.h"
 #include "input-method-relay.h"
 #include "touch.h"
-#include "xcursor.h"
 #include "xwayland-surface.h"
 
 enum {
