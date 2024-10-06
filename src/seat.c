@@ -1306,7 +1306,7 @@ seat_view_destroy (PhocSeatView *seat_view)
 
   if (view == phoc_seat_get_focus_view (seat)) {
     priv->has_focus = false;
-    seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
+    phoc_cursor_set_mode (seat->cursor, PHOC_CURSOR_PASSTHROUGH);
   }
 
   if (seat_view == seat->cursor->pointer_view) {
@@ -1517,7 +1517,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
     phoc_view_activate (prev_focus, false);
 
   if (view == NULL) {
-    seat->cursor->mode = PHOC_CURSOR_PASSTHROUGH;
+    phoc_cursor_set_mode (seat->cursor, PHOC_CURSOR_PASSTHROUGH);
     wlr_seat_keyboard_clear_focus (seat->seat);
     phoc_input_method_relay_set_focus (&seat->im_relay, NULL);
     return;
@@ -1724,7 +1724,7 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
 
   PhocCursor *cursor = seat->cursor;
 
-  cursor->mode = PHOC_CURSOR_MOVE;
+  phoc_cursor_set_mode (cursor, PHOC_CURSOR_MOVE);
   if (seat->touch_id != -1)
     wlr_cursor_warp (cursor->cursor, NULL, seat->touch_x, seat->touch_y);
 
@@ -1760,7 +1760,7 @@ phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
 
   PhocCursor *cursor = seat->cursor;
 
-  cursor->mode = PHOC_CURSOR_RESIZE;
+  phoc_cursor_set_mode (cursor, PHOC_CURSOR_RESIZE);
   if (seat->touch_id != -1)
     wlr_cursor_warp (cursor->cursor, NULL, seat->touch_x, seat->touch_y);
 
@@ -1801,7 +1801,7 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
   if (view == NULL)
     return;
 
-  switch (cursor->mode) {
+  switch (phoc_cursor_get_mode (cursor)) {
   case PHOC_CURSOR_MOVE:
     if (!phoc_view_is_fullscreen (view))
       phoc_view_move (view, cursor->view_x, cursor->view_y);
@@ -1815,10 +1815,10 @@ phoc_seat_end_compositor_grab (PhocSeat *seat)
   case PHOC_CURSOR_PASSTHROUGH:
     break;
   default:
-    g_error ("Invalid cursor mode %d", cursor->mode);
+    g_error ("Invalid cursor mode %d", phoc_cursor_get_mode (cursor));
   }
 
-  cursor->mode = PHOC_CURSOR_PASSTHROUGH;
+  phoc_cursor_set_mode (cursor, PHOC_CURSOR_PASSTHROUGH);
   phoc_cursor_update_focus (seat->cursor);
 }
 

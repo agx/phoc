@@ -1860,3 +1860,34 @@ phoc_cursor_set_name (PhocCursor *self, const char *name)
     name = PHOC_XCURSOR_DEFAULT;
   wlr_cursor_set_xcursor (self->cursor, self->xcursor_manager, name);
 }
+
+/**
+ * phoc_cursor_set_mode:
+ * @self: The cursor
+ * @mode: The cursor mode
+ *
+ * Set the cursor mode
+ */
+void
+phoc_cursor_set_mode (PhocCursor *self, PhocCursorMode mode)
+{
+  g_assert (PHOC_IS_CURSOR (self));
+
+  self->mode = mode;
+}
+
+/**
+ * phoc_cursor_get_mode:
+ * @self: The cursor
+ *
+ * Get the current cursor mode
+ *
+ * Returns: The cursor mode
+ */
+PhocCursorMode
+phoc_cursor_get_mode (PhocCursor *self)
+{
+  g_assert (PHOC_IS_CURSOR (self));
+
+  return self->mode;
+}

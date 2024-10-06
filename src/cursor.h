@@ -25,6 +25,14 @@ G_DECLARE_FINAL_TYPE (PhocCursor, phoc_cursor, PHOC, CURSOR, GObject)
 #define PHOC_SHELL_REVEAL_POINTER_THRESHOLD 0
 #define PHOC_EDGE_SNAP_THRESHOLD 20
 
+/**
+ * PhocCursorMode:
+ * @PHOC_CURSOR_PASSTHROUGH: Cursor is passed through to the client
+ * @PHOC_CUSROR_MOVE: Cursor is used for a window move operation
+ * @PHOC_CURSOR_RESIZE: Cursor is used for a window resize operation
+ *
+ * The mode of the cursor.
+ */
 typedef enum {
   PHOC_CURSOR_PASSTHROUGH = 0,
   PHOC_CURSOR_MOVE = 1,
@@ -136,5 +144,8 @@ GSList     *phoc_cursor_get_gestures             (PhocCursor                    
 gboolean    phoc_cursor_is_active_touch_id       (PhocCursor                             *self,
                                                   int                                     touch_id);
 void        phoc_cursor_set_name (PhocCursor *self, const char *name);
+
+PhocCursorMode phoc_cursor_get_mode (PhocCursor *self);
+void        phoc_cursor_set_mode (PhocCursor *self, PhocCursorMode mode);
 
 G_END_DECLS
