@@ -61,7 +61,6 @@ typedef struct _PhocCursor {
   PhocCursorMode                    mode;
 
   struct wlr_xcursor_manager       *xcursor_manager;
-  struct wl_client                 *cursor_client;
 
   /* For moving and resizing surfaces */
   int                               offs_x, offs_y;

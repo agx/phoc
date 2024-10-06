@@ -45,10 +45,10 @@ static GParamSpec *props[PROP_LAST_PROP];
 typedef struct _PhocCursorPrivate {
   /* Would be good to store on the surface itself */
   PhocDraggableLayerSurface *drag_surface;
-  GSList *gestures;
+  GSList                    *gestures;
 
   /* The compositor tracked touch points */
-  GHashTable       *touch_points;
+  GHashTable                *touch_points;
 
   /* State of the animated view when cursor touches a screen edge */
   struct {
@@ -59,6 +59,9 @@ typedef struct _PhocCursorPrivate {
     PhocOutput            *output;
     PhocTimedAnimation    *anim;
   } view_state;
+
+  /* The cursor */
+  struct wl_client          *cursor_client;
 } PhocCursorPrivate;
 
 
@@ -739,6 +742,7 @@ phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
   PhocSeat *seat = self->seat;
   struct wl_client *client = NULL;
   struct wlr_surface *surface;
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   surface = phoc_desktop_wlr_surface_at (desktop, self->cursor->x, self->cursor->y, &sx, &sy, &view);
   if (surface)
@@ -747,9 +751,9 @@ phoc_passthrough_cursor (PhocCursor *self, uint32_t time)
   if (surface && !phoc_seat_allow_input (seat, surface->resource))
     return;
 
-  if (self->cursor_client != client || !client) {
+  if (priv->cursor_client != client || !client) {
     phoc_seat_maybe_set_cursor (seat, NULL);
-    self->cursor_client = client;
+    priv->cursor_client = client;
   }
 
   if (view) {
@@ -1654,6 +1658,7 @@ phoc_cursor_handle_request_set_cursor (PhocCursor                               
   struct wlr_surface *focused_surface = event->seat_client->seat->pointer_state.focused_surface;
   bool has_focused = focused_surface != NULL && focused_surface->resource != NULL;
   struct wl_client *focused_client = NULL;
+  PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
 
   if (has_focused)
     focused_client = wl_resource_get_client (focused_surface->resource);
@@ -1664,7 +1669,7 @@ phoc_cursor_handle_request_set_cursor (PhocCursor                               
   }
 
   wlr_cursor_set_surface (self->cursor, event->surface, event->hotspot_x, event->hotspot_y);
-  self->cursor_client = event->seat_client->client;
+  priv->cursor_client = event->seat_client->client;
 }
 
 void
