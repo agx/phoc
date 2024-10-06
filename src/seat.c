@@ -1242,7 +1242,7 @@ phoc_seat_configure_xcursor (PhocSeat *seat)
   PhocOutput *output;
 
   wl_list_for_each (output, &desktop->outputs, link) {
-    float scale = output->wlr_output->scale;
+    float scale = phoc_output_get_scale (output);
     if (!wlr_xcursor_manager_load (seat->cursor->xcursor_manager, scale)) {
       g_critical ("Cannot load xcursor theme for output '%s' "
                   "with scale %f", output->wlr_output->name, scale);
