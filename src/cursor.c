@@ -1852,9 +1852,10 @@ phoc_cursor_set_name (PhocCursor *self, const char *name)
 {
   if (phoc_seat_has_pointer (self->seat) == FALSE) {
     wlr_cursor_unset_image (self->cursor);
-  } else {
-    if (!name)
-      name = self->default_xcursor;
-    wlr_cursor_set_xcursor (self->cursor, self->xcursor_manager, name);
+    return;
   }
+
+  if (!name)
+    name = self->default_xcursor;
+  wlr_cursor_set_xcursor (self->cursor, self->xcursor_manager, name);
 }
