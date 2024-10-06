@@ -138,3 +138,4 @@ GSList     *phoc_cursor_get_gestures             (PhocCursor                    
 
 gboolean    phoc_cursor_is_active_touch_id       (PhocCursor                             *self,
                                                   int                                     touch_id);
+G_END_DECLS
