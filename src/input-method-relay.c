@@ -2,11 +2,12 @@
 
 #include "phoc-config.h"
 
-#include <assert.h>
-#include <stdlib.h>
 #include "seat.h"
 #include "server.h"
 #include "input-method-relay.h"
+
+#include <assert.h>
+#include <stdlib.h>
 
 /**
  * PhocTextInput:
