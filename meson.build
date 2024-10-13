@@ -11,6 +11,7 @@ project('phoc', 'c',
 
 add_project_arguments([
   '-DWLR_USE_UNSTABLE',
+  '-DGMOBILE_USE_UNSTABLE_API',
   '-I' + meson.project_build_root(),
 ], language: 'c')
 
