@@ -65,18 +65,17 @@ popup_get_pos (PhocViewChild *child, int *sx, int *sy)
 static void
 popup_unconstrain (PhocXdgPopup* self)
 {
-  /* get the output of the popup's positioner anchor point and convert it to
-   * the toplevel parent's coordinate system and then pass it to
-   * wlr_xdg_popup_unconstrain_from_box */
   PhocView *view = phoc_view_child_get_view (PHOC_VIEW_CHILD (self));
+  struct wlr_box output_box;
+  struct wlr_box usable_area;
+  PhocOutput *output;
 
-  PhocOutput *output = phoc_desktop_layout_get_output (view->desktop, view->box.x, view->box.y);
+  output = phoc_desktop_layout_get_output (view->desktop, view->box.x, view->box.y);
   if (output == NULL)
     return;
 
-  struct wlr_box output_box;
   wlr_output_layout_get_box (view->desktop->layout, output->wlr_output, &output_box);
-  struct wlr_box usable_area = output->usable_area;
+  usable_area = output->usable_area;
   usable_area.x += output_box.x;
   usable_area.y += output_box.y;
 
