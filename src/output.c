@@ -393,6 +393,9 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
       return false;
   }
 
+  if (phoc_output_has_shell_revealed (self))
+    return false;
+
   if (phoc_output_has_layer (self, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY))
     return false;
 

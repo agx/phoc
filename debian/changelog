@@ -1,3 +1,29 @@
+phoc (0.42.1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * treewide: Ack unstable gmobile api in a single place.
+    No need to clutter all source files
+  * input-method-relay: Only submit preedit when not empty.
+    We checked for NULL but need to also check for the empty string as
+    otherwise multiple clicks confuse the client and e.g. GTK4 looses text
+    when double clicking with a pointer.
+    Fixes c252b39d0 ("input-method-relay: Allow to submit preedit")
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/381
+    Tested-by: Julian <juliannfairfax@protonmail.com>
+  * xdg-popup: Delay damaging to the next commit.
+    We want to make sure the old popup position gets damaged but not before
+    the client submits a new buffer. Otherwise we might see the popup
+    flickering at the old position.
+    This fixes flickering selection bubbles in e.g. gnome-text-editor when
+    repositioning them quickly.
+
+  [ Sebastian Krzyszkowiak ]
+  * output: Check for shell reveal before scanning a fullscreen view out.
+    Otherwise the shell will remain hidden (but accepting input) whenever
+    the fullscreen surface behind it can be scanned out directly.
+
+ -- Guido Günther <agx@sigxcpu.org>  Mon, 21 Oct 2024 14:08:45 +0200
+
 phoc (0.42.0) experimental; urgency=medium
 
   * cursor: Don't submit pending im state without a surface.
