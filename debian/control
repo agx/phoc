@@ -17,9 +17,8 @@ Build-Depends:
  pkgconf,
  wayland-protocols,
  libxcb1-dev,
- libwlroots-dev (>= 0.17.1) <!pkg.phoc.embedwlroots>,
- libwlroots-dev (<< 0.18.0) <!pkg.phoc.embedwlroots>,
- xwayland,
+ libwlroots-0.18-dev <!pkg.phoc.embedwlroots>,
+ xwayland (>= 1.23.0),
 # For wlroots subproject build
  hwdata <pkg.phoc.embedwlroots>,
  libcap-dev <pkg.phoc.embedwlroots>,
