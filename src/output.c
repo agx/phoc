@@ -1169,7 +1169,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
   struct wlr_xwayland_surface *child;
 
   wl_list_for_each (child, &surface->children, parent_link) {
-    if (child->surface->mapped) {
+    if (child->surface && child->surface->mapped) {
       double ox = child->x - output_box.x;
       double oy = child->y - output_box.y;
       phoc_output_surface_for_each_surface (self, child->surface, ox, oy, iterator,
