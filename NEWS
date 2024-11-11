@@ -1,3 +1,21 @@
+phoc 0.43~rc1
+-------------
+Released November 2024
+* Fix interaction between predit and pointer
+* Fix flickering text bubbles in e.g. GTK4 text selection
+* Disable direct scan out when we need the shell overlay
+* Fix possible crash with XWayland surfaces
+* Only show cursor when there was mouse movement
+* Support cursor themes
+* More cleanups and fixes
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/381
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/382
+* Contributors:
+    * Evangelos Ribeiro Tzaras
+    * Guido Günther
+    * Sebastian Krzyszkowiak
+
 phoc 0.42.0
 -----------
 Released September 2024
