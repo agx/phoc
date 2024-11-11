@@ -2191,9 +2191,9 @@ phoc_output_transform_box (PhocOutput *self, struct wlr_box *box)
 
   g_assert (PHOC_IS_OUTPUT (self));
 
-  wlr_output_transformed_resolution(self->wlr_output, &ow, &oh);
+  wlr_output_transformed_resolution (self->wlr_output, &ow, &oh);
   transform = wlr_output_transform_invert (self->wlr_output->transform);
-  wlr_box_transform(box, box, transform, ow, oh);
+  wlr_box_transform (box, box, transform, ow, oh);
 }
 
 
