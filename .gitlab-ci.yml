@@ -47,7 +47,7 @@ variables:
         wayland-dev wayland-protocols xcb-util-image-dev xcb-util-renderutil-dev
         xcb-util-wm-dev libseat-dev hwdata-dev libdisplay-info-dev
   XVFB_RUN: xvfb-run -s -noreset
-  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2024-04-04
+  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2024-11-11
 
 .build: &build
   script:
