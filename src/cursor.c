@@ -430,11 +430,11 @@ send_pointer_motion (PhocSeat           *seat,
 }
 
 static void
-send_pointer_button (PhocSeat             *seat,
-                     struct wlr_surface   *surface,
-                     uint32_t              time,
-                     uint32_t              button,
-                     enum wlr_button_state state)
+send_pointer_button (PhocSeat                    *seat,
+                     struct wlr_surface          *surface,
+                     uint32_t                     time,
+                     uint32_t                     button,
+                     enum wl_pointer_button_state state)
 {
   uint32_t serial;
 
