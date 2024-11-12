@@ -1,3 +1,80 @@
+phoc (0.43~rc1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * treewide: Ack unstable gmobile api in a single place. No need to clutter
+    all source files
+  * input-method-relay: Only submit preedit when not empty.
+    We checked for NULL but need to also check for the empty string as
+    otherwise multiple clicks confuse the client and e.g. GTK4 looses text
+    when double clicking with a pointer.
+    Fixes c252b39d0 ("input-method-relay: Allow to submit preedit")
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/381
+    Tested-by: Julian <juliannfairfax@protonmail.com>
+  * cursor: Add G_END_DECLS
+  * cursor: Make cursor_client private
+  * cursor: Move setting of cursor from theme to PhocCursor.
+    No need to have it in the seat.
+  * cursor: Save one indent level
+  * treewide: Use default cursor name.
+    No need to go via a fixed theme default. This allows us to drop the
+    default cursor from PhocCursor.
+  * cursor: Add getters and setters for the cursor mode
+  * cursor: Make mode private
+  * cursor: Move cursor image handling to cursor.
+    It was split between cursor and seat before. To handle that
+    introduce `set_image` and `set_name` methods that either
+    set a cursor by its name or a surface.
+    We also do away with the special `NULL` name handling and let `NULL`
+    rather mean "unset cursor".
+  * seat: Move cursor setting to PhocCursor.
+    No need to go via seat.
+    Helps: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/231
+  * cursor: Rename cursor_client to image_client.
+    It's the client that sets the cursor image not e.g. a client tracked by
+    the cursor.
+  * xcursor: Drop file.
+    It has only a couple of defines that fit into PhocCursor just as well.
+  * cursor: Only show cursor if we have motion events.
+    Many tablets expose a pointing device that isn't usable. Instead of
+    having to override that via libinput rather only ever show a cursor if
+    we had a motion event.
+  * cursor: Allow to set theme
+  * seat: Move xcursor handling to cursor.
+    No need to have parts on the seat
+  * cursor: Make xcursor_manager private
+  * cursor: Chain up to constructed first.
+    The parent constructor should get a chance to run first
+  * cursor: Attach output layout in constructor.
+    Makes the server more self contained
+  * cursor: Set cursor theme via GSettings.
+    We do that at the very end as we already need the output layout mapping
+    set up.
+    Close: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/6
+  * po: Fix path to phoc-dev unit.
+    Fixes efecd3612 ("build: Setup i18n")
+  * docs: Mention examples
+  * ci: Update shared scripts to 891d0bd
+  * ci: Check our markdown.
+    This makes sure we don't regress
+  * xdg-popup: Delay damaging to the next commit.
+    We want to make sure the old popup position gets damaged but not before
+    the client submits a new buffer. Otherwise we might see the popup
+    flickering at the old position.
+    This fixes flickering selection bubbles in e.g. gnome-text-editor when
+    repositioning them quickly.
+
+  [ Sebastian Krzyszkowiak ]
+  * output: Check for shell reveal before scanning a fullscreen view out.
+    Otherwise the shell will remain hidden (but accepting input) whenever
+    the fullscreen surface behind it can be scanned out directly.
+
+  [ Evangelos Ribeiro Tzaras ]
+  * output: Fix possible segfault with XWayland views.
+    Surface might be NULL here, so check before dereferencing it.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/382
+
+ -- Guido Günther <agx@sigxcpu.org>  Mon, 11 Nov 2024 20:15:19 +0100
+
 phoc (0.42.0) experimental; urgency=medium
 
   * cursor: Don't submit pending im state without a surface.
