@@ -127,19 +127,21 @@ phoc_output_frame_callback_info_free (PhocOutputFrameCallbackInfo *cb_info)
  */
 static bool
 get_surface_box (PhocOutputSurfaceIteratorData *data,
-                 struct wlr_surface *surface, int sx, int sy,
-                 struct wlr_box *surface_box)
+                 struct wlr_surface            *wlr_surface,
+                 int                            sx,
+                 int                            sy,
+                 struct wlr_box                *surface_box)
 {
   PhocOutput *self = data->output;
 
-  if (!wlr_surface_has_buffer (surface))
+  if (!wlr_surface_has_buffer (wlr_surface))
     return false;
 
   struct wlr_box box = {
     .x = floor (data->ox + sx),
     .y = floor (data->oy + sy),
-    .width = surface->current.width,
-    .height = surface->current.height,
+    .width = wlr_surface->current.width,
+    .height = wlr_surface->current.height,
   };
 
   if (surface_box != NULL)
@@ -349,20 +351,20 @@ phoc_output_set_gamma_lut (PhocOutput *self, struct wlr_output_state *pending)
 
 static void
 surface_send_frame_done_iterator (PhocOutput         *output,
-                                  struct wlr_surface *surface,
+                                  struct wlr_surface *wlr_surface,
                                   struct wlr_box     *box,
                                   float               scale,
                                   void               *data)
 {
   struct timespec *when = data;
 
-  wlr_surface_send_frame_done (surface, when);
+  wlr_surface_send_frame_done (wlr_surface, when);
 }
 
 
 static void
 count_surface_iterator (PhocOutput         *output,
-                        struct wlr_surface *surface,
+                        struct wlr_surface *wlr_surface,
                         struct wlr_box     *box,
                         float               scale,
                         void               *data)
@@ -598,14 +600,14 @@ phoc_output_handle_needs_frame (struct wl_listener *listener, void *user_data)
 
 static void
 update_output_scale_iterator (PhocOutput         *self,
-                              struct wlr_surface *surface,
+                              struct wlr_surface *wlr_surface,
                               struct wlr_box     *box,
                               float               scale,
                               void               *user_data)
 
 
 {
-  phoc_utils_wlr_surface_update_scales (surface);
+  phoc_utils_wlr_surface_update_scales (wlr_surface);
 }
 
 
@@ -1024,7 +1026,7 @@ phoc_output_class_init (PhocOutputClass *klass)
 }
 
 static void
-phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
+phoc_output_for_each_surface_iterator (struct wlr_surface *wlr_surface,
                                        int                 sx,
                                        int                 sy,
                                        void               *_data)
@@ -1032,13 +1034,13 @@ phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
   PhocOutputSurfaceIteratorData *data = _data;
 
   struct wlr_box box;
-  bool intersects = get_surface_box (data, surface, sx, sy, &box);
+  bool intersects = get_surface_box (data, wlr_surface, sx, sy, &box);
 
   if (!intersects) {
     return;
   }
 
-  data->user_iterator (data->output, surface, &box, data->scale, data->user_data);
+  data->user_iterator (data->output, wlr_surface, &box, data->scale, data->user_data);
 }
 
 /**
@@ -1054,7 +1056,7 @@ phoc_output_for_each_surface_iterator (struct wlr_surface *surface,
  */
 void
 phoc_output_surface_for_each_surface (PhocOutput          *self,
-                                      struct wlr_surface  *surface,
+                                      struct wlr_surface  *wlr_surface,
                                       double               ox,
                                       double               oy,
                                       PhocSurfaceIterator  iterator,
@@ -1066,12 +1068,12 @@ phoc_output_surface_for_each_surface (PhocOutput          *self,
     .output = self,
     .ox = ox,
     .oy = oy,
-    .width = surface->current.width,
-    .height = surface->current.height,
+    .width = wlr_surface->current.width,
+    .height = wlr_surface->current.height,
     .scale = 1.0
   };
 
-  wlr_surface_for_each_surface (surface,
+  wlr_surface_for_each_surface (wlr_surface,
                                 phoc_output_for_each_surface_iterator, &data);
 }
 
@@ -1500,7 +1502,7 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
 }
 
 static void
-damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct wlr_box *_box,
+damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, struct wlr_box *_box,
                          float scale, void *data)
 {
   bool *whole = data;
@@ -1512,13 +1514,13 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct w
 
   pixman_region32_t damage;
   pixman_region32_init (&damage);
-  wlr_surface_get_effective_damage (surface, &damage);
+  wlr_surface_get_effective_damage (wlr_surface, &damage);
   wlr_region_scale (&damage, &damage, scale);
   wlr_region_scale (&damage, &damage, self->wlr_output->scale);
-  if (ceil (self->wlr_output->scale) > surface->current.scale) {
+  if (ceil (self->wlr_output->scale) > wlr_surface->current.scale) {
     // When scaling up a surface, it'll become blurry so we need to
     // expand the damage region
-    wlr_region_expand (&damage, &damage, ceil (self->wlr_output->scale) - surface->current.scale);
+    wlr_region_expand (&damage, &damage, ceil (self->wlr_output->scale) - wlr_surface->current.scale);
   }
 
   pixman_region32_translate (&damage, box.x, box.y);
@@ -1531,7 +1533,7 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *surface, struct w
       wlr_output_schedule_frame (self->wlr_output);
   }
 
-  if (!wl_list_empty (&surface->current.frame_callback_list))
+  if (!wl_list_empty (&wlr_surface->current.frame_callback_list))
     wlr_output_schedule_frame (self->wlr_output);
 }
 
@@ -1615,13 +1617,13 @@ phoc_output_damage_whole_surface (PhocOutput         *self,
 
 void
 phoc_output_damage_from_surface (PhocOutput         *self,
-                                 struct wlr_surface *surface,
+                                 struct wlr_surface *wlr_surface,
                                  double              ox,
                                  double              oy)
 {
   bool whole = false;
 
-  phoc_output_surface_for_each_surface (self, surface, ox, oy,
+  phoc_output_surface_for_each_surface (self, wlr_surface, ox, oy,
                                         damage_surface_iterator, &whole);
 }
 
