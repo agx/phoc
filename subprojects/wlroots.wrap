@@ -5,5 +5,4 @@ revision=0.18.0
 depth=1
 
 # Phoc specific patches
-diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch,
-  wlroots/0001-Fix-compile-with-libliftoff-0.5.patch
+diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch
