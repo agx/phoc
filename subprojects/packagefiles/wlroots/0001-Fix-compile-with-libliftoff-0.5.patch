@@ -1,0 +1,30 @@
+From 20c8e7da1c40c30e626552114028686ac60f83a9 Mon Sep 17 00:00:00 2001
+Message-ID: <20c8e7da1c40c30e626552114028686ac60f83a9.1731601190.git.agx@sigxcpu.org>
+From: =?UTF-8?q?Guido=20G=C3=BCnther?= <agx@sigxcpu.org>
+Date: Thu, 14 Nov 2024 17:19:22 +0100
+Subject: [PATCH] Fix compile with libliftoff 0.5
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Guido Günther <agx@sigxcpu.org>
+---
+ backend/drm/libliftoff.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/backend/drm/libliftoff.c b/backend/drm/libliftoff.c
+index b53c157..6351206 100644
+--- a/backend/drm/libliftoff.c
++++ b/backend/drm/libliftoff.c
+@@ -437,7 +437,7 @@ static bool crtc_commit(struct wlr_drm_connector *conn,
+ 		goto out;
+ 	}
+ 
+-	int ret = liftoff_output_apply(crtc->liftoff, req, flags);
++	int ret = liftoff_output_apply(crtc->liftoff, req, flags, NULL);
+ 	if (ret != 0) {
+ 		wlr_drm_conn_log(conn, test_only ? WLR_DEBUG : WLR_ERROR,
+ 			"liftoff_output_apply failed: %s", strerror(-ret));
+-- 
+2.45.2
+
