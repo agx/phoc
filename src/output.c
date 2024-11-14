@@ -32,6 +32,7 @@
 #include "render-private.h"
 #include "seat.h"
 #include "server.h"
+#include "surface.h"
 #include "input-method-relay.h"
 #include "utils.h"
 #include "xwayland-surface.h"
@@ -1505,6 +1506,7 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
                          float scale, void *data)
 {
   bool *whole = data;
+  PhocSurface *surface = wlr_surface->data;
 
   struct wlr_box box = *_box;
 
@@ -1514,6 +1516,8 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
   pixman_region32_t damage;
   pixman_region32_init (&damage);
   wlr_surface_get_effective_damage (wlr_surface, &damage);
+  pixman_region32_union (&damage, &damage, phoc_surface_get_damage (surface));
+
   wlr_region_scale (&damage, &damage, scale);
   wlr_region_scale (&damage, &damage, self->wlr_output->scale);
   if (ceil (self->wlr_output->scale) > wlr_surface->current.scale) {

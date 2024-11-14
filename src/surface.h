@@ -17,5 +17,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (PhocSurface, phoc_surface, PHOC, SURFACE, GObject)
 
 PhocSurface             *phoc_surface_new (struct wlr_surface *self);
+const pixman_region32_t *phoc_surface_get_damage (PhocSurface *self);
 
 G_END_DECLS

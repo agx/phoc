@@ -29,10 +29,35 @@ struct _PhocSurface {
   GObject             parent;
 
   struct wlr_surface *wlr_surface;
+  pixman_region32_t   damage;
 
+  struct wl_listener  commit;
   struct wl_listener  destroy;
 };
 G_DEFINE_TYPE (PhocSurface, phoc_surface, G_TYPE_OBJECT)
+
+
+static void
+handle_commit (struct wl_listener *listener, void *data)
+{
+  PhocSurface *self = wl_container_of (listener, self, commit);
+  struct wlr_surface *wlr_surface = self->wlr_surface;
+
+  pixman_region32_clear (&self->damage);
+
+  if (wlr_surface->previous.width == wlr_surface->current.width &&
+      wlr_surface->previous.height == wlr_surface->current.height &&
+      wlr_surface->current.dx == 0 && wlr_surface->current.dy ==  0)
+    return;
+
+  /* Damage surface size or contents offset changed */
+  pixman_region32_union_rect (&self->damage,
+                              &self->damage,
+                              -wlr_surface->current.dx,
+                              -wlr_surface->current.dy,
+                              wlr_surface->previous.width,
+                              wlr_surface->previous.height);
+}
 
 
 static void
@@ -54,6 +79,9 @@ set_wlr_surface (PhocSurface *self, struct wlr_surface *wlr_surface)
   self->wlr_surface = wlr_surface;
   g_debug ("New surface %p", self->wlr_surface);
   self->wlr_surface->data = self;
+
+  self->commit.notify = handle_commit;
+  wl_signal_add (&self->wlr_surface->events.commit, &self->commit);
 
   self->destroy.notify = handle_destroy;
   wl_signal_add (&self->wlr_surface->events.destroy, &self->destroy);
@@ -103,6 +131,9 @@ phoc_surface_finalize (GObject *object)
 {
   PhocSurface *self = PHOC_SURFACE (object);
 
+  pixman_region32_fini (&self->damage);
+
+  wl_list_remove (&self->commit.link);
   wl_list_remove (&self->destroy.link);
 
   self->wlr_surface = NULL;
@@ -131,6 +162,7 @@ phoc_surface_class_init (PhocSurfaceClass *klass)
 static void
 phoc_surface_init (PhocSurface *self)
 {
+  pixman_region32_init (&self->damage);
 }
 
 
@@ -138,4 +170,13 @@ PhocSurface *
 phoc_surface_new (struct wlr_surface *surface)
 {
   return g_object_new (PHOC_TYPE_SURFACE, "wlr-surface", surface, NULL);
+}
+
+
+const pixman_region32_t *
+phoc_surface_get_damage (PhocSurface *self)
+{
+  g_assert (PHOC_IS_SURFACE (self));
+
+  return &self->damage;
 }
