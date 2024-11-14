@@ -671,7 +671,7 @@ phoc_output_compute_scale (PhocOutput *self, struct wlr_output_state *pending)
     return 1;
   }
 
-  // Use the pending mode if any
+  /*  Use the pending mode if any */
   if (pending->committed & WLR_OUTPUT_STATE_MODE) {
     switch (pending->mode_type) {
     case WLR_OUTPUT_STATE_MODE_FIXED:
@@ -685,7 +685,7 @@ phoc_output_compute_scale (PhocOutput *self, struct wlr_output_state *pending)
     default:
       break;
     }
-  // Fall back to current mode
+  /* Fall back to current mode */
   } else if (self->wlr_output->current_mode) {
     width = self->wlr_output->current_mode->width;
     height = self->wlr_output->current_mode->height;
@@ -708,7 +708,7 @@ phoc_output_state_set_mode (PhocOutput *self, struct wlr_output_state *pending, 
   int mhz = (int)(oc->mode.refresh_rate * 1000);
 
   if (wl_list_empty (&self->wlr_output->modes)) {
-    // Output has no mode, try setting a custom one
+    /* Output has no mode, try setting a custom one */
     wlr_output_state_set_custom_mode (pending, oc->mode.width, oc->mode.height, mhz);
     return;
   }
@@ -1485,7 +1485,7 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
 
 #ifdef PHOC_XWAYLAND
   if (PHOC_IS_XWAYLAND_SURFACE (self->fullscreen_view) && PHOC_IS_XWAYLAND_SURFACE (view)) {
-    // Special case: accept damage from children
+    /* Special case: accept damage from children */
     struct wlr_xwayland_surface *xsurface =
       phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
     struct wlr_xwayland_surface *fullscreen_xsurface =
@@ -1518,8 +1518,8 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
   wlr_region_scale (&damage, &damage, scale);
   wlr_region_scale (&damage, &damage, self->wlr_output->scale);
   if (ceil (self->wlr_output->scale) > wlr_surface->current.scale) {
-    // When scaling up a surface, it'll become blurry so we need to
-    // expand the damage region
+    /* When scaling up a surface, it'll become blurry so we need to
+     * expand the damage region */
     wlr_region_expand (&damage, &damage, ceil (self->wlr_output->scale) - wlr_surface->current.scale);
   }
 
