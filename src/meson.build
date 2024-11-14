@@ -81,6 +81,8 @@ sources = files(
   'server.h',
   'settings.c',
   'settings.h',
+  'surface.c',
+  'surface.h',
   'subsurface.c',
   'subsurface.h',
   'switch.c',

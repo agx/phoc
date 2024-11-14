@@ -14,6 +14,7 @@
 #include "utils.h"
 #include "seat.h"
 #include "server.h"
+#include "surface.h"
 
 #include <gmobile.h>
 
@@ -65,6 +66,8 @@ typedef struct _PhocServer {
 
   struct wlr_linux_dmabuf_v1     *linux_dmabuf_v1;
   struct wlr_data_device_manager *data_device_manager;
+
+  struct wl_listener   new_surface;
 } PhocServer;
 
 static void phoc_server_initable_iface_init (GInitableIface *iface);
@@ -268,6 +271,16 @@ phoc_server_filter_globals (const struct wl_client *client,
 }
 
 
+static void
+handle_new_surface (struct wl_listener *listener, void *data)
+{
+  struct wlr_surface *surface = data;
+
+  /* Ref is dropped on surface destroy */
+  phoc_surface_new (surface);
+}
+
+
 static gboolean
 phoc_server_initable_init (GInitable    *initable,
                            GCancellable *cancellable,
@@ -313,6 +326,9 @@ phoc_server_initable_init (GInitable    *initable,
   self->data_device_manager = wlr_data_device_manager_create (self->wl_display);
 
   self->compositor = wlr_compositor_create (self->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
+  wl_signal_add (&self->compositor->events.new_surface, &self->new_surface);
+  self->new_surface.notify = handle_new_surface;
+
   self->subcompositor = wlr_subcompositor_create (self->wl_display);
 
   return TRUE;
@@ -346,6 +362,8 @@ static void
 phoc_server_finalize (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
+
+  wl_list_remove (&self->new_surface.link);
 
   g_clear_pointer (&self->dt_compatibles, g_strfreev);
   g_clear_handle_id (&self->wl_source, g_source_remove);
