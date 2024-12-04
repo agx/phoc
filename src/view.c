@@ -1324,8 +1324,9 @@ handle_toplevel_handle_request_fullscreen (struct wl_listener *listener, void *d
   PhocViewPrivate *priv = wl_container_of (listener, priv, toplevel_handle_request_fullscreen);
   PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_foreign_toplevel_handle_v1_fullscreen_event *event = data;
+  PhocOutput *output = event->output ? PHOC_OUTPUT (event->output->data) : NULL;
 
-  phoc_view_set_fullscreen (self, event->fullscreen, PHOC_OUTPUT (event->output->data));
+  phoc_view_set_fullscreen (self, event->fullscreen, output);
 }
 
 static void
