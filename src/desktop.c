@@ -15,7 +15,6 @@
 #include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
-#include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
@@ -393,35 +392,6 @@ handle_layout_change (struct wl_listener *listener, void *data)
 
 
 static void
-input_inhibit_activate (struct wl_listener *listener, void *data)
-{
-  PhocDesktop *desktop = wl_container_of(listener, desktop, input_inhibit_activate);
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-
-  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
-    PhocSeat *seat = PHOC_SEAT (elem->data);
-
-    g_assert (PHOC_IS_SEAT (seat));
-    phoc_seat_set_exclusive_client (seat, desktop->input_inhibit->active_client);
-  }
-}
-
-
-static void
-input_inhibit_deactivate (struct wl_listener *listener, void *data)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-
-  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
-    PhocSeat *seat = PHOC_SEAT (elem->data);
-
-    g_assert (PHOC_IS_SEAT (seat));
-    phoc_seat_set_exclusive_client (seat, NULL);
-  }
-}
-
-
-static void
 handle_constraint_destroy (struct wl_listener *listener, void *data)
 {
   PhocPointerConstraint *constraint = wl_container_of (listener, constraint, destroy);
@@ -734,12 +704,6 @@ phoc_desktop_constructed (GObject *object)
   self->primary_selection_device_manager =
     wlr_primary_selection_v1_device_manager_create (wl_display);
 
-  self->input_inhibit = wlr_input_inhibit_manager_create (wl_display);
-  self->input_inhibit_activate.notify = input_inhibit_activate;
-  wl_signal_add (&self->input_inhibit->events.activate, &self->input_inhibit_activate);
-  self->input_inhibit_deactivate.notify = input_inhibit_deactivate;
-  wl_signal_add (&self->input_inhibit->events.deactivate, &self->input_inhibit_deactivate);
-
   self->input_method = wlr_input_method_manager_v2_create (wl_display);
   self->text_input = wlr_text_input_manager_v3_create (wl_display);
 
@@ -833,8 +797,6 @@ phoc_desktop_finalize (GObject *object)
   wl_list_remove (&self->xdg_shell_surface.link);
   wl_list_remove (&self->layer_shell_surface.link);
   wl_list_remove (&self->xdg_toplevel_decoration.link);
-  wl_list_remove (&self->input_inhibit_activate.link);
-  wl_list_remove (&self->input_inhibit_deactivate.link);
   wl_list_remove (&self->virtual_keyboard_new.link);
   wl_list_remove (&self->virtual_pointer_new.link);
   wl_list_remove (&self->pointer_constraint.link);
@@ -1271,7 +1233,6 @@ phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *
     global == self->export_dmabuf_manager_v1->global ||
     global == self->foreign_toplevel_manager_v1->global ||
     global == self->gamma_control_manager_v1->global ||
-    global == self->input_inhibit->global ||
     global == self->input_method->global ||
     global == self->layer_shell->global ||
     global == self->output_manager_v1->global ||

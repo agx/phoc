@@ -5,13 +5,19 @@
 DIR="${1:-_build}"
 LOG="${DIR}/doc/doc-build.log"
 
+rm -f "${DIR}"/src/*.gir
 meson compile -C "${DIR}" doc/phoc-doc |& tee "${LOG}"
+
+echo "Checking log…"
 
 if grep -vE  '('\
 'wayland-server-core.h:.* syntax error, unexpected'\
 '|argument pressed_keysyms: Unresolved type:'\
 '|argument iterator: Unresolved type: .wlr_surface_iterator_func_t.'\
-'|argument .*damage: Unresolved type: .pixman_region32_t.'\
-')' "${LOG}" | grep -i 'warning:'; then
+'|argument [a-z_]+: Unresolved type: .pixman_region32_t'\
+'|return value: Unresolved type: .pixman_region32_t'\
+')' "${LOG}" | grep -i ' warning:'; then
+    echo "Found new warning."
     exit 1
 fi
+echo "No new warnings found."

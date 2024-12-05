@@ -21,8 +21,9 @@ phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
                                                 void               *data)
 {
   const struct wlr_xdg_activation_v1_request_activate_event *event = data;
-  const struct wlr_xdg_activation_token_v1 *token = event->token;
+  struct wlr_xdg_activation_token_v1 *token = event->token;
   struct wlr_xdg_surface *xdg_surface;
+  const char *token_name;
   PhocView *view;
 
   if (!token) {
@@ -30,7 +31,8 @@ phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
     return;
   }
 
-  g_debug ("%s: %s", __func__, token->token);
+  token_name = wlr_xdg_activation_token_v1_get_name (token);
+  g_debug ("%s: %s", __func__, token_name);
   xdg_surface = wlr_xdg_surface_try_from_wlr_surface (event->surface);
   if (xdg_surface == NULL) {
     return;
@@ -40,14 +42,14 @@ phoc_xdg_activation_v1_handle_request_activate (struct wl_listener *listener,
   if (view == NULL)
     return;
 
-  phoc_view_set_activation_token (view, token->token, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
+  phoc_view_set_activation_token (view, token_name, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_XDG_ACTIVATION);
   if (phoc_view_is_mapped (view)) {
     PhocSeat *seat = token->seat ? PHOC_SEAT (token->seat->data) :
       phoc_server_get_last_active_seat (phoc_server_get_default ());
 
-    g_debug ("Activating view %p via token '%s'", view, token->token);
+    g_debug ("Activating view %p via token '%s'", view, token_name);
     phoc_seat_set_focus_view (seat, view);
   } else {
-    g_debug ("Setting view %p via token '%s' as pending activation", view, token->token);
+    g_debug ("Setting view %p via token '%s' as pending activation", view, token_name);
   }
 }

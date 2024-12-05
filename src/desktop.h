@@ -12,7 +12,6 @@
 #include <wlr/config.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_input_inhibitor.h>
 #include <wlr/types/wlr_input_method_v2.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -54,7 +53,6 @@ struct _PhocDesktop {
   struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
   struct wlr_primary_selection_v1_device_manager *primary_selection_device_manager;
   struct wlr_idle *idle;
-  struct wlr_input_inhibit_manager *input_inhibit;
   struct wlr_layer_shell_v1 *layer_shell;
   struct wlr_input_method_manager_v2 *input_method;
   struct wlr_text_input_manager_v3 *text_input;
@@ -76,8 +74,6 @@ struct _PhocDesktop {
   struct wl_listener xdg_shell_surface;
   struct wl_listener layer_shell_surface;
   struct wl_listener xdg_toplevel_decoration;
-  struct wl_listener input_inhibit_activate;
-  struct wl_listener input_inhibit_deactivate;
   struct wl_listener virtual_keyboard_new;
   struct wl_listener virtual_pointer_new;
   struct wl_listener pointer_constraint;
