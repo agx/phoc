@@ -97,6 +97,9 @@ static GDebugKey debug_keys[] =
  { .key = "disable-animations",
    .value = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
  },
+ { .key = "force-shell-reveal",
+   .value = PHOC_SERVER_DEBUG_FLAG_FORCE_SHELL_REVEAL,
+ },
 };
 
 

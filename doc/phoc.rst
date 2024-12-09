@@ -65,6 +65,7 @@ ENVIRONMENT VARIABLES
       - ``layer-shell``: Debug layer shell
       - ``cutouts``: Debug display cutouts and notches
       - ``disable-animations``: Disable animations
+      - ``force-shell-reveal``: Always reveal shell over fullscreen apps
 
 See also
 --------
