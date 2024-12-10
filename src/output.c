@@ -2098,8 +2098,14 @@ void
 phoc_output_force_shell_reveal (PhocOutput *self, gboolean force)
 {
   PhocOutputPrivate *priv;
+  PhocServer *server = phoc_server_get_default ();
   g_assert (PHOC_IS_OUTPUT (self));
   priv = phoc_output_get_instance_private (self);
+
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server,
+                                                 PHOC_SERVER_DEBUG_FLAG_FORCE_SHELL_REVEAL))) {
+      force = TRUE;
+  }
 
   priv->force_shell_reveal = force;
   phoc_output_update_shell_reveal (self);
