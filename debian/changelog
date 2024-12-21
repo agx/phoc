@@ -1,3 +1,40 @@
+phoc (0.44~rc1) experimental; urgency=medium
+
+  * output: Prefix surface with wlr_ It's our common pattern to prefix with
+    wlr_ and with the introduction of PhocSurface it will avoid type
+    confusion.
+  * xdg-activation: Don't access token directly.
+    Use the getter wlr_xdg_activation_token_v1_get_name() instead.
+  * xdg-popup: Take geometry into account when getting output.
+    Otherwise view.x might e.g. be < 0 in the case of one output and shadow
+    around the window. In that case output would be NULL.
+  * xdg-popup: Make sure we always send a configure
+    wlr_xdg_popup_unconstrain_from_box() sends it but make sure we also send
+    it in the case of no output as otherwise the window might become
+    unusable.
+  * desktop: Drop wlr-input-inhibitor-unstable-v1 protocol support
+    wlroots will drop support for it in 0.18.0. See wlroots commit
+    5dd614b9adc97bf1c89c8e2ebe8504841f8635ea.
+  * doc-check: Relax warning check.
+    Check for ' warning' rather than 'warning' so we don't choke on
+    Python's SyntaxWarnings.
+    Improve output readability while at that
+  * doc-check: Allow pixman_region32_t as return value too.
+    Until we make it a boxed type we need to allow it as any argument
+    and return value.
+  * view: Don't crash on NULL output.
+    Check there's a wlr_output before trying to make a PhocOutput from it.
+  * output: Allow to force shell reveal via debug flag.
+    This makes it simpler to test shell reveal in a nested session
+  * view: Don't draw decoration on maximized windows.
+    No need to do that and it helps to not leak decorations into e.g.
+    transparent top or bottom layer surfaces.
+    Later on we should restrict this to auto-maxmize mode and rather
+    calculate the maximized window size *including* decorations so that
+    they're visible and usable in non auto-maximized mode.
+
+ -- Guido Günther <agx@sigxcpu.org>  Sat, 21 Dec 2024 10:46:45 +0100
+
 phoc (0.43.0) experimental; urgency=medium
 
   * No changes over rc1
