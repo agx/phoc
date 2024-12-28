@@ -90,12 +90,10 @@ handle_xwayland_surface (struct wl_listener *listener, void *data)
   phoc_xwayland_surface_new (surface);
 }
 
-#endif /* PHOC_XWAYLAND */
 
 void
 phoc_desktop_setup_xwayland (PhocDesktop *self)
 {
-#ifdef PHOC_XWAYLAND
   const char *cursor_default = PHOC_XCURSOR_DEFAULT;
   PhocServer *server = phoc_server_get_default ();
   PhocConfig *config = phoc_server_get_config (server);
@@ -138,5 +136,12 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
                                image->hotspot_y);
     }
   }
-#endif
 }
+#else /* PHOC_XWAYLAND */
+
+void
+phoc_desktop_setup_xwayland (PhocDesktop *self)
+{
+}
+
+#endif /* !PHOC_XWAYLAND */
