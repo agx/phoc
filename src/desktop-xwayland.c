@@ -15,8 +15,8 @@
 
 #ifdef PHOC_XWAYLAND
 static const char *atom_map[XWAYLAND_ATOM_LAST] = {
-        "_NET_WM_WINDOW_TYPE_NORMAL",
-        "_NET_WM_WINDOW_TYPE_DIALOG"
+  "_NET_WM_WINDOW_TYPE_NORMAL",
+  "_NET_WM_WINDOW_TYPE_DIALOG"
 };
 
 static void
@@ -84,7 +84,7 @@ handle_xwayland_surface (struct wl_listener *listener, void *data)
   struct wlr_xwayland_surface *surface = data;
   g_debug ("new xwayland surface: title=%s, class=%s, instance=%s",
            surface->title, surface->class, surface->instance);
-  wlr_xwayland_surface_ping(surface);
+  wlr_xwayland_surface_ping (surface);
 
   /* Ref is dropped on surface destroy */
   phoc_xwayland_surface_new (surface);
@@ -150,8 +150,8 @@ phoc_desktop_destroy_xwayland (PhocDesktop *self)
   }
 
   g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
-  // We need to shutdown Xwayland before disconnecting all clients, otherwise
-  // wlroots will restart it automatically.
+  /* We need to shutdown Xwayland before disconnecting all clients, otherwise
+   * wlroots will restart it automatically. */
   g_clear_pointer (&self->xwayland, wlr_xwayland_destroy);
 }
 
