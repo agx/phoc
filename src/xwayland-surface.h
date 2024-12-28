@@ -32,4 +32,8 @@ struct wlr_xwayland_surface *phoc_xwayland_surface_get_wlr_surface (PhocXWayland
 
 G_END_DECLS
 
+#else
+
+#define PHOC_IS_XWAYLAND_SURFACE(x) (FALSE)
+
 #endif

@@ -331,14 +331,12 @@ phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
   }
 
   top_view = phoc_desktop_get_view_by_index (self, 0);
-#ifdef PHOC_XWAYLAND
   // XWayland parent relations can be complicated and aren't described by PhocView
   // relationships very well at the moment, so just make all XWayland windows visible
   // when some XWayland window is active for now
   if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view)) {
     return true;
   }
-#endif
 
   PhocView *v = top_view;
   while (v) {
