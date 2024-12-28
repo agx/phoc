@@ -411,15 +411,10 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
   if (n_surfaces > 1)
     return false;
 
-#ifdef PHOC_XWAYLAND
   if (PHOC_IS_XWAYLAND_SURFACE (view)) {
-    struct wlr_xwayland_surface *xsurface =
-      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-    if (!wl_list_empty (&xsurface->children)) {
+    if (phoc_xwayland_surface_has_children (PHOC_XWAYLAND_SURFACE (view)))
       return false;
-    }
   }
-#endif
 
   wlr_surface = view->wlr_surface;
   if (wlr_surface->buffer == NULL)

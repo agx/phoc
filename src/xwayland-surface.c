@@ -688,3 +688,22 @@ phoc_xwayland_surface_is_child (PhocXWaylandSurface *self, PhocXWaylandSurface *
 
   return FALSE;
 }
+
+/**
+ * phoc_xwayland_surface_has_children:
+ * @self: The XWayland surface
+ *
+ * Checks whether the given XWayland surface has any children
+ *
+ * Returns: `TRUE` if the surface has any children
+ */
+gboolean
+phoc_xwayland_surface_has_children (PhocXWaylandSurface *self)
+{
+  struct wlr_xwayland_surface *xsurface;
+
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (self));
+  xsurface = phoc_xwayland_surface_get_wlr_surface (self);
+
+  return !wl_list_empty (&xsurface->children);
+}
