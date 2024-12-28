@@ -1483,21 +1483,14 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
   if (self->fullscreen_view == view)
     return true;
 
-#ifdef PHOC_XWAYLAND
+  /* Special case: accept damage from children */
   if (PHOC_IS_XWAYLAND_SURFACE (self->fullscreen_view) && PHOC_IS_XWAYLAND_SURFACE (view)) {
-    /* Special case: accept damage from children */
-    struct wlr_xwayland_surface *xsurface =
-      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-    struct wlr_xwayland_surface *fullscreen_xsurface =
-      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (self->fullscreen_view));
-    while (xsurface != NULL) {
-      if (fullscreen_xsurface == xsurface)
-        return true;
-
-      xsurface = xsurface->parent;
+    if (phoc_xwayland_surface_is_child (PHOC_XWAYLAND_SURFACE (view),
+                                        PHOC_XWAYLAND_SURFACE (self->fullscreen_view))) {
+      return true;
     }
   }
-#endif
+
   return false;
 }
 
