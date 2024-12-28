@@ -137,10 +137,34 @@ phoc_desktop_setup_xwayland (PhocDesktop *self)
     }
   }
 }
+
+
+void
+phoc_desktop_destroy_xwayland (PhocDesktop *self)
+{
+  /* Disconnect XWayland listener before shutting it down */
+  if (self->xwayland) {
+    wl_list_remove (&self->xwayland_surface.link);
+    wl_list_remove (&self->xwayland_ready.link);
+    wl_list_remove (&self->xwayland_remove_startup_id.link);
+  }
+
+  g_clear_pointer (&self->xcursor_manager, wlr_xcursor_manager_destroy);
+  // We need to shutdown Xwayland before disconnecting all clients, otherwise
+  // wlroots will restart it automatically.
+  g_clear_pointer (&self->xwayland, wlr_xwayland_destroy);
+}
+
 #else /* PHOC_XWAYLAND */
 
 void
 phoc_desktop_setup_xwayland (PhocDesktop *self)
+{
+}
+
+
+void
+phoc_desktop_destroy_xwayland (PhocDesktop *self)
 {
 }
 
