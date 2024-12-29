@@ -88,7 +88,6 @@ build-with-xwayland-debian-trixie-clang:
     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true --werror
   before_script:
     - eatmydata apt-get update
-    - eatmydata apt-get -y remove --purge libwlroots-dev
     - eatmydata apt-get -y install clang
   <<: *build
   artifacts:
