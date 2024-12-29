@@ -1,7 +1,8 @@
-phoc 0.44~rc1
--------------
-Released Dezember 2024
+phoc 0.44.0
+-----------
+Released December 2024
 * Don't crash when foreign-toplevel requests (un)fullscreen
+* Don't forget to notify about unfullscreen when tiling
 * Internal cleanups for wlroots 0.18/0.19 switch
 * Contributors:
     * Guido Günther
