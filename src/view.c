@@ -803,6 +803,9 @@ phoc_view_tile (PhocView *self, PhocViewTileDirection direction, PhocOutput *out
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_STATE]);
   PHOC_VIEW_GET_CLASS (self)->set_tiled (self, true);
 
+  if (priv->toplevel_handle)
+    wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle, false);
+
   view_arrange_tiled (self, output);
 }
 
