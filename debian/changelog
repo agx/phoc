@@ -1,3 +1,14 @@
+phoc (0.44.0) experimental; urgency=medium
+
+  * ci: Don't wipe libwlroots-dev.
+    It's not in the clang image and not in the Debian archive anymore either
+  * view: Don't forget to set window state when tiling.
+    A tiled window is not maximized.
+    This became visible in phosh now that we set a background for maximized
+    windows in the overview.
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 29 Dec 2024 14:04:27 +0100
+
 phoc (0.44~rc1) experimental; urgency=medium
 
   * output: Prefix surface with wlr_ It's our common pattern to prefix with
