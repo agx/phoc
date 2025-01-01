@@ -358,8 +358,6 @@ phoc_layer_surface_finalize (GObject *object)
     g_assert (PHOC_IS_OUTPUT (output));
     phoc_output_remove_frame_callbacks_by_animatable (output, PHOC_ANIMATABLE (self));
     wl_list_remove (&self->output_destroy.link);
-    phoc_layer_shell_arrange (output);
-    phoc_layer_shell_update_focus ();
   }
 
   G_OBJECT_CLASS (phoc_layer_surface_parent_class)->finalize (object);
