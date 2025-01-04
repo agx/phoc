@@ -231,7 +231,7 @@ set_maximized (PhocView *view, bool maximized)
 
   g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
   xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
-  wlr_xwayland_surface_set_maximized(xwayland_surface, maximized);
+  wlr_xwayland_surface_set_maximized (xwayland_surface, maximized, maximized);
 }
 
 static void
