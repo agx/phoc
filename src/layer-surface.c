@@ -245,8 +245,8 @@ handle_surface_commit (struct wl_listener *listener, void *data)
    * the *new* layer surface.
    * Another cursor move event is needed when the surface actually changes. */
   struct wlr_surface *surface = wlr_layer_surface->surface;
-  if (surface->previous.width != surface->current.width ||
-      surface->previous.height != surface->current.height) {
+  if (surface->WLR_PRIVATE.previous.width != surface->current.width ||
+      surface->WLR_PRIVATE.previous.height != surface->current.height) {
     phoc_layer_shell_update_cursors (self, phoc_input_get_seats (input));
   }
 
@@ -687,7 +687,7 @@ phoc_layer_surface_covers_output (PhocLayerSurface *self)
     return FALSE;
 
   /* Buffer uses opaque pixel format or is opaque single pixel buffer */
-  if (wlr_surface->opaque)
+  if (wlr_surface->WLR_PRIVATE.opaque)
     return TRUE;
 
   /* Surface's opaque region covers the whole surface */
