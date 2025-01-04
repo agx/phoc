@@ -49,7 +49,7 @@ enum {
   OUTPUT_DESTROY,
   N_SIGNALS
 };
-static guint signals[N_SIGNALS] = { 0 };
+static guint signals[N_SIGNALS];
 
 typedef struct _PhocOutputPrivate {
   PhocRenderer            *renderer;
@@ -169,11 +169,9 @@ phoc_output_set_property (GObject      *object,
   switch (property_id) {
   case PROP_DESKTOP:
     self->desktop = g_value_dup_object (value);
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DESKTOP]);
     break;
   case PROP_WLR_OUTPUT:
     self->wlr_output = g_value_get_pointer (value);
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_WLR_OUTPUT]);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -999,22 +997,26 @@ phoc_output_class_init (PhocOutputClass *klass)
 
   object_class->set_property = phoc_output_set_property;
   object_class->get_property = phoc_output_get_property;
-
   object_class->finalize = phoc_output_finalize;
 
+  /**
+   * PhocOutput:desktop:
+   *
+   * The desktop object
+   */
   props[PROP_DESKTOP] =
-    g_param_spec_object (
-      "desktop",
-      "Desktop",
-      "The desktop object",
-      PHOC_TYPE_DESKTOP,
-      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+    g_param_spec_object ("desktop", "", "",
+                         PHOC_TYPE_DESKTOP,
+                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * PhocOutput:wlr-output:
+   *
+   * The wlroots output backing this output.
+   */
   props[PROP_WLR_OUTPUT] =
-    g_param_spec_pointer (
-      "wlr-output",
-      "wlr-output",
-      "The wlroots output object",
-      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+    g_param_spec_pointer ("wlr-output", "", "",
+                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
   signals[OUTPUT_DESTROY] = g_signal_new ("output-destroyed",
