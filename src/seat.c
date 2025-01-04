@@ -1466,7 +1466,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   if (view && PHOC_IS_XWAYLAND_SURFACE (view)) {
     struct wlr_xwayland_surface *xsurface =
       phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-    if (!wlr_xwayland_or_surface_wants_focus (xsurface))
+    if (!wlr_xwayland_surface_override_redirect_wants_focus (xsurface))
       return;
   }
 #endif
