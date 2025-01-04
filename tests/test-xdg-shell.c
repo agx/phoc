@@ -26,6 +26,7 @@ test_client_xdg_shell_normal (PhocTestClientGlobals *globals, gpointer data)
   return TRUE;
 }
 
+
 static gboolean
 test_client_xdg_shell_auto_maximized (PhocTestClientGlobals *globals, gpointer data)
 {
@@ -83,25 +84,27 @@ test_client_xdg_shell_server_prepare (PhocServer *server, gpointer data)
   return TRUE;
 }
 
+
 static void
 test_xdg_shell_normal (void)
 {
   PhocTestClientIface iface = {
-   .server_prepare = test_client_xdg_shell_server_prepare,
-   .client_run     = test_client_xdg_shell_normal,
-   .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
+    .server_prepare = test_client_xdg_shell_server_prepare,
+    .client_run     = test_client_xdg_shell_normal,
+    .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
   };
 
   phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (FALSE));
 }
 
+
 static void
 test_xdg_shell_auto_maximized (void)
 {
   PhocTestClientIface iface = {
-   .server_prepare = test_client_xdg_shell_server_prepare,
-   .client_run     = test_client_xdg_shell_auto_maximized,
-   .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
+    .server_prepare = test_client_xdg_shell_server_prepare,
+    .client_run     = test_client_xdg_shell_auto_maximized,
+    .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
   };
 
   phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (TRUE));
@@ -112,9 +115,9 @@ static void
 test_xdg_shell_toplevel_maximized (void)
 {
   PhocTestClientIface iface = {
-   .server_prepare = test_client_xdg_shell_server_prepare,
-   .client_run     = test_client_xdg_shell_toplevel_maximized,
-   .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
+    .server_prepare = test_client_xdg_shell_server_prepare,
+    .client_run     = test_client_xdg_shell_toplevel_maximized,
+    .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
   };
 
   phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, GINT_TO_POINTER (FALSE));
@@ -130,5 +133,5 @@ main (gint argc, gchar *argv[])
   PHOC_TEST_ADD ("/phoc/xdg-shell/auto-maximize", test_xdg_shell_auto_maximized);
   PHOC_TEST_ADD ("/phoc/xdg-shell/toplevel-maximize", test_xdg_shell_toplevel_maximized);
 
-  return g_test_run();
+  return g_test_run ();
 }
