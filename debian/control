@@ -7,6 +7,7 @@ Build-Depends:
  gsettings-desktop-schemas,
  gi-docgen <!nodoc>,
  libglib2.0-dev,
+ libgmobile-dev,
  libgnome-desktop-3-dev,
  libinput-dev,
  libjson-glib-dev,
