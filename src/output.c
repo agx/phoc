@@ -397,8 +397,7 @@ phoc_output_handle_damage (struct wl_listener *listener, void *user_data)
   PhocOutput *self = PHOC_OUTPUT_SELF (priv);
   struct wlr_output_event_damage *event = user_data;
 
-  if (wlr_damage_ring_add (&self->damage_ring, event->damage))
-    wlr_output_schedule_frame (self->wlr_output);
+  phoc_output_damage_region (self, event->damage);
 }
 
 
@@ -568,11 +567,7 @@ build_debug_damage_tracking (PhocOutput *self)
   };
 
   if (pixman_region32_not_empty (&highlight_damage)) {
-    gboolean intersects;
-
-    intersects = wlr_damage_ring_add (&self->damage_ring, &highlight_damage);
-    if (!intersects)
-      g_warning_once ("Damage not on output %p", self);
+    wlr_damage_ring_add (&self->damage_ring, &highlight_damage);
   }
 
   pixman_region32_fini (&highlight_damage);
@@ -686,8 +681,7 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
   /* Ensure the cutouts are drawn */
   if (G_UNLIKELY (priv->cutouts_texture)) {
     struct wlr_box box = { 0, 0, priv->cutouts_texture->width, priv->cutouts_texture->height };
-    if (wlr_damage_ring_add_box (&self->damage_ring, &box))
-      wlr_output_schedule_frame (self->wlr_output);
+    phoc_output_damage_box (self, &box);
   }
 
   build_debug_damage_tracking (self);
@@ -1657,14 +1651,11 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
   }
 
   pixman_region32_translate (&damage, box.x, box.y);
-  if (wlr_damage_ring_add (&self->damage_ring, &damage))
-    wlr_output_schedule_frame (self->wlr_output);
+  phoc_output_damage_region (self, &damage);
   pixman_region32_fini (&damage);
 
-  if (*whole) {
-    if (wlr_damage_ring_add_box (&self->damage_ring, &box))
-      wlr_output_schedule_frame (self->wlr_output);
-  }
+  if (*whole)
+    phoc_output_damage_box (self, &box);
 
   if (!wl_list_empty (&wlr_surface->current.frame_callback_list))
     wlr_output_schedule_frame (self->wlr_output);
@@ -1693,8 +1684,7 @@ damage_whole_view (PhocOutput *self, PhocView  *view)
     box.y -= self->ly;
     phoc_utils_scale_box (&box, self->wlr_output->scale);
 
-    if (wlr_damage_ring_add_box (&self->damage_ring, &box))
-      wlr_output_schedule_frame (self->wlr_output);
+    phoc_output_damage_box (self, &box);
   }
 }
 
@@ -1781,6 +1771,63 @@ phoc_output_damage_from_surface (PhocOutput         *self,
 {
   phoc_output_surface_for_each_surface (self, wlr_surface, ox, oy,
                                         damage_surface_iterator, &whole);
+}
+
+/**
+ * phoc_output_damage_region:
+ * @self: The output
+ * @region: The damage in output local coordinates
+ *
+ * If damage overlaps with output add it and schedule a frame.
+ *
+ * Returns: `TRUE` if the damage overlapped with the output
+ */
+gboolean
+phoc_output_damage_region (PhocOutput *self, const pixman_region32_t *region)
+{
+  pixman_region32_t clipped;
+  int width, height;
+
+  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+
+  pixman_region32_init (&clipped);
+  pixman_region32_intersect_rect (&clipped, region, 0, 0, width, height);
+
+  if (!pixman_region32_not_empty (&clipped)) {
+    pixman_region32_fini (&clipped);
+    return FALSE;
+  }
+
+  wlr_damage_ring_add (&self->damage_ring, &clipped);
+  pixman_region32_fini (&clipped);
+  wlr_output_schedule_frame (self->wlr_output);
+  return TRUE;
+}
+
+/**
+ * phoc_output_damage_box:
+ * @self: The output
+ * @box: The damage box in output local coordinates
+ *
+ * If damage overlaps with output add it and schedule a frame.
+ *
+ * Returns: `TRUE` if the damage overlapped with the output
+ */
+gboolean
+phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box)
+{
+  struct wlr_box clipped;
+  int width, height;
+
+  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+  clipped = (struct wlr_box) { .x = 0, .y = 0, .width = width, .height = height };
+  if (!wlr_box_intersection (&clipped, &clipped, box))
+    return FALSE;
+
+  wlr_damage_ring_add_box (&self->damage_ring, &clipped);
+
+  wlr_output_schedule_frame (self->wlr_output);
+  return TRUE;
 }
 
 

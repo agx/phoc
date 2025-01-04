@@ -127,7 +127,6 @@ phoc_bling_damage_box (PhocBling *self)
     damage_box.y -= output->ly;
     phoc_utils_scale_box (&damage_box, output->wlr_output->scale);
 
-    if (wlr_damage_ring_add_box (&output->damage_ring, &damage_box))
-      wlr_output_schedule_frame (output->wlr_output);
+    wlr_damage_ring_add_box (&output->damage_ring, &damage_box);
   }
 }

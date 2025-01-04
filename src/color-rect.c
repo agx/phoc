@@ -53,9 +53,6 @@ static void bling_interface_init (PhocBlingInterface *iface);
 G_DEFINE_TYPE_WITH_CODE (PhocColorRect, phoc_color_rect, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (PHOC_TYPE_BLING, bling_interface_init))
 
-
-
-
 static void
 phoc_color_rect_set_property (GObject      *object,
                               guint         property_id,
