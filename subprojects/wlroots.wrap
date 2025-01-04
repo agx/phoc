@@ -1,7 +1,7 @@
 [wrap-git]
 directory=wlroots-0.19.x
 url=https://gitlab.freedesktop.org/wlroots/wlroots.git
-revision=85e2b662f195bb2999cb906d691f4ab8580b20dd
+revision=24597bb971a1c7cd29fceaa6c9ada8f96686c083
 depth=1
 
 # Phoc specific patches
