@@ -758,9 +758,6 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
 
   if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
                                  WLR_OUTPUT_STATE_TRANSFORM)) {
-    int width, height;
-    wlr_output_transformed_resolution (self->wlr_output, &width, &height);
-    wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
     wlr_output_schedule_frame (self->wlr_output);
   }
 
@@ -1046,7 +1043,6 @@ phoc_output_initable_init (GInitable    *initable,
   update_output_manager_config (self->desktop);
 
   wlr_output_transformed_resolution (self->wlr_output, &width, &height);
-  wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
 
   if (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_CUTOUTS)) {
     priv->cutouts = phoc_cutouts_overlay_new (phoc_server_get_compatibles (server));
