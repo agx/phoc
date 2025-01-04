@@ -38,7 +38,7 @@ phoc_input_get_device_type (enum wlr_input_device_type type)
     return "switch";
   case WLR_INPUT_DEVICE_TOUCH:
     return "touch";
-  case WLR_INPUT_DEVICE_TABLET_TOOL:
+  case WLR_INPUT_DEVICE_TABLET:
     return "tablet tool";
   case WLR_INPUT_DEVICE_TABLET_PAD:
     return "tablet pad";
@@ -94,8 +94,7 @@ handle_new_input (struct wl_listener *listener, void *data)
     return;
   }
 
-  g_debug ("New input device: %s (%d:%d) %s seat:%s", device->name,
-           device->vendor, device->product,
+  g_debug ("New input device: %s %s seat:%s", device->name,
            phoc_input_get_device_type (device->type), seat_name);
 
   phoc_seat_add_device (seat, device);

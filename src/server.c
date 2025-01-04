@@ -14,6 +14,7 @@
 #include "utils.h"
 #include "seat.h"
 #include "server.h"
+#include "surface.h"
 
 #include <gmobile.h>
 
@@ -27,7 +28,7 @@
 
 /* Maximum protocol versions we support */
 #define PHOC_WL_DISPLAY_VERSION 6
-#define PHOC_LINUX_DMABUF_VERSION 4
+#define PHOC_LINUX_DMABUF_VERSION 5
 
 /**
  * PhocServer:
@@ -65,6 +66,8 @@ typedef struct _PhocServer {
 
   struct wlr_linux_dmabuf_v1     *linux_dmabuf_v1;
   struct wlr_data_device_manager *data_device_manager;
+
+  struct wl_listener   new_surface;
 } PhocServer;
 
 static void phoc_server_initable_iface_init (GInitableIface *iface);
@@ -268,6 +271,16 @@ phoc_server_filter_globals (const struct wl_client *client,
 }
 
 
+static void
+handle_new_surface (struct wl_listener *listener, void *data)
+{
+  struct wlr_surface *surface = data;
+
+  /* Ref is dropped on surface destroy */
+  phoc_surface_new (surface);
+}
+
+
 static gboolean
 phoc_server_initable_init (GInitable    *initable,
                            GCancellable *cancellable,
@@ -285,7 +298,8 @@ phoc_server_initable_init (GInitable    *initable,
   }
   wl_display_set_global_filter (self->wl_display, phoc_server_filter_globals, self);
 
-  self->backend = wlr_backend_autocreate (self->wl_display, &self->session);
+  self->backend = wlr_backend_autocreate (wl_display_get_event_loop (self->wl_display),
+                                          &self->session);
   if (self->backend == NULL) {
     g_set_error (error,
                  G_FILE_ERROR, G_FILE_ERROR_FAILED,
@@ -300,7 +314,7 @@ phoc_server_initable_init (GInitable    *initable,
   wlr_renderer = phoc_renderer_get_wlr_renderer (self->renderer);
   wlr_renderer_init_wl_shm (wlr_renderer, self->wl_display);
 
-  if (wlr_renderer_get_dmabuf_texture_formats (wlr_renderer)) {
+  if (wlr_renderer_get_texture_formats (wlr_renderer, WLR_BUFFER_CAP_DMABUF)) {
     wlr_drm_create (self->wl_display, wlr_renderer);
     self->linux_dmabuf_v1 = wlr_linux_dmabuf_v1_create_with_renderer (self->wl_display,
                                                                       PHOC_LINUX_DMABUF_VERSION,
@@ -312,6 +326,9 @@ phoc_server_initable_init (GInitable    *initable,
   self->data_device_manager = wlr_data_device_manager_create (self->wl_display);
 
   self->compositor = wlr_compositor_create (self->wl_display, PHOC_WL_DISPLAY_VERSION, wlr_renderer);
+  wl_signal_add (&self->compositor->events.new_surface, &self->new_surface);
+  self->new_surface.notify = handle_new_surface;
+
   self->subcompositor = wlr_subcompositor_create (self->wl_display);
 
   return TRUE;
@@ -346,6 +363,8 @@ phoc_server_finalize (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
 
+  wl_list_remove (&self->new_surface.link);
+
   g_clear_pointer (&self->dt_compatibles, g_strfreev);
   g_clear_handle_id (&self->wl_source, g_source_remove);
   g_clear_object (&self->input);
@@ -359,6 +378,7 @@ phoc_server_finalize (GObject *object)
 
   g_clear_pointer (&self->config, phoc_config_destroy);
 
+  wl_display_terminate (self->wl_display);
   g_clear_pointer (&self->wl_display, wl_display_destroy);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);

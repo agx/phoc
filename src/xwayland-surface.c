@@ -84,7 +84,9 @@ set_active (PhocView *view, bool active)
   xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
 
   wlr_xwayland_surface_activate (xwayland_surface, active);
-  wlr_xwayland_surface_restack (xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
+
+  if (!xwayland_surface->override_redirect)
+    wlr_xwayland_surface_restack (xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
 }
 
 static void

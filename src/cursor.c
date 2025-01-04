@@ -430,11 +430,11 @@ send_pointer_motion (PhocSeat           *seat,
 }
 
 static void
-send_pointer_button (PhocSeat             *seat,
-                     struct wlr_surface   *surface,
-                     uint32_t              time,
-                     uint32_t              button,
-                     enum wlr_button_state state)
+send_pointer_button (PhocSeat                    *seat,
+                     struct wlr_surface          *surface,
+                     uint32_t                     time,
+                     uint32_t                     button,
+                     enum wl_pointer_button_state state)
 {
   uint32_t serial;
 
@@ -450,20 +450,28 @@ send_pointer_button (PhocSeat             *seat,
 
 
 static void
-send_pointer_axis (PhocSeat                 *seat,
-                   struct wlr_surface       *surface,
-                   uint32_t                  time,
-                   enum wlr_axis_orientation orientation,
-                   double                    value,
-                   int32_t                   value_discrete,
-                   enum wlr_axis_source      source)
+send_pointer_axis (PhocSeat                      *seat,
+                   struct wlr_surface            *surface,
+                   struct wlr_pointer_axis_event *event)
 {
   if (should_ignore_pointer_grab (seat, surface)) {
-    wlr_seat_pointer_send_axis (seat->seat, time, orientation, value, value_discrete, source);
+    wlr_seat_pointer_send_axis (seat->seat,
+                                event->time_msec,
+                                event->orientation,
+                                event->delta,
+                                event->delta_discrete,
+                                event->source,
+                                event->relative_direction);
     return;
   }
 
-  wlr_seat_pointer_notify_axis (seat->seat, time, orientation, value, value_discrete, source);
+  wlr_seat_pointer_notify_axis (seat->seat,
+                                event->time_msec,
+                                event->orientation,
+                                event->delta,
+                                event->delta_discrete,
+                                event->source,
+                                event->relative_direction);
 }
 
 
@@ -540,21 +548,27 @@ send_touch_up (PhocSeat                  *seat,
 
 
 static void
-send_touch_cancel (PhocSeat                  *seat,
-                   struct wlr_surface        *surface)
+send_touch_cancel (PhocSeat *seat, struct wlr_surface *surface)
 {
+  struct wl_client *client = wl_resource_get_client (surface->resource);
+  struct wlr_seat_client *seat_client;
+
+  seat_client = wlr_seat_client_for_wl_client (seat->seat, client);
+  if (!seat_client)
+    return;
+
   if (should_ignore_touch_grab (seat, surface)) {
-    // currently, wlr_seat_touch_send_* functions don't work, so temporarily
-    // restore grab to the default one and use notify_* instead
-    // See https://gitlab.freedesktop.org/wlroots/wlroots/-/issues/3478
+    /* currently, wlr_seat_touch_send_* functions don't work, so temporarily
+     * restore grab to the default one and use notify_* instead
+     * See https://gitlab.freedesktop.org/wlroots/wlroots/-/issues/3478 */
     struct wlr_seat_touch_grab *grab = seat->seat->touch_state.grab;
     seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
-    wlr_seat_touch_notify_cancel (seat->seat, surface);
+    wlr_seat_touch_notify_cancel (seat->seat, seat_client);
     seat->seat->touch_state.grab = grab;
     return;
   }
 
-  wlr_seat_touch_notify_cancel (seat->seat, surface);
+  wlr_seat_touch_notify_cancel (seat->seat, seat_client);
 }
 
 
@@ -1490,8 +1504,7 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
   }
   phoc_desktop_notify_activity (desktop, self->seat);
 
-  send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event->time_msec,
-                     event->orientation, event->delta, event->delta_discrete, event->source);
+  send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event);
 }
 
 

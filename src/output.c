@@ -17,6 +17,7 @@
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/region.h>
+#include <wlr/util/transform.h>
 
 #include "anim/animatable.h"
 #include "bling.h"
@@ -31,6 +32,7 @@
 #include "render-private.h"
 #include "seat.h"
 #include "server.h"
+#include "surface.h"
 #include "input-method-relay.h"
 #include "utils.h"
 #include "xwayland-surface.h"
@@ -435,9 +437,7 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
   if (!wlr_output_test_state (wlr_output, pending))
     return false;
 
-  wlr_presentation_surface_scanned_out_on_output (self->desktop->presentation,
-                                                  wlr_surface,
-                                                  wlr_output);
+  wlr_presentation_surface_scanned_out_on_output (wlr_surface, wlr_output);
 
   return wlr_output_commit_state (wlr_output, pending);
 }
@@ -1506,6 +1506,7 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
                          float scale, void *data)
 {
   bool *whole = data;
+  PhocSurface *surface = wlr_surface->data;
 
   struct wlr_box box = *_box;
 
@@ -1515,6 +1516,8 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
   pixman_region32_t damage;
   pixman_region32_init (&damage);
   wlr_surface_get_effective_damage (wlr_surface, &damage);
+  pixman_region32_union (&damage, &damage, phoc_surface_get_damage (surface));
+
   wlr_region_scale (&damage, &damage, scale);
   wlr_region_scale (&damage, &damage, self->wlr_output->scale);
   if (ceil (self->wlr_output->scale) > wlr_surface->current.scale) {
