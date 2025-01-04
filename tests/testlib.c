@@ -445,12 +445,11 @@ on_wl_client_finish (GObject *source, GAsyncResult *res, gpointer data)
 }
 
 
-static gboolean
+G_NORETURN static void
 on_timer_expired (gpointer unused)
 {
   /* Compositor did not quit in time */
   g_assert_not_reached ();
-  return FALSE;
 }
 
 /**
@@ -488,7 +487,7 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
 
   g_task_set_task_data (wl_client_task, &td, NULL);
   g_task_run_in_thread (wl_client_task, wl_client_run);
-  g_timeout_add_seconds (timeout, on_timer_expired, NULL);
+  g_timeout_add_seconds_once (timeout, on_timer_expired, NULL);
   g_main_loop_run (loop);
 }
 
