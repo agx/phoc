@@ -19,7 +19,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _PhocTestWlGlobals PhocTestClientGlobals;
+typedef struct _PhocTestClientGlobals PhocTestClientGlobals;
 
 typedef struct _PhocTestBuffer {
   struct wl_buffer *wl_buffer;
@@ -42,7 +42,7 @@ typedef struct _PhocTestOutput {
   PhocTestScreencopyFrame screenshot;
 } PhocTestOutput;
 
-typedef struct _PhocTestWlGlobals {
+typedef struct _PhocTestClientGlobals {
   struct wl_display *display;
   struct wl_compositor *compositor;
   struct wl_shm *shm;
