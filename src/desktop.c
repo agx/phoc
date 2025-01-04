@@ -61,6 +61,7 @@
 #define PHOC_EXT_FOREIGN_TOPLEVEL_LIST_VERSION 1
 #define PHOC_XDG_SHELL_VERSION 6
 #define PHOC_LAYER_SHELL_VERSION 3
+#define PHOC_PRESENTATION_TIME_VERSION 2
 
 #define PHOC_ANIM_ALWAYS_ON_TOP_DURATION  300
 #define PHOC_ANIM_ALWAYS_ON_TOP_COLOR_ON  (PhocColor){0.5f, 0.0f, 0.3f, 0.5f}
@@ -674,7 +675,7 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->pointer_constraints->events.new_constraint, &self->pointer_constraint);
 
   wlr_alpha_modifier_v1_create (wl_display);
-  wlr_presentation_create (wl_display, wlr_backend);
+  wlr_presentation_create (wl_display, wlr_backend, PHOC_PRESENTATION_TIME_VERSION);
   self->foreign_toplevel_manager_v1 = wlr_foreign_toplevel_manager_v1_create (wl_display);
   self->ext_foreign_toplevel_list_v1 =
     wlr_ext_foreign_toplevel_list_v1_create (wl_display, PHOC_EXT_FOREIGN_TOPLEVEL_LIST_VERSION);
