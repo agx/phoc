@@ -569,9 +569,9 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
     g_autofree guint8 *dst = g_malloc0 (height * stride);
 
     for (guint i = 0, j = height - 1; i < height; i++, j--)
-      memmove((dst + (i * stride)), (src + (j * stride)), stride);
+      memcpy ((dst + (i * stride)), (src + (j * stride)), stride);
 
-    memmove (src, dst, height * stride);
+    memcpy (src, dst, height * stride);
     frame->flags &= ~ZWLR_SCREENCOPY_FRAME_V1_FLAGS_Y_INVERT;
   }
   /* There shouldn't be any other flags left */
