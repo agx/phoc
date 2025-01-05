@@ -573,9 +573,9 @@ phoc_test_client_capture_frame (PhocTestClientGlobals *globals,
 
     memmove (src, dst, height * stride);
     frame->flags &= ~ZWLR_SCREENCOPY_FRAME_V1_FLAGS_Y_INVERT;
-    /* There shouldn't be any other flags left */
-    g_assert_false (frame->flags);
   }
+  /* There shouldn't be any other flags left */
+  g_assert_false (frame->flags);
   buffer_to_argb(&frame->buffer);
 
   frame->done = FALSE;
