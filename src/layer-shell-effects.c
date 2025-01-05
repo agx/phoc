@@ -882,6 +882,7 @@ handle_get_stacked_layer_surface (struct wl_client   *client,
                                                  version,
                                                  id);
   if (stacked_surface->resource == NULL) {
+    g_free (stacked_surface);
     wl_client_post_no_memory(client);
     return;
   }
