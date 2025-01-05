@@ -62,6 +62,15 @@ variables:
   - eatmydata apt-get -y remove --purge "libwlroots-.*dev"
   - dpkg -l
 
+.before_script_debian_clang: &before_script_debian_clang
+  - eatmydata apt-get update
+  - eatmydata apt-get -y install clang clang-tools
+  - git clone https://gitlab.freedesktop.org/wayland/wayland.git
+  - cd wayland &&
+    meson setup -Dtests=false -Ddocumentation=false -Ddtd_validation=false _build &&
+    meson install -C _build &&
+    cd ..
+
 .before_script_alpine: &before_script_alpine
   - apk -q add alpine-sdk
   - apk -q add $ALPINE_EDGE_DEPS $ALPINE_EDGE_WLROOTS_DEPS
@@ -83,11 +92,7 @@ build-with-xwayland-debian-trixie-clang:
   variables:
     CC: clang
     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true --werror
-  before_script:
-    - eatmydata apt-get update
-    - eatmydata apt-get -y install clang
-    - git clone https://gitlab.freedesktop.org/wayland/wayland.git
-    - cd wayland && meson setup -Dtests=false -Ddocumentation=false -Ddtd_validation=false _build && meson install -C _build && cd ..
+  before_script: *before_script_debian_clang
   <<: *build
   artifacts:
     paths:
@@ -140,6 +145,19 @@ asan-test-native-debian-trixie:
     - ninja -C _build-asan data/gschemas.compiled
     - WLR_RENDERER=pixman ${XVFB_RUN} meson test --verbose -C _build-asan
   allow_failure: true
+
+scan-build-native-debian-trixie:
+  stage: test+docs
+  image: ${DEBIAN_IMAGE}
+  needs:
+    - build-with-xwayland-debian-trixie-clang
+  before_script: *before_script_debian_clang
+  script:
+    - "SCANBUILD=${PWD}/helpers/scan-build ninja -C _build scan-build"
+  artifacts:
+    when: on_failure
+    paths:
+      - _build/meson-logs/scanbuild/
 
 build-gtkdoc:
   stage: test+docs

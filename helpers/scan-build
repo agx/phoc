@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+# Wrapper to invokd scan-build in ci
+
+set -e
+
+exec scan-build --status-bugs "$@"
