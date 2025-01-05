@@ -141,6 +141,7 @@ handle_get_tablet_mode_switch (struct wl_client   *client,
                                                      version,
                                                      id);
   if (tablet_mode_switch->resource == NULL) {
+    g_free (tablet_mode_switch);
     wl_client_post_no_memory (client);
     return;
   }
