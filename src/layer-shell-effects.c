@@ -824,6 +824,7 @@ handle_get_alpha_layer_surface (struct wl_client   *client,
                                                 version,
                                                 id);
   if (alpha_surface->resource == NULL) {
+    g_free (alpha_surface);
     wl_client_post_no_memory(client);
     return;
   }
