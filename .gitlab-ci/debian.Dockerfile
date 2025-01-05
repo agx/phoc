@@ -14,5 +14,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 # Tools needed for CI jobs
 RUN export DEBIAN_FRONTEND=noninteractive \
    && cd /home/user/app \
+   && eatmydata apt-get install --no-install-recommends -y clang clang-tools \
    && eatmydata apt-get install --no-install-recommends -y git gcovr uncrustify \
    && eatmydata apt-get clean

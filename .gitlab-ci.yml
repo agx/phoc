@@ -47,7 +47,7 @@ variables:
         wayland-dev wayland-protocols xcb-util-image-dev xcb-util-renderutil-dev
         xcb-util-wm-dev libseat-dev hwdata-dev libdisplay-info-dev
   XVFB_RUN: xvfb-run -s -noreset
-  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2024-11-11
+  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2025-01-05.1
 
 .build: &build
   script:
@@ -64,7 +64,6 @@ variables:
 
 .before_script_debian_clang: &before_script_debian_clang
   - eatmydata apt-get update
-  - eatmydata apt-get -y install clang clang-tools
   - git clone https://gitlab.freedesktop.org/wayland/wayland.git
   - cd wayland &&
     meson setup -Dtests=false -Ddocumentation=false -Ddtd_validation=false _build &&
