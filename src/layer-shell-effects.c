@@ -346,12 +346,14 @@ handle_stacked_layer_surface_stack_above (struct wl_client   *client,
     wl_resource_post_error (resource,
                             ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
                             "Layer surface not yet committed");
+    return;
   }
 
   if (!wlr_layer_surface->data) {
     wl_resource_post_error (resource,
                             ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
                             "Layer surface not yet committed");
+    return;
   }
 
   stacked_surface->pending.surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
@@ -377,12 +379,14 @@ handle_stacked_layer_surface_stack_below (struct wl_client   *client,
     wl_resource_post_error (resource,
                             ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
                             "Layer surface not yet committed");
+    return;
   }
 
   if (!wlr_layer_surface->data) {
     wl_resource_post_error (resource,
                             ZPHOC_LAYER_SHELL_EFFECTS_V1_STACK_ERROR_INVALID_SURFACE,
                             "Layer surface not yet committed");
+    return;
   }
 
   stacked_surface->pending.surface = PHOC_LAYER_SURFACE (wlr_layer_surface->data);
