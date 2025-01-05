@@ -866,6 +866,13 @@ handle_get_stacked_layer_surface (struct wl_client   *client,
   wlr_surface = wlr_layer_surface->surface;
   g_assert (wlr_surface);
 
+  if (!wlr_layer_surface->data) {
+    wl_resource_post_error (layer_shell_effects_resource,
+                            ZPHOC_LAYER_SHELL_EFFECTS_V1_ERROR_BAD_SURFACE,
+                            "Layer surface not yet committed");
+    return;
+  }
+
   stacked_surface = g_new0 (PhocStackedLayerSurface, 1);
 
   version = wl_resource_get_version (layer_shell_effects_resource);
@@ -884,12 +891,6 @@ handle_get_stacked_layer_surface (struct wl_client   *client,
                                   &stacked_layer_surface_v1_impl,
                                   stacked_surface,
                                   stacked_layer_surface_handle_resource_destroy);
-  if (!wlr_layer_surface->data) {
-    wl_resource_post_error (layer_shell_effects_resource,
-                            ZPHOC_LAYER_SHELL_EFFECTS_V1_ERROR_BAD_SURFACE,
-                            "Layer surface not yet committed");
-    return;
-  }
 
   g_assert (PHOC_IS_LAYER_SURFACE (wlr_layer_surface->data));
 
