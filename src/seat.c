@@ -549,7 +549,7 @@ seat_set_device_output_mappings (PhocSeat *self, PhocInputDevice *device)
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   struct wlr_cursor *cursor = self->cursor->cursor;
   PhocOutput *output;
-  const char *type = "";
+  const char *type = NULL;
 
   switch (phoc_input_device_get_device_type (device)) {
   /* only map devices with absolute positions */
