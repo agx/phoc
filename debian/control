@@ -22,6 +22,7 @@ Build-Depends:
 # For wlroots subproject build
  hwdata <pkg.phoc.embedwlroots>,
  libcap-dev <pkg.phoc.embedwlroots>,
+ liblcms2-dev <pkg.phoc.embedwlroots>,
  libdisplay-info-dev (>= 0.1.1) <pkg.phoc.embedwlroots>,
  libdrm-dev (>= 2.4.118) <pkg.phoc.embedwlroots>,
  libegl1-mesa-dev <pkg.phoc.embedwlroots>,
@@ -31,8 +32,10 @@ Build-Depends:
  libpng-dev <pkg.phoc.embedwlroots>,
  libseat-dev <pkg.phoc.embedwlroots>,
  libsystemd-dev <pkg.phoc.embedwlroots>,
+ libvulkan-dev <pkg.phoc.embedwlroots>,
  libx11-xcb-dev <pkg.phoc.embedwlroots>,
  libxcb-composite0-dev <pkg.phoc.embedwlroots>,
+ libxcb-errors-dev <pkg.phoc.embedwlroots>,
  libxcb-ewmh-dev <pkg.phoc.embedwlroots>,
  libxcb-icccm4-dev <pkg.phoc.embedwlroots>,
  libxcb-image0-dev <pkg.phoc.embedwlroots>,
