@@ -1350,7 +1350,7 @@ seat_add_view (PhocSeat *seat, PhocView *view)
 PhocSeatView *
 phoc_seat_view_from_view (PhocSeat *seat, PhocView *view)
 {
-  PhocSeatPrivate *priv = phoc_seat_get_instance_private (seat);
+  PhocSeatPrivate *priv;
   bool found = false;
   PhocSeatView *seat_view = NULL;
 
