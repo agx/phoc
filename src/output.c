@@ -818,6 +818,7 @@ phoc_output_fill_state (PhocOutput              *self,
                self->wlr_output->name);
       struct wlr_output_mode *mode;
       wl_list_for_each (mode, &self->wlr_output->modes, link) {
+        g_assert (mode);
         if (mode == preferred_mode)
           continue;
 
