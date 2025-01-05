@@ -91,7 +91,7 @@ build-with-xwayland-debian-trixie-clang:
   image: ${DEBIAN_IMAGE}
   variables:
     CC: clang
-    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true --werror
+    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled --werror
   before_script: *before_script_debian_clang
   <<: *build
   artifacts:
