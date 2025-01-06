@@ -8,11 +8,12 @@ RUN export DEBIAN_FRONTEND=noninteractive \
    && eatmydata apt-get -y dist-upgrade \
    && cd /home/user/app \
    && DEB_BUILD_PROFILES=pkg.phoc.embedwlroots eatmydata apt-get --no-install-recommends -y build-dep . \
-   && eatmydata apt-get -y remove --purge libwlroots-dev \
+   && eatmydata apt-get -y remove --purge "libwlroots-.*dev" || true \
    && eatmydata apt-get clean
 
 # Tools needed for CI jobs
 RUN export DEBIAN_FRONTEND=noninteractive \
    && cd /home/user/app \
+   && eatmydata apt-get install --no-install-recommends -y clang clang-tools \
    && eatmydata apt-get install --no-install-recommends -y git gcovr uncrustify \
    && eatmydata apt-get clean

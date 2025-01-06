@@ -47,7 +47,7 @@ variables:
         wayland-dev wayland-protocols xcb-util-image-dev xcb-util-renderutil-dev
         xcb-util-wm-dev libseat-dev hwdata-dev libdisplay-info-dev
   XVFB_RUN: xvfb-run -s -noreset
-  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2024-11-11
+  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2025-01-05.1
 
 .build: &build
   script:
@@ -58,9 +58,17 @@ variables:
 
 .before_script_debian: &before_script_debian
   - rm -f ../* || true
-  # Don't accidentally pull in system headers
-  - eatmydata apt-get -y remove --purge libwlroots-dev
+  # Don't accidentally pull in system wlroots headers
+  - eatmydata apt-get -y remove --purge "libwlroots-.*dev"
   - dpkg -l
+
+.before_script_debian_clang: &before_script_debian_clang
+  - eatmydata apt-get update
+  - git clone https://gitlab.freedesktop.org/wayland/wayland.git
+  - cd wayland &&
+    meson setup -Dtests=false -Ddocumentation=false -Ddtd_validation=false _build &&
+    meson install -C _build &&
+    cd ..
 
 .before_script_alpine: &before_script_alpine
   - apk -q add alpine-sdk
@@ -76,28 +84,18 @@ build-with-xwayland-debian-trixie:
   artifacts:
     paths:
       - _build
-  except:
-    variables:
-      - $PKG_ONLY == "1"
 
 build-with-xwayland-debian-trixie-clang:
   stage: build
   image: ${DEBIAN_IMAGE}
   variables:
     CC: clang
-    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true --werror
-  before_script:
-    - eatmydata apt-get update
-    - eatmydata apt-get -y install clang
-    - git clone https://gitlab.freedesktop.org/wayland/wayland.git
-    - cd wayland && meson setup -Dtests=false -Ddocumentation=false -Ddtd_validation=false _build && meson install -C _build && cd ..
+    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled --werror
+  before_script: *before_script_debian_clang
   <<: *build
   artifacts:
     paths:
       - _build
-  except:
-    variables:
-      - $PKG_ONLY == "1"
 
 build-with-xwayland-alpinelinux-edge:
   stage: build
@@ -107,9 +105,6 @@ build-with-xwayland-alpinelinux-edge:
      BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled
   <<: *build
   allow_failure: true
-  except:
-    variables:
-      - $PKG_ONLY == "1"
 
 build-without-xwayland-alpinelinux-edge:
   stage: build
@@ -119,10 +114,6 @@ build-without-xwayland-alpinelinux-edge:
      BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=disabled
   <<: *build
   allow_failure: true
-  except:
-    variables:
-      - $PKG_ONLY == "1"
-
 
 unit-test-with-xwayland-debian-trixie:
   stage: test+docs
@@ -141,9 +132,6 @@ unit-test-with-xwayland-debian-trixie:
         - _build/meson-logs/testlog.junit.xml
     paths:
       - _build
-  except:
-    variables:
-      - $PKG_ONLY == "1"
 
 asan-test-native-debian-trixie:
   stage: test+docs
@@ -155,10 +143,20 @@ asan-test-native-debian-trixie:
     - meson setup -Db_sanitize=address _build-asan
     - ninja -C _build-asan data/gschemas.compiled
     - WLR_RENDERER=pixman ${XVFB_RUN} meson test --verbose -C _build-asan
-  except:
-    variables:
-      - $PKG_ONLY == "1"
   allow_failure: true
+
+scan-build-native-debian-trixie:
+  stage: test+docs
+  image: ${DEBIAN_IMAGE}
+  needs:
+    - build-with-xwayland-debian-trixie-clang
+  before_script: *before_script_debian_clang
+  script:
+    - "SCANBUILD=${PWD}/helpers/scan-build ninja -C _build scan-build"
+  artifacts:
+    when: on_failure
+    paths:
+      - _build/meson-logs/scanbuild/
 
 build-gtkdoc:
   stage: test+docs
@@ -176,16 +174,10 @@ build-gtkdoc:
   artifacts:
     paths:
       - _reference
-  except:
-    variables:
-      - $PKG_ONLY == "1"
 
 check-po:
   stage: test+docs
   extends: .phosh-check-po
-  except:
-    variables:
-      - $PKG_ONLY == "1"
 
 check-consistency:
   stage: test+docs
@@ -243,9 +235,6 @@ check-license:
   artifacts:
     paths:
       - _build
-  except:
-    variables:
-      - $PKG_ONLY == "1"
 
 check-markdown:
   stage: style-checks

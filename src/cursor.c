@@ -1695,6 +1695,7 @@ phoc_cursor_handle_touch_motion (PhocCursor                    *self,
           break;
         }
       }
+      g_assert (found);
     } else {
       PhocView *view = phoc_view_from_wlr_surface (root);
       if (view) {

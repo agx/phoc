@@ -805,22 +805,26 @@ phoc_output_fill_state (PhocOutput              *self,
     priv->scale_filter = output_config->scale_filter;
   } else if (enable) {
     enum wl_output_transform transform = WL_OUTPUT_TRANSFORM_NORMAL;
+    gboolean has_mode = FALSE;
 
     if (preferred_mode != NULL) {
       g_debug ("Using preferred mode for %s", self->wlr_output->name);
       wlr_output_state_set_mode (pending, preferred_mode);
+      has_mode = wlr_output_test_state (self->wlr_output, pending);
     }
 
-    if (!wlr_output_test_state (self->wlr_output, pending)) {
+    if (!has_mode) {
       g_debug ("Preferred mode rejected for %s falling back to another mode",
                self->wlr_output->name);
       struct wlr_output_mode *mode;
       wl_list_for_each (mode, &self->wlr_output->modes, link) {
+        g_assert (mode);
         if (mode == preferred_mode)
           continue;
 
         wlr_output_state_set_mode (pending, mode);
-        if (wlr_output_test_state (self->wlr_output, pending))
+        has_mode = wlr_output_test_state (self->wlr_output, pending);
+        if (has_mode)
           break;
       }
     }
