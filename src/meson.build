@@ -28,6 +28,8 @@ sources = files(
   'cutouts-overlay.h',
   'desktop.c',
   'desktop.h',
+  'desktop-xwayland.c',
+  'desktop-xwayland.h',
   'device-state.c',
   'device-state.h',
   'drag-icon.c',

@@ -411,15 +411,10 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
   if (n_surfaces > 1)
     return false;
 
-#ifdef PHOC_XWAYLAND
   if (PHOC_IS_XWAYLAND_SURFACE (view)) {
-    struct wlr_xwayland_surface *xsurface =
-      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-    if (!wl_list_empty (&xsurface->children)) {
+    if (phoc_xwayland_surface_has_children (PHOC_XWAYLAND_SURFACE (view)))
       return false;
-    }
   }
-#endif
 
   wlr_surface = view->wlr_surface;
   if (wlr_surface->buffer == NULL)
@@ -1483,21 +1478,14 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
   if (self->fullscreen_view == view)
     return true;
 
-#ifdef PHOC_XWAYLAND
+  /* Special case: accept damage from children */
   if (PHOC_IS_XWAYLAND_SURFACE (self->fullscreen_view) && PHOC_IS_XWAYLAND_SURFACE (view)) {
-    /* Special case: accept damage from children */
-    struct wlr_xwayland_surface *xsurface =
-      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-    struct wlr_xwayland_surface *fullscreen_xsurface =
-      phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (self->fullscreen_view));
-    while (xsurface != NULL) {
-      if (fullscreen_xsurface == xsurface)
-        return true;
-
-      xsurface = xsurface->parent;
+    if (phoc_xwayland_surface_is_child (PHOC_XWAYLAND_SURFACE (view),
+                                        PHOC_XWAYLAND_SURFACE (self->fullscreen_view))) {
+      return true;
     }
   }
-#endif
+
   return false;
 }
 

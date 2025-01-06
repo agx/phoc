@@ -29,7 +29,17 @@ G_DECLARE_FINAL_TYPE (PhocXWaylandSurface, phoc_xwayland_surface, PHOC, XWAYLAND
 
 PhocXWaylandSurface *phoc_xwayland_surface_new (struct wlr_xwayland_surface *surface);
 struct wlr_xwayland_surface *phoc_xwayland_surface_get_wlr_surface (PhocXWaylandSurface *self);
+gboolean             phoc_xwayland_surface_is_child (PhocXWaylandSurface *self,
+                                                     PhocXWaylandSurface *maybe_child);
+gboolean             phoc_xwayland_surface_has_children (PhocXWaylandSurface *self);
 
 G_END_DECLS
+
+#else
+
+#define PHOC_IS_XWAYLAND_SURFACE(x) (FALSE)
+#define PHOC_XWAYLAND_SURFACE(x) (x)
+#define phoc_xwayland_surface_is_child(x,y) (FALSE)
+#define phoc_xwayland_surface_has_children(x) (FALSE)
 
 #endif

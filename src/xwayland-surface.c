@@ -658,3 +658,52 @@ phoc_xwayland_surface_get_wlr_surface (PhocXWaylandSurface *self)
   g_assert (PHOC_IS_XWAYLAND_SURFACE (self));
   return self->xwayland_surface;
 }
+
+/**
+ * phoc_xwayland_surface_is_child:
+ * @self: The XWayland surface
+ * @maybe_child: The XWayland surface to check
+ *
+ * Checks if `maybe_child` is a child of `self`. This is `TRUE` if
+ * `maybe_child` is `self` or has `self` as any parent.
+ *
+ * Returns: `TRUE` if `maybe_child` is a child of `self`
+ */
+gboolean
+phoc_xwayland_surface_is_child (PhocXWaylandSurface *self, PhocXWaylandSurface *maybe_child)
+{
+  struct wlr_xwayland_surface *parent, *xsurface;
+
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (self));
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (maybe_child));
+  xsurface = phoc_xwayland_surface_get_wlr_surface (maybe_child);
+  parent = phoc_xwayland_surface_get_wlr_surface (self);
+
+  while (xsurface != NULL) {
+    if (parent == xsurface)
+      return TRUE;
+
+    xsurface = xsurface->parent;
+  }
+
+  return FALSE;
+}
+
+/**
+ * phoc_xwayland_surface_has_children:
+ * @self: The XWayland surface
+ *
+ * Checks whether the given XWayland surface has any children
+ *
+ * Returns: `TRUE` if the surface has any children
+ */
+gboolean
+phoc_xwayland_surface_has_children (PhocXWaylandSurface *self)
+{
+  struct wlr_xwayland_surface *xsurface;
+
+  g_assert (PHOC_IS_XWAYLAND_SURFACE (self));
+  xsurface = phoc_xwayland_surface_get_wlr_surface (self);
+
+  return !wl_list_empty (&xsurface->children);
+}
