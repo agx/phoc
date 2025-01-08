@@ -348,8 +348,7 @@ phoc_desktop_view_check_visibility (PhocDesktop *self, PhocView *view)
   if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view))
     goto out;
 
-  PhocView *v = top_view;
-  while (v) {
+  for (PhocView *v = top_view; v; v = v->parent) {
     if (v == view)
       goto out;
 
@@ -357,8 +356,6 @@ phoc_desktop_view_check_visibility (PhocDesktop *self, PhocView *view)
       visible = FALSE;
       goto out;
     }
-
-    v = v->parent;
   }
 
  out:
