@@ -326,19 +326,18 @@ phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
 
   priv = phoc_desktop_get_instance_private (self);
 
-  if (!phoc_view_is_mapped (view)) {
-    return false;
-  }
+  if (!phoc_view_is_mapped (view))
+    return FALSE;
 
   g_assert_true (priv->views->head);
 
   if (wl_list_length (&self->outputs) != 1) {
     // current heuristics work well only for single output
-    return true;
+    return TRUE;
   }
 
   if (!self->maximize) {
-    return true;
+    return TRUE;
   }
 
   top_view = phoc_desktop_get_view_by_index (self, 0);
@@ -346,21 +345,21 @@ phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
   // relationships very well at the moment, so just make all XWayland windows visible
   // when some XWayland window is active for now
   if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view)) {
-    return true;
+    return TRUE;
   }
 
   PhocView *v = top_view;
   while (v) {
     if (v == view) {
-      return true;
+      return TRUE;
     }
     if (phoc_view_is_maximized (v)) {
-      return false;
+      return FALSE;
     }
     v = v->parent;
   }
 
-  return false;
+  return FALSE;
 }
 
 static void
