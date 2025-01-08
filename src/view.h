@@ -95,6 +95,8 @@ struct _PhocView {
  * @set_maximized: This is called by `PhocView` to maximize a view
  * @set_tiled: This is called by `PhocView` to tile a view.
  *     The implementation is optional.
+ * @set_suspended: This is called by `PhocView` to indicate that the view is suspended
+ *     The implementation is optional.
  * @close: This is called by `PhocView` to close a view.
  * @for_each_surface: This is used by `PhocView` to iterate over a surface and it's children.
  *     The implementation is optional.
@@ -116,6 +118,7 @@ typedef struct _PhocViewClass
   void (*set_fullscreen)     (PhocView *self, bool fullscreen);
   void (*set_maximized)      (PhocView *self, bool maximized);
   void (*set_tiled)          (PhocView *self, bool tiled);
+  void (*set_suspended)      (PhocView *self, bool suspended);
   void (*close)              (PhocView *self);
   void (*for_each_surface)   (PhocView *self, wlr_surface_iterator_func_t iterator, void *user_data);
   void (*get_geometry)       (PhocView *self, struct wlr_box *box);

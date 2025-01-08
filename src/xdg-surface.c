@@ -281,6 +281,19 @@ set_tiled (PhocView *view, bool tiled)
 
 
 static void
+set_suspended (PhocView *view, bool suspended)
+{
+  PhocXdgSurface *self = PHOC_XDG_SURFACE (view);
+  struct wlr_xdg_surface *xdg_surface = self->xdg_surface;
+
+  g_assert (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+
+  wlr_xdg_toplevel_set_suspended (xdg_surface->toplevel, suspended);
+  send_frame_done_if_not_visible (self);
+}
+
+
+static void
 set_fullscreen (PhocView *view, bool fullscreen)
 {
   struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
@@ -702,6 +715,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
   view_class->set_fullscreen = set_fullscreen;
   view_class->set_maximized = set_maximized;
   view_class->set_tiled = set_tiled;
+  view_class->set_suspended = set_suspended;
   view_class->close = _close;
   view_class->for_each_surface = for_each_surface;
   view_class->get_geometry = get_geometry;
