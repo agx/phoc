@@ -56,7 +56,7 @@
 
 /* Maximum protocol versions we support */
 #define PHOC_FRACTIONAL_SCALE_VERSION 1
-#define PHOC_XDG_SHELL_VERSION 5
+#define PHOC_XDG_SHELL_VERSION 6
 #define PHOC_LAYER_SHELL_VERSION 3
 
 #define PHOC_ANIM_ALWAYS_ON_TOP_DURATION  300
