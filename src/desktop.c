@@ -332,30 +332,28 @@ phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
   g_assert_true (priv->views->head);
 
   if (wl_list_length (&self->outputs) != 1) {
-    // current heuristics work well only for single output
+    /* current heuristics work well only for single output */
     return TRUE;
   }
 
-  if (!self->maximize) {
+  if (!self->maximize)
     return TRUE;
-  }
 
   top_view = phoc_desktop_get_view_by_index (self, 0);
-  // XWayland parent relations can be complicated and aren't described by PhocView
-  // relationships very well at the moment, so just make all XWayland windows visible
-  // when some XWayland window is active for now
-  if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view)) {
+  /* XWayland parent relations can be complicated and aren't described by PhocView
+   * relationships very well at the moment, so just make all XWayland windows visible
+   * when some XWayland window is active for now */
+  if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view))
     return TRUE;
-  }
 
   PhocView *v = top_view;
   while (v) {
-    if (v == view) {
+    if (v == view)
       return TRUE;
-    }
-    if (phoc_view_is_maximized (v)) {
+
+    if (phoc_view_is_maximized (v))
       return FALSE;
-    }
+
     v = v->parent;
   }
 
