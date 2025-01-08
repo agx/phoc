@@ -304,6 +304,17 @@ phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
   return NULL;
 }
 
+/**
+ * phoc_desktop_view_is_visible:
+ * @self: The desktop
+ * @view: The view to check
+ *
+ * Checks if a view is currently visible. This is currently very
+ * pessimistic and only assumes that the view is not visible when
+ * we're certain it is covered by other windows.
+ *
+ * Returns: `FALSE` when it's certain that the view is not visible, otherwise `TRUE`
+ */
 gboolean
 phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
 {
