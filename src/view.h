@@ -204,6 +204,7 @@ void                  phoc_view_set_decorated (PhocView *self,
 gboolean              phoc_view_get_maximized_box (PhocView       *self,
                                                    PhocOutput     *output,
                                                    struct wlr_box *box);
+void                  phoc_view_set_visibility (PhocView *self, gboolean visibility);
 gboolean              phoc_view_get_tiled_box (PhocView             *self,
                                                PhocViewTileDirection dir,
                                                PhocOutput           *output,

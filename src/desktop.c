@@ -189,7 +189,7 @@ desktop_view_at (PhocDesktop         *self,
   for (GList *l = phoc_desktop_get_views (self)->head; l; l = l->next) {
     PhocView *view = PHOC_VIEW (l->data);
 
-    if (phoc_desktop_view_is_visible (self, view) && view_at (view, lx, ly, surface, sx, sy))
+    if (phoc_desktop_view_check_visibility (self, view) && view_at (view, lx, ly, surface, sx, sy))
       return view;
   }
   return NULL;
@@ -305,7 +305,7 @@ phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
 }
 
 /**
- * phoc_desktop_view_is_visible:
+ * phoc_desktop_view_check_visibility:
  * @self: The desktop
  * @view: The view to check
  *
@@ -316,48 +316,54 @@ phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
  * Returns: `FALSE` when it's certain that the view is not visible, otherwise `TRUE`
  */
 gboolean
-phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
+phoc_desktop_view_check_visibility (PhocDesktop *self, PhocView *view)
 {
   PhocDesktopPrivate *priv;
   PhocView *top_view;
+  gboolean visible = TRUE;
 
   g_assert (PHOC_IS_DESKTOP (self));
   g_assert (PHOC_IS_VIEW (view));
 
   priv = phoc_desktop_get_instance_private (self);
 
-  if (!phoc_view_is_mapped (view))
-    return FALSE;
+  if (!phoc_view_is_mapped (view)) {
+    visible = FALSE;
+    goto out;
+  }
 
   g_assert_true (priv->views->head);
 
-  if (wl_list_length (&self->outputs) != 1) {
-    /* current heuristics work well only for single output */
-    return TRUE;
-  }
+  /* current heuristics work well only for single output */
+  if (wl_list_length (&self->outputs) != 1)
+    goto out;
 
   if (!self->maximize)
-    return TRUE;
+    goto out;
 
   top_view = phoc_desktop_get_view_by_index (self, 0);
   /* XWayland parent relations can be complicated and aren't described by PhocView
    * relationships very well at the moment, so just make all XWayland windows visible
    * when some XWayland window is active for now */
   if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view))
-    return TRUE;
+    goto out;
 
   PhocView *v = top_view;
   while (v) {
     if (v == view)
-      return TRUE;
+      goto out;
 
-    if (phoc_view_is_maximized (v))
-      return FALSE;
+    if (phoc_view_is_maximized (v)) {
+      visible = FALSE;
+      goto out;
+    }
 
     v = v->parent;
   }
 
-  return FALSE;
+ out:
+  phoc_view_set_visibility (view, visible);
+  return visible;
 }
 
 static void

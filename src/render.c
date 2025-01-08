@@ -645,7 +645,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
     for (GList *l = phoc_desktop_get_views (desktop)->tail; l; l = l->prev) {
       PhocView *view = PHOC_VIEW (l->data);
 
-      if (phoc_desktop_view_is_visible (desktop, view))
+      if (phoc_desktop_view_check_visibility (desktop, view))
         render_view (output, view, ctx);
     }
     // Render top layer above views

@@ -59,6 +59,7 @@ typedef struct _PhocViewPrivate {
   PhocViewState  state;
   PhocViewTileDirection tile_direction;
   gboolean       always_on_top;
+  gboolean       visibility;
 
   PhocOutput    *fullscreen_output;
 
@@ -1030,7 +1031,7 @@ phoc_view_unmap (PhocView *view)
 
   g_assert (view->wlr_surface != NULL);
 
-  bool was_visible = phoc_desktop_view_is_visible (view->desktop, view);
+  bool was_visible = phoc_desktop_view_check_visibility (view->desktop, view);
 
   phoc_view_damage_whole (view);
 
@@ -1096,7 +1097,7 @@ phoc_view_set_initial_focus (PhocView *self)
 void
 view_send_frame_done_if_not_visible (PhocView *view)
 {
-  if (!phoc_desktop_view_is_visible (view->desktop, view) && phoc_view_is_mapped (view)) {
+  if (!phoc_desktop_view_check_visibility (view->desktop, view) && phoc_view_is_mapped (view)) {
     struct timespec now;
     clock_gettime (CLOCK_MONOTONIC, &now);
     wlr_surface_send_frame_done (view->wlr_surface, &now);
@@ -1698,6 +1699,7 @@ phoc_view_init (PhocView *self)
   priv->alpha = 1.0f;
   priv->scale = 1.0f;
   priv->state = PHOC_VIEW_STATE_FLOATING;
+  priv->visibility = TRUE;
 
   wl_list_init (&priv->child_surfaces);
   wl_list_init (&self->stack);
@@ -2214,4 +2216,27 @@ phoc_view_is_always_on_top (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->always_on_top;
+}
+
+/**
+ * phoc_view_set_visiblity:
+ * @self: a view
+ * @visibility: The views visibility
+ *
+ * Sets the views visibility as determined by
+ * [method@Desktop.view_check_visible] and triggers needed actions
+ * resulting from visibility changes.
+ */
+void
+phoc_view_set_visibility (PhocView *self, gboolean visibility)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (priv->visibility == visibility)
+    return;
+
+  priv->visibility = visibility;
 }
