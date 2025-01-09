@@ -85,12 +85,13 @@ static void
 send_frame_done_if_not_visible (PhocXdgSurface *self)
 {
   PhocView *view = PHOC_VIEW (self);
+  struct timespec now;
 
-  if (!phoc_desktop_view_check_visibility (view->desktop, view) && phoc_view_is_mapped (view)) {
-    struct timespec now;
-    clock_gettime (CLOCK_MONOTONIC, &now);
-    wlr_surface_send_frame_done (view->wlr_surface, &now);
-  }
+  if (phoc_desktop_view_check_visibility (view->desktop, view) || !phoc_view_is_mapped (view))
+    return;
+
+  clock_gettime (CLOCK_MONOTONIC, &now);
+  wlr_surface_send_frame_done (view->wlr_surface, &now);
 }
 
 
