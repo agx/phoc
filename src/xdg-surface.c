@@ -62,6 +62,8 @@ typedef struct _PhocXdgSurface {
 
   struct wl_listener surface_commit;
 
+  struct wl_event_source *frame_done_idle;
+
   uint32_t pending_move_resize_configure_serial;
 
   PhocXdgToplevelDecoration *decoration;
@@ -69,6 +71,18 @@ typedef struct _PhocXdgSurface {
 
 G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC_TYPE_VIEW)
 
+
+static void
+send_frame_done (void *user_data)
+{
+  PhocXdgSurface *self = PHOC_XDG_SURFACE (user_data);
+  struct timespec now;
+
+  self->frame_done_idle = NULL;
+
+  clock_gettime (CLOCK_MONOTONIC, &now);
+  wlr_surface_send_frame_done (PHOC_VIEW (self)->wlr_surface, &now);
+}
 
 /**
  * send_frame_done_if_not_visible:
@@ -85,13 +99,17 @@ static void
 send_frame_done_if_not_visible (PhocXdgSurface *self)
 {
   PhocView *view = PHOC_VIEW (self);
-  struct timespec now;
+  struct wl_display *display;
+  struct wl_event_loop *loop;
 
   if (phoc_desktop_view_check_visibility (view->desktop, view) || !phoc_view_is_mapped (view))
     return;
 
-  clock_gettime (CLOCK_MONOTONIC, &now);
-  wlr_surface_send_frame_done (view->wlr_surface, &now);
+  display = wl_client_get_display (self->xdg_surface->client->client);
+  loop = wl_display_get_event_loop (display);
+
+  self->frame_done_idle = wl_event_loop_add_idle (loop, send_frame_done, view);
+  g_assert (self->frame_done_idle);
 }
 
 
@@ -645,6 +663,8 @@ static void
 phoc_xdg_surface_finalize (GObject *object)
 {
   PhocXdgSurface *self = PHOC_XDG_SURFACE(object);
+
+  g_clear_pointer (&self->frame_done_idle, wl_event_source_remove);
 
   wl_list_remove(&self->surface_commit.link);
   wl_list_remove(&self->destroy.link);
