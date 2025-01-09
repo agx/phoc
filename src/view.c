@@ -1083,27 +1083,6 @@ phoc_view_set_initial_focus (PhocView *self)
   phoc_seat_set_focus_view (seat, self);
 }
 
-/**
- * view_send_frame_done_if_not_visible:
- * @view: The #PhocView
- *
- * For views that aren't visible, EGL-Wayland can be stuck
- * in eglSwapBuffers waiting for frame done event. This function
- * helps it get unstuck, so further events can actually be processed
- * by the client. It's worth calling this function when sending
- * events like `configure` or `close`, as these should get processed
- * immediately regardless of surface visibility.
- */
-void
-view_send_frame_done_if_not_visible (PhocView *view)
-{
-  if (!phoc_desktop_view_check_visibility (view->desktop, view) && phoc_view_is_mapped (view)) {
-    struct timespec now;
-    clock_gettime (CLOCK_MONOTONIC, &now);
-    wlr_surface_send_frame_done (view->wlr_surface, &now);
-  }
-}
-
 static void view_create_foreign_toplevel_handle (PhocView *view);
 
 /**
