@@ -71,8 +71,8 @@ G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC_TYPE_VIEW)
 
 
 /**
- * view_send_frame_done_if_not_visible:
- * @view: The #PhocView
+ * send_frame_done_if_not_visible:
+ * @self: The #PhocXdgSurface
  *
  * For views that aren't visible, EGL-Wayland can be stuck
  * in eglSwapBuffers waiting for frame done event. This function
@@ -82,8 +82,10 @@ G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC_TYPE_VIEW)
  * immediately regardless of surface visibility.
  */
 static void
-view_send_frame_done_if_not_visible (PhocView *view)
+send_frame_done_if_not_visible (PhocXdgSurface *self)
 {
+  PhocView *view = PHOC_VIEW (self);
+
   if (!phoc_desktop_view_check_visibility (view->desktop, view) && phoc_view_is_mapped (view)) {
     struct timespec now;
     clock_gettime (CLOCK_MONOTONIC, &now);
@@ -162,7 +164,7 @@ resize (PhocView *view, uint32_t width, uint32_t height)
   if (wlr_xdg_surface->initialized)
     wlr_xdg_toplevel_set_size (wlr_xdg_surface->toplevel, constrained_width, constrained_height);
 
-  view_send_frame_done_if_not_visible (view);
+  send_frame_done_if_not_visible (PHOC_XDG_SURFACE (view));
 }
 
 static void
@@ -202,7 +204,7 @@ move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height
       wlr_xdg_toplevel_set_size (wlr_xdg_surface->toplevel, constrained_width, constrained_height);
   }
 
-  view_send_frame_done_if_not_visible (view);
+  send_frame_done_if_not_visible (self);
 }
 
 static bool
@@ -281,7 +283,7 @@ _close(PhocView *view)
   }
   wlr_xdg_toplevel_send_close (xdg_surface->toplevel);
 
-  view_send_frame_done_if_not_visible (view);
+  send_frame_done_if_not_visible (PHOC_XDG_SURFACE (view));
 }
 
 static void
