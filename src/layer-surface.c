@@ -500,3 +500,35 @@ phoc_layer_surface_get_mapped (PhocLayerSurface *self)
 
   return self->mapped;
 }
+
+/**
+ * phoc_layer_surface_covers_output:
+ * @self: The layer surface
+ *
+ * Check whether the given layer surface fully covers its output
+ *
+ * Returns: `TRUE` if the surface fully covers its output, otherwise `FALSE`
+ */
+gboolean
+phoc_layer_surface_covers_output (PhocLayerSurface *self)
+{
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  if (!self->layer_surface)
+    return FALSE;
+
+  if (!self->layer_surface->output)
+    return FALSE;
+
+  if (self->layer_surface->current.anchor != (ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+                                              ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT |
+                                              ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+                                              ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM)) {
+    return FALSE;
+  }
+
+  if (self->layer_surface->current.exclusive_zone != -1)
+    return FALSE;
+
+  return TRUE;
+}
