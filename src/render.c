@@ -46,12 +46,8 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#define TOUCH_POINT_SIZE 20
-#define TOUCH_POINT_BORDER 0.1
-
 #define COLOR_BLACK                ((struct wlr_render_color){0.0f, 0.0f, 0.0f, 1.0f})
 #define COLOR_TRANSPARENT          {0.0f, 0.0f, 0.0f, 0.0f}
-#define COLOR_TRANSPARENT_WHITE    ((struct wlr_render_color){0.5f, 0.5f, 0.5f, 0.5f})
 #define COLOR_TRANSPARENT_YELLOW   ((struct wlr_render_color){0.5f, 0.5f, 0.0f, 0.5f})
 #define COLOR_TRANSPARENT_MAGENTA  ((struct wlr_render_color){0.5f, 0.0f, 0.5f, 0.5f})
 
@@ -282,80 +278,12 @@ render_drag_icons (PhocInput *input, PhocRenderContext *ctx)
 
 
 static void
-color_hsv_to_rgb (struct wlr_render_color *color)
-{
-  float h = color->r, s = color->g, v = color->b;
-
-  h = fmodf (h, 360);
-  if (h < 0)
-    h += 360;
-
-  int d = h / 60;
-  float e = h / 60 - d;
-  float a = v * (1 - s);
-  float b = v * (1 - e * s);
-  float c = v * (1 - (1 - e) * s);
-
-  switch (d) {
-  default:
-  case 0: color->r = v, color->g = c, color->b = a; return;
-  case 1: color->r = b, color->g = v, color->b = a; return;
-  case 2: color->r = a, color->g = v, color->b = c; return;
-  case 3: color->r = a, color->g = b, color->b = v; return;
-  case 4: color->r = c, color->g = a, color->b = v; return;
-  case 5: color->r = v, color->g = a, color->b = b; return;
-  }
-}
-
-
-static void
 render_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocTouchPoint *touch_point = value;
   PhocRenderContext *ctx = user_data;
-  struct wlr_output *wlr_output = ctx->output->wlr_output;
-  int size = TOUCH_POINT_SIZE * wlr_output->scale;
-  struct wlr_render_color color = {touch_point->touch_id * 100 + 240, 1.0, 1.0, 0.75};
-  struct wlr_box point_box;
 
-  if (!wlr_output_layout_contains_point (desktop->layout,
-                                         wlr_output,
-                                         touch_point->lx,
-                                         touch_point->ly)) {
-    return;
-  }
-
-  color_hsv_to_rgb (&color);
-
-  point_box = phoc_touch_point_get_box (touch_point, ctx->output, size, size);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = color,
-    });
-
-  size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
-  point_box = phoc_touch_point_get_box (touch_point, ctx->output, size, size);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = COLOR_TRANSPARENT_WHITE,
-    });
-
-  point_box = phoc_touch_point_get_box (touch_point, ctx->output, 8 * wlr_output->scale, 2 * wlr_output->scale);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = color,
-    });
-
-  point_box = phoc_touch_point_get_box (touch_point, ctx->output, 2 * wlr_output->scale, 8 * wlr_output->scale);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = color,
-    });
+  phoc_touch_point_render (touch_point, ctx);
 }
 
 

@@ -21,10 +21,8 @@ typedef struct PhocTouchPoint {
 PhocTouchPoint *phoc_touch_point_new (int touch_id, double lx, double ly);
 void            phoc_touch_point_destroy (PhocTouchPoint *self);
 
+void            phoc_touch_point_render (PhocTouchPoint    *self,
+                                         PhocRenderContext *ctx);
 void            phoc_touch_point_damage (PhocTouchPoint *self);
-struct wlr_box  phoc_touch_point_get_box (PhocTouchPoint *self,
-                                          PhocOutput     *output,
-                                          int             width,
-                                          int             height);
 
 G_END_DECLS
