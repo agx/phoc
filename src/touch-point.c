@@ -121,6 +121,16 @@ phoc_touch_point_destroy (PhocTouchPoint *self)
 
 
 void
+phoc_touch_point_update (PhocTouchPoint *self, double lx, double ly)
+{
+  g_assert (self);
+
+  self->lx = lx;
+  self->ly = ly;
+}
+
+
+void
 phoc_touch_point_render (PhocTouchPoint *self, PhocRenderContext *ctx)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default());

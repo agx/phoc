@@ -20,6 +20,7 @@ typedef struct PhocTouchPoint {
 
 PhocTouchPoint *phoc_touch_point_new (int touch_id, double lx, double ly);
 void            phoc_touch_point_destroy (PhocTouchPoint *self);
+void            phoc_touch_point_update (PhocTouchPoint *self, double lx, double ly);
 
 void            phoc_touch_point_render (PhocTouchPoint    *self,
                                          PhocRenderContext *ctx);

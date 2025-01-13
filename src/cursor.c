@@ -606,8 +606,7 @@ phoc_cursor_update_touch_point (PhocCursor *self, struct wlr_touch_motion_event 
   }
   wlr_cursor_absolute_to_layout_coords (self->cursor, &event->touch->base,
                                         event->x, event->y, &lx, &ly);
-  touch_point->lx = lx;
-  touch_point->ly = ly;
+  phoc_touch_point_update (touch_point, lx, ly);
 
   return touch_point;
 }
