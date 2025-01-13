@@ -77,8 +77,12 @@ phoc_touch_point_get_box (PhocTouchPoint *self, PhocOutput *output, int width, i
 void
 phoc_touch_point_damage (PhocTouchPoint *self)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocOutput *output;
+
+  if (!G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
+    return;
 
   wl_list_for_each (output, &desktop->outputs, link) {
     if (wlr_output_layout_contains_point (desktop->layout, output->wlr_output, self->lx,
@@ -99,15 +103,13 @@ phoc_touch_point_damage (PhocTouchPoint *self)
 PhocTouchPoint *
 phoc_touch_point_new (int touch_id, double lx, double ly)
 {
-  PhocServer *server = phoc_server_get_default ();
   PhocTouchPoint *self = g_new0 (PhocTouchPoint, 1);
 
   self->touch_id = touch_id;
   self->lx = lx;
   self->ly = ly;
 
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
-    phoc_touch_point_damage (self);
+  phoc_touch_point_damage (self);
 
   return self;
 }
@@ -116,10 +118,7 @@ phoc_touch_point_new (int touch_id, double lx, double ly)
 void
 phoc_touch_point_destroy (PhocTouchPoint *self)
 {
-  PhocServer *server = phoc_server_get_default ();
-
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
-    phoc_touch_point_damage (self);
+  phoc_touch_point_damage (self);
 
   g_free (self);
 }
@@ -128,29 +127,28 @@ phoc_touch_point_destroy (PhocTouchPoint *self)
 void
 phoc_touch_point_update (PhocTouchPoint *self, double lx, double ly)
 {
-  PhocServer *server = phoc_server_get_default ();
-
   g_assert (self);
 
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
-    phoc_touch_point_damage (self);
+  phoc_touch_point_damage (self);
 
   self->lx = lx;
   self->ly = ly;
 
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
-    phoc_touch_point_damage (self);
+  phoc_touch_point_damage (self);
 }
 
 
 void
 phoc_touch_point_render (PhocTouchPoint *self, PhocRenderContext *ctx)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default());
+  PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   struct wlr_output *wlr_output = ctx->output->wlr_output;
   struct wlr_render_color color = {self->touch_id * 100 + 240, 1.0, 1.0, 0.75};
   struct wlr_box point_box;
   int size;
+
+  g_assert (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS));
 
   if (!wlr_output_layout_contains_point (desktop->layout, wlr_output, self->lx, self->ly))
     return;
