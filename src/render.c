@@ -374,45 +374,6 @@ render_touch_points (PhocRenderContext *ctx)
 
 
 static void
-damage_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
-{
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default());
-  PhocTouchPoint *touch_point = value;
-  PhocOutput *output = user_data;
-  struct wlr_output *wlr_output = output->wlr_output;
-  int size = TOUCH_POINT_SIZE * wlr_output->scale;
-  struct wlr_box box;
-  pixman_region32_t region;
-
-  if (!wlr_output_layout_contains_point (desktop->layout,
-                                         wlr_output,
-                                         touch_point->lx,
-                                         touch_point->ly)) {
-    return;
-  }
-
-  box = phoc_touch_point_get_box (touch_point, output, size, size);
-  pixman_region32_init_rect (&region, box.x, box.y, box.width, box.height);
-  wlr_damage_ring_add (&output->damage_ring, &region);
-  pixman_region32_fini (&region);
-}
-
-
-static void
-damage_touch_points (PhocOutput *output)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-
-  for (GSList *l = phoc_input_get_seats (input); l; l = l->next) {
-    PhocSeat *seat = PHOC_SEAT (l->data);
-    PhocCursor *cursor = phoc_seat_get_cursor (seat);
-
-    g_hash_table_foreach (phoc_cursor_get_touch_points (cursor), damage_touch_point_cb, output);
-  }
-}
-
-
-static void
 view_render_to_buffer_iterator (struct wlr_surface *surface, int sx, int sy, void *_data)
 {
   struct wlr_texture *texture;
@@ -646,9 +607,6 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
   g_signal_emit (self, signals[RENDER_END], 0, ctx);
   if (G_UNLIKELY (phoc_server_check_debug_flags (server,PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)))
     render_damage (self, ctx);
-
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
-    damage_touch_points (output);
 }
 
 
