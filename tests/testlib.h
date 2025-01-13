@@ -19,7 +19,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _PhocTestWlGlobals PhocTestClientGlobals;
+typedef struct _PhocTestClientGlobals PhocTestClientGlobals;
 
 typedef struct _PhocTestBuffer {
   struct wl_buffer *wl_buffer;
@@ -42,7 +42,7 @@ typedef struct _PhocTestOutput {
   PhocTestScreencopyFrame screenshot;
 } PhocTestOutput;
 
-typedef struct _PhocTestWlGlobals {
+typedef struct _PhocTestClientGlobals {
   struct wl_display *display;
   struct wl_compositor *compositor;
   struct wl_shm *shm;
@@ -62,9 +62,9 @@ typedef struct _PhocTestWlGlobals {
 } PhocTestClientGlobals;
 
 typedef struct _PhocTestForeignToplevel {
-    char* title;
-    struct zwlr_foreign_toplevel_handle_v1 *handle;
-    PhocTestClientGlobals *globals;
+  char* title;
+  struct zwlr_foreign_toplevel_handle_v1 *handle;
+  PhocTestClientGlobals *globals;
 } PhocTestForeignToplevel;
 
 typedef gboolean (* PhocTestServerFunc) (PhocServer *server, gpointer data);
@@ -97,7 +97,6 @@ typedef struct _PhocTestFixture {
   char        *tmpdir;
 } PhocTestFixture;
 
-
 /* Test client */
 void phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data);
 int  phoc_test_client_create_shm_buffer (PhocTestClientGlobals *globals,
@@ -110,24 +109,22 @@ PhocTestBuffer *phoc_test_client_capture_output (PhocTestClientGlobals *globals,
                                                  PhocTestOutput *output);
 PhocTestForeignToplevel *phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
                                                                        const char *title);
-
 /* Test surfaces */
 PhocTestXdgToplevelSurface *
-                phoc_test_xdg_toplevel_new  (PhocTestClientGlobals *globals,
-                                             guint32                width,
-                                             guint32                height,
-                                             const char            *title);
+                phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
+                                            guint32                width,
+                                            guint32                height,
+                                            const char            *title);
 PhocTestXdgToplevelSurface *
-                phoc_test_xdg_toplevel_new_with_buffer  (PhocTestClientGlobals     *globals,
-                                                         guint32                    width,
-                                                         guint32                    height,
-                                                         const char                *title,
-                                                         guint32                    color);
+                phoc_test_xdg_toplevel_new_with_buffer (PhocTestClientGlobals     *globals,
+                                                        guint32                    width,
+                                                        guint32                    height,
+                                                        const char                *title,
+                                                        guint32                    color);
 void            phoc_test_xdg_toplevel_free (PhocTestXdgToplevelSurface *xs);
 void            phoc_test_xdg_update_buffer (PhocTestClientGlobals      *globals,
                                              PhocTestXdgToplevelSurface *xs,
                                              guint32                     color);
-
 /* Buffers */
 gboolean phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2);
 gboolean phoc_test_buffer_save (PhocTestBuffer *buffer, const gchar *filename);
@@ -177,7 +174,6 @@ void     phoc_test_buffer_free (PhocTestBuffer *buffer);
                            "Buffer " #b1 " != " #b2);                   \
     } \
   } G_STMT_END
-
 
 /* Test setup and fixtures */
 void phoc_test_setup (PhocTestFixture *fixture, gconstpointer data);
