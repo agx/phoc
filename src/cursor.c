@@ -522,8 +522,7 @@ send_touch_motion (PhocSeat                      *seat,
     return;
   }
 
-  wlr_seat_touch_notify_motion (seat->seat, event->time_msec,
-                                event->touch_id, sx, sy);
+  wlr_seat_touch_notify_motion (seat->seat, event->time_msec, event->touch_id, sx, sy);
 }
 
 
@@ -1590,8 +1589,7 @@ void
 phoc_cursor_handle_touch_up (PhocCursor                *self,
                              struct wlr_touch_up_event *event)
 {
-  struct wlr_touch_point *point =
-    wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
+  struct wlr_touch_point *point = wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
   PhocTouchPoint *touch_point;
   PhocCursorPrivate *priv;
 
