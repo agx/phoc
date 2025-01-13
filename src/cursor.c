@@ -2120,3 +2120,22 @@ phoc_cursor_configure_xcursor (PhocCursor *self)
   phoc_cursor_set_name (self, NULL, PHOC_XCURSOR_DEFAULT);
   wlr_cursor_warp (self->cursor, NULL, self->cursor->x, self->cursor->y);
 }
+
+/**
+ * phoc_cursor_get_touch_points:
+ * @self: The cursor
+ *
+ * Gets the touch points currently tracked by the cursor.
+ *
+ * Returns: (transfer none): The touch points
+ */
+GHashTable *
+phoc_cursor_get_touch_points (PhocCursor *self)
+{
+  PhocCursorPrivate *priv;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  return priv->touch_points;
+}
