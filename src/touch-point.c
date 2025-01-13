@@ -22,6 +22,8 @@
  *
  * A touch point tracked compositor side.
  */
+G_DEFINE_BOXED_TYPE (PhocTouchPoint, phoc_touch_point, phoc_touch_point_copy,
+                     phoc_touch_point_destroy)
 
 static void
 color_hsv_to_rgb (struct wlr_render_color *color)
@@ -121,6 +123,13 @@ phoc_touch_point_destroy (PhocTouchPoint *self)
   phoc_touch_point_damage (self);
 
   g_free (self);
+}
+
+
+PhocTouchPoint *
+phoc_touch_point_copy (PhocTouchPoint *self)
+{
+  return phoc_touch_point_new (self->touch_id, self->lx, self->ly);
 }
 
 
