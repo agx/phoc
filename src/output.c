@@ -494,7 +494,7 @@ phoc_output_draw (PhocOutput *self)
     goto out;
 
   if (!wlr_output_configure_primary_swapchain (wlr_output, &pending, &wlr_output->swapchain))
-    goto  out;
+    goto out;
 
   buffer = wlr_swapchain_acquire (wlr_output->swapchain, &buffer_age);
   if (!buffer)
