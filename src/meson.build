@@ -91,6 +91,8 @@ sources = files(
   'switch.h',
   'tablet.c',
   'tablet.h',
+  'touch-point.c',
+  'touch-point.h',
   'input-method-relay.c',
   'input-method-relay.h',
   'touch.c',

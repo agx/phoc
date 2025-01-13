@@ -12,6 +12,7 @@
 #include "seat.h"
 #include "event.h"
 #include "gesture.h"
+#include "touch-point.h"
 
 #include <glib-object.h>
 
@@ -46,18 +47,6 @@ typedef enum {
 } PhocCursorMode;
 
 typedef struct _PhocSeatView PhocSeatView;
-
-/**
- * PhocTouchPoint:
- *
- * A touch point tracked compositor side.
- */
-typedef struct PhocTouchPoint {
-  int   touch_id;
-
-  double lx;
-  double ly;
-} PhocTouchPoint;
 
 /* TODO: we keep the struct public due to the list links and
    notifiers but we should avoid other member access */
