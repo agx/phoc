@@ -51,8 +51,6 @@ struct _PhocOutput {
   PhocView                 *fullscreen_view;
   struct wl_list            layer_surfaces; // PhocLayerSurface::link
 
-  GList                    *debug_touch_points;
-
   struct wlr_box            usable_area;
   int                       lx, ly;
 

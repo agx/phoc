@@ -246,7 +246,6 @@ phoc_output_init (PhocOutput *self)
   priv->last_frame_us = g_get_monotonic_time ();
   priv->shield = phoc_output_shield_new (self);
 
-  self->debug_touch_points = NULL;
   wl_list_init (&self->layer_surfaces);
 
   priv->scale_filter = PHOC_OUTPUT_SCALE_FILTER_AUTO;
@@ -965,7 +964,6 @@ phoc_output_finalize (GObject *object)
   wl_list_remove (&priv->needs_frame.link);
   wlr_damage_ring_finish (&self->damage_ring);
 
-  g_clear_list (&self->debug_touch_points, g_free);
   /* Remove all frame callbacks, this will also free associated user data */
   g_clear_slist (&priv->frame_callbacks,
                  (GDestroyNotify)phoc_output_frame_callback_info_free);

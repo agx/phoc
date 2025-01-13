@@ -1565,23 +1565,6 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
 
     phoc_input_method_relay_im_submit (&seat->im_relay, surface);
   }
-
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))) {
-    PhocOutput *output;
-    wl_list_for_each (output, &desktop->outputs, link) {
-      if (wlr_output_layout_contains_point (desktop->layout, output->wlr_output, lx, ly)) {
-        double ox = lx, oy = ly;
-        wlr_output_layout_output_coords (desktop->layout, output->wlr_output, &ox, &oy);
-        struct wlr_box box = {
-          .x = ox,
-          .y = oy,
-          .width = 1,
-          .height = 1
-        };
-        wlr_damage_ring_add_box (&output->damage_ring, &box);
-      }
-    }
-  }
 }
 
 
