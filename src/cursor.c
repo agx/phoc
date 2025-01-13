@@ -575,15 +575,13 @@ send_touch_cancel (PhocSeat *seat, struct wlr_surface *surface)
 static PhocTouchPoint *
 phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_touch_down_event *event)
 {
-  PhocTouchPoint *touch_point = g_new0 (PhocTouchPoint, 1);
+  PhocTouchPoint *touch_point;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   double lx, ly;
 
   wlr_cursor_absolute_to_layout_coords (self->cursor, &event->touch->base,
                                         event->x, event->y, &lx, &ly);
-  touch_point->touch_id = event->touch_id;
-  touch_point->lx = lx;
-  touch_point->ly = ly;
+  touch_point = phoc_touch_point_new (event->touch_id, lx, ly);
 
   if (!g_hash_table_insert (priv->touch_points,
                             GINT_TO_POINTER (event->touch_id),
@@ -1167,7 +1165,7 @@ phoc_cursor_init (PhocCursor *self)
   priv->touch_points = g_hash_table_new_full (g_direct_hash,
                                               g_direct_equal,
                                               NULL,
-                                              g_free);
+                                              (GDestroyNotify)phoc_touch_point_destroy);
   /*
    * Drag gesture starting at the current cursor position
    */

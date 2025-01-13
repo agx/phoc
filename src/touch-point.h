@@ -17,4 +17,8 @@ typedef struct PhocTouchPoint {
   double ly;
 } PhocTouchPoint;
 
+
+PhocTouchPoint *phoc_touch_point_new (int touch_id, double lx, double ly);
+void            phoc_touch_point_destroy (PhocTouchPoint *self);
+
 G_END_DECLS
