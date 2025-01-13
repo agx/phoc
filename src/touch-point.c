@@ -116,6 +116,11 @@ phoc_touch_point_new (int touch_id, double lx, double ly)
 void
 phoc_touch_point_destroy (PhocTouchPoint *self)
 {
+  PhocServer *server = phoc_server_get_default ();
+
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
+    phoc_touch_point_damage (self);
+
   g_free (self);
 }
 
@@ -123,10 +128,18 @@ phoc_touch_point_destroy (PhocTouchPoint *self)
 void
 phoc_touch_point_update (PhocTouchPoint *self, double lx, double ly)
 {
+  PhocServer *server = phoc_server_get_default ();
+
   g_assert (self);
+
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
+    phoc_touch_point_damage (self);
 
   self->lx = lx;
   self->ly = ly;
+
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
+    phoc_touch_point_damage (self);
 }
 
 
