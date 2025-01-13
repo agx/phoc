@@ -238,7 +238,7 @@ render_blings (PhocOutput *output, PhocView *view, PhocRenderContext *ctx)
 static void
 render_view (PhocOutput *output, PhocView *view, PhocRenderContext *ctx)
 {
-  // Do not render views fullscreened on other outputs
+  /*  Do not render views fullscreened on other outputs */
   if (phoc_view_is_fullscreen (view) && phoc_view_get_fullscreen_output (view) != output)
     return;
 
@@ -468,7 +468,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
   pixman_region32_init (&transformed_damage);
 
   if (!pixman_region32_not_empty (damage)) {
-    // Output isn't damaged but needs buffer swap
+    /* Output isn't damaged but needs buffer swap */
     goto renderer_end;
   }
 
@@ -482,15 +482,15 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
                               .clip = &transformed_damage,
                             });
 
-  // If a view is fullscreen on this output, render it
+  /* If a view is fullscreen on this output, render it */
   if (output->fullscreen_view != NULL) {
     PhocView *view = output->fullscreen_view;
 
     render_view (output, view, ctx);
 
-    // During normal rendering the xwayland window tree isn't traversed
-    // because all windows are rendered. Here we only want to render
-    // the fullscreen window's children so we have to traverse the tree.
+    /* During normal rendering the xwayland window tree isn't traversed
+     * because all windows are rendered. Here we only want to render
+     * the fullscreen window's children so we have to traverse the tree. */
 #ifdef PHOC_XWAYLAND
     if (PHOC_IS_XWAYLAND_SURFACE (view)) {
       struct wlr_xwayland_surface *xsurface =
@@ -503,11 +503,11 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
 #endif
 
     if (phoc_output_has_shell_revealed (output)) {
-      // Render top layer above fullscreen view when requested
+      /* Render top layer above fullscreen view when requested */
       render_layer (ZWLR_LAYER_SHELL_V1_LAYER_TOP, ctx);
     }
   } else {
-    // Render background and bottom layers under views
+    /* Render background and bottom layers under views */
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND, ctx);
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM, ctx);
 
@@ -518,7 +518,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
       if (phoc_desktop_view_check_visibility (desktop, view))
         render_view (output, view, ctx);
     }
-    // Render top layer above views
+    /* Render top layer above views */
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_TOP, ctx);
   }
   render_drag_icons (phoc_server_get_input (server), ctx);
