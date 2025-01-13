@@ -9,12 +9,37 @@
 #include "desktop.h"
 #include "server.h"
 #include "touch-point.h"
+#include "utils.h"
 
 /**
  * PhocTouchPoint:
  *
  * A touch point tracked compositor side.
  */
+
+/**
+ * phoc_touch_point_get_box:
+ * @self: The touch point
+ * @output: The output the touch point is on
+ * @width: The boxes width
+ * @height: The boxes height
+ *
+ * Gets a box around the given touchpoint on output in output local coordinates.
+ */
+struct wlr_box
+phoc_touch_point_get_box (PhocTouchPoint *self, PhocOutput *output, int width, int height)
+{
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  double ox = self->lx, oy = self->ly;
+
+  wlr_output_layout_output_coords (desktop->layout, output->wlr_output, &ox, &oy);
+  return (struct wlr_box) {
+           .x = ox - width / 2.0,
+           .y = oy - height / 2.0,
+           .width = width,
+           .height = height
+  };
+}
 
 
 static void

@@ -308,18 +308,6 @@ color_hsv_to_rgb (struct wlr_render_color *color)
 }
 
 
-static struct wlr_box
-phoc_box_from_touch_point (double ox, double oy, int width, int height)
-{
-  return (struct wlr_box) {
-    .x = ox - width / 2.0,
-    .y = oy - height / 2.0,
-    .width = width,
-    .height = height
-  };
-}
-
-
 static void
 render_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
 {
@@ -330,7 +318,6 @@ render_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
   int size = TOUCH_POINT_SIZE * wlr_output->scale;
   struct wlr_render_color color = {touch_point->touch_id * 100 + 240, 1.0, 1.0, 0.75};
   struct wlr_box point_box;
-  double ox = touch_point->lx, oy = touch_point->ly;
 
   if (!wlr_output_layout_contains_point (desktop->layout,
                                          wlr_output,
@@ -339,14 +326,9 @@ render_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
     return;
   }
 
-  ox = touch_point->lx;
-  oy = touch_point->ly;
-
-  wlr_output_layout_output_coords (desktop->layout, wlr_output, &ox, &oy);
-
   color_hsv_to_rgb (&color);
 
-  point_box = phoc_box_from_touch_point (ox, oy, size, size);
+  point_box = phoc_touch_point_get_box (touch_point, ctx->output, size, size);
   phoc_output_transform_box (ctx->output, &point_box);
   wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
       .box = point_box,
@@ -354,21 +336,21 @@ render_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
     });
 
   size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
-  point_box = phoc_box_from_touch_point (ox, oy, size, size);
+  point_box = phoc_touch_point_get_box (touch_point, ctx->output, size, size);
   phoc_output_transform_box (ctx->output, &point_box);
   wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
       .box = point_box,
       .color = COLOR_TRANSPARENT_WHITE,
     });
 
-  point_box = phoc_box_from_touch_point (ox, oy, 8 * wlr_output->scale, 2 * wlr_output->scale);
+  point_box = phoc_touch_point_get_box (touch_point, ctx->output, 8 * wlr_output->scale, 2 * wlr_output->scale);
   phoc_output_transform_box (ctx->output, &point_box);
   wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
       .box = point_box,
       .color = color,
     });
 
-  point_box = phoc_box_from_touch_point (ox, oy, 2 * wlr_output->scale, 8 * wlr_output->scale);
+  point_box = phoc_touch_point_get_box (touch_point, ctx->output, 2 * wlr_output->scale, 8 * wlr_output->scale);
   phoc_output_transform_box (ctx->output, &point_box);
   wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
       .box = point_box,
@@ -401,7 +383,6 @@ damage_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
   int size = TOUCH_POINT_SIZE * wlr_output->scale;
   struct wlr_box box;
   pixman_region32_t region;
-  double ox = touch_point->lx, oy = touch_point->ly;
 
   if (!wlr_output_layout_contains_point (desktop->layout,
                                          wlr_output,
@@ -410,9 +391,7 @@ damage_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
     return;
   }
 
-  wlr_output_layout_output_coords (desktop->layout, wlr_output, &ox, &oy);
-
-  box = phoc_box_from_touch_point (ox, oy, size, size);
+  box = phoc_touch_point_get_box (touch_point, output, size, size);
   pixman_region32_init_rect (&region, box.x, box.y, box.width, box.height);
   wlr_damage_ring_add (&output->damage_ring, &region);
   pixman_region32_fini (&region);
