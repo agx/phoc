@@ -75,6 +75,8 @@ typedef struct _PhocOutputPrivate {
   gboolean               gamma_lut_changed;
 
   GQueue                *layer_surfaces[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY + 1];
+
+  GSList                *debug_damage;
 } PhocOutputPrivate;
 
 static void phoc_output_initable_iface_init (GInitableIface *iface);
@@ -120,6 +122,26 @@ phoc_output_frame_callback_info_free (PhocOutputFrameCallbackInfo *cb_info)
   if (cb_info->notify && cb_info->user_data)
     cb_info->notify (cb_info->user_data);
   g_free (cb_info);
+}
+
+
+static PhocDebugDamageRegion *
+phoc_debug_damage_region_new (pixman_region32_t *region, gint64 when)
+{
+  PhocDebugDamageRegion *damage = g_new0 (PhocDebugDamageRegion, 1);
+  pixman_region32_init (&damage->region);
+  pixman_region32_copy (&damage->region, region);
+  damage->when = when;
+
+  return damage;
+}
+
+
+static void
+phoc_debug_damage_region_destroy (PhocDebugDamageRegion *damage)
+{
+  pixman_region32_fini (&damage->region);
+  g_free (damage);
 }
 
 /**
@@ -438,7 +460,6 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
 static void
 get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
 {
-  PhocServer *server = phoc_server_get_default ();
   int width, height;
   enum wl_output_transform transform;
 
@@ -448,12 +469,59 @@ get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
 
   transform = wlr_output_transform_invert (self->wlr_output->transform);
   wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
+}
 
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING))) {
-    pixman_region32_union_rect (frame_damage, frame_damage,
-                                0, 0, self->wlr_output->width, self->wlr_output->height);
 
+static void
+build_debug_damage_tracking (PhocOutput *self)
+{
+  PhocServer *server = phoc_server_get_default ();
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+  pixman_region32_t highlight_damage;
+  GSList *elem;
+  gint64 now;
+
+  if (!G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)))
+    return;
+
+  now = g_get_monotonic_time ();
+
+  /* Add current damage */
+  if (pixman_region32_not_empty (&self->damage_ring.current)) {
+    PhocDebugDamageRegion *current_damage;
+
+    current_damage = phoc_debug_damage_region_new (&self->damage_ring.current, now);
+    priv->debug_damage = g_slist_prepend (priv->debug_damage, current_damage);
   }
+
+  pixman_region32_init (&highlight_damage);
+
+  elem = priv->debug_damage;
+  while (elem != NULL) {
+    GSList *next = elem->next;
+    PhocDebugDamageRegion *damage = elem->data;
+
+    /* Drop overlapping damage to prevent rendering multiple times */
+    pixman_region32_subtract (&damage->region, &damage->region, &highlight_damage);
+    pixman_region32_union (&highlight_damage, &highlight_damage, &damage->region);
+
+    /* Discard old damage (that rendered fully transparent) */
+    if (damage->done || pixman_region32_empty (&damage->region)) {
+      phoc_debug_damage_region_destroy (damage);
+      priv->debug_damage = g_slist_delete_link (priv->debug_damage, elem);
+    }
+    elem = next;
+  };
+
+  if (pixman_region32_not_empty (&highlight_damage)) {
+    gboolean intersects;
+
+    intersects = wlr_damage_ring_add (&self->damage_ring, &highlight_damage);
+    if (!intersects)
+      g_warning_once ("Damage not on output %p", self);
+  }
+
+  pixman_region32_fini (&highlight_damage);
 }
 
 
@@ -476,6 +544,7 @@ phoc_output_draw (PhocOutput *self)
   needs_frame = wlr_output->needs_frame;
   needs_frame |= pixman_region32_not_empty (&self->damage_ring.current);
   needs_frame |= priv->gamma_lut_changed;
+  needs_frame |= (priv->debug_damage != NULL);
 
   if (!needs_frame)
     return;
@@ -570,6 +639,8 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
       wlr_output_schedule_frame (self->wlr_output);
   }
 
+  build_debug_damage_tracking (self);
+
   /* Repaint the output */
   phoc_output_draw (self);
 
@@ -579,6 +650,10 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
 
   /* Want frame clock ticking as long as we have frame callbacks */
   if (priv->frame_callbacks)
+    wlr_output_schedule_frame (self->wlr_output);
+
+  /* Need to redraw until all debug damage faded out */
+  if (priv->debug_damage)
     wlr_output_schedule_frame (self->wlr_output);
 }
 
@@ -2235,4 +2310,23 @@ phoc_output_get_wlr_output (PhocOutput *self)
   g_assert (PHOC_IS_OUTPUT (self));
 
   return self->wlr_output;
+}
+
+/**
+ * phoc_output_get_debug_damage:
+ * @self: The output
+ *
+ * Get the current list of debug damage regions.
+ *
+ * Returns: (transfer none)(element-type PhocDebugDamageRegion): The debug damage
+ */
+GSList *
+phoc_output_get_debug_damage (PhocOutput *self)
+{
+  PhocOutputPrivate *priv;
+
+  g_assert (PHOC_IS_OUTPUT (self));
+  priv = phoc_output_get_instance_private (self);
+
+  return priv->debug_damage;
 }
