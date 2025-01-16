@@ -1,3 +1,12 @@
+phoc 0.44.1
+-----------
+Released January 2024
+* Avoid hitting an assert when cleaning up layer surfaces
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phosh/-/issues/1161
+* Contributors:
+    * Guido Günther
+
 phoc 0.44.0
 -----------
 Released December 2024

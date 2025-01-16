@@ -1,3 +1,12 @@
+phoc (0.44.1) experimental; urgency=medium
+
+  * layer-surface: Don't arrange surfaces / set focus on finalize.
+    This already happens on unmap. 
+    Closes: https://gitlab.gnome.org/World/Phosh/phosh/-/issues/1161
+    (cherry picked from commit 47882bcbb3e79ebfc5a9f3fa5f51dd349e2d0fe9)
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 15 Jan 2025 19:45:26 +0100
+
 phoc (0.44.0) experimental; urgency=medium
 
   * ci: Don't wipe libwlroots-dev.
