@@ -62,12 +62,56 @@ typedef struct _PhocXdgSurface {
 
   struct wl_listener surface_commit;
 
+  struct wl_event_source *frame_done_idle;
+
   uint32_t pending_move_resize_configure_serial;
 
   PhocXdgToplevelDecoration *decoration;
 } PhocXdgSurface;
 
 G_DEFINE_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC_TYPE_VIEW)
+
+
+static void
+send_frame_done (void *user_data)
+{
+  PhocXdgSurface *self = PHOC_XDG_SURFACE (user_data);
+  struct timespec now;
+
+  self->frame_done_idle = NULL;
+
+  clock_gettime (CLOCK_MONOTONIC, &now);
+  wlr_surface_send_frame_done (PHOC_VIEW (self)->wlr_surface, &now);
+}
+
+/**
+ * send_frame_done_if_not_visible:
+ * @self: The #PhocXdgSurface
+ *
+ * For views that aren't visible, EGL-Wayland can be stuck
+ * in eglSwapBuffers waiting for frame done event. This function
+ * helps it get unstuck, so further events can actually be processed
+ * by the client. It's worth calling this function when sending
+ * events like `configure` or `close`, as these should get processed
+ * immediately regardless of surface visibility.
+ */
+static void
+send_frame_done_if_not_visible (PhocXdgSurface *self)
+{
+  PhocView *view = PHOC_VIEW (self);
+  struct wl_display *display;
+  struct wl_event_loop *loop;
+
+  if (phoc_desktop_view_check_visibility (view->desktop, view) || !phoc_view_is_mapped (view))
+    return;
+
+  display = wl_client_get_display (self->xdg_surface->client->client);
+  loop = wl_display_get_event_loop (display);
+
+  self->frame_done_idle = wl_event_loop_add_idle (loop, send_frame_done, view);
+  g_assert (self->frame_done_idle);
+}
+
 
 static void
 phoc_xdg_surface_set_property (GObject      *object,
@@ -139,7 +183,7 @@ resize (PhocView *view, uint32_t width, uint32_t height)
   if (wlr_xdg_surface->initialized)
     wlr_xdg_toplevel_set_size (wlr_xdg_surface->toplevel, constrained_width, constrained_height);
 
-  view_send_frame_done_if_not_visible (view);
+  send_frame_done_if_not_visible (PHOC_XDG_SURFACE (view));
 }
 
 static void
@@ -179,7 +223,7 @@ move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height
       wlr_xdg_toplevel_set_size (wlr_xdg_surface->toplevel, constrained_width, constrained_height);
   }
 
-  view_send_frame_done_if_not_visible (view);
+  send_frame_done_if_not_visible (self);
 }
 
 static bool
@@ -237,6 +281,19 @@ set_tiled (PhocView *view, bool tiled)
 
 
 static void
+set_suspended (PhocView *view, bool suspended)
+{
+  PhocXdgSurface *self = PHOC_XDG_SURFACE (view);
+  struct wlr_xdg_surface *xdg_surface = self->xdg_surface;
+
+  g_assert (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+
+  wlr_xdg_toplevel_set_suspended (xdg_surface->toplevel, suspended);
+  send_frame_done_if_not_visible (self);
+}
+
+
+static void
 set_fullscreen (PhocView *view, bool fullscreen)
 {
   struct wlr_xdg_surface *xdg_surface = PHOC_XDG_SURFACE (view)->xdg_surface;
@@ -258,7 +315,7 @@ _close(PhocView *view)
   }
   wlr_xdg_toplevel_send_close (xdg_surface->toplevel);
 
-  view_send_frame_done_if_not_visible (view);
+  send_frame_done_if_not_visible (PHOC_XDG_SURFACE (view));
 }
 
 static void
@@ -620,6 +677,8 @@ phoc_xdg_surface_finalize (GObject *object)
 {
   PhocXdgSurface *self = PHOC_XDG_SURFACE(object);
 
+  g_clear_pointer (&self->frame_done_idle, wl_event_source_remove);
+
   wl_list_remove(&self->surface_commit.link);
   wl_list_remove(&self->destroy.link);
   wl_list_remove(&self->new_popup.link);
@@ -656,6 +715,7 @@ phoc_xdg_surface_class_init (PhocXdgSurfaceClass *klass)
   view_class->set_fullscreen = set_fullscreen;
   view_class->set_maximized = set_maximized;
   view_class->set_tiled = set_tiled;
+  view_class->set_suspended = set_suspended;
   view_class->close = _close;
   view_class->for_each_surface = for_each_surface;
   view_class->get_geometry = get_geometry;

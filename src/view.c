@@ -27,6 +27,9 @@
 
 #define PHOC_ANIM_DURATION_WINDOW_FADE 150
 #define PHOC_MOVE_TO_CORNER_MARGIN 12
+/* How long should a surface be invisible/occluded before we notify it about it */
+#define PHOC_SUSPEND_TIMEOUT_SECONDS 3
+
 
 enum {
   PROP_0,
@@ -59,6 +62,8 @@ typedef struct _PhocViewPrivate {
   PhocViewState  state;
   PhocViewTileDirection tile_direction;
   gboolean       always_on_top;
+  gboolean       visibility;
+  guint          suspend_timer_id;
 
   PhocOutput    *fullscreen_output;
 
@@ -297,6 +302,42 @@ phoc_view_move_default (PhocView *view, double x, double y)
   view_update_position (view, x, y);
 }
 
+
+static void
+on_suspend_timer_expired (gpointer user_data)
+{
+  PhocView *self = user_data;
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  priv->suspend_timer_id = 0;
+
+  PHOC_VIEW_GET_CLASS (self)->set_suspended (self, TRUE);
+}
+
+
+static void
+phoc_view_set_suspended (PhocView *self, bool suspended)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  if (suspended) {
+    if (!priv->suspend_timer_id) {
+      priv->suspend_timer_id = g_timeout_add_seconds_once (PHOC_SUSPEND_TIMEOUT_SECONDS,
+                                                           on_suspend_timer_expired,
+                                                           self);
+    }
+  } else {
+    g_clear_handle_id (&priv->suspend_timer_id, g_source_remove);
+    PHOC_VIEW_GET_CLASS (self)->set_suspended (self, FALSE);
+  }
+}
+
+
 void
 phoc_view_appear_activated (PhocView *view, bool activated)
 {
@@ -331,6 +372,9 @@ phoc_view_activate (PhocView *self, bool activate)
 
   if (activate && phoc_view_is_fullscreen (self))
     phoc_output_force_shell_reveal (priv->fullscreen_output, false);
+
+  /* Update view visibility */
+  phoc_desktop_view_check_visibility (self->desktop, self);
 }
 
 
@@ -1030,7 +1074,7 @@ phoc_view_unmap (PhocView *view)
 
   g_assert (view->wlr_surface != NULL);
 
-  bool was_visible = phoc_desktop_view_is_visible (view->desktop, view);
+  bool was_visible = phoc_desktop_view_check_visibility (view->desktop, view);
 
   phoc_view_damage_whole (view);
 
@@ -1080,27 +1124,6 @@ phoc_view_set_initial_focus (PhocView *self)
   /* This also submits any pending activation tokens */
   g_debug ("Initial focus view %p, token %s", self, phoc_view_get_activation_token (self));
   phoc_seat_set_focus_view (seat, self);
-}
-
-/**
- * view_send_frame_done_if_not_visible:
- * @view: The #PhocView
- *
- * For views that aren't visible, EGL-Wayland can be stuck
- * in eglSwapBuffers waiting for frame done event. This function
- * helps it get unstuck, so further events can actually be processed
- * by the client. It's worth calling this function when sending
- * events like `configure` or `close`, as these should get processed
- * immediately regardless of surface visibility.
- */
-void
-view_send_frame_done_if_not_visible (PhocView *view)
-{
-  if (!phoc_desktop_view_is_visible (view->desktop, view) && phoc_view_is_mapped (view)) {
-    struct timespec now;
-    clock_gettime (CLOCK_MONOTONIC, &now);
-    wlr_surface_send_frame_done (view->wlr_surface, &now);
-  }
 }
 
 static void view_create_foreign_toplevel_handle (PhocView *view);
@@ -1459,6 +1482,8 @@ phoc_view_finalize (GObject *object)
   PhocView *self = PHOC_VIEW (object);
   PhocViewPrivate *priv = phoc_view_get_instance_private (self);
 
+  g_clear_handle_id (&priv->suspend_timer_id, g_source_remove);
+
   /* Unlink from our parent */
   if (self->parent) {
     wl_list_remove (&self->parent_link);
@@ -1526,6 +1551,12 @@ phoc_view_set_tiled_default (PhocView *self, bool tiled)
     /* fallback to the maximized flag on the toplevel so it can remove its drop shadows */
     PHOC_VIEW_GET_CLASS (self)->set_maximized (self, true);
   }
+}
+
+
+static void
+phoc_view_set_suspended_default (PhocView *self, bool suspended)
+{
 }
 
 
@@ -1604,6 +1635,7 @@ phoc_view_class_init (PhocViewClass *klass)
   view_class->get_geometry = phoc_view_get_geometry_default;
   view_class->move = phoc_view_move_default;
   view_class->set_tiled = phoc_view_set_tiled_default;
+  view_class->set_suspended = phoc_view_set_suspended_default;
   view_class->get_wlr_surface_at = phoc_view_get_wlr_surface_at_default;
   /* Mandatory */
   view_class->resize = phoc_view_resize_default;
@@ -1698,6 +1730,7 @@ phoc_view_init (PhocView *self)
   priv->alpha = 1.0f;
   priv->scale = 1.0f;
   priv->state = PHOC_VIEW_STATE_FLOATING;
+  priv->visibility = TRUE;
 
   wl_list_init (&priv->child_surfaces);
   wl_list_init (&self->stack);
@@ -2214,4 +2247,29 @@ phoc_view_is_always_on_top (PhocView *self)
   priv = phoc_view_get_instance_private (self);
 
   return priv->always_on_top;
+}
+
+/**
+ * phoc_view_set_visiblity:
+ * @self: a view
+ * @visibility: The views visibility
+ *
+ * Sets the views visibility as determined by
+ * [method@Desktop.view_check_visible] and triggers needed actions
+ * resulting from visibility changes.
+ */
+void
+phoc_view_set_visibility (PhocView *self, gboolean visibility)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
+
+  if (priv->visibility == visibility)
+    return;
+
+  priv->visibility = visibility;
+
+  phoc_view_set_suspended (self, !visibility);
 }

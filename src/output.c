@@ -1445,7 +1445,7 @@ phoc_output_for_each_surface (PhocOutput          *self,
     for (GList *l = phoc_desktop_get_views (desktop)->tail; l; l = l->prev) {
       PhocView *view = PHOC_VIEW (l->data);
 
-      if (!visible_only || phoc_desktop_view_is_visible (desktop, view))
+      if (!visible_only || phoc_desktop_view_check_visibility (desktop, view))
         phoc_output_view_for_each_surface (self, view, iterator, user_data);
     }
   }
@@ -1475,7 +1475,7 @@ phoc_view_accept_damage (PhocOutput *self, PhocView  *view)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
-  if (!phoc_desktop_view_is_visible (desktop, view))
+  if (!phoc_desktop_view_check_visibility (desktop, view))
     return false;
 
   if (self->fullscreen_view == NULL)

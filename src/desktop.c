@@ -56,7 +56,7 @@
 
 /* Maximum protocol versions we support */
 #define PHOC_FRACTIONAL_SCALE_VERSION 1
-#define PHOC_XDG_SHELL_VERSION 5
+#define PHOC_XDG_SHELL_VERSION 6
 #define PHOC_LAYER_SHELL_VERSION 3
 
 #define PHOC_ANIM_ALWAYS_ON_TOP_DURATION  300
@@ -189,7 +189,7 @@ desktop_view_at (PhocDesktop         *self,
   for (GList *l = phoc_desktop_get_views (self)->head; l; l = l->next) {
     PhocView *view = PHOC_VIEW (l->data);
 
-    if (phoc_desktop_view_is_visible (self, view) && view_at (view, lx, ly, surface, sx, sy))
+    if (phoc_desktop_view_check_visibility (self, view) && view_at (view, lx, ly, surface, sx, sy))
       return view;
   }
   return NULL;
@@ -304,11 +304,25 @@ phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
   return NULL;
 }
 
+/**
+ * phoc_desktop_view_check_visibility:
+ * @self: The desktop
+ * @view: The view to check
+ *
+ * Checks if a view is currently visible. This is currently very
+ * pessimistic and only assumes that the view is not visible when
+ * we're certain it is covered by other windows.
+ *
+ * Returns: `FALSE` when it's certain that the view is not visible, otherwise `TRUE`
+ */
 gboolean
-phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
+phoc_desktop_view_check_visibility (PhocDesktop *self, PhocView *view)
 {
   PhocDesktopPrivate *priv;
+  PhocOutput *output;
   PhocView *top_view;
+  GQueue *layer_surfaces;
+  gboolean visible = TRUE;
 
   g_assert (PHOC_IS_DESKTOP (self));
   g_assert (PHOC_IS_VIEW (view));
@@ -316,40 +330,50 @@ phoc_desktop_view_is_visible (PhocDesktop *self, PhocView *view)
   priv = phoc_desktop_get_instance_private (self);
 
   if (!phoc_view_is_mapped (view)) {
-    return false;
+    visible = FALSE;
+    goto out;
   }
 
   g_assert_true (priv->views->head);
 
-  if (wl_list_length (&self->outputs) != 1) {
-    // current heuristics work well only for single output
-    return true;
+  /* current heuristics work well only for single output */
+  if (wl_list_length (&self->outputs) != 1)
+    goto out;
+
+  output = wl_container_of (self->outputs.next, output, link);
+  layer_surfaces = phoc_output_get_layer_surfaces_for_layer (output, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY);
+  for (GList *l = layer_surfaces->head; l; l = l->next) {
+    PhocLayerSurface *layer_surface = PHOC_LAYER_SURFACE (l->data);
+
+    if (phoc_layer_surface_covers_output (layer_surface)) {
+      visible = FALSE;
+      goto out;
+    }
   }
 
-  if (!self->maximize) {
-    return true;
-  }
+  if (!self->maximize)
+    goto out;
 
   top_view = phoc_desktop_get_view_by_index (self, 0);
-  // XWayland parent relations can be complicated and aren't described by PhocView
-  // relationships very well at the moment, so just make all XWayland windows visible
-  // when some XWayland window is active for now
-  if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view)) {
-    return true;
-  }
+  /* XWayland parent relations can be complicated and aren't described by PhocView
+   * relationships very well at the moment, so just make all XWayland windows visible
+   * when some XWayland window is active for now */
+  if (PHOC_IS_XWAYLAND_SURFACE (view) && PHOC_IS_XWAYLAND_SURFACE (top_view))
+    goto out;
 
-  PhocView *v = top_view;
-  while (v) {
-    if (v == view) {
-      return true;
-    }
+  for (PhocView *v = top_view; v; v = v->parent) {
+    if (v == view)
+      goto out;
+
     if (phoc_view_is_maximized (v)) {
-      return false;
+      visible = FALSE;
+      goto out;
     }
-    v = v->parent;
   }
 
-  return false;
+ out:
+  phoc_view_set_visibility (view, visible);
+  return visible;
 }
 
 static void
