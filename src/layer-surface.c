@@ -98,6 +98,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   PhocLayerSurface *self = wl_container_of (listener, self, surface_commit);
   struct wlr_layer_surface_v1 *wlr_layer_surface = self->layer_surface;
   struct wlr_output *wlr_output = wlr_layer_surface->output;
+  gboolean exclusive_zone_changed;
 
   if (!wlr_output)
     return;
@@ -109,7 +110,9 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   if (wlr_layer_surface->current.committed != 0) {
     layer_changed = self->layer != wlr_layer_surface->current.layer;
 
-    phoc_output_set_layer_dirty (output, self->layer);
+    /* Invalidate the layer the surface previously belonged to */
+    if (layer_changed)
+      phoc_output_set_layer_dirty (output, self->layer);
 
     self->layer = wlr_layer_surface->current.layer;
     phoc_layer_shell_arrange (output);
@@ -145,7 +148,11 @@ handle_surface_commit (struct wl_listener *listener, void *data)
                                      self->geo.y);
   }
 
-  phoc_output_set_layer_dirty (output, self->layer);
+  /* Exclusive zone changes affect the surface ordering in a layer */
+  exclusive_zone_changed = !!(wlr_layer_surface->current.committed &
+                              WLR_LAYER_SURFACE_V1_STATE_EXCLUSIVE_ZONE);
+  if (layer_changed || exclusive_zone_changed)
+    phoc_output_set_layer_dirty (output, self->layer);
 }
 
 
@@ -238,8 +245,10 @@ handle_unmap (struct wl_listener *listener, void *data)
   phoc_layer_surface_damage (self);
   phoc_input_update_cursor_focus (input);
 
-  if (output)
+  if (output) {
     phoc_layer_shell_arrange (output);
+    phoc_output_set_layer_dirty (output, self->layer);
+  }
   phoc_layer_shell_update_focus ();
 }
 

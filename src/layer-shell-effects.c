@@ -1010,6 +1010,7 @@ static void
 apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
 {
   struct wlr_layer_surface_v1 *wlr_layer_surface = drag_surface->layer_surface->layer_surface;
+  int exclusive = wlr_layer_surface->current.exclusive_zone;
 
   /* The client is not supposed to update margin or exclusive zone so
    * keep current and pending in sync */
@@ -1038,6 +1039,14 @@ apply_margin (PhocDraggableLayerSurface *drag_surface, double margin)
   wlr_layer_surface->pending.margin.left = wlr_layer_surface->current.margin.left;
   wlr_layer_surface->pending.margin.right = wlr_layer_surface->current.margin.right;
   wlr_layer_surface->pending.exclusive_zone = wlr_layer_surface->current.exclusive_zone;
+
+  /* Exclusive zone changes affect the surface ordering in a layer but not if both of them
+     are positive */
+  if (wlr_layer_surface->current.exclusive_zone != exclusive &&
+      (wlr_layer_surface->current.exclusive_zone <= 0 || exclusive <= 0)) {
+    PhocOutput *output = phoc_layer_surface_get_output (drag_surface->layer_surface);
+    phoc_output_set_layer_dirty (output, phoc_layer_surface_get_layer (drag_surface->layer_surface));
+  }
 }
 
 

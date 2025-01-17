@@ -744,6 +744,7 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
   wlr_layer_surface->current = wlr_layer_surface->pending;
 
   phoc_layer_shell_arrange (output);
+  phoc_output_set_layer_dirty (output, wlr_layer_surface->pending.layer);
   phoc_layer_shell_update_focus ();
 
   wlr_layer_surface->current = old_state;
