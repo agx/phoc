@@ -99,53 +99,53 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   struct wlr_layer_surface_v1 *wlr_layer_surface = self->layer_surface;
   struct wlr_output *wlr_output = wlr_layer_surface->output;
 
-  if (wlr_output != NULL) {
-    PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
-    struct wlr_box old_geo = self->geo;
+  if (!wlr_output)
+    return;
 
-    bool layer_changed = false;
-    if (wlr_layer_surface->current.committed != 0) {
-      layer_changed = self->layer != wlr_layer_surface->current.layer;
+  PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
+  struct wlr_box old_geo = self->geo;
 
-      phoc_output_set_layer_dirty (output, self->layer);
-
-      self->layer = wlr_layer_surface->current.layer;
-      phoc_layer_shell_arrange (output);
-      phoc_layer_shell_update_focus ();
-    }
-
-    // Cursor changes which happen as a consequence of resizing a layer
-    // surface are applied in phoc_layer_shell_arrange. Because the resize happens
-    // before the underlying surface changes, it will only receive a cursor
-    // update if the new cursor position crosses the *old* sized surface in
-    // the *new* layer surface.
-    // Another cursor move event is needed when the surface actually
-    // changes.
-    struct wlr_surface *surface = wlr_layer_surface->surface;
-    if (surface->previous.width != surface->current.width ||
-        surface->previous.height != surface->current.height) {
-      phoc_layer_shell_update_cursors (self, phoc_input_get_seats (input));
-    }
-
-    bool geo_changed = memcmp (&old_geo, &self->geo, sizeof (struct wlr_box)) != 0;
-    if (geo_changed || layer_changed) {
-      phoc_output_damage_whole_surface (output,
-                                        wlr_layer_surface->surface,
-                                        old_geo.x,
-                                        old_geo.y);
-      phoc_output_damage_whole_surface (output,
-                                        wlr_layer_surface->surface,
-                                        self->geo.x,
-                                        self->geo.y);
-    } else {
-      phoc_output_damage_from_surface (output,
-                                       wlr_layer_surface->surface,
-                                       self->geo.x,
-                                       self->geo.y);
-    }
+  bool layer_changed = false;
+  if (wlr_layer_surface->current.committed != 0) {
+    layer_changed = self->layer != wlr_layer_surface->current.layer;
 
     phoc_output_set_layer_dirty (output, self->layer);
+
+    self->layer = wlr_layer_surface->current.layer;
+    phoc_layer_shell_arrange (output);
+    phoc_layer_shell_update_focus ();
   }
+
+  /* Cursor changes which happen as a consequence of resizing a layer
+   * surface are applied in phoc_layer_shell_arrange. Because the resize happens
+   * before the underlying surface changes, it will only receive a cursor
+   * update if the new cursor position crosses the *old* sized surface in
+   * the *new* layer surface.
+   * Another cursor move event is needed when the surface actually changes. */
+  struct wlr_surface *surface = wlr_layer_surface->surface;
+  if (surface->previous.width != surface->current.width ||
+      surface->previous.height != surface->current.height) {
+    phoc_layer_shell_update_cursors (self, phoc_input_get_seats (input));
+  }
+
+  bool geo_changed = memcmp (&old_geo, &self->geo, sizeof (struct wlr_box)) != 0;
+  if (geo_changed || layer_changed) {
+    phoc_output_damage_whole_surface (output,
+                                      wlr_layer_surface->surface,
+                                      old_geo.x,
+                                      old_geo.y);
+    phoc_output_damage_whole_surface (output,
+                                      wlr_layer_surface->surface,
+                                      self->geo.x,
+                                      self->geo.y);
+  } else {
+    phoc_output_damage_from_surface (output,
+                                     wlr_layer_surface->surface,
+                                     self->geo.x,
+                                     self->geo.y);
+  }
+
+  phoc_output_set_layer_dirty (output, self->layer);
 }
 
 
