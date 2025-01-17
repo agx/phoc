@@ -512,9 +512,14 @@ phoc_layer_surface_get_mapped (PhocLayerSurface *self)
 gboolean
 phoc_layer_surface_covers_output (PhocLayerSurface *self)
 {
+  struct wlr_surface *wlr_surface;
+
   g_assert (PHOC_IS_LAYER_SURFACE (self));
 
   if (!self->layer_surface)
+    return FALSE;
+
+  if (!self->mapped)
     return FALSE;
 
   if (!self->layer_surface->output)
@@ -530,5 +535,21 @@ phoc_layer_surface_covers_output (PhocLayerSurface *self)
   if (self->layer_surface->current.exclusive_zone != -1)
     return FALSE;
 
-  return TRUE;
+  if (!G_APPROX_VALUE (self->alpha, 1.0, FLT_EPSILON))
+    return FALSE;
+
+  wlr_surface = self->layer_surface->surface;
+  if (!wlr_surface)
+    return FALSE;
+
+  /* Buffer uses opaque pixel format or is opaque single pixel buffer */
+  if (wlr_surface->opaque)
+    return TRUE;
+
+  /* Surface's opaque region covers the whole surface */
+  pixman_box32_t box = {0, 0, wlr_surface->current.width, wlr_surface->current.height};
+  if (pixman_region32_contains_rectangle (&wlr_surface->opaque_region, &box))
+    return TRUE;
+
+  return FALSE;
 }
