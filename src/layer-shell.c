@@ -714,17 +714,7 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
 {
   struct wlr_layer_surface_v1 *wlr_layer_surface = data;
   PhocDesktop *desktop = wl_container_of (listener, desktop, layer_shell_surface);
-
-  g_debug ("new layer surface: namespace %s layer %d anchor %d "
-           "size %dx%d margin %d,%d,%d,%d",
-           wlr_layer_surface->namespace, wlr_layer_surface->pending.layer,
-           wlr_layer_surface->pending.anchor,
-           wlr_layer_surface->pending.desired_width,
-           wlr_layer_surface->pending.desired_height,
-           wlr_layer_surface->pending.margin.top,
-           wlr_layer_surface->pending.margin.right,
-           wlr_layer_surface->pending.margin.bottom,
-           wlr_layer_surface->pending.margin.left);
+  PhocLayerSurface *self;
 
   if (!wlr_layer_surface->output) {
     PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
@@ -745,7 +735,7 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
     }
   }
 
-  phoc_layer_surface_new (wlr_layer_surface);
+  self = phoc_layer_surface_new (wlr_layer_surface);
   PhocOutput *output = PHOC_OUTPUT (wlr_layer_surface->output->data);
 
   // Temporarily set the layer's current state to pending
@@ -757,6 +747,17 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
   phoc_layer_shell_update_focus ();
 
   wlr_layer_surface->current = old_state;
+
+  g_debug ("New layer surface %p: namespace %s layer %d anchor %d size %dx%d margin %d,%d,%d,%d",
+           self,
+           wlr_layer_surface->namespace, wlr_layer_surface->pending.layer,
+           wlr_layer_surface->pending.anchor,
+           wlr_layer_surface->pending.desired_width,
+           wlr_layer_surface->pending.desired_height,
+           wlr_layer_surface->pending.margin.top,
+           wlr_layer_surface->pending.margin.right,
+           wlr_layer_surface->pending.margin.bottom,
+           wlr_layer_surface->pending.margin.left);
 }
 
 /**
