@@ -330,6 +330,7 @@ phoc_view_set_suspended (PhocView *self, bool suspended)
       priv->suspend_timer_id = g_timeout_add_seconds_once (PHOC_SUSPEND_TIMEOUT_SECONDS,
                                                            on_suspend_timer_expired,
                                                            self);
+      g_source_set_name_by_id (priv->suspend_timer_id, "[phoc] surface suspend timer");
     }
   } else {
     g_clear_handle_id (&priv->suspend_timer_id, g_source_remove);
