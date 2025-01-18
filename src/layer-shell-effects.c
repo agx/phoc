@@ -312,6 +312,9 @@ handle_alpha_layer_surface_set_alpha (struct wl_client   *client,
   g_assert (alpha_surface);
   alpha = wl_fixed_to_double (alpha_f);
 
+  alpha = MIN (1.0, alpha);
+  alpha = MAX (0.0, alpha);
+
   g_debug ("Alpha Layer surface alpha for %p: alpha: %f", alpha_surface, alpha);
 
   if (alpha_surface->layer_surface == NULL)
