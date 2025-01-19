@@ -190,37 +190,6 @@ on_animation_done (PhocOutputShield *self)
 
 
 static void
-phoc_output_shield_constructed (GObject *object)
-{
-  PhocOutputShield *self = PHOC_OUTPUT_SHIELD (object);
-
-  g_autoptr (PhocTimedAnimation) fade_anim = NULL;
-  g_autoptr (PhocPropertyEaser) easer = NULL;
-
-  G_OBJECT_CLASS (phoc_output_shield_parent_class)->constructed (object);
-
-  easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
-                        "target", self,
-                        "easing", PHOC_EASING_EASE_IN_CUBIC,
-                        NULL);
-  phoc_property_easer_set_props (easer,
-                                 "alpha", 1.0, 0.0,
-                                 NULL);
-
-  fade_anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
-                            "animatable", self,
-                            "duration", PHOC_ANIM_DURATION_SHIELD_UP,
-                            "property-easer", easer,
-                            NULL);
-  g_set_object (&self->animation, fade_anim);
-
-  g_signal_connect_swapped (self->animation, "done",
-                            G_CALLBACK (on_animation_done),
-                            self);
-}
-
-
-static void
 phoc_output_shield_finalize (GObject *object)
 {
   PhocOutputShield *self = PHOC_OUTPUT_SHIELD (object);
@@ -247,7 +216,6 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
 
   object_class->get_property = phoc_output_shield_get_property;
   object_class->set_property = phoc_output_shield_set_property;
-  object_class->constructed = phoc_output_shield_constructed;
   object_class->finalize = phoc_output_shield_finalize;
 
   /**
@@ -279,6 +247,27 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
 static void
 phoc_output_shield_init (PhocOutputShield *self)
 {
+  g_autoptr (PhocTimedAnimation) fade_anim = NULL;
+  g_autoptr (PhocPropertyEaser) easer = NULL;
+
+  easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
+                        "target", self,
+                        "easing", PHOC_EASING_EASE_IN_CUBIC,
+                        NULL);
+  phoc_property_easer_set_props (easer,
+                                 "alpha", 1.0, 0.0,
+                                 NULL);
+
+  fade_anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
+                            "animatable", self,
+                            "duration", PHOC_ANIM_DURATION_SHIELD_UP,
+                            "property-easer", easer,
+                            NULL);
+  g_set_object (&self->animation, fade_anim);
+
+  g_signal_connect_swapped (self->animation, "done",
+                            G_CALLBACK (on_animation_done),
+                            self);
 }
 
 
