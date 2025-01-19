@@ -16,7 +16,7 @@
 
 #include "render-private.h"
 
-#define PHOC_ANIM_DURATION_SHIELD_UP 250 /* ms */
+#define PHOC_ANIM_DURATION_SHIELD_MS 250 /* ms */
 
 enum {
   PROP_0,
@@ -280,7 +280,7 @@ phoc_output_shield_init (PhocOutputShield *self)
 
   fade_anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
                             "animatable", self,
-                            "duration", PHOC_ANIM_DURATION_SHIELD_UP,
+                            "duration", PHOC_ANIM_DURATION_SHIELD_MS,
                             "property-easer", self->easer,
                             NULL);
   g_set_object (&self->animation, fade_anim);
@@ -339,4 +339,16 @@ phoc_output_shield_set_easing (PhocOutputShield *self, PhocEasing easing)
   g_assert (PHOC_IS_OUTPUT_SHIELD (self));
 
   phoc_property_easer_set_easing (self->easer, easing);
+}
+
+
+void
+phoc_output_shield_set_duration (PhocOutputShield *self, guint duration)
+{
+  g_assert (PHOC_IS_OUTPUT_SHIELD (self));
+
+  if (duration == 0)
+    duration = PHOC_ANIM_DURATION_SHIELD_MS;
+
+  phoc_timed_animation_set_duration (self->animation, duration);
 }

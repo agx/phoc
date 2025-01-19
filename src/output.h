@@ -168,7 +168,7 @@ void       phoc_output_remove_frame_callbacks_by_animatable (PhocOutput     *sel
                                                              PhocAnimatable *animatable);
 bool       phoc_output_has_frame_callbacks   (PhocOutput        *self);
 
-void       phoc_output_lower_shield          (PhocOutput *self, PhocEasing easing);
+void       phoc_output_lower_shield          (PhocOutput *self, PhocEasing easing, guint duration);
 void       phoc_output_raise_shield          (PhocOutput *self);
 float      phoc_output_get_scale             (PhocOutput *self);
 const char *phoc_output_get_name             (PhocOutput *self);
