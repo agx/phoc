@@ -17,6 +17,7 @@
 #include "desktop.h"
 #include "layer-shell.h"
 #include "layer-shell-private.h"
+#include "layout-transaction.h"
 #include "output.h"
 #include "seat.h"
 #include "server.h"
@@ -221,7 +222,7 @@ arrange_layer (PhocOutput                     *output,
     }
 
     if (box.width != old_geo.width || box.height != old_geo.height)
-      wlr_layer_surface_v1_configure (wlr_layer_surface, box.width, box.height);
+      phoc_layer_surface_send_configure (layer_surface);
 
     /* Having a cursor newly end up over the moved layer will not
      * automatically send a motion event to the surface. The event needs to
