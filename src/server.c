@@ -233,7 +233,7 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UP:
     /* Shell is up, lower shields */
     wl_list_for_each (output, &self->desktop->outputs, link)
-      phoc_output_lower_shield (output);
+      phoc_output_lower_shield (output, PHOC_EASING_EASE_IN_CUBIC);
     break;
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN:
   default:

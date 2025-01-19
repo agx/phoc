@@ -2032,7 +2032,7 @@ phoc_output_has_frame_callbacks (PhocOutput *self)
  * the outputs current content.
  */
 void
-phoc_output_lower_shield (PhocOutput *self)
+phoc_output_lower_shield (PhocOutput *self, PhocEasing easing)
 {
   PhocOutputPrivate *priv;
 
@@ -2042,6 +2042,7 @@ phoc_output_lower_shield (PhocOutput *self)
   if (priv->shield == NULL)
     return;
 
+  phoc_output_shield_set_easing (priv->shield, easing);
   phoc_output_shield_lower (priv->shield);
 }
 
