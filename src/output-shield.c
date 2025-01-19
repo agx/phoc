@@ -197,6 +197,8 @@ phoc_output_shield_finalize (GObject *object)
   set_output (self, NULL);
   stop_render (self);
 
+  g_clear_object (&self->animation);
+
   G_OBJECT_CLASS (phoc_output_shield_parent_class)->finalize (object);
 }
 
@@ -229,7 +231,6 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
                         1.0,
                         1.0,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
   /**
    * PhocOutputShield:output:
    *
@@ -279,7 +280,6 @@ phoc_output_shield_new (PhocOutput *output)
                        NULL);
 }
 
-
 /**
  * phoc_output_shield_raise:
  * @self: The shield
@@ -297,7 +297,6 @@ phoc_output_shield_raise (PhocOutputShield *self)
   phoc_output_damage_whole (self->output);
   start_render (self);
 }
-
 
 /**
  * phoc_output_shield_lower
