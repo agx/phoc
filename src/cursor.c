@@ -522,8 +522,7 @@ send_touch_motion (PhocSeat                      *seat,
     return;
   }
 
-  wlr_seat_touch_notify_motion (seat->seat, event->time_msec,
-                                event->touch_id, sx, sy);
+  wlr_seat_touch_notify_motion (seat->seat, event->time_msec, event->touch_id, sx, sy);
 }
 
 
@@ -575,15 +574,13 @@ send_touch_cancel (PhocSeat *seat, struct wlr_surface *surface)
 static PhocTouchPoint *
 phoc_cursor_add_touch_point (PhocCursor *self, struct wlr_touch_down_event *event)
 {
-  PhocTouchPoint *touch_point = g_new0 (PhocTouchPoint, 1);
+  PhocTouchPoint *touch_point;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
   double lx, ly;
 
   wlr_cursor_absolute_to_layout_coords (self->cursor, &event->touch->base,
                                         event->x, event->y, &lx, &ly);
-  touch_point->touch_id = event->touch_id;
-  touch_point->lx = lx;
-  touch_point->ly = ly;
+  touch_point = phoc_touch_point_new (event->touch_id, lx, ly);
 
   if (!g_hash_table_insert (priv->touch_points,
                             GINT_TO_POINTER (event->touch_id),
@@ -609,8 +606,7 @@ phoc_cursor_update_touch_point (PhocCursor *self, struct wlr_touch_motion_event 
   }
   wlr_cursor_absolute_to_layout_coords (self->cursor, &event->touch->base,
                                         event->x, event->y, &lx, &ly);
-  touch_point->lx = lx;
-  touch_point->ly = ly;
+  phoc_touch_point_update (touch_point, lx, ly);
 
   return touch_point;
 }
@@ -1167,7 +1163,7 @@ phoc_cursor_init (PhocCursor *self)
   priv->touch_points = g_hash_table_new_full (g_direct_hash,
                                               g_direct_equal,
                                               NULL,
-                                              g_free);
+                                              (GDestroyNotify)phoc_touch_point_destroy);
   /*
    * Drag gesture starting at the current cursor position
    */
@@ -1568,23 +1564,6 @@ phoc_cursor_handle_touch_down (PhocCursor                  *self,
 
     phoc_input_method_relay_im_submit (&seat->im_relay, surface);
   }
-
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))) {
-    PhocOutput *output;
-    wl_list_for_each (output, &desktop->outputs, link) {
-      if (wlr_output_layout_contains_point (desktop->layout, output->wlr_output, lx, ly)) {
-        double ox = lx, oy = ly;
-        wlr_output_layout_output_coords (desktop->layout, output->wlr_output, &ox, &oy);
-        struct wlr_box box = {
-          .x = ox,
-          .y = oy,
-          .width = 1,
-          .height = 1
-        };
-        wlr_damage_ring_add_box (&output->damage_ring, &box);
-      }
-    }
-  }
 }
 
 
@@ -1592,8 +1571,7 @@ void
 phoc_cursor_handle_touch_up (PhocCursor                *self,
                              struct wlr_touch_up_event *event)
 {
-  struct wlr_touch_point *point =
-    wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
+  struct wlr_touch_point *point = wlr_seat_touch_get_point (self->seat->seat, event->touch_id);
   PhocTouchPoint *touch_point;
   PhocCursorPrivate *priv;
 
@@ -2123,4 +2101,23 @@ phoc_cursor_configure_xcursor (PhocCursor *self)
 
   phoc_cursor_set_name (self, NULL, PHOC_XCURSOR_DEFAULT);
   wlr_cursor_warp (self->cursor, NULL, self->cursor->x, self->cursor->y);
+}
+
+/**
+ * phoc_cursor_get_touch_points:
+ * @self: The cursor
+ *
+ * Gets the touch points currently tracked by the cursor.
+ *
+ * Returns: (transfer none): The touch points
+ */
+GHashTable *
+phoc_cursor_get_touch_points (PhocCursor *self)
+{
+  PhocCursorPrivate *priv;
+
+  g_assert (PHOC_IS_CURSOR (self));
+  priv = phoc_cursor_get_instance_private (self);
+
+  return priv->touch_points;
 }

@@ -13,6 +13,8 @@
 
 #include "phoc-config.h"
 #include "bling.h"
+#include "cursor.h"
+#include "input.h"
 #include "layer-shell.h"
 #include "seat.h"
 #include "server.h"
@@ -44,12 +46,8 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#define TOUCH_POINT_SIZE 20
-#define TOUCH_POINT_BORDER 0.1
-
 #define COLOR_BLACK                ((struct wlr_render_color){0.0f, 0.0f, 0.0f, 1.0f})
 #define COLOR_TRANSPARENT          {0.0f, 0.0f, 0.0f, 0.0f}
-#define COLOR_TRANSPARENT_WHITE    ((struct wlr_render_color){0.5f, 0.5f, 0.5f, 0.5f})
 #define COLOR_TRANSPARENT_YELLOW   ((struct wlr_render_color){0.5f, 0.5f, 0.0f, 0.5f})
 #define COLOR_TRANSPARENT_MAGENTA  ((struct wlr_render_color){0.5f, 0.0f, 0.5f, 0.5f})
 
@@ -92,12 +90,6 @@ struct render_view_data {
   int width;
   int height;
   struct wlr_render_pass *render_pass;
-};
-
-struct touch_point_data {
-  int id;
-  double x;
-  double y;
 };
 
 
@@ -190,35 +182,6 @@ render_texture (PhocOutput               *output,
   pixman_region32_fini (&damage);
 }
 
-static void
-collect_touch_points (PhocOutput *output, struct wlr_surface *surface, struct wlr_box box, float scale)
-{
-  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
-  PhocServer *server = phoc_server_get_default ();
-  if (G_LIKELY (!(phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS))))
-    return;
-
-  for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
-    PhocSeat *seat = PHOC_SEAT (elem->data);
-    struct wlr_touch_point *point;
-
-    g_assert (PHOC_IS_SEAT (seat));
-
-    wl_list_for_each(point, &seat->seat->touch_state.touch_points, link) {
-      struct touch_point_data *touch_point;
-
-      if (point->surface != surface)
-        continue;
-
-      touch_point = g_new (struct touch_point_data, 1);
-      touch_point->id = point->touch_id;
-      touch_point->x = box.x + point->sx * output->wlr_output->scale * scale;
-      touch_point->y = box.y + point->sy * output->wlr_output->scale * scale;
-      output->debug_touch_points = g_list_append (output->debug_touch_points, touch_point);
-    }
-  }
-}
-
 
 static void
 render_surface_iterator (PhocOutput         *output,
@@ -249,8 +212,6 @@ render_surface_iterator (PhocOutput         *output,
   render_texture (output, texture, &src_box, &dst_box, &clip_box, surface->current.transform, alpha, ctx);
 
   wlr_presentation_surface_scanned_out_on_output (surface, wlr_output);
-
-  collect_touch_points(output, surface, dst_box, scale);
 }
 
 
@@ -317,117 +278,26 @@ render_drag_icons (PhocInput *input, PhocRenderContext *ctx)
 
 
 static void
-color_hsv_to_rgb (struct wlr_render_color *color)
+render_touch_point_cb (gpointer key, gpointer value, gpointer user_data)
 {
-  float h = color->r, s = color->g, v = color->b;
-
-  h = fmodf (h, 360);
-  if (h < 0)
-    h += 360;
-
-  int d = h / 60;
-  float e = h / 60 - d;
-  float a = v * (1 - s);
-  float b = v * (1 - e * s);
-  float c = v * (1 - (1 - e) * s);
-
-  switch (d) {
-  default:
-  case 0: color->r = v, color->g = c, color->b = a; return;
-  case 1: color->r = b, color->g = v, color->b = a; return;
-  case 2: color->r = a, color->g = v, color->b = c; return;
-  case 3: color->r = a, color->g = b, color->b = v; return;
-  case 4: color->r = c, color->g = a, color->b = v; return;
-  case 5: color->r = v, color->g = a, color->b = b; return;
-  }
-}
-
-
-static struct wlr_box
-phoc_box_from_touch_point (struct touch_point_data *touch_point, int width, int height)
-{
-  return (struct wlr_box) {
-    .x = touch_point->x - width / 2.0,
-    .y = touch_point->y - height / 2.0,
-    .width = width,
-    .height = height
-  };
-}
-
-static void
-render_touch_point_cb (gpointer data, gpointer user_data)
-{
-  struct touch_point_data *touch_point = data;
+  PhocTouchPoint *touch_point = value;
   PhocRenderContext *ctx = user_data;
-  struct wlr_output *wlr_output = ctx->output->wlr_output;
-  int size = TOUCH_POINT_SIZE * wlr_output->scale;
-  struct wlr_render_color color = {touch_point->id * 100 + 240, 1.0, 1.0, 0.75};
-  struct wlr_box point_box;
 
-  color_hsv_to_rgb (&color);
-
-  point_box = phoc_box_from_touch_point (touch_point, size, size);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = color,
-    });
-
-  size = TOUCH_POINT_SIZE * (1.0 - TOUCH_POINT_BORDER) * wlr_output->scale;
-  point_box = phoc_box_from_touch_point (touch_point, size, size);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = COLOR_TRANSPARENT_WHITE,
-    });
-
-  point_box = phoc_box_from_touch_point (touch_point, 8 * wlr_output->scale, 2 * wlr_output->scale);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = color,
-    });
-
-  point_box = phoc_box_from_touch_point (touch_point, 2 * wlr_output->scale, 8 * wlr_output->scale);
-  phoc_output_transform_box (ctx->output, &point_box);
-  wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = point_box,
-      .color = color,
-    });
+  phoc_touch_point_render (touch_point, ctx);
 }
+
 
 static void
 render_touch_points (PhocRenderContext *ctx)
 {
-  if (G_LIKELY (ctx->output->debug_touch_points == NULL))
-    return;
+  PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
 
-  g_list_foreach (ctx->output->debug_touch_points, render_touch_point_cb, ctx);
-}
+  for (GSList *l = phoc_input_get_seats (input); l; l = l->next) {
+    PhocSeat *seat = PHOC_SEAT (l->data);
+    PhocCursor *cursor = phoc_seat_get_cursor (seat);
 
-
-static void
-damage_touch_point_cb (gpointer data, gpointer user_data)
-{
-  struct touch_point_data *touch_point = data;
-  PhocOutput *output = user_data;
-  struct wlr_output *wlr_output = output->wlr_output;
-  int size = TOUCH_POINT_SIZE * wlr_output->scale;
-  struct wlr_box box = phoc_box_from_touch_point (touch_point, size, size);
-  pixman_region32_t region;
-
-  pixman_region32_init_rect (&region, box.x, box.y, box.width, box.height);
-  wlr_damage_ring_add (&output->damage_ring, &region);
-  pixman_region32_fini (&region);
-}
-
-static void
-damage_touch_points (PhocOutput *output)
-{
-  if (G_LIKELY (output->debug_touch_points == NULL))
-    return;
-
-  g_list_foreach (output->debug_touch_points, damage_touch_point_cb, output);
+    g_hash_table_foreach (phoc_cursor_get_touch_points (cursor), render_touch_point_cb, ctx);
+  }
 }
 
 
@@ -659,13 +529,12 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
   pixman_region32_fini (&transformed_damage);
   wlr_output_add_software_cursors_to_render_pass (wlr_output, ctx->render_pass, damage);
 
-  render_touch_points (ctx);
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
+    render_touch_points (ctx);
+
   g_signal_emit (self, signals[RENDER_END], 0, ctx);
   if (G_UNLIKELY (phoc_server_check_debug_flags (server,PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)))
     render_damage (self, ctx);
-
-  damage_touch_points (output);
-  g_clear_list (&output->debug_touch_points, g_free);
 }
 
 
