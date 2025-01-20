@@ -352,3 +352,18 @@ phoc_output_shield_set_duration (PhocOutputShield *self, guint duration)
 
   phoc_timed_animation_set_duration (self->animation, duration);
 }
+
+/**
+ * phoc_output_shield_is_raised:
+ * @self: The shield
+ *
+ * Check whether the shield is currently fully up (raised). We return  `FALSE`
+ * when the shield is either down or already fading out.
+ */
+gboolean
+phoc_output_shield_is_raised (PhocOutputShield *self)
+{
+  g_assert (PHOC_IS_OUTPUT_SHIELD (self));
+
+  return G_APPROX_VALUE (self->alpha, 1.0, FLT_EPSILON);
+}

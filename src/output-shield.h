@@ -25,4 +25,5 @@ void                phoc_output_shield_set_easing                (PhocOutputShie
                                                                   PhocEasing        easing);
 void                phoc_output_shield_set_duration              (PhocOutputShield *self,
                                                                   guint             duration);
+gboolean            phoc_output_shield_is_raised                 (PhocOutputShield *self);
 G_END_DECLS
