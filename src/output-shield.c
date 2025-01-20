@@ -22,6 +22,7 @@ enum {
   PROP_0,
   PROP_ALPHA,
   PROP_OUTPUT,
+  PROP_EASING,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -40,6 +41,8 @@ struct _PhocOutputShield {
   float               alpha;
   PhocOutput         *output;
   PhocTimedAnimation *animation;
+  PhocPropertyEaser  *easer;
+
   gulong              render_end_id;
 };
 
@@ -109,6 +112,9 @@ phoc_output_shield_set_property (GObject      *object,
   case PROP_OUTPUT:
     set_output (self, g_value_get_object (value));
     break;
+  case PROP_EASING:
+    phoc_output_shield_set_easing (self, g_value_get_enum (value));
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     break;
@@ -130,6 +136,9 @@ phoc_output_shield_get_property (GObject    *object,
     break;
   case PROP_OUTPUT:
     g_value_set_object (value, self->output);
+    break;
+  case PROP_EASING:
+    g_value_set_enum (value, phoc_property_easer_get_easing (self->easer));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -190,43 +199,15 @@ on_animation_done (PhocOutputShield *self)
 
 
 static void
-phoc_output_shield_constructed (GObject *object)
-{
-  PhocOutputShield *self = PHOC_OUTPUT_SHIELD (object);
-
-  g_autoptr (PhocTimedAnimation) fade_anim = NULL;
-  g_autoptr (PhocPropertyEaser) easer = NULL;
-
-  G_OBJECT_CLASS (phoc_output_shield_parent_class)->constructed (object);
-
-  easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
-                        "target", self,
-                        "easing", PHOC_EASING_EASE_IN_CUBIC,
-                        NULL);
-  phoc_property_easer_set_props (easer,
-                                 "alpha", 1.0, 0.0,
-                                 NULL);
-
-  fade_anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
-                            "animatable", self,
-                            "duration", PHOC_ANIM_DURATION_SHIELD_UP,
-                            "property-easer", easer,
-                            NULL);
-  g_set_object (&self->animation, fade_anim);
-
-  g_signal_connect_swapped (self->animation, "done",
-                            G_CALLBACK (on_animation_done),
-                            self);
-}
-
-
-static void
 phoc_output_shield_finalize (GObject *object)
 {
   PhocOutputShield *self = PHOC_OUTPUT_SHIELD (object);
 
   set_output (self, NULL);
   stop_render (self);
+
+  g_clear_object (&self->easer);
+  g_clear_object (&self->animation);
 
   G_OBJECT_CLASS (phoc_output_shield_parent_class)->finalize (object);
 }
@@ -247,7 +228,6 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
 
   object_class->get_property = phoc_output_shield_get_property;
   object_class->set_property = phoc_output_shield_set_property;
-  object_class->constructed = phoc_output_shield_constructed;
   object_class->finalize = phoc_output_shield_finalize;
 
   /**
@@ -261,7 +241,6 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
                         1.0,
                         1.0,
                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
   /**
    * PhocOutputShield:output:
    *
@@ -271,6 +250,16 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
     g_param_spec_object ("output", "", "",
                          PHOC_TYPE_OUTPUT,
                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PhocOutputShield:easing:
+   *
+   * The easing function to use
+   */
+  props[PROP_EASING] =
+    g_param_spec_enum ("easing", "", "",
+                       PHOC_TYPE_EASING,
+                       PHOC_EASING_EASE_IN_CUBIC,
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
@@ -279,6 +268,26 @@ phoc_output_shield_class_init (PhocOutputShieldClass *klass)
 static void
 phoc_output_shield_init (PhocOutputShield *self)
 {
+  g_autoptr (PhocTimedAnimation) fade_anim = NULL;
+
+  self->easer = g_object_new (PHOC_TYPE_PROPERTY_EASER,
+                              "target", self,
+                              "easing", PHOC_EASING_EASE_IN_CUBIC,
+                              NULL);
+  phoc_property_easer_set_props (self->easer,
+                                 "alpha", 1.0, 0.0,
+                                 NULL);
+
+  fade_anim = g_object_new (PHOC_TYPE_TIMED_ANIMATION,
+                            "animatable", self,
+                            "duration", PHOC_ANIM_DURATION_SHIELD_UP,
+                            "property-easer", self->easer,
+                            NULL);
+  g_set_object (&self->animation, fade_anim);
+
+  g_signal_connect_swapped (self->animation, "done",
+                            G_CALLBACK (on_animation_done),
+                            self);
 }
 
 
@@ -289,7 +298,6 @@ phoc_output_shield_new (PhocOutput *output)
                        "output", output,
                        NULL);
 }
-
 
 /**
  * phoc_output_shield_raise:
@@ -309,7 +317,6 @@ phoc_output_shield_raise (PhocOutputShield *self)
   start_render (self);
 }
 
-
 /**
  * phoc_output_shield_lower
  * @self: The shield
@@ -323,4 +330,13 @@ phoc_output_shield_lower (PhocOutputShield *self)
 
   start_render (self);
   phoc_timed_animation_play (self->animation);
+}
+
+
+void
+phoc_output_shield_set_easing (PhocOutputShield *self, PhocEasing easing)
+{
+  g_assert (PHOC_IS_OUTPUT_SHIELD (self));
+
+  phoc_property_easer_set_easing (self->easer, easing);
 }
