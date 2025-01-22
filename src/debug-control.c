@@ -245,7 +245,8 @@ phoc_debug_control_set_exported (PhocDebugControl *self, gboolean exported)
   if (exported) {
     self->dbus_name_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                                          DEBUG_CONTROL_DBUS_NAME,
-                                         G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT,
+                                         G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
+                                         G_BUS_NAME_OWNER_FLAGS_REPLACE,
                                          on_bus_acquired,
                                          NULL,
                                          NULL,

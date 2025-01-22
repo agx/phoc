@@ -10,12 +10,12 @@
 
 #include "phoc-config.h"
 #include "phoc-enums.h"
-#include "render.h"
+#include "debug-control.h"
 #include "render-private.h"
-#include "utils.h"
 #include "seat.h"
 #include "server.h"
 #include "surface.h"
+#include "utils.h"
 
 #include <gmobile.h>
 
@@ -54,6 +54,7 @@ typedef struct _PhocServer {
   PhocConfig          *config;
   PhocServerFlags      flags;
   PhocServerDebugFlags debug_flags;
+  PhocDebugControl    *debug_control;
 
   PhocRenderer        *renderer;
   PhocDesktop         *desktop;
@@ -339,6 +340,9 @@ phoc_server_initable_init (GInitable    *initable,
 
   self->subcompositor = wlr_subcompositor_create (self->wl_display);
 
+  self->debug_control = phoc_debug_control_new (self);
+  phoc_debug_control_set_exported (self->debug_control, TRUE);
+
   return TRUE;
 }
 
@@ -400,6 +404,7 @@ phoc_server_dispose (GObject *object)
   }
 
   g_clear_object (&self->renderer);
+  g_clear_object (&self->debug_control);
 
   G_OBJECT_CLASS (phoc_server_parent_class)->dispose (object);
 }
