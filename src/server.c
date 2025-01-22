@@ -498,7 +498,6 @@ phoc_server_get_default (void)
  * @exec: The executable to run
  * @mainloop:(transfer none): The mainloop
  * @flags: The flags to use for spawning the server
- * @debug_flags: The debug flags to use
  *
  * Perform wayland server initialization: parse command line and config,
  * create the wayland socket, setup env vars.
@@ -506,18 +505,17 @@ phoc_server_get_default (void)
  * Returns: %TRUE on success, %FALSE otherwise
  */
 gboolean
-phoc_server_setup (PhocServer *self, PhocConfig *config,
-                   const char *exec, GMainLoop *mainloop,
-                   PhocServerFlags flags,
-                   PhocServerDebugFlags debug_flags)
+phoc_server_setup (PhocServer      *self,
+                   PhocConfig      *config,
+                   const char      *exec,
+                   GMainLoop       *mainloop,
+                   PhocServerFlags  flags)
 {
   g_assert (!self->inited);
 
   self->config = config;
   self->flags = flags;
-  self->debug_flags = debug_flags;
   self->mainloop = mainloop;
-  self->exit_status = 1;
   self->desktop = phoc_desktop_new ();
   self->input = phoc_input_new ();
   self->session_exec = g_strdup (exec);
