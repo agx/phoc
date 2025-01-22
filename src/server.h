@@ -58,6 +58,9 @@ gboolean               phoc_server_setup                   (PhocServer *self,
                                                             GMainLoop  *mainloop,
                                                             PhocServerFlags flags,
                                                             PhocServerDebugFlags debug_flags);
+void                   phoc_server_set_debug_flags         (PhocServer *self,
+                                                            PhocServerDebugFlags flags);
+PhocServerDebugFlags   phoc_server_get_debug_flags         (PhocServer *self);
 gboolean               phoc_server_check_debug_flags       (PhocServer *self,
                                                             PhocServerDebugFlags check);
 const char            *phoc_server_get_session_exec        (PhocServer *self);

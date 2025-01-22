@@ -9,6 +9,7 @@
 #define G_LOG_DOMAIN "phoc-server"
 
 #include "phoc-config.h"
+#include "phoc-enums.h"
 #include "render.h"
 #include "render-private.h"
 #include "utils.h"
@@ -29,6 +30,13 @@
 /* Maximum protocol versions we support */
 #define PHOC_WL_DISPLAY_VERSION 6
 #define PHOC_LINUX_DMABUF_VERSION 5
+
+enum {
+  PROP_0,
+  PROP_DEBUG_FLAGS,
+  PROP_LAST_PROP
+};
+static GParamSpec *props[PROP_LAST_PROP];
 
 /**
  * PhocServer:
@@ -343,6 +351,44 @@ phoc_server_initable_iface_init (GInitableIface *iface)
 
 
 static void
+phoc_server_set_property (GObject      *object,
+                          guint         property_id,
+                          const GValue *value,
+                          GParamSpec   *pspec)
+{
+  PhocServer *self = PHOC_SERVER (object);
+
+  switch (property_id) {
+  case PROP_DEBUG_FLAGS:
+    phoc_server_set_debug_flags (self, g_value_get_flags (value));
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+phoc_server_get_property (GObject    *object,
+                          guint       property_id,
+                          GValue     *value,
+                          GParamSpec *pspec)
+{
+  PhocServer *self = PHOC_SERVER (object);
+
+  switch (property_id) {
+  case PROP_DEBUG_FLAGS:
+    g_value_set_flags (value, phoc_server_get_debug_flags (self));
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
 phoc_server_dispose (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
@@ -390,9 +436,25 @@ phoc_server_class_init (PhocServerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->get_property = phoc_server_get_property;
+  object_class->set_property = phoc_server_set_property;
   object_class->finalize = phoc_server_finalize;
   object_class->dispose = phoc_server_dispose;
+
+  /**
+   * PhocServer:debug-flags
+   *
+   * The debug flags currently active
+   */
+  props[PROP_DEBUG_FLAGS] =
+    g_param_spec_flags ("debug-flags", "", "",
+                        PHOC_TYPE_SERVER_DEBUG_FLAGS,
+                        PHOC_SERVER_DEBUG_FLAG_NONE,
+                        G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
+
 
 static void
 phoc_server_init (PhocServer *self)
@@ -607,6 +669,39 @@ phoc_server_check_debug_flags (PhocServer *self, PhocServerDebugFlags check)
   g_assert (PHOC_IS_SERVER (self));
 
   return !!(self->debug_flags & check);
+}
+
+/**
+ * phoc_server_set_debug_flags:
+ * @self: The server
+ * @flags: The debug flags
+ *
+ * Set the currently enabled debug flags
+ */
+void
+phoc_server_set_debug_flags (PhocServer *self, PhocServerDebugFlags flags)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  if (self->debug_flags == flags)
+    return;
+
+  self->debug_flags = flags;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_DEBUG_FLAGS]);
+}
+
+/**
+ * phoc_server_get_debug_flags:
+ * @self: The server
+ *
+ * Get the debug flags
+ */
+PhocServerDebugFlags
+phoc_server_get_debug_flags (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->debug_flags;
 }
 
 /**
