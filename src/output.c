@@ -521,6 +521,8 @@ phoc_output_draw (PhocOutput *self)
   pixman_region32_fini (&buffer_damage);
 
   if (!wlr_render_pass_submit (render_pass)) {
+    /* Rerender in case of failure */
+    wlr_damage_ring_add_whole (&self->damage_ring);
     wlr_buffer_unlock (buffer);
     goto out;
   }
