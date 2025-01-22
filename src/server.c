@@ -459,7 +459,6 @@ phoc_server_setup (PhocServer *self, PhocConfig *config,
   self->desktop = phoc_desktop_new ();
   self->input = phoc_input_new ();
   self->session_exec = g_strdup (exec);
-  self->mainloop = mainloop;
 
   const char *socket = wl_display_add_socket_auto (self->wl_display);
   if (!socket) {
