@@ -69,5 +69,5 @@ main (gint argc, gchar *argv[])
   g_test_add_func ("/phoc/config/output", test_phoc_config_output);
   g_test_add_func ("/phoc/config/modelines", test_phoc_config_modelines);
 
-  return g_test_run();
+  return g_test_run ();
 }

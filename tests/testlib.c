@@ -350,7 +350,9 @@ registry_handle_global (void               *data,
                                                     &zwlr_screencopy_manager_v1_interface, 1);
   } else if (!g_strcmp0 (interface, zwlr_foreign_toplevel_manager_v1_interface.name)) {
     globals->foreign_toplevel_manager = wl_registry_bind (registry, name,
-                                                          &zwlr_foreign_toplevel_manager_v1_interface, 2);
+                                                          &
+                                                          zwlr_foreign_toplevel_manager_v1_interface,
+                                                          2);
     zwlr_foreign_toplevel_manager_v1_add_listener (globals->foreign_toplevel_manager,
                                                    &foreign_toplevel_manager_listener, globals);
   } else if (!g_strcmp0 (interface, phosh_private_interface.name)) {

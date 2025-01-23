@@ -20,7 +20,7 @@ test_color_rect_new (void)
   rect = g_object_new (PHOC_TYPE_COLOR_RECT,
                        "color", &(PhocColor){1.0, 2.0, 3.0, 4.0},
                        "box", &(PhocBox){10, 11, 100, 101},
-                        NULL);
+                       NULL);
   box = phoc_color_rect_get_box (rect);
   g_assert_cmpint (box.x, ==, 10);
   g_assert_cmpint (box.y, ==, 11);
@@ -44,7 +44,7 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/color-rect/new", test_color_rect_new);
+  g_test_add_func ("/phoc/color-rect/new", test_color_rect_new);
 
-  return g_test_run();
+  return g_test_run ();
 }

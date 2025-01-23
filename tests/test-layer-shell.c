@@ -8,8 +8,7 @@
 
 #include <wayland-client-protocol.h>
 
-typedef struct _PhocTestLayerSurface
-{
+typedef struct _PhocTestLayerSurface {
   struct wl_surface *wl_surface;
   struct zwlr_layer_surface_v1 *layer_surface;
   PhocTestBuffer buffer;
@@ -17,11 +16,12 @@ typedef struct _PhocTestLayerSurface
   gboolean configured;
 } PhocTestLayerSurface;
 
-static void layer_surface_configure (void                         *data,
-                                     struct zwlr_layer_surface_v1 *surface,
-                                     uint32_t                      serial,
-                                     uint32_t                      width,
-                                     uint32_t                      height)
+static void
+layer_surface_configure (void                         *data,
+                         struct zwlr_layer_surface_v1 *surface,
+                         uint32_t                      serial,
+                         uint32_t                      width,
+                         uint32_t                      height)
 {
   PhocTestLayerSurface *ls = data;
 
@@ -39,8 +39,9 @@ static void layer_surface_configure (void                         *data,
 }
 
 
-static void layer_surface_closed (void                         *data,
-                                  struct zwlr_layer_surface_v1 *surface)
+static void
+layer_surface_closed (void                         *data,
+                      struct zwlr_layer_surface_v1 *surface)
 {
   g_debug ("Destroyed %p", surface);
   zwlr_layer_surface_v1_destroy (surface);
@@ -82,7 +83,7 @@ phoc_test_layer_surface_new (PhocTestClientGlobals *globals,
   phoc_test_client_create_shm_buffer (globals, &ls->buffer, ls->width, ls->height,
                                       WL_SHM_FORMAT_XRGB8888);
 
-  for (int i = 0; i < ls->width * ls->height * 4; i+=4)
+  for (int i = 0; i < ls->width * ls->height * 4; i += 4)
     *(guint32*)(ls->buffer.shm_data + i) = color;
 
   wl_surface_attach (ls->wl_surface, ls->buffer.wl_buffer, 0, 0);
@@ -222,5 +223,5 @@ main (gint argc, gchar *argv[])
   PHOC_TEST_ADD ("/phoc/layer-shell/exclusive_zone", test_layer_shell_exclusive_zone);
   PHOC_TEST_ADD ("/phoc/layer-shell/set_layer", test_layer_shell_set_layer);
 
-  return g_test_run();
+  return g_test_run ();
 }

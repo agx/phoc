@@ -20,8 +20,7 @@ typedef enum {
   GRAB_STATUS_OK = 1,
 } PhocTestGrabStatus;
 
-typedef struct _PhocTestKeyboardEvent
-{
+typedef struct _PhocTestKeyboardEvent {
   char *title;
   struct phosh_private_keyboard_event *kbevent;
   PhocTestGrabStatus grab_status;
@@ -30,11 +29,13 @@ typedef struct _PhocTestKeyboardEvent
 
 static PhocTestScreencopyFrame *
 phoc_test_get_thumbnail (PhocTestClientGlobals *globals,
-                           guint32 max_width, guint32 max_height, PhocTestForeignToplevel *toplevel)
+                         guint32 max_width, guint32 max_height, PhocTestForeignToplevel *toplevel)
 {
   PhocTestScreencopyFrame *thumbnail = g_malloc0 (sizeof(PhocTestScreencopyFrame));
 
-  struct zwlr_screencopy_frame_v1 *handle = phosh_private_get_thumbnail (globals->phosh, toplevel->handle, max_width, max_height);
+  struct zwlr_screencopy_frame_v1 *handle = phosh_private_get_thumbnail (globals->phosh,
+                                                                         toplevel->handle,
+                                                                         max_width, max_height);
   phoc_test_client_capture_frame (globals, thumbnail, handle);
 
   zwlr_screencopy_frame_v1_destroy (handle);
@@ -58,7 +59,8 @@ test_client_phosh_private_thumbnail_simple (PhocTestClientGlobals *globals, gpoi
   g_assert_nonnull (toplevel_green);
   phoc_assert_screenshot (globals, "test-phosh-private-thumbnail-simple-1.png");
 
-  green_thumbnail = phoc_test_get_thumbnail (globals, toplevel_green->width, toplevel_green->height, toplevel_green->foreign_toplevel);
+  green_thumbnail = phoc_test_get_thumbnail (globals, toplevel_green->width, toplevel_green->height,
+                                             toplevel_green->foreign_toplevel);
   phoc_assert_buffer_equal (&toplevel_green->buffer, &green_thumbnail->buffer);
   phoc_test_thumbnail_free (green_thumbnail);
 
@@ -83,10 +85,10 @@ test_phosh_private_thumbnail_simple (void)
 }
 
 static void
-keyboard_event_handle_grab_failed (void *data,
+keyboard_event_handle_grab_failed (void                                *data,
                                    struct phosh_private_keyboard_event *kbevent,
-                                   const char *accelerator,
-                                   uint32_t error)
+                                   const char                          *accelerator,
+                                   uint32_t                             error)
 {
   PhocTestKeyboardEvent *kbe = data;
 
@@ -97,10 +99,10 @@ keyboard_event_handle_grab_failed (void *data,
 }
 
 static void
-keyboard_event_handle_grab_success (void *data,
-                                   struct phosh_private_keyboard_event *kbevent,
-                                   const char *accelerator,
-                                   uint32_t action_id)
+keyboard_event_handle_grab_success (void                                *data,
+                                    struct phosh_private_keyboard_event *kbevent,
+                                    const char                          *accelerator,
+                                    uint32_t                             action_id)
 {
   PhocTestKeyboardEvent *kbe = data;
 
@@ -112,13 +114,13 @@ keyboard_event_handle_grab_success (void *data,
 }
 
 static const struct phosh_private_keyboard_event_listener keyboard_event_listener = {
-   .grab_failed_event = keyboard_event_handle_grab_failed,
-   .grab_success_event = keyboard_event_handle_grab_success,
+  .grab_failed_event = keyboard_event_handle_grab_failed,
+  .grab_success_event = keyboard_event_handle_grab_success,
 };
 
 static PhocTestKeyboardEvent *
 phoc_test_keyboard_event_new (PhocTestClientGlobals *globals,
-                              char* title)
+                              char                  *title)
 {
   PhocTestKeyboardEvent *kbe = g_new0 (PhocTestKeyboardEvent, 1);
 
@@ -213,7 +215,7 @@ static void
 test_phosh_private_kbevents_simple (void)
 {
   PhocTestClientIface iface = {
-   .client_run = test_client_phosh_private_kbevent_simple,
+    .client_run = test_client_phosh_private_kbevent_simple,
   };
 
   phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
@@ -230,7 +232,7 @@ startup_tracker_handle_launched (void                                 *data,
 
   (*counter)++;
   g_assert_cmpint (flags, ==, 0);
-  g_assert_cmpint(protocol, ==, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
+  g_assert_cmpint (protocol, ==, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
 }
 
 
@@ -246,7 +248,7 @@ startup_tracker_handle_startup_id (void                                 *data,
 
   (*counter)++;
   g_assert_cmpint (flags, ==, 0);
-  g_assert_cmpint(protocol, ==, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
+  g_assert_cmpint (protocol, ==, PHOSH_PRIVATE_STARTUP_TRACKER_PROTOCOL_GTK_SHELL);
 }
 
 static const struct phosh_private_startup_tracker_listener startup_tracker_listener = {
@@ -287,7 +289,7 @@ static void
 test_phosh_private_startup_tracker_simple (void)
 {
   PhocTestClientIface iface = {
-   .client_run = test_client_phosh_private_startup_tracker_simple,
+    .client_run = test_client_phosh_private_startup_tracker_simple,
   };
 
   phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);

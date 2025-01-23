@@ -19,20 +19,20 @@ test_client_xdg_decoration_server_side (PhocTestClientGlobals *globals, gpointer
   xs = phoc_test_xdg_toplevel_new (globals, 0, 0, "server-side-decoration");
   g_assert_nonnull (xs);
 
-  toplevel_decoration_manager = zxdg_decoration_manager_v1_get_toplevel_decoration(
+  toplevel_decoration_manager = zxdg_decoration_manager_v1_get_toplevel_decoration (
     globals->decoration_manager, xs->xdg_toplevel);
 
   /* As per protocol we need to set decoration before attaching a buffer */
-  zxdg_toplevel_decoration_v1_set_mode(toplevel_decoration_manager,
-                                       ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+  zxdg_toplevel_decoration_v1_set_mode (toplevel_decoration_manager,
+                                        ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
   wl_display_dispatch (globals->display);
 
   phoc_test_xdg_update_buffer (globals, xs, color);
 
   phoc_assert_screenshot (globals, "test-xdg-decoration-server-side-1.png");
 
-  zxdg_toplevel_decoration_v1_set_mode(toplevel_decoration_manager,
-                                       ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
+  zxdg_toplevel_decoration_v1_set_mode (toplevel_decoration_manager,
+                                        ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
   wl_display_dispatch (globals->display);
   phoc_test_xdg_update_buffer (globals, xs, color);
 
@@ -79,5 +79,5 @@ main (gint argc, gchar *argv[])
 
   PHOC_TEST_ADD ("/phoc/xdg-decoration/server-side", test_xdg_decoration_server_side);
 
-  return g_test_run();
+  return g_test_run ();
 }

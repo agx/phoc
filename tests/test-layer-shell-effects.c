@@ -203,5 +203,5 @@ main (gint argc, gchar *argv[])
                  test_layer_shell_effects_alpha_surface_simple);
   PHOC_TEST_ADD ("/phoc/layer-shell-effects/bind-surface/simple",
                  test_layer_shell_effects_stack_surface_simple);
-  return g_test_run();
+  return g_test_run ();
 }
