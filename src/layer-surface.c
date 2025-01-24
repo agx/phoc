@@ -98,54 +98,61 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   PhocLayerSurface *self = wl_container_of (listener, self, surface_commit);
   struct wlr_layer_surface_v1 *wlr_layer_surface = self->layer_surface;
   struct wlr_output *wlr_output = wlr_layer_surface->output;
+  gboolean exclusive_zone_changed;
 
-  if (wlr_output != NULL) {
-    PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
-    struct wlr_box old_geo = self->geo;
+  if (!wlr_output)
+    return;
 
-    bool layer_changed = false;
-    if (wlr_layer_surface->current.committed != 0) {
-      layer_changed = self->layer != wlr_layer_surface->current.layer;
+  PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
+  struct wlr_box old_geo = self->geo;
 
+  bool layer_changed = false;
+  if (wlr_layer_surface->current.committed != 0) {
+    layer_changed = self->layer != wlr_layer_surface->current.layer;
+
+    /* Invalidate the layer the surface previously belonged to */
+    if (layer_changed)
       phoc_output_set_layer_dirty (output, self->layer);
 
-      self->layer = wlr_layer_surface->current.layer;
-      phoc_layer_shell_arrange (output);
-      phoc_layer_shell_update_focus ();
-    }
-
-    // Cursor changes which happen as a consequence of resizing a layer
-    // surface are applied in phoc_layer_shell_arrange. Because the resize happens
-    // before the underlying surface changes, it will only receive a cursor
-    // update if the new cursor position crosses the *old* sized surface in
-    // the *new* layer surface.
-    // Another cursor move event is needed when the surface actually
-    // changes.
-    struct wlr_surface *surface = wlr_layer_surface->surface;
-    if (surface->previous.width != surface->current.width ||
-        surface->previous.height != surface->current.height) {
-      phoc_layer_shell_update_cursors (self, phoc_input_get_seats (input));
-    }
-
-    bool geo_changed = memcmp (&old_geo, &self->geo, sizeof (struct wlr_box)) != 0;
-    if (geo_changed || layer_changed) {
-      phoc_output_damage_whole_surface (output,
-                                        wlr_layer_surface->surface,
-                                        old_geo.x,
-                                        old_geo.y);
-      phoc_output_damage_whole_surface (output,
-                                        wlr_layer_surface->surface,
-                                        self->geo.x,
-                                        self->geo.y);
-    } else {
-      phoc_output_damage_from_surface (output,
-                                       wlr_layer_surface->surface,
-                                       self->geo.x,
-                                       self->geo.y);
-    }
-
-    phoc_output_set_layer_dirty (output, self->layer);
+    self->layer = wlr_layer_surface->current.layer;
+    phoc_layer_shell_arrange (output);
+    phoc_layer_shell_update_focus ();
   }
+
+  /* Cursor changes which happen as a consequence of resizing a layer
+   * surface are applied in phoc_layer_shell_arrange. Because the resize happens
+   * before the underlying surface changes, it will only receive a cursor
+   * update if the new cursor position crosses the *old* sized surface in
+   * the *new* layer surface.
+   * Another cursor move event is needed when the surface actually changes. */
+  struct wlr_surface *surface = wlr_layer_surface->surface;
+  if (surface->previous.width != surface->current.width ||
+      surface->previous.height != surface->current.height) {
+    phoc_layer_shell_update_cursors (self, phoc_input_get_seats (input));
+  }
+
+  bool geo_changed = memcmp (&old_geo, &self->geo, sizeof (struct wlr_box)) != 0;
+  if (geo_changed || layer_changed) {
+    phoc_output_damage_whole_surface (output,
+                                      wlr_layer_surface->surface,
+                                      old_geo.x,
+                                      old_geo.y);
+    phoc_output_damage_whole_surface (output,
+                                      wlr_layer_surface->surface,
+                                      self->geo.x,
+                                      self->geo.y);
+  } else {
+    phoc_output_damage_from_surface (output,
+                                     wlr_layer_surface->surface,
+                                     self->geo.x,
+                                     self->geo.y);
+  }
+
+  /* Exclusive zone changes affect the surface ordering in a layer */
+  exclusive_zone_changed = !!(wlr_layer_surface->current.committed &
+                              WLR_LAYER_SURFACE_V1_STATE_EXCLUSIVE_ZONE);
+  if (layer_changed || exclusive_zone_changed)
+    phoc_output_set_layer_dirty (output, self->layer);
 }
 
 
@@ -238,8 +245,10 @@ handle_unmap (struct wl_listener *listener, void *data)
   phoc_layer_surface_damage (self);
   phoc_input_update_cursor_focus (input);
 
-  if (output)
+  if (output) {
     phoc_layer_shell_arrange (output);
+    phoc_output_set_layer_dirty (output, self->layer);
+  }
   phoc_layer_shell_update_focus ();
 }
 
@@ -512,9 +521,14 @@ phoc_layer_surface_get_mapped (PhocLayerSurface *self)
 gboolean
 phoc_layer_surface_covers_output (PhocLayerSurface *self)
 {
+  struct wlr_surface *wlr_surface;
+
   g_assert (PHOC_IS_LAYER_SURFACE (self));
 
   if (!self->layer_surface)
+    return FALSE;
+
+  if (!self->mapped)
     return FALSE;
 
   if (!self->layer_surface->output)
@@ -530,5 +544,21 @@ phoc_layer_surface_covers_output (PhocLayerSurface *self)
   if (self->layer_surface->current.exclusive_zone != -1)
     return FALSE;
 
-  return TRUE;
+  if (!G_APPROX_VALUE (self->alpha, 1.0, FLT_EPSILON))
+    return FALSE;
+
+  wlr_surface = self->layer_surface->surface;
+  if (!wlr_surface)
+    return FALSE;
+
+  /* Buffer uses opaque pixel format or is opaque single pixel buffer */
+  if (wlr_surface->opaque)
+    return TRUE;
+
+  /* Surface's opaque region covers the whole surface */
+  pixman_box32_t box = {0, 0, wlr_surface->current.width, wlr_surface->current.height};
+  if (pixman_region32_contains_rectangle (&wlr_surface->opaque_region, &box))
+    return TRUE;
+
+  return FALSE;
 }
