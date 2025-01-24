@@ -16,6 +16,7 @@
 #include "cursor.h"
 #include "desktop.h"
 #include "input.h"
+#include "surface.h"
 #include "server.h"
 #include "view.h"
 #include "view-child-private.h"
@@ -44,6 +45,9 @@ typedef struct _PhocXdgPopup {
   struct wl_listener    reposition;
   struct wl_listener    surface_commit;
 
+  struct {
+    struct wlr_box      box;
+  } previous;
   gboolean              repositioned;
 } PhocXdgPopup;
 
@@ -105,7 +109,18 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
 {
   PhocXdgPopup *self = wl_container_of (listener, self, reposition);
 
-  self->repositioned = TRUE;
+  if (self->wlr_popup->base->surface) {
+    double sx, sy;
+
+    self->repositioned = TRUE;
+    wlr_xdg_popup_get_position (self->wlr_popup, &sx, &sy);
+    self->previous.box = (struct wlr_box) {
+      sx, sy,
+      self->wlr_popup->base->surface->current.width,
+      self->wlr_popup->base->surface->current.height
+    };
+  }
+
   popup_unconstrain (self);
 }
 
@@ -119,10 +134,30 @@ popup_handle_surface_commit (struct wl_listener *listener, void *data)
     popup_unconstrain (self);
 
   if (self->repositioned) {
-    /* clear the old popup position */
-    /* TODO: this is too much damage */
-    phoc_view_damage_whole (phoc_view_child_get_view (PHOC_VIEW_CHILD (self)));
+    PhocSurface *surface = PHOC_SURFACE (self->wlr_popup->base->surface->data);
+    double sx, sy;
+
+    g_assert (PHOC_IS_SURFACE (surface));
     self->repositioned = FALSE;
+
+    wlr_xdg_popup_get_position (self->wlr_popup, &sx, &sy);
+
+    /* Old position */
+    phoc_surface_add_damage_box (surface, &(struct wlr_box) {
+        floor (self->previous.box.x - sx),
+        floor (self->previous.box.y - sy),
+        self->previous.box.width,
+        self->previous.box.height,
+      });
+
+    /* New position */
+    phoc_surface_add_damage_box (surface, &(struct wlr_box) {
+        0, 0,
+        self->wlr_popup->base->surface->current.width,
+        self->wlr_popup->base->surface->current.height,
+      });
+
+    phoc_view_child_apply_damage (PHOC_VIEW_CHILD (self));
   }
 }
 
