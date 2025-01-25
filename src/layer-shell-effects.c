@@ -567,6 +567,8 @@ alpha_layer_surface_handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocAlphaLayerSurface *alpha_surface = wl_container_of(listener, alpha_surface, layer_surface_handle_destroy);
 
+  wl_list_remove (&alpha_surface->layer_surface_handle_destroy.link);
+
   /* The layer-surface is unusable for us now */
   alpha_surface->layer_surface = NULL;
 }
@@ -584,6 +586,8 @@ draggable_layer_surface_handle_destroy (struct wl_listener *listener, void *data
   g_hash_table_remove (layer_shell_effects->drag_surfaces_by_layer_surface,
                        drag_surface->layer_surface);
 
+  wl_list_remove (&drag_surface->layer_surface_handle_destroy.link);
+
   /* The layer-surface is unusable for us now */
   drag_surface->layer_surface = NULL;
 }
@@ -595,6 +599,8 @@ stacked_layer_surface_handle_destroy (struct wl_listener *listener, void *data)
   PhocStackedLayerSurface *stacked_surface;
 
   stacked_surface = wl_container_of (listener, stacked_surface, layer_surface_handle_destroy);
+
+  wl_list_remove (&stacked_surface->layer_surface_handle_destroy.link);
 
   /* The layer-surface is unusable for us now */
   stacked_surface->layer_surface = NULL;
@@ -609,6 +615,8 @@ stacked_target_layer_surface_handle_destroy (struct wl_listener *listener, void 
   PhocStackedLayerSurface *stacked_surface;
 
   stacked_surface = wl_container_of (listener, stacked_surface, target_layer_surface_handle_destroy);
+
+  wl_list_remove (&stacked_surface->target_layer_surface_handle_destroy.link);
 
   /* The layer-surface is unusable for us now */
   stacked_surface->current.surface = NULL;
