@@ -21,6 +21,7 @@
 #include "subsurface.h"
 #include "utils.h"
 
+#include <wlr/types/wlr_buffer.h>
 
 /**
  * PhocLayerSurface:
@@ -687,13 +688,15 @@ phoc_layer_surface_covers_output (PhocLayerSurface *self)
     return FALSE;
 
   /* Buffer uses opaque pixel format or is opaque single pixel buffer */
-  if (wlr_surface->WLR_PRIVATE.opaque)
+  if (wlr_surface->buffer && wlr_buffer_is_opaque ((struct wlr_buffer *)wlr_surface->buffer)) {
     return TRUE;
+  }
 
   /* Surface's opaque region covers the whole surface */
   pixman_box32_t box = {0, 0, wlr_surface->current.width, wlr_surface->current.height};
-  if (pixman_region32_contains_rectangle (&wlr_surface->opaque_region, &box))
+  if (pixman_region32_contains_rectangle (&wlr_surface->opaque_region, &box)) {
     return TRUE;
+  }
 
   return FALSE;
 }
