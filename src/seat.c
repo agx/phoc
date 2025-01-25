@@ -195,7 +195,6 @@ handle_pinch_end (struct wl_listener *listener, void *data)
 static void
 on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
   if (phoc_switch_is_tablet_mode_switch (switch_)) {
@@ -206,7 +205,7 @@ on_switch_toggled (PhocSeat *self, gboolean state, PhocSwitch *switch_)
     g_assert_not_reached ();
   }
 
-  phoc_desktop_notify_activity (desktop, self);
+  phoc_seat_notify_activity (self);
 }
 
 
@@ -223,7 +222,7 @@ handle_touch_down (struct wl_listener *listener, void *data)
              output->wlr_output->name);
     return;
   }
-  phoc_desktop_notify_activity (desktop, cursor->seat);
+  phoc_seat_notify_activity (cursor->seat);
   phoc_cursor_handle_touch_down (cursor, event);
 }
 
@@ -231,7 +230,6 @@ handle_touch_down (struct wl_listener *listener, void *data)
 static void
 handle_touch_up (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_up);
   struct wlr_touch_up_event *event = data;
 
@@ -239,14 +237,13 @@ handle_touch_up (struct wl_listener *listener, void *data)
     return;
 
   phoc_cursor_handle_touch_up (cursor, event);
-  phoc_desktop_notify_activity (desktop, cursor->seat);
+  phoc_seat_notify_activity (cursor->seat);
 }
 
 
 static void
 handle_touch_motion (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, touch_motion);
   struct wlr_touch_motion_event *event = data;
 
@@ -254,7 +251,7 @@ handle_touch_motion (struct wl_listener *listener, void *data)
     return;
 
   phoc_cursor_handle_touch_motion (cursor, event);
-  phoc_desktop_notify_activity (desktop, cursor->seat);
+  phoc_seat_notify_activity (cursor->seat);
 }
 
 
@@ -315,7 +312,6 @@ handle_tablet_tool_position (PhocCursor             *cursor,
 static void
 handle_tool_axis (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_axis);
 
   struct wlr_tablet_tool_axis_event *event = data;
@@ -362,14 +358,13 @@ handle_tool_axis (struct wl_listener *listener, void *data)
   if (event->updated_axes & WLR_TABLET_TOOL_AXIS_WHEEL)
     wlr_tablet_v2_tablet_tool_notify_wheel (phoc_tool->tablet_v2_tool, event->wheel_delta, 0);
 
-  phoc_desktop_notify_activity (desktop, cursor->seat);
+  phoc_seat_notify_activity (cursor->seat);
 }
 
 
 static void
 handle_tool_tip (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_tip);
   struct wlr_tablet_tool_tip_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
@@ -381,7 +376,7 @@ handle_tool_tip (struct wl_listener *listener, void *data)
     wlr_tablet_v2_tablet_tool_notify_up (phoc_tool->tablet_v2_tool);
   }
 
-  phoc_desktop_notify_activity (desktop, cursor->seat);
+  phoc_seat_notify_activity (cursor->seat);
 }
 
 static void
@@ -401,7 +396,6 @@ handle_tablet_tool_destroy (struct wl_listener *listener, void *data)
 static void
 handle_tool_button (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *cursor = wl_container_of (listener, cursor, tool_button);
   struct wlr_tablet_tool_button_event *event = data;
   PhocTabletTool *phoc_tool = event->tool->data;
@@ -410,20 +404,19 @@ handle_tool_button (struct wl_listener *listener, void *data)
                                            (enum zwp_tablet_pad_v2_button_state)event->button,
                                            (enum zwp_tablet_pad_v2_button_state)event->state);
 
-  phoc_desktop_notify_activity (desktop, cursor->seat);
+  phoc_seat_notify_activity (cursor->seat);
 }
 
 static void
 handle_tablet_tool_set_cursor (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocTabletTool *tool = wl_container_of (listener, tool, set_cursor);
   struct wlr_tablet_v2_event_cursor *event = data;
   struct wlr_surface *focused_surface = event->seat_client->seat->pointer_state.focused_surface;
   struct wl_client *focused_client = NULL;
   gboolean has_focused = focused_surface != NULL && focused_surface->resource != NULL;
 
-  phoc_desktop_notify_activity (desktop, tool->seat);
+  phoc_seat_notify_activity (tool->seat);
 
   if (has_focused)
     focused_client = wl_resource_get_client (focused_surface->resource);
@@ -449,7 +442,7 @@ handle_tool_proximity (struct wl_listener *listener, void *data)
   struct wlr_tablet_tool_proximity_event *event = data;
   struct wlr_tablet_tool *tool = event->tool;
 
-  phoc_desktop_notify_activity (desktop, cursor->seat);
+  phoc_seat_notify_activity (cursor->seat);
 
   if (!tool->data) {
     PhocTabletTool *phoc_tool = g_new0 (PhocTabletTool, 1);
@@ -870,7 +863,7 @@ on_keyboard_activity (PhocSeat *self, uint32_t keycode, PhocKeyboard *keyboard)
 
   g_debug ("Keycode %d pressed. is_wakeup=%d", keycode, is_wakeup);
 
-  phoc_desktop_notify_activity (desktop, self);
+  phoc_seat_notify_activity (self);
 }
 
 
@@ -2047,4 +2040,15 @@ phoc_seat_update_last_button_serial (PhocSeat *self, uint32_t serial)
   priv = phoc_seat_get_instance_private (self);
 
   priv->last_button_serial = serial;
+}
+
+
+void
+phoc_seat_notify_activity (PhocSeat *self)
+{
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+
+  g_assert (PHOC_IS_SEAT (self));
+
+  phoc_desktop_notify_activity (desktop, self);
 }

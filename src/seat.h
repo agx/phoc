@@ -167,3 +167,4 @@ gboolean           phoc_seat_has_switch   (PhocSeat *self, enum wlr_switch_type 
 void               phoc_seat_update_last_touch_serial (PhocSeat *self, uint32_t serial);
 void               phoc_seat_update_last_button_serial (PhocSeat *self, uint32_t serial);
 uint32_t           phoc_seat_get_last_button_or_touch_serial (PhocSeat *self);
+void               phoc_seat_notify_activity (PhocSeat *self);
