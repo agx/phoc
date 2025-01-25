@@ -537,9 +537,10 @@ handle_new_output (struct wl_listener *listener, void *data)
     return;
   }
 
-  g_signal_connect_swapped (output, "output-destroyed",
-                            G_CALLBACK (on_output_destroyed),
-                            self);
+  g_signal_connect_object (output, "output-destroyed",
+                           G_CALLBACK (on_output_destroyed),
+                           self,
+                           G_CONNECT_SWAPPED);
 }
 
 
