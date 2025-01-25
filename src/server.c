@@ -397,6 +397,8 @@ phoc_server_dispose (GObject *object)
 {
   PhocServer *self = PHOC_SERVER (object);
 
+  g_clear_object (&self->input);
+
   if (self->backend) {
     wl_display_destroy_clients (self->wl_display);
     wlr_backend_destroy (self->backend);
@@ -418,7 +420,6 @@ phoc_server_finalize (GObject *object)
 
   g_clear_pointer (&self->dt_compatibles, g_strfreev);
   g_clear_handle_id (&self->wl_source, g_source_remove);
-  g_clear_object (&self->input);
   g_clear_object (&self->desktop);
   g_clear_pointer (&self->session_exec, g_free);
 
