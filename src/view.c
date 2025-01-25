@@ -176,15 +176,15 @@ handle_toplevel_handle_request_close (struct wl_listener *listener, void *data)
 
 
 static void
-view_create_foreign_toplevel_handle (PhocView *view)
+view_create_foreign_toplevel_handle (PhocView *self)
 {
   PhocViewPrivate *priv;
 
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
   priv->toplevel_handle =
-    wlr_foreign_toplevel_handle_v1_create (view->desktop->foreign_toplevel_manager_v1);
+    wlr_foreign_toplevel_handle_v1_create (self->desktop->foreign_toplevel_manager_v1);
   g_assert (priv->toplevel_handle);
 
   priv->toplevel_handle_request_maximize.notify = handle_toplevel_handle_request_maximize;
@@ -202,7 +202,7 @@ view_create_foreign_toplevel_handle (PhocView *view)
   priv->toplevel_handle_request_close.notify = handle_toplevel_handle_request_close;
   wl_signal_add(&priv->toplevel_handle->events.request_close, &priv->toplevel_handle_request_close);
 
-  priv->toplevel_handle->data = view;
+  priv->toplevel_handle->data = self;
 }
 
 
