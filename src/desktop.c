@@ -684,6 +684,7 @@ phoc_desktop_finalize (GObject *object)
 
   /* TODO: currently destroys the backend before the desktop */
   //wl_list_remove (&self->new_output.link);
+  wl_list_remove (&priv->gamma_control_set_gamma.link);
   wl_list_remove (&self->layout_change.link);
   wl_list_remove (&self->xdg_shell_toplevel.link);
   wl_list_remove (&self->layer_shell_surface.link);
