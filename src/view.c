@@ -120,6 +120,17 @@ toggle_decoration (PhocView *self)
 }
 
 
+static void
+phoc_view_destroy_toplevel_handle (PhocView *self)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
+
+  priv->toplevel_handle->data = NULL;
+  wlr_foreign_toplevel_handle_v1_destroy (priv->toplevel_handle);
+  priv->toplevel_handle = NULL;
+}
+
+
 static struct wlr_foreign_toplevel_handle_v1 *
 phoc_view_get_toplevel_handle (PhocView *self)
 {
@@ -1105,11 +1116,8 @@ phoc_view_unmap (PhocView *view)
   view->wlr_surface = NULL;
   view->box.width = view->box.height = 0;
 
-  if (priv->toplevel_handle) {
-    priv->toplevel_handle->data = NULL;
-    wlr_foreign_toplevel_handle_v1_destroy (priv->toplevel_handle);
-    priv->toplevel_handle = NULL;
-  }
+  if (priv->toplevel_handle)
+    phoc_view_destroy_toplevel_handle (view);
 
   g_clear_signal_handler (&priv->notify_scale_to_fit_id, view->desktop);
 
