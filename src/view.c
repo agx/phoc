@@ -212,6 +212,10 @@ phoc_view_destroy_toplevel_handle (PhocView *self)
   PhocViewPrivate *priv = phoc_view_get_instance_private (self);
 
   priv->toplevel_handle->data = NULL;
+  wl_list_remove (&priv->toplevel_handle_request_maximize.link);
+  wl_list_remove (&priv->toplevel_handle_request_activate.link);
+  wl_list_remove (&priv->toplevel_handle_request_fullscreen.link);
+  wl_list_remove (&priv->toplevel_handle_request_close.link);
   wlr_foreign_toplevel_handle_v1_destroy (priv->toplevel_handle);
   priv->toplevel_handle = NULL;
 }
