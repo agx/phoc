@@ -349,14 +349,24 @@ update_output_manager_config (PhocDesktop *desktop)
   wlr_output_manager_v1_set_configuration (desktop->output_manager_v1, config);
 }
 
+
 static void
 phoc_output_handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocOutput *self = wl_container_of (listener, self, output_destroy);
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
 
   if (self->fullscreen_view)
     phoc_view_set_fullscreen (self->fullscreen_view, false, NULL);
 
+  wl_list_remove (&priv->request_state.link);
+  wl_list_remove (&priv->damage.link);
+  wl_list_remove (&priv->frame.link);
+  wl_list_remove (&priv->needs_frame.link);
+  wl_list_remove (&self->commit.link);
+  wl_list_remove (&self->output_destroy.link);
+
+  /* This will trigger dispose */
   g_signal_emit (self, signals[OUTPUT_DESTROY], 0);
 }
 
@@ -1084,13 +1094,6 @@ phoc_output_finalize (GObject *object)
 
   update_output_manager_config (self->desktop);
 
-  wl_list_remove (&self->commit.link);
-  wl_list_remove (&self->output_destroy.link);
-
-  wl_list_remove (&priv->request_state.link);
-  wl_list_remove (&priv->damage.link);
-  wl_list_remove (&priv->frame.link);
-  wl_list_remove (&priv->needs_frame.link);
   wlr_damage_ring_finish (&self->damage_ring);
 
   /* Remove all frame callbacks, this will also free associated user data */
