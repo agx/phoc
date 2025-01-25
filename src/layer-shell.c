@@ -160,7 +160,7 @@ arrange_layer (PhocOutput                     *output,
       .width = state->desired_width,
       .height = state->desired_height
     };
-    // Horizontal axis
+    /* Horizontal axis */
     const uint32_t both_horiz = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
       | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
     if ((state->anchor & both_horiz) && box.width == 0) {
@@ -173,7 +173,7 @@ arrange_layer (PhocOutput                     *output,
     } else {
       box.x = bounds.x + ((bounds.width / 2) - (box.width / 2));
     }
-    // Vertical axis
+    /* Vertical axis */
     const uint32_t both_vert = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
       | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
     if ((state->anchor & both_vert) && box.height == 0) {
@@ -186,7 +186,7 @@ arrange_layer (PhocOutput                     *output,
     } else {
       box.y = bounds.y + ((bounds.height / 2) - (box.height / 2));
     }
-    // Margin
+    /* Margin */
     if ((state->anchor & both_horiz) == both_horiz) {
       box.x += state->margin.left;
       box.width -= state->margin.left + state->margin.right;
@@ -211,7 +211,7 @@ arrange_layer (PhocOutput                     *output,
       continue;
     }
 
-    // Apply
+    /* Apply */
     struct wlr_box old_geo = layer_surface->geo;
     layer_surface->geo = box;
     if (wlr_layer_surface->surface->mapped) {
@@ -223,12 +223,11 @@ arrange_layer (PhocOutput                     *output,
     if (box.width != old_geo.width || box.height != old_geo.height)
       wlr_layer_surface_v1_configure (wlr_layer_surface, box.width, box.height);
 
-    // Having a cursor newly end up over the moved layer will not
-    // automatically send a motion event to the surface. The event needs to
-    // be synthesized.
-    // Only update layer surfaces which kept their size (and so buffers) the
-    // same, because those with resized buffers will be handled separately.
-
+    /* Having a cursor newly end up over the moved layer will not
+     * automatically send a motion event to the surface. The event needs to
+     * be synthesized.
+     * Only update layer surfaces which kept their size (and so buffers) the
+     * same, because those with resized buffers will be handled separately. */
     if (layer_surface->geo.x != old_geo.x || layer_surface->geo.y != old_geo.y)
       phoc_layer_shell_update_cursors (layer_surface, seats);
   }
@@ -279,7 +278,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
   phoc_layer_shell_update_osk (output, FALSE);
 
   wlr_output_effective_resolution (output->wlr_output, &usable_area.width, &usable_area.height);
-  // Arrange exclusive surfaces from top->bottom
+  /* Arrange exclusive surfaces from top->bottom */
   for (size_t i = 0; i < G_N_ELEMENTS (layers); ++i)
     arrange_layer (output, seats, layers[i], &usable_area, true);
   output->usable_area = usable_area;
@@ -290,7 +289,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
     phoc_view_arrange (view, NULL, output->desktop->maximize);
   }
 
-  // Arrange non-exlusive surfaces from top->bottom
+  /* Arrange non-exlusive surfaces from top->bottom */
   for (size_t i = 0; i < G_N_ELEMENTS (layers); ++i)
     arrange_layer (output, seats, layers[i], &usable_area, false);
 
@@ -325,8 +324,8 @@ phoc_layer_shell_update_focus (void)
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
   };
   PhocLayerSurface *layer_surface, *topmost = NULL;
-  // Find topmost keyboard interactive layer, if such a layer exists
-  // TODO: Make layer surface focus per-output based on cursor position
+  /* Find topmost keyboard interactive layer, if such a layer exists */
+  /* TODO: Make layer surface focus per-output based on cursor position */
   PhocOutput *output;
   wl_list_for_each (output, &desktop->outputs, link) {
     for (size_t i = 0; i < G_N_ELEMENTS (layers_above_shell); ++i) {
@@ -404,8 +403,8 @@ phoc_layer_popup_unconstrain (PhocLayerPopup *popup)
 
   PhocOutput *output = phoc_layer_surface_get_output (layer);
 
-  // the output box expressed in the coordinate system of the toplevel parent
-  // of the popup
+  /* The output box expressed in the coordinate system of the toplevel
+   * parent of the popup */
   struct wlr_box output_toplevel_sx_box = {
     .x = -layer->geo.x,
     .y = -layer->geo.y,
@@ -718,7 +717,7 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
 
   if (!wlr_layer_surface->output) {
     PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
-    g_assert (PHOC_IS_SEAT (seat)); // Technically speaking we should handle this case
+    g_assert (PHOC_IS_SEAT (seat)); /* Technically speaking we should handle this case */
     PhocCursor *cursor = phoc_seat_get_cursor (seat);
     struct wlr_output *output = wlr_output_layout_output_at (desktop->layout,
                                                              cursor->cursor->x,
@@ -738,8 +737,8 @@ phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data)
   self = phoc_layer_surface_new (wlr_layer_surface);
   PhocOutput *output = PHOC_OUTPUT (wlr_layer_surface->output->data);
 
-  // Temporarily set the layer's current state to pending
-  // So that we can easily arrange it
+  /* Temporarily set the layer's current state to pending so that we
+   * can easily arrange it */
   struct wlr_layer_surface_v1_state old_state = wlr_layer_surface->current;
   wlr_layer_surface->current = wlr_layer_surface->pending;
 
