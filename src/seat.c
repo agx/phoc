@@ -1861,6 +1861,11 @@ phoc_seat_finalize (GObject *object)
   PhocSeat *self = PHOC_SEAT (object);
   PhocSeatPrivate *priv = phoc_seat_get_instance_private (self);
 
+  wl_list_remove (&self->request_set_primary_selection.link);
+  wl_list_remove (&self->request_set_selection.link);
+  wl_list_remove (&self->request_start_drag.link);
+  wl_list_remove (&self->start_drag.link);
+
   g_clear_pointer (&priv->input_mapping_settings, g_hash_table_destroy);
   phoc_seat_handle_destroy (&self->destroy, self->seat);
   wlr_seat_destroy (self->seat);
