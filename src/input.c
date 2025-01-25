@@ -126,6 +126,8 @@ phoc_input_finalize (GObject *object)
 {
   PhocInput *self = PHOC_INPUT (object);
 
+  wl_list_remove (&self->new_input.link);
+
   g_clear_slist (&self->seats, g_object_unref);
 
   G_OBJECT_CLASS (phoc_input_parent_class)->finalize (object);
