@@ -168,3 +168,4 @@ void               phoc_seat_update_last_touch_serial (PhocSeat *self, uint32_t 
 void               phoc_seat_update_last_button_serial (PhocSeat *self, uint32_t serial);
 uint32_t           phoc_seat_get_last_button_or_touch_serial (PhocSeat *self);
 void               phoc_seat_notify_activity (PhocSeat *self);
+gint64             phoc_seat_get_last_event_ts (PhocSeat *self);

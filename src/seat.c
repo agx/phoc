@@ -61,6 +61,8 @@ typedef struct _PhocSeatPrivate {
 
   uint32_t               last_button_serial;
   uint32_t               last_touch_serial;
+
+  gint64                 last_event_ts;
 } PhocSeatPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocSeat, phoc_seat, G_TYPE_OBJECT)
@@ -2047,8 +2049,23 @@ void
 phoc_seat_notify_activity (PhocSeat *self)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocSeatPrivate *priv;
 
   g_assert (PHOC_IS_SEAT (self));
+  priv = phoc_seat_get_instance_private (self);
 
+  priv->last_event_ts = g_get_monotonic_time ();
   phoc_desktop_notify_activity (desktop, self);
+}
+
+
+gint64
+phoc_seat_get_last_event_ts (PhocSeat *self)
+{
+  PhocSeatPrivate *priv;
+
+  g_assert (PHOC_IS_SEAT (self));
+  priv = phoc_seat_get_instance_private (self);
+
+  return priv->last_event_ts;
 }
