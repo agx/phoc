@@ -129,7 +129,7 @@ phoc_layer_shell_update_cursors (PhocLayerSurface *layer_surface, GSList *seats)
 }
 
 
-static void
+static gboolean
 arrange_layer (PhocOutput                     *output,
                GSList                         *seats, /* PhocSeat */
                enum zwlr_layer_shell_v1_layer  layer,
@@ -138,6 +138,7 @@ arrange_layer (PhocOutput                     *output,
 {
   PhocLayerSurface *layer_surface;
   struct wlr_box full_area = { 0 };
+  gboolean sent_configure = FALSE;
 
   g_assert (PHOC_IS_OUTPUT (output));
   wlr_output_effective_resolution (output->wlr_output, &full_area.width, &full_area.height);
@@ -221,8 +222,10 @@ arrange_layer (PhocOutput                     *output,
                        state->margin.bottom, state->margin.left);
     }
 
-    if (box.width != old_geo.width || box.height != old_geo.height)
+    if (box.width != old_geo.width || box.height != old_geo.height) {
       phoc_layer_surface_send_configure (layer_surface);
+      sent_configure = TRUE;
+    }
 
     /* Having a cursor newly end up over the moved layer will not
      * automatically send a motion event to the surface. The event needs to
@@ -232,6 +235,8 @@ arrange_layer (PhocOutput                     *output,
     if (layer_surface->geo.x != old_geo.x || layer_surface->geo.y != old_geo.y)
       phoc_layer_shell_update_cursors (layer_surface, seats);
   }
+
+  return sent_configure;
 }
 
 /**
@@ -256,8 +261,16 @@ phoc_layer_shell_find_osk (PhocOutput *output)
   return NULL;
 }
 
-
-void
+/**
+ * phoc_layer_shell_arrange:
+ * @output: The output to arrange
+ *
+ * Arrange the layer surfaces on the given output.
+ *
+ * Returns: `TRUE` if at least one layer surface needs to change size
+ * and hence configure events were sent to the client.
+ */
+gboolean
 phoc_layer_shell_arrange (PhocOutput *output)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -265,7 +278,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
   PhocInput *input = phoc_server_get_input (server);
   struct wlr_box usable_area = { 0 };
   GSList *seats = phoc_input_get_seats (input);
-  gboolean usable_area_changed;
+  gboolean usable_area_changed, sent_configure = FALSE;
   enum zwlr_layer_shell_v1_layer layers[] = {
     ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
     ZWLR_LAYER_SHELL_V1_LAYER_TOP,
@@ -282,7 +295,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
   wlr_output_effective_resolution (output->wlr_output, &usable_area.width, &usable_area.height);
   /* Arrange exclusive surfaces from top->bottom */
   for (size_t i = 0; i < G_N_ELEMENTS (layers); ++i)
-    arrange_layer (output, seats, layers[i], &usable_area, true);
+    sent_configure |= arrange_layer (output, seats, layers[i], &usable_area, true);
 
   usable_area_changed = memcmp (&output->usable_area, &usable_area, sizeof (output->usable_area));
   if (usable_area_changed) {
@@ -298,7 +311,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
 
   /* Arrange non-exlusive surfaces from top->bottom */
   for (size_t i = 0; i < G_N_ELEMENTS (layers); ++i)
-    arrange_layer (output, seats, layers[i], &usable_area, false);
+    sent_configure |= arrange_layer (output, seats, layers[i], &usable_area, false);
 
   phoc_output_update_shell_reveal (output);
 
@@ -317,6 +330,8 @@ phoc_layer_shell_arrange (PhocOutput *output)
                  layer_surface->layer_surface->current.exclusive_zone);
     }
   }
+
+  return sent_configure;
 }
 
 

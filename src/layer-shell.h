@@ -55,7 +55,7 @@ struct _PhocLayerSubsurface {
   struct wl_list subsurfaces; // phoc_layer_subsurface::link
 };
 
-void                    phoc_layer_shell_arrange                 (PhocOutput *output);
+gboolean                phoc_layer_shell_arrange                 (PhocOutput *output);
 void                    phoc_layer_shell_update_focus            (void);
 void                    phoc_layer_shell_update_osk              (PhocOutput *output,
                                                                   gboolean    arrange);
