@@ -32,6 +32,13 @@ typedef enum _PhocOutputScaleFilter {
   PHOC_OUTPUT_SCALE_FILTER_NEAREST,
 } PhocOutputScaleFilter;
 
+
+typedef struct {
+  gint64            when;
+  pixman_region32_t region;
+  guint             done:1;
+} PhocDebugDamageRegion;
+
 /**
  * PhocOutput:
  *
@@ -166,6 +173,7 @@ float      phoc_output_get_scale             (PhocOutput *self);
 const char *phoc_output_get_name             (PhocOutput *self);
 void       phoc_output_transform_damage      (PhocOutput *self, pixman_region32_t *damage);
 void       phoc_output_transform_box         (PhocOutput *self, struct wlr_box *box);
+GSList    *phoc_output_get_debug_damage      (PhocOutput *self);
 
 enum wlr_scale_filter_mode
            phoc_output_get_texture_filter_mode (PhocOutput *self);

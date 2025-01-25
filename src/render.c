@@ -47,10 +47,7 @@
 #include <GLES2/gl2ext.h>
 
 #define COLOR_BLACK                ((struct wlr_render_color){0.0f, 0.0f, 0.0f, 1.0f})
-#define COLOR_TRANSPARENT          {0.0f, 0.0f, 0.0f, 0.0f}
-#define COLOR_TRANSPARENT_YELLOW   ((struct wlr_render_color){0.5f, 0.5f, 0.0f, 0.5f})
-#define COLOR_TRANSPARENT_MAGENTA  ((struct wlr_render_color){0.5f, 0.0f, 0.5f, 0.5f})
-
+#define COLOR_MAGENTA_ALPHA(x)     ((struct wlr_render_color){0.5f, 0.0f, 0.5f, (x)})
 
 /**
  * PhocRenderer:
@@ -91,18 +88,6 @@ struct render_view_data {
   int height;
   struct wlr_render_pass *render_pass;
 };
-
-
-static void
-wlr_box_from_pixman_box32 (struct wlr_box *dest, const pixman_box32_t box)
-{
-  *dest = (struct wlr_box){
-    .x = box.x1,
-    .y = box.y1,
-    .width = box.x2 - box.x1,
-    .height = box.y2 - box.y1,
-  };
-}
 
 
 static void
@@ -238,7 +223,7 @@ render_blings (PhocOutput *output, PhocView *view, PhocRenderContext *ctx)
 static void
 render_view (PhocOutput *output, PhocView *view, PhocRenderContext *ctx)
 {
-  // Do not render views fullscreened on other outputs
+  /*  Do not render views fullscreened on other outputs */
   if (phoc_view_is_fullscreen (view) && phoc_view_get_fullscreen_output (view) != output)
     return;
 
@@ -406,45 +391,36 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
   return success;
 }
 
+#define DEBUG_DAMAGE_TIMEOUT_US (250.0 * 1000.0)
+#define DEBUG_DAMAGE_MAX_OPACITY 0.8
 
 static void
 render_damage (PhocRenderer *self, PhocRenderContext *ctx)
 {
-  int nrects;
-  pixman_box32_t *rects;
-  struct wlr_box box;
+  gint64 now = g_get_monotonic_time ();
 
-  pixman_region32_t previous_damage;
+  for (GSList *l = phoc_output_get_debug_damage (ctx->output); l; l = l->next) {
+    PhocDebugDamageRegion *damage = l->data;
+    float elapsed = fmax (1.0 - (now - damage->when) / DEBUG_DAMAGE_TIMEOUT_US, 0.0);
+    float alpha = DEBUG_DAMAGE_MAX_OPACITY * elapsed;
+    struct pixman_region32 clip;
 
-  pixman_region32_init (&previous_damage);
-  pixman_region32_subtract (&previous_damage,
-                            &ctx->output->damage_ring.previous[ctx->output->damage_ring.previous_idx],
-                            &ctx->output->damage_ring.current);
+    pixman_region32_init (&clip);
+    pixman_region32_copy (&clip, &damage->region);
+    phoc_output_transform_damage (ctx->output, &clip);
 
-  rects = pixman_region32_rectangles(&previous_damage, &nrects);
-  for (int i = 0; i < nrects; ++i) {
-    wlr_box_from_pixman_box32 (&box, rects[i]);
-
-    phoc_output_transform_box (ctx->output, &box);
+    /* Using an empty box makes us clip the damage from the whole output buffer */
     wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = box,
-      .color = COLOR_TRANSPARENT_MAGENTA,
+        .color = COLOR_MAGENTA_ALPHA (alpha),
+        .clip = &clip,
       });
-  }
-  pixman_region32_fini(&previous_damage);
 
-  rects = pixman_region32_rectangles (&ctx->output->damage_ring.current, &nrects);
-  for (int i = 0; i < nrects; ++i) {
-    wlr_box_from_pixman_box32 (&box, rects[i]);
+    if (G_APPROX_VALUE (elapsed, 0.0, FLT_EPSILON))
+      damage->done = 1;
 
-    phoc_output_transform_box (ctx->output, &box);
-    wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
-      .box = box,
-      .color = COLOR_TRANSPARENT_YELLOW,
-      });
+    pixman_region32_fini (&clip);
   }
 }
-
 
 /**
  * phoc_renderer_render_output:
@@ -468,7 +444,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
   pixman_region32_init (&transformed_damage);
 
   if (!pixman_region32_not_empty (damage)) {
-    // Output isn't damaged but needs buffer swap
+    /* Output isn't damaged but needs buffer swap */
     goto renderer_end;
   }
 
@@ -482,15 +458,15 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
                               .clip = &transformed_damage,
                             });
 
-  // If a view is fullscreen on this output, render it
+  /* If a view is fullscreen on this output, render it */
   if (output->fullscreen_view != NULL) {
     PhocView *view = output->fullscreen_view;
 
     render_view (output, view, ctx);
 
-    // During normal rendering the xwayland window tree isn't traversed
-    // because all windows are rendered. Here we only want to render
-    // the fullscreen window's children so we have to traverse the tree.
+    /* During normal rendering the xwayland window tree isn't traversed
+     * because all windows are rendered. Here we only want to render
+     * the fullscreen window's children so we have to traverse the tree. */
 #ifdef PHOC_XWAYLAND
     if (PHOC_IS_XWAYLAND_SURFACE (view)) {
       struct wlr_xwayland_surface *xsurface =
@@ -503,11 +479,11 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
 #endif
 
     if (phoc_output_has_shell_revealed (output)) {
-      // Render top layer above fullscreen view when requested
+      /* Render top layer above fullscreen view when requested */
       render_layer (ZWLR_LAYER_SHELL_V1_LAYER_TOP, ctx);
     }
   } else {
-    // Render background and bottom layers under views
+    /* Render background and bottom layers under views */
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND, ctx);
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM, ctx);
 
@@ -518,7 +494,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
       if (phoc_desktop_view_check_visibility (desktop, view))
         render_view (output, view, ctx);
     }
-    // Render top layer above views
+    /* Render top layer above views */
     render_layer (ZWLR_LAYER_SHELL_V1_LAYER_TOP, ctx);
   }
   render_drag_icons (phoc_server_get_input (server), ctx);
@@ -533,7 +509,7 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
     render_touch_points (ctx);
 
   g_signal_emit (self, signals[RENDER_END], 0, ctx);
-  if (G_UNLIKELY (phoc_server_check_debug_flags (server,PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)))
+  if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)))
     render_damage (self, ctx);
 }
 
