@@ -633,12 +633,9 @@ phoc_xdg_surface_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_xdg_surface_parent_class)->constructed (object);
 
-  /* Register all handlers */
+  /* Register wlr_surface handlers */
   self->surface_commit.notify = handle_surface_commit;
   wl_signal_add (&self->xdg_surface->surface->events.commit, &self->surface_commit);
-
-  self->destroy.notify = handle_destroy;
-  wl_signal_add (&self->xdg_surface->events.destroy, &self->destroy);
 
   self->map.notify = handle_map;
   wl_signal_add (&self->xdg_surface->surface->events.map, &self->map);
@@ -646,29 +643,34 @@ phoc_xdg_surface_constructed (GObject *object)
   self->unmap.notify = handle_unmap;
   wl_signal_add (&self->xdg_surface->surface->events.unmap, &self->unmap);
 
+  /* Register wlr_xdg_surface handlers */
+  self->destroy.notify = handle_destroy;
+  wl_signal_add (&self->xdg_surface->events.destroy, &self->destroy);
+
+  self->new_popup.notify = handle_new_popup;
+  wl_signal_add (&self->xdg_surface->events.new_popup, &self->new_popup);
+
+  /* Register wlr_xdg_toplevel handlers */
   self->request_move.notify = handle_request_move;
   wl_signal_add (&self->xdg_surface->toplevel->events.request_move, &self->request_move);
 
   self->request_resize.notify = handle_request_resize;
-  wl_signal_add(&self->xdg_surface->toplevel->events.request_resize, &self->request_resize);
+  wl_signal_add (&self->xdg_surface->toplevel->events.request_resize, &self->request_resize);
 
   self->request_maximize.notify = handle_request_maximize;
-  wl_signal_add(&self->xdg_surface->toplevel->events.request_maximize, &self->request_maximize);
+  wl_signal_add (&self->xdg_surface->toplevel->events.request_maximize, &self->request_maximize);
 
   self->request_fullscreen.notify = handle_request_fullscreen;
-  wl_signal_add(&self->xdg_surface->toplevel->events.request_fullscreen, &self->request_fullscreen);
+  wl_signal_add (&self->xdg_surface->toplevel->events.request_fullscreen, &self->request_fullscreen);
 
   self->set_title.notify = handle_set_title;
-  wl_signal_add(&self->xdg_surface->toplevel->events.set_title, &self->set_title);
+  wl_signal_add (&self->xdg_surface->toplevel->events.set_title, &self->set_title);
 
   self->set_app_id.notify = handle_set_app_id;
-  wl_signal_add(&self->xdg_surface->toplevel->events.set_app_id, &self->set_app_id);
+  wl_signal_add (&self->xdg_surface->toplevel->events.set_app_id, &self->set_app_id);
 
   self->set_parent.notify = handle_set_parent;
-  wl_signal_add(&self->xdg_surface->toplevel->events.set_parent, &self->set_parent);
-
-  self->new_popup.notify = handle_new_popup;
-  wl_signal_add(&self->xdg_surface->events.new_popup, &self->new_popup);
+  wl_signal_add (&self->xdg_surface->toplevel->events.set_parent, &self->set_parent);
 }
 
 
