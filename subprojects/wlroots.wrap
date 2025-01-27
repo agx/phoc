@@ -5,4 +5,5 @@ revision=0.18.2
 depth=1
 
 # Phoc specific patches
-diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch
+diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch,
+ wlroots/0001-seat-Don-t-forget-to-destroy-touch-points-on-touch-u.patch
