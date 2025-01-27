@@ -497,8 +497,8 @@ send_touch_down (PhocSeat                    *seat,
     return;
   }
 
-  serial =  wlr_seat_touch_notify_down (seat->seat, surface, event->time_msec,
-                                        event->touch_id, sx, sy);
+  serial = wlr_seat_touch_notify_down (seat->seat, surface, event->time_msec,
+                                       event->touch_id, sx, sy);
   phoc_seat_update_last_touch_serial (seat, serial);
 }
 
@@ -531,18 +531,22 @@ send_touch_up (PhocSeat                  *seat,
                struct wlr_surface        *surface,
                struct wlr_touch_up_event *event)
 {
+  uint32_t serial;
+
   if (should_ignore_touch_grab (seat, surface)) {
     // currently wlr_seat_touch_send_* functions don't work, so temporarily
     // restore grab to the default one and use notify_* instead
     // See https://gitlab.freedesktop.org/wlroots/wlroots/-/issues/3478
     struct wlr_seat_touch_grab *grab = seat->seat->touch_state.grab;
     seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
-    wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
+    serial = wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
+    phoc_seat_update_last_touch_serial (seat, serial);
     seat->seat->touch_state.grab = grab;
     return;
   }
 
-  wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
+  serial = wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
+  phoc_seat_update_last_touch_serial (seat, serial);
 }
 
 
