@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
- * Copyright (C) 2023-2024 The Phosh Developers
+ * Copyright (C) 2023-2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -300,16 +300,29 @@ view_render_to_buffer_iterator (struct wlr_surface *surface, int sx, int sy, voi
 
   texture = wlr_surface_get_texture (surface);
   phoc_view_get_geometry (data->view, &geo);
-
-  float scale = fmin (data->width / (float)geo.width,
-                      data->height / (float)geo.height);
-
   wlr_surface_get_buffer_source_box (surface, &src_box);
+
+  /* Geometry needs to be fully within the surface so we don't sample
+   * out of bounds. For other cases (e.g. the geometry being extended
+   * due to subsurfaces) just use the surface verbatim */
+  if (geo.x > src_box.x && geo.y > src_box.y &&
+      geo.width < src_box.width && geo.height < src_box.height) {
+    src_box = (struct wlr_fbox) {
+      .x = geo.x,
+      .y = geo.y,
+      .width = geo.width,
+      .height = geo.height,
+    };
+  }
+
+  float scale = fmin (data->width / (float)src_box.width,
+                      data->height / (float)src_box.height);
+
   struct wlr_box dst_box = {
     .x = sx * scale,
     .y = sy * scale,
-    .width = surface->current.width * scale,
-    .height = surface->current.height * scale,
+    .width = src_box.width * scale,
+    .height = src_box.height * scale,
   };
 
   wlr_render_pass_add_texture (data->render_pass, &(struct wlr_render_texture_options) {
