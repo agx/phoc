@@ -1,0 +1,27 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+  <!--
+      mobi.phosh.DebugControl:
+
+      This interface is exported by the compositor to control its runtime
+      debug settings.
+  -->
+
+  <interface name="mobi.phosh.Phoc.DebugControl">
+    <!--
+        TouchPoints:
+
+        Whether the compositor highlights touch points.
+    -->
+    <property name="TouchPoints" type="b" access="readwrite"/>
+    <!--
+        DamageTracking:
+
+        Whether the compositor highlights damaged areas.
+    -->
+    <property name="DamageTracking" type="b" access="readwrite"/>
+
+  </interface>
+</node>

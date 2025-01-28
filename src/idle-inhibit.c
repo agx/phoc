@@ -226,7 +226,7 @@ on_proxy_new_for_bus_finish (GObject *object, GAsyncResult *res, gpointer data)
 {
   PhocIdleInhibit *self = data;
   g_autoptr (GError) err = NULL;
-  struct wl_display *wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
+  struct wl_display *wl_display;
   GDBusProxy *screensaver_proxy;
 
   screensaver_proxy = g_dbus_proxy_new_for_bus_finish (res, &err);
@@ -237,6 +237,7 @@ on_proxy_new_for_bus_finish (GObject *object, GAsyncResult *res, gpointer data)
   }
 
   g_info ("Found " SCREENSAVER_BUS_NAME " interface");
+  wl_display = phoc_server_get_wl_display (phoc_server_get_default ());
 
   self->screensaver_proxy = screensaver_proxy;
   /* We connected to DBus so let's expose zwp_idle_inhibit_manager_v1 */

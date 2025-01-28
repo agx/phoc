@@ -24,9 +24,9 @@ create_surface (PhocTestClientGlobals *globals, gpointer data)
 
   surface = wl_compositor_create_surface (globals->compositor);
 
-  g_assert_nonnull(surface);
+  g_assert_nonnull (surface);
 
-  wl_surface_destroy(surface);
+  wl_surface_destroy (surface);
   return TRUE;
 }
 
@@ -46,5 +46,5 @@ main (gint argc, gchar *argv[])
   PHOC_TEST_ADD ("/phoc/client/noop", test_phoc_client_noop);
   PHOC_TEST_ADD ("/phoc/client/surface", test_phoc_client_surface);
 
-  return g_test_run();
+  return g_test_run ();
 }

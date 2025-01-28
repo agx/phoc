@@ -19,15 +19,14 @@ static void
 test_phoc_run_session_success (void)
 {
   PhocConfig *config = phoc_config_new_from_file (TEST_PHOC_INI);
-  g_autoptr(PhocServer) server = phoc_server_get_default ();
-  g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
+  g_autoptr (PhocServer) server = phoc_server_get_default ();
+  g_autoptr (GMainLoop) loop = g_main_loop_new (NULL, FALSE);
 
   g_assert_true (PHOC_IS_SERVER (server));
   g_assert_true (config);
 
-  g_assert_true (phoc_server_setup(server, config, "/bin/true", loop,
-                                   PHOC_SERVER_FLAG_NONE,
-                                   PHOC_SERVER_DEBUG_FLAG_NONE));
+  g_assert_true (phoc_server_setup (server, config, "/bin/true", loop,
+                                    PHOC_SERVER_FLAG_NONE));
   g_timeout_add_seconds (TEST_PHOC_CLIENT_TIMEOUT, on_timer_expired, NULL);
   g_main_loop_run (loop);
   g_assert_cmpint (phoc_server_get_session_exit_status (server), ==, 0);
@@ -37,15 +36,14 @@ static void
 test_phoc_run_session_failure (void)
 {
   PhocConfig *config = phoc_config_new_from_file (TEST_PHOC_INI);
-  g_autoptr(PhocServer) server = phoc_server_get_default ();
-  g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
+  g_autoptr (PhocServer) server = phoc_server_get_default ();
+  g_autoptr (GMainLoop) loop = g_main_loop_new (NULL, FALSE);
 
   g_assert_true (PHOC_IS_SERVER (server));
   g_assert_true (config);
 
-  g_assert_true (phoc_server_setup(server, config, "/bin/false", loop,
-                                   PHOC_SERVER_FLAG_NONE,
-                                   PHOC_SERVER_DEBUG_FLAG_NONE));
+  g_assert_true (phoc_server_setup (server, config, "/bin/false", loop,
+                                    PHOC_SERVER_FLAG_NONE));
   g_timeout_add_seconds (TEST_PHOC_CLIENT_TIMEOUT, on_timer_expired, NULL);
   g_main_loop_run (loop);
   g_assert_cmpint (phoc_server_get_session_exit_status (server), ==, 1);
@@ -59,5 +57,5 @@ main (gint argc, gchar *argv[])
   PHOC_TEST_ADD ("/phoc/run/session_success", test_phoc_run_session_success);
   PHOC_TEST_ADD ("/phoc/run/session_failure", test_phoc_run_session_failure);
 
-  return g_test_run();
+  return g_test_run ();
 }

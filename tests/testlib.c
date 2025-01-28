@@ -350,7 +350,9 @@ registry_handle_global (void               *data,
                                                     &zwlr_screencopy_manager_v1_interface, 1);
   } else if (!g_strcmp0 (interface, zwlr_foreign_toplevel_manager_v1_interface.name)) {
     globals->foreign_toplevel_manager = wl_registry_bind (registry, name,
-                                                          &zwlr_foreign_toplevel_manager_v1_interface, 2);
+                                                          &
+                                                          zwlr_foreign_toplevel_manager_v1_interface,
+                                                          2);
     zwlr_foreign_toplevel_manager_v1_add_listener (globals->foreign_toplevel_manager,
                                                    &foreign_toplevel_manager_listener, globals);
   } else if (!g_strcmp0 (interface, phosh_private_interface.name)) {
@@ -476,12 +478,14 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
   if (iface)
     td.func = iface->client_run;
 
+  phoc_server_set_debug_flags (server,
+                               iface ? iface->debug_flags : PHOC_SERVER_DEBUG_FLAG_NONE);
+
   config = (iface && iface->config) ? iface->config : phoc_config_new_from_file (TEST_PHOC_INI);
   g_assert_true (PHOC_IS_SERVER (server));
   g_assert_true (config);
   g_assert_true (phoc_server_setup (server, config, NULL, loop,
-                                    PHOC_SERVER_FLAG_NONE,
-                                    iface ? iface->debug_flags : PHOC_SERVER_DEBUG_FLAG_NONE));
+                                    PHOC_SERVER_FLAG_NONE));
   if (iface && iface->server_prepare)
     g_assert_true (iface->server_prepare (server, data));
 

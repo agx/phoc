@@ -67,7 +67,27 @@ ENVIRONMENT VARIABLES
       - ``disable-animations``: Disable animations
       - ``force-shell-reveal``: Always reveal shell over fullscreen apps
 
+DBUS INTERFACE
+--------------
+
+``phoc`` allows to enable and disable certain debug flags at runtime via DBus. To see a list of
+available flags use:
+
+::
+
+  busctl --user introspect mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl
+
+To toggle individual values:
+
+::
+
+  busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl TouchPoints b true
+  busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl DamageTracking b true
+
+Note that the flags are not considered stable API so can change
+between releases.
+
 See also
 --------
 
-``phoc.ini(5)`` ``phoc.gsettings(5)`` ``gmobile.udev(5)`` ``phosh(1)``
+``phoc.ini(5)`` ``phoc.gsettings(5)`` ``gmobile.udev(5)`` ``phosh(1)`` ``busctl``

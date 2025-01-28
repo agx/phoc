@@ -173,6 +173,7 @@ main(int argc, char **argv)
     /* phoc_server_get_default already printed an error */
     return 1;
   }
+  phoc_server_set_debug_flags (server, debug_flags);
 
   if (shell_mode)
     flags |= PHOC_SERVER_FLAG_SHELL_MODE;
@@ -184,7 +185,7 @@ main(int argc, char **argv)
     config->xwayland = TRUE;
 
   loop = g_main_loop_new (NULL, FALSE);
-  if (!phoc_server_setup (server, config, exec, loop, flags, debug_flags))
+  if (!phoc_server_setup (server, config, exec, loop, flags))
     return EXIT_FAILURE;
 
   g_main_loop_run (loop);

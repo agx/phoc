@@ -32,6 +32,12 @@ Files:
 Copyright: See individual files
 License: MIT
 
+# DBus protocols have the same copyright as the code
+Files:
+ src/dbus/*.xml
+Copyright: See individual files
+License: GPL-3.0-or-later
+
 # Test data has the same copyright as the tests
 Files:
  tests/data/phosh,tiny.json

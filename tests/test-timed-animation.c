@@ -21,19 +21,19 @@ enum {
 static GParamSpec *props[PROP_LAST_PROP];
 
 struct _PhocTestObj {
-  GObject               parent;
+  GObject parent;
 
-  int                   prop_i;
-  float                 prop_f;
+  int     prop_i;
+  float   prop_f;
 };
 G_DEFINE_TYPE (PhocTestObj, phoc_test_obj, G_TYPE_OBJECT)
 
 
 static void
 phoc_test_obj_set_property (GObject      *object,
-                     guint         property_id,
-                     const GValue *value,
-                     GParamSpec   *pspec)
+                            guint         property_id,
+                            const GValue *value,
+                            GParamSpec   *pspec)
 {
   PhocTestObj *self = PHOC_TEST_OBJ (object);
 
@@ -53,9 +53,9 @@ phoc_test_obj_set_property (GObject      *object,
 
 static void
 phoc_test_obj_get_property (GObject    *object,
-                     guint       property_id,
-                     GValue     *value,
-                     GParamSpec *pspec)
+                            guint       property_id,
+                            GValue     *value,
+                            GParamSpec *pspec)
 {
   PhocTestObj *self = PHOC_TEST_OBJ (object);
 
@@ -157,9 +157,9 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  g_test_add_func("/phoc/timed-animation/simple", test_phoc_timed_animation_simple);
-  g_test_add_func("/phoc/timed-animation/dispose_on_done",
-                  test_phoc_timed_animation_dispose_on_done);
+  g_test_add_func ("/phoc/timed-animation/simple", test_phoc_timed_animation_simple);
+  g_test_add_func ("/phoc/timed-animation/dispose_on_done",
+                   test_phoc_timed_animation_dispose_on_done);
 
-  return g_test_run();
+  return g_test_run ();
 }

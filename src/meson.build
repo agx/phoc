@@ -1,4 +1,5 @@
 subdir('anim')
+subdir('dbus')
 
 phoc_enum_headers = files(
   [
@@ -6,6 +7,7 @@ phoc_enum_headers = files(
     'layer-shell-effects.h',
     'view.h',
     'output.h',
+    'server.h',
     'phosh-private.h',
   ])
 phoc_enum_sources = gnome.mkenums_simple(
@@ -26,6 +28,8 @@ sources = files(
   'cursor.h',
   'cutouts-overlay.c',
   'cutouts-overlay.h',
+  'debug-control.c',
+  'debug-control.h',
   'desktop.c',
   'desktop.h',
   'desktop-xwayland.c',
@@ -119,6 +123,7 @@ sources = files(
 
 libphoc_generated_sources = [
   phoc_anim_enum_sources[0],
+  phoc_dbus_sources,
   phoc_enum_sources[0],
   phoc_marshalers[0],
   protos_sources,
@@ -127,6 +132,7 @@ libphoc_generated_sources = [
 libphoc_generated_headers = [
   phoc_config_h,
   phoc_anim_enum_sources[1],
+  phoc_dbus_headers,
   phoc_enum_sources[1],
   phoc_marshalers[1],
   server_protos_headers,
@@ -165,18 +171,16 @@ phoc_lib = both_libraries(
   install: false,
 )
 
+libphoc_inc_dirs = [include_directories('.'), phoc_anim_inc, phoc_dbus_inc, protocol_inc]
+
 libphoc_dep = declare_dependency(
-  include_directories: [include_directories('.'),
-                        phoc_anim_inc,
-                        protocol_inc],
+  include_directories: libphoc_inc_dirs,
   link_with: phoc_lib,
   dependencies: phoc_deps,
   sources: libphoc_generated_headers)
 
 libphoc_static_dep = declare_dependency(
-  include_directories: [include_directories('.'),
-                        phoc_anim_inc,
-                        protocol_inc],
+  include_directories: libphoc_inc_dirs,
   link_with: phoc_lib.get_static_lib(),
   dependencies: phoc_deps,
   sources: libphoc_generated_headers)
@@ -186,7 +190,7 @@ if get_option('gtk_doc')
     '--quiet',
   ]
 
-  gir_sources = sources + phoc_anim_enum_sources + phoc_enum_sources
+  gir_sources = sources + phoc_anim_enum_sources + phoc_enum_sources + phoc_dbus_sources
 
   phoc_gir = gnome.generate_gir(phoc_lib,
                  sources: gir_sources,
