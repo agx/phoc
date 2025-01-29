@@ -124,6 +124,8 @@ phoc_subsurface_finalize (GObject *object)
 
   wl_list_remove (&self->destroy.link);
 
+  self->wlr_subsurface = NULL;
+
   G_OBJECT_CLASS (phoc_subsurface_parent_class)->finalize (object);
 }
 
