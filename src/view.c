@@ -2137,7 +2137,7 @@ phoc_view_get_pid (PhocView *self)
  * By adding a [type@Bling] to a view you ensure that it gets rendered
  * just before the view if both the view and the bling are mapped.
  *
- * Thew view will take a reference on the [type@Bling] that will be
+ * The view will take a reference on the [type@Bling] that will be
  * dropped when the bling is removed or the view is destroyed.
  */
 void
