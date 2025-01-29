@@ -1442,7 +1442,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
 #endif
 
   if (view && unfullscreen) {
-    PhocDesktop *desktop = view->desktop;
+    PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
     PhocOutput *output;
     struct wlr_box box;
 
@@ -1684,7 +1684,9 @@ phoc_seat_cycle_focus (PhocSeat *seat, gboolean forward)
 void
 phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
 {
-  if (view->desktop->maximize)
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+
+  if (desktop->maximize)
     return;
 
   PhocCursor *cursor = seat->cursor;
@@ -1720,7 +1722,9 @@ phoc_seat_begin_move (PhocSeat *seat, PhocView *view)
 void
 phoc_seat_begin_resize (PhocSeat *seat, PhocView *view, uint32_t edges)
 {
-  if (view->desktop->maximize || phoc_view_is_fullscreen (view))
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+
+  if (desktop->maximize || phoc_view_is_fullscreen (view))
     return;
 
   PhocCursor *cursor = seat->cursor;
