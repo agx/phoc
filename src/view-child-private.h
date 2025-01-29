@@ -13,31 +13,11 @@
 
 G_BEGIN_DECLS
 
-/**
- * PhocViewChild:
- * @view: The [type@PhocView] this child belongs to
- * @parent: (nullable): The parent of this child if another child
- * @children: (nullable): children of this child
- *
- * A child of a [type@View], e.g. a [type@XdgPopup] or subsurface
- */
 typedef struct _PhocView PhocView;
 
-typedef struct _PhocViewChild PhocViewChild;
-struct _PhocViewChild {
-  GObject                      parent_instance;
+#define PHOC_TYPE_VIEW_CHILD (phoc_view_child_get_type ())
 
-  PhocView                     *view;
-  PhocViewChild                *parent;
-  GSList                       *children;
-  struct wlr_surface           *wlr_surface;
-  bool                          mapped;
-
-  struct wl_listener            map;
-  struct wl_listener            unmap;
-  struct wl_listener            commit;
-  struct wl_listener            new_subsurface;
-};
+G_DECLARE_DERIVABLE_TYPE (PhocViewChild, phoc_view_child, PHOC, VIEW_CHILD, GObject)
 
 /**
  * PhocViewChildClass:
@@ -59,20 +39,6 @@ typedef struct _PhocViewChildClass
 } PhocViewChildClass;
 
 #define PHOC_TYPE_VIEW_CHILD (phoc_view_child_get_type ())
-
-GType phoc_view_child_get_type (void);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocViewChild, g_object_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocViewChildClass, g_type_class_unref)
-static inline PhocViewChild * PHOC_VIEW_CHILD (gpointer ptr) {
-  return G_TYPE_CHECK_INSTANCE_CAST (ptr, phoc_view_child_get_type (), PhocViewChild); }
-static inline PhocViewChildClass * PHOC_VIEW_CHILD_CLASS (gpointer ptr) {
-  return G_TYPE_CHECK_CLASS_CAST (ptr, phoc_view_child_get_type (), PhocViewChildClass); }
-static inline gboolean PHOC_IS_VIEW_CHILD (gpointer ptr) {
-  return G_TYPE_CHECK_INSTANCE_TYPE (ptr, phoc_view_child_get_type ()); }
-static inline gboolean PHOC_IS_VIEW_CHILD_CLASS (gpointer ptr) {
-  return G_TYPE_CHECK_CLASS_TYPE (ptr, phoc_view_child_get_type ()); }
-static inline PhocViewChildClass * PHOC_VIEW_CHILD_GET_CLASS (gpointer ptr) {
-  return G_TYPE_INSTANCE_GET_CLASS (ptr, phoc_view_child_get_type (), PhocViewChildClass); }
 
 PhocView *            phoc_view_child_get_view (PhocViewChild *self);
 void                  phoc_view_child_apply_damage (PhocViewChild *self);
