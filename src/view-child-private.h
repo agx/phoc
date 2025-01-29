@@ -78,5 +78,6 @@ PhocView *            phoc_view_child_get_view (PhocViewChild *self);
 void                  phoc_view_child_apply_damage (PhocViewChild *self);
 void                  phoc_view_child_damage_whole (PhocViewChild *self);
 void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
+PhocViewChild *       phoc_view_child_get_parent (PhocViewChild *self);
 
 G_END_DECLS

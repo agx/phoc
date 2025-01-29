@@ -361,3 +361,20 @@ phoc_view_child_get_view (PhocViewChild *self)
 
   return self->view;
 }
+
+/**
+ * phoc_view_child_get_parent:
+ * @self: A view child
+ *
+ * Get the view's parent (if any). The parent is either a `PhocViewChild`
+ * or `NULL` (in that case `self` is a direct child of it's `view`).
+ *
+ * Returns: (transfer none)(nullable): The view child
+ */
+PhocViewChild *
+phoc_view_child_get_parent (PhocViewChild *self)
+{
+  g_assert (PHOC_IS_VIEW_CHILD (self));
+
+  return self->parent;
+}
