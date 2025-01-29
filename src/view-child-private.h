@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Phosh Developers
+ * Copyright (C) 2024-2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -79,5 +79,6 @@ void                  phoc_view_child_apply_damage (PhocViewChild *self);
 void                  phoc_view_child_damage_whole (PhocViewChild *self);
 void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
 PhocViewChild *       phoc_view_child_get_parent (PhocViewChild *self);
+struct wlr_surface *  phoc_view_child_get_wlr_surface (PhocViewChild *self);
 
 G_END_DECLS

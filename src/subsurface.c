@@ -51,7 +51,7 @@ subsurface_get_pos (PhocViewChild *child, int *sx, int *sy)
   struct wlr_subsurface *wlr_subsurface;
   PhocViewChild *parent;
 
-  wlr_surface = child->wlr_surface;
+  wlr_surface = phoc_view_child_get_wlr_surface (child);
   parent = phoc_view_child_get_parent (child);
   if (parent)
     phoc_view_child_get_pos (parent, sx, sy);

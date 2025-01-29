@@ -378,3 +378,19 @@ phoc_view_child_get_parent (PhocViewChild *self)
 
   return self->parent;
 }
+
+/**
+ * phoc_view_child_get_wlr_surface:
+ * @self: A view child
+ *
+ * Get the `wlr_surface` associated with this view child.
+ *
+ * Returns: (transfer none): The `wlr_surface`
+ */
+struct wlr_surface *
+phoc_view_child_get_wlr_surface (PhocViewChild *self)
+{
+  g_assert (PHOC_IS_VIEW_CHILD (self));
+
+  return self->wlr_surface;
+}
