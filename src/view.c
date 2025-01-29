@@ -82,7 +82,7 @@ typedef struct _PhocViewPrivate {
 
   /* Subsurface and popups */
   struct wl_listener surface_new_subsurface;
-  struct wl_list child_surfaces; // PhocViewChild::link
+  GSList            *child_surfaces;
 } PhocViewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
@@ -1170,6 +1170,27 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_IS_MAPPED]);
 }
 
+
+static void
+phoc_view_drop_child_surfaces (PhocView *self)
+{
+  PhocViewPrivate *priv = phoc_view_get_instance_private (self);
+
+  GSList *elem = priv->child_surfaces;
+  while (elem != NULL) {
+    GSList *next = elem->next;
+    PhocViewChild *child = PHOC_VIEW_CHILD (elem->data);
+
+    /* Same as in the child's `handle_destroy` */
+    g_object_unref (child);
+    elem = next;
+  }
+
+  /* Check if all children removed themselves properly */
+  g_assert (priv->child_surfaces == NULL);
+}
+
+
 void
 phoc_view_unmap (PhocView *view)
 {
@@ -1182,10 +1203,7 @@ phoc_view_unmap (PhocView *view)
   phoc_view_damage_whole (view);
 
   wl_list_remove (&priv->surface_new_subsurface.link);
-
-  PhocViewChild *child, *tmp;
-  wl_list_for_each_safe (child, tmp, &priv->child_surfaces, link)
-    g_object_unref (child);
+  phoc_view_drop_child_surfaces (view);
 
   if (phoc_view_is_fullscreen (view)) {
     phoc_output_damage_whole (priv->fullscreen_output);
@@ -1508,7 +1526,7 @@ phoc_view_finalize (GObject *object)
     wl_list_init (&self->parent_link);
   }
 
-  /* Unlink our children */
+  /* Unlink our children in the view stack */
   PhocView *child, *tmp;
   wl_list_for_each_safe (child, tmp, &self->stack, parent_link) {
     wl_list_remove (&child->parent_link);
@@ -1750,7 +1768,6 @@ phoc_view_init (PhocView *self)
   priv->state = PHOC_VIEW_STATE_FLOATING;
   priv->visibility = TRUE;
 
-  wl_list_init (&priv->child_surfaces);
   wl_list_init (&self->stack);
 
   self->desktop = phoc_server_get_desktop (phoc_server_get_default ());
@@ -2225,9 +2242,22 @@ phoc_view_add_child (PhocView *self, PhocViewChild *child)
 
   g_assert (PHOC_IS_VIEW (self));
   g_assert (PHOC_IS_VIEW_CHILD (child));
-
   priv = phoc_view_get_instance_private (child->view);
-  wl_list_insert (&priv->child_surfaces, &child->link);
+
+  priv->child_surfaces = g_slist_prepend (priv->child_surfaces, child);
+}
+
+
+void
+phoc_view_remove_child (PhocView *self, PhocViewChild *child)
+{
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_VIEW_CHILD (child));
+  priv = phoc_view_get_instance_private (child->view);
+
+  priv->child_surfaces = g_slist_remove (priv->child_surfaces, child);
 }
 
 /**

@@ -195,13 +195,14 @@ phoc_view_child_finalize (GObject *object)
   for (GSList *elem = self->children; elem; elem = elem->next) {
     PhocViewChild *subchild = elem->data;
     subchild->parent = NULL;
-    /* The subchild lost its parent, so it cannot see that the parent is unmapped. Unmap it directly */
+    /* The subchild lost its parent, so it cannot see that the parent is unmapped.
+     * Unmap it directly */
     /* TODO: But then we won't damage them on destroy? */
     subchild->mapped = false;
   }
   g_clear_pointer (&self->children, g_slist_free);
 
-  wl_list_remove (&self->link);
+  phoc_view_remove_child (self->view, self);
 
   wl_list_remove (&self->map.link);
   wl_list_remove (&self->unmap.link);
