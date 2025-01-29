@@ -10,6 +10,7 @@
 
 #include "phoc-config.h"
 
+#include "child-root.h"
 #include "desktop.h"
 #include "input.h"
 #include "output.h"
@@ -36,14 +37,14 @@
 
 enum {
   PROP_0,
-  PROP_VIEW,
+  PROP_CHILD_ROOT,
   PROP_WLR_SURFACE,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
 typedef struct _PhocViewChildPrivate {
-  PhocView                     *view;
+  PhocChildRoot                *root;
   PhocViewChild                *parent;
   GSList                       *children;
   struct wlr_surface           *wlr_surface;
@@ -63,7 +64,7 @@ static void
 phoc_view_child_subsurface_create (PhocViewChild *self, struct wlr_subsurface *wlr_subsurface)
 {
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
-  PhocSubsurface *subsurface = phoc_subsurface_new (priv->view, wlr_subsurface);
+  PhocSubsurface *subsurface = phoc_subsurface_new (priv->root, wlr_subsurface);
   PhocViewChildPrivate *subsurface_priv;
 
   subsurface_priv = phoc_view_child_get_instance_private (PHOC_VIEW_CHILD (subsurface));
@@ -113,9 +114,9 @@ phoc_view_child_set_property (GObject      *object,
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
 
   switch (property_id) {
-  case PROP_VIEW:
+  case PROP_CHILD_ROOT:
     /* TODO: Should hold a ref */
-    priv->view = g_value_get_object (value);
+    priv->root = g_value_get_object (value);
     break;
   case PROP_WLR_SURFACE:
     priv->wlr_surface = g_value_get_pointer (value);
@@ -137,8 +138,8 @@ phoc_view_child_get_property (GObject    *object,
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
 
   switch (property_id) {
-  case PROP_VIEW:
-    g_value_set_object (value, priv->view);
+  case PROP_CHILD_ROOT:
+    g_value_set_object (value, priv->root);
     break;
   case PROP_WLR_SURFACE:
     g_value_set_pointer (value, priv->wlr_surface);
@@ -211,7 +212,7 @@ phoc_view_child_constructed (GObject *object)
   priv->new_subsurface.notify = phoc_view_child_handle_new_subsurface;
   wl_signal_add (&priv->wlr_surface->events.new_subsurface, &priv->new_subsurface);
 
-  phoc_view_add_child (priv->view, self);
+  phoc_child_root_add_child (priv->root, self);
 
   phoc_view_child_init_subsurfaces (self, priv->wlr_surface);
 }
@@ -232,7 +233,7 @@ phoc_view_child_finalize (GObject *object)
   PhocViewChild *self = PHOC_VIEW_CHILD (object);
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
 
-  if (phoc_view_child_is_mapped (self) && phoc_view_is_mapped (priv->view))
+  if (phoc_view_child_is_mapped (self) && phoc_child_root_is_mapped (priv->root))
     phoc_view_child_damage_whole (self);
 
   /* Remove from parent if it's also a PhocViewChild */
@@ -254,14 +255,14 @@ phoc_view_child_finalize (GObject *object)
   }
   g_clear_pointer (&priv->children, g_slist_free);
 
-  phoc_view_remove_child (priv->view, self);
+  phoc_child_root_remove_child (priv->root, self);
 
   wl_list_remove (&priv->map.link);
   wl_list_remove (&priv->unmap.link);
   wl_list_remove (&priv->commit.link);
   wl_list_remove (&priv->new_subsurface.link);
 
-  priv->view = NULL;
+  priv->root = NULL;
   priv->wlr_surface = NULL;
 
   G_OBJECT_CLASS (phoc_view_child_parent_class)->finalize (object);
@@ -274,13 +275,13 @@ phoc_view_child_map_default (PhocViewChild *self)
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
-  PhocView *view = priv->view;
+  PhocChildRoot *root = priv->root;
 
   priv->mapped = true;
   phoc_view_child_damage_whole (self);
 
   struct wlr_box box;
-  phoc_view_get_box (view, &box);
+  phoc_child_root_get_box (root, &box);
 
   PhocOutput *output;
   wl_list_for_each (output, &desktop->outputs, link) {
@@ -330,9 +331,9 @@ phoc_view_child_class_init (PhocViewChildClass *klass)
   view_child_class->unmap = phoc_view_child_unmap_default;
   view_child_class->get_pos = phoc_view_child_get_pos_default;
 
-  props[PROP_VIEW] =
-    g_param_spec_object ("view", "", "",
-                         PHOC_TYPE_VIEW,
+  props[PROP_CHILD_ROOT] =
+    g_param_spec_object ("child-root", "", "",
+                         PHOC_TYPE_CHILD_ROOT,
                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   props[PROP_WLR_SURFACE] =
@@ -362,10 +363,10 @@ phoc_view_child_apply_damage (PhocViewChild *self)
   g_assert (PHOC_IS_VIEW_CHILD (self));
   priv = phoc_view_child_get_instance_private (self);
 
-  if (!self || !phoc_view_child_is_mapped (self) || !phoc_view_is_mapped (priv->view))
+  if (!self || !phoc_view_child_is_mapped (self) || !phoc_child_root_is_mapped (priv->root))
     return;
 
-  phoc_view_apply_damage (priv->view);
+  phoc_child_root_apply_damage (priv->root);
 }
 
 /**
@@ -382,12 +383,12 @@ phoc_view_child_damage_whole (PhocViewChild *self)
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
   PhocOutput *output;
   int sx, sy;
-  struct wlr_box view_box;
+  struct wlr_box root_box;
 
-  if (!self || !phoc_view_child_is_mapped (self) || !phoc_view_is_mapped (priv->view))
+  if (!self || !phoc_view_child_is_mapped (self) || !phoc_child_root_is_mapped (priv->root))
     return;
 
-  phoc_view_get_box (priv->view, &view_box);
+  phoc_child_root_get_box (priv->root, &root_box);
   phoc_view_child_get_pos (self, &sx, &sy);
 
   wl_list_for_each (output, &desktop->outputs, link) {
@@ -395,8 +396,8 @@ phoc_view_child_damage_whole (PhocViewChild *self)
     wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
     phoc_output_damage_whole_surface (output,
                                       priv->wlr_surface,
-                                      view_box.x + sx - output_box.x,
-                                      view_box.y + sy - output_box.y);
+                                      root_box.x + sx - output_box.x,
+                                      root_box.y + sy - output_box.y);
   }
 }
 
@@ -410,22 +411,22 @@ phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy)
 }
 
 /**
- * phoc_view_child_get_view:
+ * phoc_view_child_get_root:
  * @self: A view child
  *
- * Get the view this child belongs to.
+ * Get the root of the tree this child belongs to.
  *
- * Returns: (transfer none): The containing view
+ * Returns: (transfer none): The root
  */
-PhocView *
-phoc_view_child_get_view (PhocViewChild *self)
+PhocChildRoot *
+phoc_view_child_get_root (PhocViewChild *self)
 {
   PhocViewChildPrivate *priv;
 
   g_assert (PHOC_IS_VIEW_CHILD (self));
   priv = phoc_view_child_get_instance_private (self);
 
-  return priv->view;
+  return priv->root;
 }
 
 /**

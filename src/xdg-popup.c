@@ -71,11 +71,11 @@ popup_get_pos (PhocViewChild *child, int *sx, int *sy)
 static void
 popup_unconstrain (PhocXdgPopup* self)
 {
-  PhocView *view = phoc_view_child_get_view (PHOC_VIEW_CHILD (self));
+  PhocChildRoot *root = phoc_view_child_get_root (PHOC_VIEW_CHILD (self));
   struct wlr_box output_toplevel_sx_box;
   gboolean ret;
 
-  ret = phoc_view_get_popup_unconstrain_region (view, &output_toplevel_sx_box);
+  ret = phoc_child_root_unconstrain_popup (root, &output_toplevel_sx_box);
   if (!ret) {
     wlr_xdg_surface_schedule_configure (self->wlr_popup->base);
     return;
@@ -100,7 +100,7 @@ popup_handle_new_popup (struct wl_listener *listener, void *data)
   PhocXdgPopup *self = wl_container_of (listener, self, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
 
-  phoc_xdg_popup_new (phoc_view_child_get_view (PHOC_VIEW_CHILD (self)), wlr_popup);
+  phoc_xdg_popup_new (phoc_view_child_get_root (PHOC_VIEW_CHILD (self)), wlr_popup);
 }
 
 
@@ -264,10 +264,10 @@ phoc_xdg_popup_init (PhocXdgPopup *self)
 
 
 PhocXdgPopup *
-phoc_xdg_popup_new (PhocView *view, struct wlr_xdg_popup *wlr_xdg_popup)
+phoc_xdg_popup_new (PhocChildRoot *root, struct wlr_xdg_popup *wlr_xdg_popup)
 {
   return g_object_new (PHOC_TYPE_XDG_POPUP,
-                       "view", view,
+                       "child-root", root,
                        "wlr-popup", wlr_xdg_popup,
                        "wlr-surface", wlr_xdg_popup->base->surface,
                        NULL);

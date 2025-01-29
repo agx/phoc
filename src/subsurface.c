@@ -229,10 +229,10 @@ phoc_subsurface_init (PhocSubsurface *self)
 
 
 PhocSubsurface *
-phoc_subsurface_new (PhocView *view, struct wlr_subsurface *wlr_subsurface)
+phoc_subsurface_new (PhocChildRoot *root, struct wlr_subsurface *wlr_subsurface)
 {
   return g_object_new (PHOC_TYPE_SUBSURFACE,
-                       "view", view,
+                       "child-root", root,
                        "wlr-surface", wlr_subsurface->surface,
                        "wlr-subsurface", wlr_subsurface,
                        NULL);

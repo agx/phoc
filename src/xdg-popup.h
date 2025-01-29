@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "view.h"
+#include "child-root.h"
 #include "view-child-private.h"
 
 #include <glib-object.h>
@@ -17,7 +17,7 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PhocXdgPopup, phoc_xdg_popup, PHOC, XDG_POPUP, PhocViewChild)
 
-PhocXdgPopup      *phoc_xdg_popup_new              (PhocView             *view,
+PhocXdgPopup      *phoc_xdg_popup_new              (PhocChildRoot        *root,
                                                     struct wlr_xdg_popup *wlr_popup);
 
 G_END_DECLS
