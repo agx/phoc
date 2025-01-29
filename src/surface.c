@@ -43,8 +43,6 @@ handle_commit (struct wl_listener *listener, void *data)
   PhocSurface *self = wl_container_of (listener, self, commit);
   struct wlr_surface *wlr_surface = self->wlr_surface;
 
-  pixman_region32_clear (&self->damage);
-
   if (wlr_surface->previous.width == wlr_surface->current.width &&
       wlr_surface->previous.height == wlr_surface->current.height &&
       wlr_surface->current.dx == 0 && wlr_surface->current.dy ==  0)

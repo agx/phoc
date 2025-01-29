@@ -1629,6 +1629,7 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
   pixman_region32_init (&damage);
   wlr_surface_get_effective_damage (wlr_surface, &damage);
   pixman_region32_union (&damage, &damage, phoc_surface_get_damage (surface));
+  phoc_surface_clear_damage (surface);
 
   wlr_region_scale (&damage, &damage, scale);
   wlr_region_scale (&damage, &damage, self->wlr_output->scale);
