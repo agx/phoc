@@ -138,7 +138,7 @@ set_wlr_subsurface (PhocSubsurface *self, struct wlr_subsurface *subsurface)
   self->wlr_subsurface = subsurface;
   g_debug ("New surface %p", self->wlr_subsurface);
 
-  PHOC_VIEW_CHILD (self)->mapped = self->wlr_subsurface->surface->mapped;
+  phoc_view_child_set_mapped (PHOC_VIEW_CHILD (self), self->wlr_subsurface->surface->mapped);
 
   self->destroy.notify = subsurface_handle_destroy;
   wl_signal_add (&self->wlr_subsurface->events.destroy, &self->destroy);

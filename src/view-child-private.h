@@ -80,5 +80,6 @@ void                  phoc_view_child_damage_whole (PhocViewChild *self);
 void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
 PhocViewChild *       phoc_view_child_get_parent (PhocViewChild *self);
 struct wlr_surface *  phoc_view_child_get_wlr_surface (PhocViewChild *self);
+void                  phoc_view_child_set_mapped (PhocViewChild *self, bool mapped);
 
 G_END_DECLS

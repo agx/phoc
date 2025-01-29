@@ -394,3 +394,17 @@ phoc_view_child_get_wlr_surface (PhocViewChild *self)
 
   return self->wlr_surface;
 }
+
+/**
+ * phoc_view_child_set_mapped:
+ * @self: A view child
+ *
+ * Sets whether the view child is currently mapped
+ */
+void
+phoc_view_child_set_mapped (PhocViewChild *self, bool mapped)
+{
+  g_assert (PHOC_IS_VIEW_CHILD (self));
+
+  self->mapped = mapped;
+}
