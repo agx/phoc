@@ -218,6 +218,15 @@ phoc_view_child_constructed (GObject *object)
 
 
 static void
+phoc_view_child_remove_child (PhocViewChild *self, PhocViewChild *child)
+{
+  PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
+
+  priv->children = g_slist_remove (priv->children, child);
+}
+
+
+static void
 phoc_view_child_finalize (GObject *object)
 {
   PhocViewChild *self = PHOC_VIEW_CHILD (object);
@@ -228,9 +237,7 @@ phoc_view_child_finalize (GObject *object)
 
   /* Remove from parent if it's also a PhocViewChild */
   if (priv->parent != NULL) {
-    PhocViewChildPrivate *parent_priv = phoc_view_child_get_instance_private (priv->parent);
-
-    parent_priv->children = g_slist_remove (parent_priv->children, self);
+    phoc_view_child_remove_child (priv->parent, self);
     priv->parent = NULL;
   }
 
