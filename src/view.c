@@ -2242,7 +2242,7 @@ phoc_view_add_child (PhocView *self, PhocViewChild *child)
 
   g_assert (PHOC_IS_VIEW (self));
   g_assert (PHOC_IS_VIEW_CHILD (child));
-  priv = phoc_view_get_instance_private (child->view);
+  priv = phoc_view_get_instance_private (self);
 
   priv->child_surfaces = g_slist_prepend (priv->child_surfaces, child);
 }
@@ -2255,7 +2255,7 @@ phoc_view_remove_child (PhocView *self, PhocViewChild *child)
 
   g_assert (PHOC_IS_VIEW (self));
   g_assert (PHOC_IS_VIEW_CHILD (child));
-  priv = phoc_view_get_instance_private (child->view);
+  priv = phoc_view_get_instance_private (self);
 
   priv->child_surfaces = g_slist_remove (priv->child_surfaces, child);
 }
