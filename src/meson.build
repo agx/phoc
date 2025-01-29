@@ -22,6 +22,8 @@ phoc_marshalers = gnome.genmarshal('phoc-marshalers',
 sources = files(
   'bling.c',
   'bling.h',
+  'child-root.c',
+  'child-root.h',
   'color-rect.c',
   'color-rect.h',
   'cursor.c',
