@@ -98,11 +98,12 @@ send_frame_done (void *user_data)
 static void
 send_frame_done_if_not_visible (PhocXdgSurface *self)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocView *view = PHOC_VIEW (self);
   struct wl_display *display;
   struct wl_event_loop *loop;
 
-  if (phoc_desktop_view_check_visibility (view->desktop, view) || !phoc_view_is_mapped (view))
+  if (phoc_desktop_view_check_visibility (desktop, view) || !phoc_view_is_mapped (view))
     return;
 
   display = wl_client_get_display (self->xdg_surface->client->client);
