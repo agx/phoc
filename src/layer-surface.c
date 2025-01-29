@@ -38,12 +38,106 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
-
+static void phoc_layer_surface_child_root_iface_init (PhocChildRootInterface *iface);
 static void phoc_animatable_interface_init (PhocAnimatableInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (PHOC_TYPE_CHILD_ROOT,
+                                                phoc_layer_surface_child_root_iface_init)
                          G_IMPLEMENT_INTERFACE (PHOC_TYPE_ANIMATABLE,
                                                 phoc_animatable_interface_init))
+
+/* {{{ PhocChildRoot interface */
+
+static void phoc_layer_surface_apply_damage (PhocLayerSurface *self);
+
+static void
+phoc_layer_surface_child_root_get_box (PhocChildRoot *root, struct wlr_box *box)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (root);
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  *box = self->geo;
+}
+
+
+static gboolean
+phoc_layer_surface_child_root_is_mapped (PhocChildRoot *root)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (root);
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  return self->mapped;
+}
+
+
+static void
+phoc_layer_surface_child_root_apply_damage (PhocChildRoot *root)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (root);
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  phoc_layer_surface_apply_damage (self);
+}
+
+
+static void
+phoc_layer_surface_child_root_add_child (PhocChildRoot *root, PhocViewChild *child)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (root);
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+  g_assert (PHOC_IS_VIEW_CHILD (child));
+
+  self->child_surfaces = g_slist_prepend (self->child_surfaces, child);
+}
+
+
+static void
+phoc_layer_surface_child_root_remove_child (PhocChildRoot *root, PhocViewChild *child)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (root);
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+  g_assert (PHOC_IS_VIEW_CHILD (child));
+
+  self->child_surfaces = g_slist_remove (self->child_surfaces, child);
+}
+
+
+static void
+phoc_layer_surface_child_root_iface_init (PhocChildRootInterface *iface)
+{
+  iface->get_box = phoc_layer_surface_child_root_get_box;
+  iface->is_mapped = phoc_layer_surface_child_root_is_mapped;
+  iface->apply_damage = phoc_layer_surface_child_root_apply_damage;
+  iface->add_child = phoc_layer_surface_child_root_add_child;
+  iface->remove_child = phoc_layer_surface_child_root_remove_child;
+}
+
+/* ))) */
+
+static void
+phoc_layer_surface_apply_damage (PhocLayerSurface *self)
+{
+  struct wlr_layer_surface_v1 *wlr_layer_surface;
+  struct wlr_output *wlr_output;
+
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+  wlr_layer_surface = self->layer_surface;
+
+  wlr_output = wlr_layer_surface->output;
+  if (!wlr_output)
+    return;
+
+  phoc_output_damage_from_surface (PHOC_OUTPUT (wlr_output->data),
+                                   wlr_layer_surface->surface,
+                                   self->geo.x,
+                                   self->geo.y);
+}
 
 
 static void
