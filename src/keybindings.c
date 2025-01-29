@@ -472,13 +472,11 @@ keybinding_by_name (const PhocKeybinding *keybinding, const gchar *name)
 static gboolean
 keybinding_by_key_combo (const PhocKeybinding *keybinding, const PhocKeyCombo *combo)
 {
-  GSList *elem = keybinding->combos;
-
-  while (elem) {
+  for (GSList *elem = keybinding->combos; elem; elem = elem->next) {
     if (key_combo_eq (elem->data, combo))
       return FALSE;
-    elem = elem->next;
   }
+
   return TRUE;
 }
 
