@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
+ *               2024-2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Author: Guido Günther <agx@sigxcpu.org>
@@ -15,7 +16,9 @@
 #include "layer-shell.h"
 #include "layout-transaction.h"
 #include "output.h"
+#include "xdg-popup.h"
 #include "server.h"
+#include "subsurface.h"
 #include "utils.h"
 
 
@@ -108,6 +111,28 @@ phoc_layer_surface_child_root_remove_child (PhocChildRoot *root, PhocViewChild *
 }
 
 
+static gboolean
+phoc_layer_surface_child_root_unconstrain_box (PhocChildRoot *root, struct wlr_box *box)
+{
+  PhocLayerSurface *self = PHOC_LAYER_SURFACE (root);
+  PhocOutput *output = phoc_layer_surface_get_output (self);
+
+  if (!output)
+    return FALSE;
+
+  /* The output box expressed in the coordinate system of the toplevel
+   * parent of the popup */
+  *box = (struct wlr_box) {
+    .x = -self->geo.x,
+    .y = -self->geo.y,
+    .width = output->usable_area.width,
+    .height = output->usable_area.height,
+  };
+
+  return TRUE;
+}
+
+
 static void
 phoc_layer_surface_child_root_iface_init (PhocChildRootInterface *iface)
 {
@@ -116,6 +141,7 @@ phoc_layer_surface_child_root_iface_init (PhocChildRootInterface *iface)
   iface->apply_damage = phoc_layer_surface_child_root_apply_damage;
   iface->add_child = phoc_layer_surface_child_root_add_child;
   iface->remove_child = phoc_layer_surface_child_root_remove_child;
+  iface->unconstrain_popup = phoc_layer_surface_child_root_unconstrain_box;
 }
 
 /* ))) */
@@ -259,15 +285,26 @@ handle_surface_commit (struct wl_listener *listener, void *data)
 
 
 static void
+phoc_layer_surface_init_subsurfaces (PhocLayerSurface *self)
+{
+  struct wlr_subsurface *subsurface;
+  struct wlr_surface *wlr_surface = self->layer_surface->surface;
+
+  wl_list_for_each (subsurface, &wlr_surface->current.subsurfaces_below, current.link)
+    phoc_subsurface_new (PHOC_CHILD_ROOT (self), subsurface);
+
+  wl_list_for_each (subsurface, &wlr_surface->current.subsurfaces_above, current.link)
+    phoc_subsurface_new (PHOC_CHILD_ROOT (self), subsurface);
+}
+
+
+static void
 handle_new_subsurface (struct wl_listener *listener, void *data)
 {
   PhocLayerSurface *self = wl_container_of (listener, self, new_subsurface);
   struct wlr_subsurface *wlr_subsurface = data;
 
-  PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
-  subsurface->parent_type = LAYER_PARENT_LAYER;
-  subsurface->parent_layer = self;
-  wl_list_insert (&self->subsurfaces, &subsurface->link);
+  phoc_subsurface_new (PHOC_CHILD_ROOT (self), wlr_subsurface);
 }
 
 
@@ -276,11 +313,8 @@ handle_new_popup (struct wl_listener *listener, void *data)
 {
   PhocLayerSurface *self = wl_container_of (listener, self, new_popup);
   struct wlr_xdg_popup *wlr_popup = data;
-  PhocLayerPopup *popup = phoc_layer_popup_create (wlr_popup);
 
-  popup->parent_type = LAYER_PARENT_LAYER;
-  popup->parent_layer = self;
-  phoc_layer_popup_unconstrain (popup);
+  phoc_xdg_popup_new (PHOC_CHILD_ROOT (self), wlr_popup);
 }
 
 
@@ -296,24 +330,7 @@ handle_map (struct wl_listener *listener, void *data)
 
   self->mapped = true;
 
-  struct wlr_subsurface *wlr_subsurface;
-  wl_list_for_each (wlr_subsurface,
-                    &wlr_layer_surface->surface->current.subsurfaces_below,
-                    current.link) {
-    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
-    subsurface->parent_type = LAYER_PARENT_LAYER;
-    subsurface->parent_layer = self;
-    wl_list_insert (&self->subsurfaces, &subsurface->link);
-  }
-  wl_list_for_each (wlr_subsurface,
-                    &wlr_layer_surface->surface->current.subsurfaces_above,
-                    current.link) {
-    PhocLayerSubsurface *subsurface = phoc_layer_subsurface_create (wlr_subsurface);
-    subsurface->parent_type = LAYER_PARENT_LAYER;
-    subsurface->parent_layer = self;
-    wl_list_insert (&self->subsurfaces, &subsurface->link);
-  }
-
+  phoc_layer_surface_init_subsurfaces (self);
   self->new_subsurface.notify = handle_new_subsurface;
   wl_signal_add (&wlr_layer_surface->surface->events.new_subsurface, &self->new_subsurface);
 
@@ -330,6 +347,24 @@ handle_map (struct wl_listener *listener, void *data)
 
 
 static void
+phoc_layer_surface_drop_child_surfaces (PhocLayerSurface *self)
+{
+  GSList *elem = self->child_surfaces;
+  while (elem != NULL) {
+    GSList *next = elem->next;
+    PhocViewChild *child = PHOC_VIEW_CHILD (elem->data);
+
+    /* The child removes itself form the list on dispose */
+    g_object_unref (child);
+    elem = next;
+  }
+
+  /* Check if all children removed themselves properly */
+  g_assert (self->child_surfaces == NULL);
+}
+
+
+static void
 handle_unmap (struct wl_listener *listener, void *data)
 {
   PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
@@ -338,11 +373,8 @@ handle_unmap (struct wl_listener *listener, void *data)
 
   self->mapped = false;
 
-  PhocLayerSubsurface *subsurface, *tmp;
-  wl_list_for_each_safe (subsurface, tmp, &self->subsurfaces, link)
-    phoc_layer_subsurface_destroy (subsurface);
-
   wl_list_remove (&self->new_subsurface.link);
+  phoc_layer_surface_drop_child_surfaces (self);
 
   phoc_layer_surface_damage_whole (self);
   phoc_input_update_cursor_focus (input);
