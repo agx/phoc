@@ -21,6 +21,7 @@
 #include "output.h"
 #include "seat.h"
 #include "server.h"
+#include "surface.h"
 #include "utils.h"
 
 #include <glib.h>
@@ -398,6 +399,7 @@ phoc_layer_shell_update_focus (void)
 void
 phoc_layer_subsurface_destroy (PhocLayerSubsurface *subsurface)
 {
+  wl_list_remove (&subsurface->parent_commit.link);
   wl_list_remove (&subsurface->map.link);
   wl_list_remove (&subsurface->unmap.link);
   wl_list_remove (&subsurface->destroy.link);
@@ -704,6 +706,53 @@ subsurface_handle_destroy (struct wl_listener *listener, void *data)
   phoc_layer_subsurface_destroy (subsurface);
 }
 
+
+static void
+collect_damage_iter (struct wlr_surface *wlr_surface, int sx, int sy, gpointer data)
+{
+  PhocLayerSubsurface *subsurface = data;
+  struct wlr_subsurface *wlr_subsurface = subsurface->wlr_subsurface;
+  PhocSurface *surface = wlr_subsurface->parent->data;
+
+  if (!surface)
+    return;
+
+  phoc_surface_add_damage_box (surface, &(struct wlr_box) {
+      subsurface->previous.x - sx,
+      subsurface->previous.y - sy,
+      wlr_surface->previous.width,
+      wlr_surface->previous.height
+    });
+}
+
+
+static void
+subsurface_handle_parent_commit (struct wl_listener *listener, void *data)
+{
+  PhocLayerSubsurface *subsurface = wl_container_of (listener, subsurface, parent_commit);
+  struct wlr_subsurface *wlr_subsurface = subsurface->wlr_subsurface;
+  struct wlr_surface *wlr_surface = wlr_subsurface->surface;
+  gboolean moved, reordered;
+
+  moved = (subsurface->previous.x != wlr_subsurface->current.x ||
+           subsurface->previous.y != wlr_subsurface->current.y);
+
+  reordered = (subsurface->previous.prev != wlr_subsurface->current.link.prev ||
+               subsurface->previous.next != wlr_subsurface->current.link.next);
+
+  if (wlr_subsurface->surface->mapped && (moved || reordered))
+    wlr_surface_for_each_surface (wlr_surface, collect_damage_iter, subsurface);
+
+  subsurface->previous.x = wlr_subsurface->current.x;
+  subsurface->previous.y = wlr_subsurface->current.y;
+  subsurface->previous.prev = wlr_subsurface->current.link.prev;
+  subsurface->previous.next = wlr_subsurface->current.link.next;
+
+  if (wlr_subsurface->surface->mapped && (moved || reordered))
+    wlr_surface_for_each_surface (wlr_surface, collect_damage_iter, subsurface);
+}
+
+
 PhocLayerSubsurface *
 phoc_layer_subsurface_create (struct wlr_subsurface *wlr_subsurface)
 {
@@ -722,6 +771,9 @@ phoc_layer_subsurface_create (struct wlr_subsurface *wlr_subsurface)
   wl_signal_add (&wlr_subsurface->events.destroy, &subsurface->destroy);
   subsurface->commit.notify = subsurface_handle_commit;
   wl_signal_add (&wlr_subsurface->surface->events.commit, &subsurface->commit);
+
+  subsurface->parent_commit.notify = subsurface_handle_parent_commit;
+  wl_signal_add (&subsurface->wlr_subsurface->parent->events.commit, &subsurface->parent_commit);
 
   wl_list_init (&subsurface->subsurfaces);
   wl_list_init (&subsurface->link);
