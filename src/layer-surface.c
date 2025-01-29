@@ -47,7 +47,7 @@ G_DEFINE_TYPE_WITH_CODE (PhocLayerSurface, phoc_layer_surface, G_TYPE_OBJECT,
 
 
 static void
-phoc_layer_surface_damage (PhocLayerSurface *self)
+phoc_layer_surface_damage_whole (PhocLayerSurface *self)
 {
   struct wlr_layer_surface_v1 *wlr_layer_surface;
   struct wlr_output *wlr_output;
@@ -250,7 +250,7 @@ handle_unmap (struct wl_listener *listener, void *data)
 
   wl_list_remove (&self->new_subsurface.link);
 
-  phoc_layer_surface_damage (self);
+  phoc_layer_surface_damage_whole (self);
   phoc_input_update_cursor_focus (input);
 
   if (output) {
@@ -359,7 +359,7 @@ phoc_layer_surface_finalize (GObject *object)
   PhocOutput *output = phoc_layer_surface_get_output (self);
 
   if (self->layer_surface->surface->mapped)
-    phoc_layer_surface_damage (self);
+    phoc_layer_surface_damage_whole (self);
 
   wl_list_remove (&self->link);
   if (output)
