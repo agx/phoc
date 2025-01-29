@@ -271,6 +271,7 @@ phoc_view_child_finalize (GObject *object)
 static void
 phoc_view_child_map_default (PhocViewChild *self)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocInput *input = phoc_server_get_input (phoc_server_get_default ());
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
   PhocView *view = priv->view;
@@ -282,9 +283,10 @@ phoc_view_child_map_default (PhocViewChild *self)
   phoc_view_get_box (view, &box);
 
   PhocOutput *output;
-  wl_list_for_each (output, &view->desktop->outputs, link) {
-    bool intersects = wlr_output_layout_intersects (view->desktop->layout,
-                                                    output->wlr_output, &box);
+  wl_list_for_each (output, &desktop->outputs, link) {
+    bool intersects;
+
+    intersects = wlr_output_layout_intersects (desktop->layout, output->wlr_output, &box);
     if (intersects)
       phoc_utils_wlr_surface_enter_output (priv->wlr_surface, output->wlr_output);
   }
@@ -376,6 +378,7 @@ phoc_view_child_apply_damage (PhocViewChild *self)
 void
 phoc_view_child_damage_whole (PhocViewChild *self)
 {
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
   PhocOutput *output;
   int sx, sy;
@@ -387,9 +390,9 @@ phoc_view_child_damage_whole (PhocViewChild *self)
   phoc_view_get_box (priv->view, &view_box);
   phoc_view_child_get_pos (self, &sx, &sy);
 
-  wl_list_for_each (output, &priv->view->desktop->outputs, link) {
+  wl_list_for_each (output, &desktop->outputs, link) {
     struct wlr_box output_box;
-    wlr_output_layout_get_box (priv->view->desktop->layout, output->wlr_output, &output_box);
+    wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
     phoc_output_damage_whole_surface (output,
                                       priv->wlr_surface,
                                       view_box.x + sx - output_box.x,
