@@ -167,6 +167,16 @@ phoc_debug_damage_region_destroy (PhocDebugDamageRegion *damage)
 
 /**
  * get_surface_box:
+ * @data: The output iterator data
+ * @wlr_surface: The surface
+ * @sx: x coordinate of a offset in surface local coordinates
+ * @sy: y coordinate of a offset in surface local coordinates
+ * @surface_box: The box in output local coordinates taking the surface size and sx, sy
+ *   into account.
+ *
+ * Build a box at `(sx, sy)` in surface's coordinates system
+ * transformed to the output coordinate system using the passed in
+ * iterator data.
  *
  * Returns: `true` if the resulting box intersects with the output
  */
