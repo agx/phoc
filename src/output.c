@@ -1307,7 +1307,7 @@ phoc_output_xwayland_children_for_each_surface (PhocOutput                  *sel
  * @iterator: (scope call): The callback invoked on each iteration
  * @user_data: Callback user data
  *
- * Iterate over a [type@LayerSurface] and it's popups.
+ * Iterate over a [type@LayerSurface] and its popups.
  */
 void
 phoc_output_layer_surface_for_each_surface (PhocOutput          *self,
@@ -1316,27 +1316,18 @@ phoc_output_layer_surface_for_each_surface (PhocOutput          *self,
                                             void                *user_data)
 {
   struct wlr_layer_surface_v1 *wlr_layer_surface_v1 = layer_surface->layer_surface;
+  PhocOutputSurfaceIteratorData data = {
+    .user_iterator = iterator,
+    .user_data = user_data,
+    .output = self,
+    .ox = layer_surface->geo.x,
+    .oy = layer_surface->geo.y,
+    .scale = 1.0,
+  };
 
-  phoc_output_surface_for_each_surface (self, wlr_layer_surface_v1->surface,
-                                        layer_surface->geo.x,
-                                        layer_surface->geo.y, iterator,
-                                        user_data);
-
-  struct wlr_xdg_popup *state;
-  wl_list_for_each (state, &wlr_layer_surface_v1->popups, link) {
-    struct wlr_xdg_surface *popup = state->base;
-    if (!popup->configured)
-      continue;
-
-    double popup_sx, popup_sy;
-    popup_sx = layer_surface->geo.x;
-    popup_sx += popup->popup->current.geometry.x - popup->current.geometry.x;
-    popup_sy = layer_surface->geo.y;
-    popup_sy += popup->popup->current.geometry.y - popup->current.geometry.y;
-
-    phoc_output_xdg_surface_for_each_surface (self, popup,
-                                              popup_sx, popup_sy, iterator, user_data);
-  }
+  wlr_layer_surface_v1_for_each_surface (wlr_layer_surface_v1,
+                                         phoc_output_for_each_surface_iterator,
+                                         &data);
 }
 
 /**
