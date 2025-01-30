@@ -1283,7 +1283,7 @@ phoc_view_setup (PhocView *view)
  * phoc_view_apply_damage:
  * @view: A view
  *
- * Add the accumulated buffer damage of all surfaces belonging to a
+ * Add the accumulated damage of all surfaces belonging to a
  * [class@PhocView] to the damaged screen area that needs repaint.
  */
 void
