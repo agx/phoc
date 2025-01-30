@@ -142,8 +142,7 @@ void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool
 void        phoc_output_damage_from_layer_surface (PhocOutput       *self,
                                                    PhocLayerSurface *layer_surface,
                                                    gboolean          whole);
-void        phoc_output_damage_whole_drag_icon (PhocOutput   *self,
-                                                PhocDragIcon *icon);
+void        phoc_output_damage_from_drag_icon (PhocOutput *self, PhocDragIcon *icon);
 void        phoc_output_damage_from_surface (PhocOutput *self, struct wlr_surface *surface,
                                              double ox, double oy);
 void        phoc_output_damage_whole_surface (PhocOutput *self, struct wlr_surface *surface,

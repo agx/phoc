@@ -1711,8 +1711,16 @@ phoc_output_damage_from_layer_surface (PhocOutput       *self,
   phoc_output_layer_surface_for_each_surface (self, layer_surface, damage_surface_iterator, &whole);
 }
 
+/**
+ * phoc_output_damage_from_drag_icon:
+ * @self: The output to add damage to
+ * @icon: The drag icon providing the damage
+ *
+ * Adds a drag icon's damage to the damaged area of @self. We always
+ * damage the whole surface.
+ */
 void
-phoc_output_damage_whole_drag_icon (PhocOutput *self, PhocDragIcon *icon)
+phoc_output_damage_from_drag_icon (PhocOutput *self, PhocDragIcon *icon)
 {
   bool whole = true;
 

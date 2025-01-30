@@ -40,7 +40,7 @@ phoc_drag_icon_damage_whole (PhocDragIcon *icon)
   PhocOutput *output;
 
   wl_list_for_each (output, &desktop->outputs, link)
-    phoc_output_damage_whole_drag_icon (output, icon);
+    phoc_output_damage_from_drag_icon (output, icon);
 }
 
 
