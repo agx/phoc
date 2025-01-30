@@ -13,6 +13,7 @@
 #include "layer-shell-private.h"
 #include "layer-surface.h"
 #include "layer-shell.h"
+#include "layout-transaction.h"
 #include "output.h"
 #include "server.h"
 #include "utils.h"
@@ -153,6 +154,13 @@ handle_surface_commit (struct wl_listener *listener, void *data)
                               WLR_LAYER_SURFACE_V1_STATE_EXCLUSIVE_ZONE);
   if (layer_changed || exclusive_zone_changed)
     phoc_output_set_layer_dirty (output, self->layer);
+
+  if (self->pending_serial &&
+      self->layer_surface->current.configure_serial >= self->pending_serial) {
+    g_debug ("layer-surface ack'ed serial %d", self->layer_surface->current.configure_serial);
+    phoc_layout_transaction_notify_configured (phoc_layout_transaction_get_default ());
+    self->pending_serial = 0;
+  }
 }
 
 
@@ -561,4 +569,48 @@ phoc_layer_surface_covers_output (PhocLayerSurface *self)
     return TRUE;
 
   return FALSE;
+}
+
+/**
+ * phoc_layer_surface_send_configure:
+ * @self: The layer surface
+ *
+ * Send a configure event with the current width and height.
+ *
+ * Send a configure event to the client informing it about the current width and height.
+ * See [method@LayerSurface.get_geometry].
+ */
+void
+phoc_layer_surface_send_configure (PhocLayerSurface *self)
+{
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  /* We're not part of a transaction yet but need to */
+  if (!self->pending_serial)
+    phoc_layout_transaction_add_dirty (phoc_layout_transaction_get_default ());
+
+  g_debug ("Layersurface %p, Pending_serial: %d, serial %d",
+           self,
+           self->pending_serial,
+           self->layer_surface->current.configure_serial);
+  self->pending_serial = wlr_layer_surface_v1_configure (self->layer_surface,
+                                                         self->geo.width,
+                                                         self->geo.height);
+}
+
+/**
+ * phoc_layer_surface_get_serial:
+ * @self: The layer surface
+ *
+ * Gets the serial of the last configure event sent to the client. If 0 then client
+ * has committed a buffer matching the current geometry.
+ *
+ * Returns: the last serial
+ */
+uint32_t
+phoc_layer_surface_get_pending_serial (PhocLayerSurface *self)
+{
+  g_assert (PHOC_IS_LAYER_SURFACE (self));
+
+  return self->pending_serial;
 }

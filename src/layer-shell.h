@@ -37,7 +37,7 @@ struct _PhocLayerPopup {
 
 
 typedef struct _PhocLayerSubsurface PhocLayerSubsurface;
-typedef struct _PhocLayerSubsurface {
+struct _PhocLayerSubsurface {
   enum layer_parent parent_type;
   union {
     PhocLayerSurface    *parent_layer;
@@ -53,13 +53,15 @@ typedef struct _PhocLayerSubsurface {
   struct wl_listener commit;
   struct wl_listener new_subsurface;
   struct wl_list subsurfaces; // phoc_layer_subsurface::link
-} PhocLayerSubsurface;
+};
 
-void phoc_layer_shell_arrange (PhocOutput *output);
-void phoc_layer_shell_update_focus (void);
-void phoc_layer_shell_update_osk (PhocOutput *output, gboolean arrange);
-PhocLayerSurface *phoc_layer_shell_find_osk (PhocOutput *output);
+gboolean                phoc_layer_shell_arrange                 (PhocOutput *output);
+void                    phoc_layer_shell_update_focus            (void);
+void                    phoc_layer_shell_update_osk              (PhocOutput *output,
+                                                                  gboolean    arrange);
+PhocLayerSurface       *phoc_layer_shell_find_osk                (PhocOutput *output);
 
-void phoc_handle_layer_shell_surface (struct wl_listener *listener, void *data);
+void                    phoc_handle_layer_shell_surface          (struct wl_listener *listener,
+                                                                  void       *data);
 
 G_END_DECLS

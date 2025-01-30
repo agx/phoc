@@ -38,6 +38,9 @@ struct _PhocLayerSurface {
   enum zwlr_layer_shell_v1_layer layer;
   float              alpha;
   bool               mapped;
+
+  /* Last not yet ACKed serial */
+  uint32_t           pending_serial;
 };
 
 PhocLayerSurface *phoc_layer_surface_new (struct wlr_layer_surface_v1 *layer_surface);
@@ -49,5 +52,9 @@ enum zwlr_layer_shell_v1_layer
                   phoc_layer_surface_get_layer (PhocLayerSurface *self);
 gboolean          phoc_layer_surface_get_mapped (PhocLayerSurface *self);
 gboolean          phoc_layer_surface_covers_output (PhocLayerSurface *self);
+struct wlr_box    phoc_layer_surface_get_geometry (PhocLayerSurface *self);
+
+void              phoc_layer_surface_send_configure (PhocLayerSurface *self);
+uint32_t          phoc_layer_surface_get_pending_serial (PhocLayerSurface *self);
 
 G_END_DECLS

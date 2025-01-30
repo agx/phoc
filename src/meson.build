@@ -68,6 +68,8 @@ sources = files(
   'layer-shell.h',
   'layer-shell-effects.h',
   'layer-shell-effects.c',
+  'layout-transaction.c',
+  'layout-transaction.h',
   'output.c',
   'output.h',
   'output-shield.c',

@@ -26,6 +26,7 @@
 #include "settings.h"
 #include "layer-shell.h"
 #include "layer-shell-effects.h"
+#include "layout-transaction.h"
 #include "output.h"
 #include "output-shield.h"
 #include "render.h"
@@ -76,6 +77,9 @@ typedef struct _PhocOutputPrivate {
 
   GQueue                *layer_surfaces[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY + 1];
 
+  PhocLayoutTransaction *transaction;
+  gboolean               modeset_shield;
+
   GSList                *debug_damage;
 } PhocOutputPrivate;
 
@@ -114,6 +118,24 @@ typedef struct {
   int                  width, height;
   float                scale;
 } PhocOutputSurfaceIteratorData;
+
+
+static void
+on_transaction_active_changed (PhocOutput            *self,
+                               GParamSpec            *pspec,
+                               PhocLayoutTransaction *transaction)
+{
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+
+  if (!priv->modeset_shield)
+    return;
+
+  if (phoc_layout_transaction_is_active (transaction))
+    return;
+
+  priv->modeset_shield = FALSE;
+  phoc_output_lower_shield (self, PHOC_EASING_EASE_OUT_QUINT, 150);
+}
 
 
 static void
@@ -273,6 +295,13 @@ phoc_output_init (PhocOutput *self)
   priv->scale_filter = PHOC_OUTPUT_SCALE_FILTER_AUTO;
 
   priv->renderer = g_object_ref (phoc_server_get_renderer (server));
+
+  g_signal_connect_object (phoc_layout_transaction_get_default (),
+                           "notify::active",
+                           G_CALLBACK (on_transaction_active_changed),
+                           self,
+                           G_CONNECT_SWAPPED);
+
 }
 
 PhocOutput *
@@ -691,7 +720,17 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
   if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
                                  WLR_OUTPUT_STATE_SCALE |
                                  WLR_OUTPUT_STATE_TRANSFORM)) {
-    phoc_layer_shell_arrange (self);
+    gboolean configure_sent;
+
+    configure_sent = phoc_layer_shell_arrange (self);
+    /* The arranging of the layer surfaces will kick of a transaction,
+     * dim screen until this finished to avoid flickering */
+    if (configure_sent &&
+        !priv->modeset_shield &&
+        !phoc_output_shield_is_raised (priv->shield)) {
+      phoc_output_raise_shield (self);
+      priv->modeset_shield = TRUE;
+    }
   }
 
   if (event->state->committed & (WLR_OUTPUT_STATE_ENABLED |
@@ -2032,7 +2071,7 @@ phoc_output_has_frame_callbacks (PhocOutput *self)
  * the outputs current content.
  */
 void
-phoc_output_lower_shield (PhocOutput *self)
+phoc_output_lower_shield (PhocOutput *self, PhocEasing easing, guint duration)
 {
   PhocOutputPrivate *priv;
 
@@ -2042,6 +2081,8 @@ phoc_output_lower_shield (PhocOutput *self)
   if (priv->shield == NULL)
     return;
 
+  phoc_output_shield_set_easing (priv->shield, easing);
+  phoc_output_shield_set_duration (priv->shield, duration);
   phoc_output_shield_lower (priv->shield);
 }
 
