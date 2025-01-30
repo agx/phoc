@@ -61,6 +61,8 @@ struct _PhocView {
 
   PhocDesktop *desktop;
 
+  /* (x, y): surface position in layout coordinates
+   * (width, height): geometry width and height */
   struct wlr_box box;
   struct wlr_box saved;
 
