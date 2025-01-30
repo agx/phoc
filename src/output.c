@@ -1679,21 +1679,18 @@ damage_whole_view (PhocOutput *self, PhocView  *view)
   }
 }
 
-
 /**
  * phoc_output_damage_from_view:
  * @self: The output to add damage to
  * @view: The view providing the damage
- * @whole: Whether
+ * @whole: Whether to damage the whole view
  *
  * Adds a [type@PhocView]'s damage to the damaged area of @self. If
- * @whole is %TRUE the whole view is damaged (including any window
- * decorations if they exist). If @whole is %FALSE only buffer damage
- * is taken into account.
- * Also schedules a new frame.
+ * `whole` is `TRUE` the whole surface area is explicitly damaged.
+ * Otherwise only already present damage is collected.
  */
 void
-phoc_output_damage_from_view (PhocOutput *self, PhocView  *view, bool whole)
+phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole)
 {
   if (!phoc_view_accept_damage (self, view)) {
     return;
