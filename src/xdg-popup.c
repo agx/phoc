@@ -69,7 +69,6 @@ popup_unconstrain (PhocXdgPopup* self)
 {
   PhocView *view = phoc_view_child_get_view (PHOC_VIEW_CHILD (self));
   struct wlr_box geom;
-  struct wlr_box output_box;
   struct wlr_box usable_area;
   PhocOutput *output;
 
@@ -83,10 +82,9 @@ popup_unconstrain (PhocXdgPopup* self)
     return;
   }
 
-  wlr_output_layout_get_box (view->desktop->layout, output->wlr_output, &output_box);
   usable_area = output->usable_area;
-  usable_area.x += output_box.x;
-  usable_area.y += output_box.y;
+  usable_area.x += output->lx;
+  usable_area.y += output->ly;
 
   /* the output box expressed in the coordinate system of the toplevel parent
    * of the popup */
