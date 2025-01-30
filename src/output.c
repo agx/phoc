@@ -1731,26 +1731,26 @@ phoc_output_damage_from_drag_icon (PhocOutput *self, PhocDragIcon *icon)
                                         damage_surface_iterator, &whole);
 }
 
-void
-phoc_output_damage_whole_surface (PhocOutput         *self,
-                                  struct wlr_surface *surface,
-                                  double              ox,
-                                  double              oy)
-{
-  bool whole = true;
-
-  phoc_output_surface_for_each_surface (self, surface, ox, oy,
-                                        damage_surface_iterator, &whole);
-}
-
+/**
+ * phoc_output_damage_from_surface:
+ * @self: The output to add damage to
+ * @wlr_surface: The wlr_surface providing the damage
+ * @ox: x coordinate of the surface in output local coordinates
+ * @oy: y coordinate of the surface in output local coordinates
+ * @whole: Whether to damage the hole surface
+ *
+ * Adds a surface's damage to the damaged area of @self. If `whole`
+ * is `TRUE` the whole surface area is explicitly damaged. Otherwise
+ * only already present damage is collected.
+ */
 void
 phoc_output_damage_from_surface (PhocOutput         *self,
                                  struct wlr_surface *wlr_surface,
                                  double              ox,
-                                 double              oy)
-{
-  bool whole = false;
+                                 double              oy,
+                                 gboolean            whole)
 
+{
   phoc_output_surface_for_each_surface (self, wlr_surface, ox, oy,
                                         damage_surface_iterator, &whole);
 }

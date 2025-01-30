@@ -394,10 +394,11 @@ phoc_view_child_damage_whole (PhocViewChild *self)
   wl_list_for_each (output, &desktop->outputs, link) {
     struct wlr_box output_box;
     wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
-    phoc_output_damage_whole_surface (output,
-                                      priv->wlr_surface,
-                                      root_box.x + sx - output_box.x,
-                                      root_box.y + sy - output_box.y);
+    phoc_output_damage_from_surface (output,
+                                     priv->wlr_surface,
+                                     root_box.x + sx - output_box.x,
+                                     root_box.y + sy - output_box.y,
+                                     TRUE);
   }
 }
 

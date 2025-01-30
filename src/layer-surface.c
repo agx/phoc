@@ -252,19 +252,22 @@ handle_surface_commit (struct wl_listener *listener, void *data)
 
   bool geo_changed = memcmp (&old_geo, &self->geo, sizeof (struct wlr_box)) != 0;
   if (geo_changed || layer_changed) {
-    phoc_output_damage_whole_surface (output,
-                                      wlr_layer_surface->surface,
-                                      old_geo.x,
-                                      old_geo.y);
-    phoc_output_damage_whole_surface (output,
-                                      wlr_layer_surface->surface,
-                                      self->geo.x,
-                                      self->geo.y);
+    phoc_output_damage_from_surface (output,
+                                     wlr_layer_surface->surface,
+                                     old_geo.x,
+                                     old_geo.y,
+                                     TRUE);
+    phoc_output_damage_from_surface (output,
+                                     wlr_layer_surface->surface,
+                                     self->geo.x,
+                                     self->geo.y,
+                                     TRUE);
   } else {
     phoc_output_damage_from_surface (output,
                                      wlr_layer_surface->surface,
                                      self->geo.x,
-                                     self->geo.y);
+                                     self->geo.y,
+                                     FALSE);
   }
 
   /* Exclusive zone changes affect the surface ordering in a layer */
@@ -332,10 +335,11 @@ handle_map (struct wl_listener *listener, void *data)
   self->new_subsurface.notify = handle_new_subsurface;
   wl_signal_add (&wlr_layer_surface->surface->events.new_subsurface, &self->new_subsurface);
 
-  phoc_output_damage_whole_surface (output,
-                                    wlr_layer_surface->surface,
-                                    self->geo.x,
-                                    self->geo.y);
+  phoc_output_damage_from_surface (output,
+                                   wlr_layer_surface->surface,
+                                   self->geo.x,
+                                   self->geo.y,
+                                   TRUE);
 
   phoc_utils_wlr_surface_enter_output (wlr_layer_surface->surface, output->wlr_output);
 
