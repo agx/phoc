@@ -1705,6 +1705,24 @@ phoc_output_damage_from_view (PhocOutput *self, PhocView  *view, bool whole)
   phoc_output_view_for_each_surface (self, view, damage_surface_iterator, &whole);
 }
 
+/**
+ * phoc_output_damage_from_layer_surface:
+ * @self: The output to add damage to
+ * @layer_surface: The layer surface providing the damage
+ * @whole: Whether to damage the whole surface
+ *
+ * Adds a [type@PhocLayerSurface]'s damage to the damaged area of
+ * @self. If `whole` is `TRUE` the whole surface area is explicitly
+ * damaged. Otherwise only already present damage is collected.
+ */
+void
+phoc_output_damage_from_layer_surface (PhocOutput       *self,
+                                       PhocLayerSurface *layer_surface,
+                                       gboolean          whole)
+{
+  phoc_output_layer_surface_for_each_surface (self, layer_surface, damage_surface_iterator, &whole);
+}
+
 void
 phoc_output_damage_whole_drag_icon (PhocOutput *self, PhocDragIcon *icon)
 {

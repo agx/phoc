@@ -159,10 +159,9 @@ phoc_layer_surface_apply_damage (PhocLayerSurface *self)
   if (!wlr_output)
     return;
 
-  phoc_output_damage_from_surface (PHOC_OUTPUT (wlr_output->data),
-                                   wlr_layer_surface->surface,
-                                   self->geo.x,
-                                   self->geo.y);
+  phoc_output_damage_from_layer_surface (PHOC_OUTPUT (wlr_output->data),
+                                         self,
+                                         FALSE);
 }
 
 
@@ -179,10 +178,9 @@ phoc_layer_surface_damage_whole (PhocLayerSurface *self)
   if (!wlr_output)
     return;
 
-  phoc_output_damage_whole_surface (PHOC_OUTPUT (wlr_output->data),
-                                    wlr_layer_surface->surface,
-                                    self->geo.x,
-                                    self->geo.y);
+  phoc_output_damage_from_layer_surface (PHOC_OUTPUT (wlr_output->data),
+                                         self,
+                                         TRUE);
 }
 
 
