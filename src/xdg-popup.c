@@ -68,32 +68,14 @@ static void
 popup_unconstrain (PhocXdgPopup* self)
 {
   PhocView *view = phoc_view_child_get_view (PHOC_VIEW_CHILD (self));
-  struct wlr_box geom;
-  struct wlr_box usable_area;
-  PhocOutput *output;
+  struct wlr_box output_toplevel_sx_box;
+  gboolean ret;
 
-  phoc_view_get_geometry (view,  &geom);
-  output = phoc_desktop_layout_get_output (view->desktop,
-                                           view->box.x + geom.x,
-                                           view->box.y + geom.y);
-  if (output == NULL) {
-    g_warning ("No output found for view %p at %d,%d", view, view->box.x, view->box.y);
+  ret = phoc_view_get_popup_unconstrain_region (view, &output_toplevel_sx_box);
+  if (!ret) {
     wlr_xdg_surface_schedule_configure (self->wlr_popup->base);
     return;
   }
-
-  usable_area = output->usable_area;
-  usable_area.x += output->lx;
-  usable_area.y += output->ly;
-
-  /* the output box expressed in the coordinate system of the toplevel parent
-   * of the popup */
-  struct wlr_box output_toplevel_sx_box = {
-    .x = usable_area.x - view->box.x,
-    .y = usable_area.y - view->box.y,
-    .width = usable_area.width,
-    .height = usable_area.height,
-  };
 
   wlr_xdg_popup_unconstrain_from_box (self->wlr_popup, &output_toplevel_sx_box);
 }
