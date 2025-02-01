@@ -1,3 +1,20 @@
+phoc 0.45~beta1
+---------------
+Released February 2025
+* Use wlroots 0.18.x API (currently 0.18.2)
+* Support xdg-shell's surface suspend for fully occluded windows
+  (e.g. when screen is locked)
+* Smoothen output mode/scale/transform changes
+* Fix touch point and damage tracking debugging
+* Allow to enable/disable touch point and damage tracking debugging at
+  runtime
+* Lots of internal modernization, cleanup and robustness fixes
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phosh/-/issues/1161
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/389
+* Contributors:
+    * Guido Günther
+
 phoc 0.44.0
 -----------
 Released December 2024
