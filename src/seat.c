@@ -680,22 +680,20 @@ phoc_seat_handle_request_start_drag (struct wl_listener *listener, void *data)
 {
   PhocSeat *seat = wl_container_of (listener, seat, request_start_drag);
   struct wlr_seat_request_start_drag_event *event = data;
+  struct wlr_touch_point *point;
 
-  if (wlr_seat_validate_pointer_grab_serial (seat->seat,
-                                             event->origin, event->serial)) {
+  if (wlr_seat_validate_pointer_grab_serial (seat->seat, event->origin, event->serial)) {
     wlr_seat_start_pointer_drag (seat->seat, event->drag, event->serial);
     return;
   }
-
-  struct wlr_touch_point *point;
 
   if (wlr_seat_validate_touch_grab_serial (seat->seat, event->origin, event->serial, &point)) {
     wlr_seat_start_touch_drag (seat->seat, event->drag, event->serial, point);
     return;
   }
 
-  g_debug ("Ignoring start_drag request: "
-           "could not validate pointer or touch serial %" PRIu32, event->serial);
+  g_debug ("Ignoring start_drag request: could not validate pointer or touch serial %" PRIu32,
+           event->serial);
   wlr_data_source_destroy (event->drag->source);
 }
 
