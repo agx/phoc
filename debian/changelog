@@ -1,3 +1,324 @@
+phoc (0.45~beta1) experimental; urgency=medium
+
+  * wlroots: Fix build with libliftoff 0.5. This makes bisecting a bit
+    simpler
+  * build: Switch wlroots dependency to 0.18
+  * wlroots: Update to wlroots git 2024-01-09
+  * desktop: Drop wlr_presentation member.
+    It's no longer in use as wlroots handles that internally.
+    See wlroots commit d68ba9d6c2bca6c5e9f7db1b6043d6e742b77bbd
+  * desktop: Adjust to wlr_output_layout_create signature change.
+    See wlroots commit 6a7463bb8e29c55b906dd66e2ce3625dcccbd3f4
+  * render: Adjust to moved output transform helper location.
+    See wlroots commit 9e702e9cfe73f5aae665b5847cf470e66714e64a
+  * xdg-shell: Adjust to wlroots xdg-shell signal changes.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/4345
+  * cursor: Adjust to wlroots adding support for axis_relative_direction
+  * server: Call wl_display_terminate(). Not handled by wlroots anymore.
+  * server: Adjust to wlr_backend_autocreate signature change.
+    Forward to wlroots d1b39b58432c471c16e09103fd2c7850e3c41950 for that.
+  * server: Bump to linux-dmabuf v5.
+    Forward to wlroots 435ca39960f47d622017630b28788f4dd14be757 for that.
+  * surface: New class to track wl_surfaces.
+    Needed to track surface damage that now isn't collected by wl_surface
+    anymore. See
+      7dfbd877 ("compositor: drop wlr_surface.external_damage")
+  * surface: Ensure we damage the surface on size changes.
+    Fixes parts of 7dfbd877 ("compositor: drop wlr_surface.external_damage")
+  * xdg-shell: Adjust to 'xdg-shell: drop automatic surface configuration'
+    Forward to wlroots commit
+        811ca199 ("xdg-shell: drop automatic surface configuration")
+  * treewide: Rename WLR_INPUT_DEVICE_TABLET_TOOL.
+    Catches up with wlroots commit
+      b821be57 ("input-device: unconfuse tablet naming")
+  * treewide: Adjust to removal of input device vendor/product.
+    Adjusts to wlroots commit
+      edbf8bf2 ("input-device: drop wlr_input_device.{vendor,product}")
+  * wlroots: Forward to wlroots 0.18.0
+  * cursor: Adjust to wlr_seat_touch_notify_cancel signature change.
+    See wlroots commit
+      34219b03 ("touch: make cancel functions take a wlr_seat_client")
+  * server: Adjust to removal of wlr_renderer_get_dmabuf_texture_formats.
+    See wlroots commit
+        0686666c ("render: drop wlr_renderer_get_dmabuf_texture_formats()")
+  * build: Adjust to tablet protocol becoming stable.
+    See wlroots commit
+       fe429b24 ("Switch to stable tablet-v2 protocol")
+  * render: Switch thumbnail rendering to new render API
+  * wlroots: Switch to 0.18.1
+  * cursor: Fix enum type. Spotted by clang.
+  * xwayland-surface: Don't try to restack override-redirect surfaces
+  * packaging: Ignore files from 0.18
+  * packaging: Bump wlroots version and its dependencies
+  * ci: Use newer image. This one contains the needed dependencies
+  * ci: Build Wayland. The one on Debian fails to build with clang atm
+  * desktop: Drop nested ifdef. No need for a #ifdef PHOC_XWAYLAND in a
+    block that already has the same conditional.
+  * desktop: Move XWayland setup to a separate file. Grouping XWayland
+    related things together would have prompted for some code move so
+    let's move to a separate file while at that.  This allows us to
+    minimize the #ifdef PHOC_XWAYLAND in PhocDesktop. Pure code move, no
+    other changes.
+  * desktop-xwayland: Provide stub for phoc_desktop_setup_xwayland()
+    This allows us to have a single "#ifdef PHOC_XWAYLAND" block.
+  * desktop: Move XWayland shutdown to desktop-xwayland
+  * treewide: Always provide PHOC_IS_XWAYLAND_SURFACE.
+    We simply return `FALSE` when XWayland is disabled. This eases checks
+    in different parts of the code base.
+  * xwayland-surface: Move child logic into class. We want to have the
+    XWayland surface related logic in the class rather than in generic
+    code
+  * xwayland-surface: Move has_children check into class. No need to open
+    code that either.
+  * ci: Make sure we remove wlroots headers. The dev package name changed
+    with wlroots 0.18
+  * ci: Drop PKG_ONLY. We've not used it since ages
+  * packaging: Add more optional wlroots dependencies. Moves our wlroots
+    build closer to what distros use
+  * seat: Don't init prev before asserting the type
+  * layer-shell-effects: Return in case of no memory. Otherwise we
+    dereference NULL pointers
+  * layer-shell-effects: Check for surface commit early. Otherwise we leak
+    alpha_surface when returning the error.
+  * layer-shell-effects: Free alpha_surface in error path. Otherwise we
+    leak alpha_surface when returning the error.
+  * layer-shell-effects: Check for surface commit early. Otherwise we
+    leak stacked_surface when returning the error.
+  * layer-shell-effects: Free the stacked_surface in error path.
+    Otherwise we leak stacked_surface when returning the error.
+  * device-state: Free lid_switch in error path. Otherwise we leak
+    lid_switch when returning the error.
+  * device-state: Free tablet_mode_switch in error path. Otherwise we
+    leak tablet_mode_switch when returning the error
+  * seat: Init with NULL rather than empty string. This helps static
+    analyzers along.
+  * testlib: Move flags check out of loop. We always want to check that
+    we handled all flags.
+  * output: Only perform mode test if we have a preferred mode.
+    So far we always performed an output test even when there wasn't a
+    preferred mode. Avoid this and pick a mode first in the case that
+    there's no preferred mode on the output.
+  * output: Check mode is non-NULL. We can't have NULL modes in the list
+    but let's make scan-build happy.
+  * cursor: Assert if we didn't find a layer surface. If a layer surface
+    got touched we better find it.
+  * testlib: Use memcpy. The areas can't overlap.
+  * testlib: Avoid automatic cleanup. This trips up static-analyzer and in
+    this case it's bearable to not use `g_autoptr`. Should this happen
+    more often we'd rather filter out these kind of errors.
+  * ci: Run scan-build. Let's have it on by default. If we detect too many
+    false positives we can always switch to manual builds or allow it to
+    fail.  Introduce a common before script for all clang jobs while at
+    that.  We use a small wrapper to ensure the scan's exit status is
+    reported, scan-build by default reports the build jobs exit status.
+  * ci: Disable coverage in clang builds. We don't use the output as it
+    doesn't cover more than the gcc build.
+  * ci: Add clang to ci image and use it. Save CI resources as we'd
+    otherwise install it two times during every build.
+  * layer-surface: Don't arrange surfaces / set focus on finalize.
+    This already happens on unmap and if we do it in `finalize()` (triggered
+    via `handle_destroy()` we might end up in situations where some of the
+    destroy handlers already ran but others (e.g. from
+    `PhocStackableLayerSurfce`) didn't. wlroots guarantees that a layer
+    surface is unmapped before destroy so this should be safe to do.
+    Thanks to Sam Day for the nicer reproducer.
+    Closes: https://gitlab.gnome.org/World/Phosh/phosh/-/issues/1161
+  * packaging: Use packaged gmobile. No need to pull it from git.
+  * output: Modernize props and signals. Follow current style. No need to
+    explicit-notify props as they're construct only and hence will be set
+    only once.
+  * layer-shell: Use G_N_ELEMENTS
+  * testlib: Use g_timeout_add_seconds_once()
+  * wlroots: Switch to 0.18.2
+  * desktop: Document phoc_desktop_view_is_visible()
+  * desktop: Fix return values of phoc_desktop_view_is_visible(). We
+    claim that the function returns `gboolean` not `bool` so adjust the
+    returned values to that.
+  * desktop: Modernize phoc_desktop_view_is_visible(). Use C style
+    comments and drop superfluous braces.
+  * layer-surface: Add "covers output" check. Add a helper to check if a
+    layer surface fully covers the output it is on.
+  * view: Cache visibility. Cache the result from
+    `phoc_desktop_view_is_visible()`. Since this function now has side
+    effects and doesn't check if the surface is actually visible but
+    performs a "certainly invisible" check we rename it to
+    `phoc_desktop_view_check_visibility()`.
+  * desktop: Use for loop in phoc_desktop_view_check_visibility()
+    This is easier to read.
+  * view: Move send_frame_done_if_not_visible to xdg-surface.
+    This commit is the mere code move
+  * xdg-surface: Safe one indent level in send_frame_done_if_not_visible()
+  * xdg-surface: Send frame-done when Wayland event loop becomes idle.
+    We send the frame.done events to make clients catch up on xdg.configure
+    events. However wlroots uses an idle callback for the later so if we
+    send them right away they arrive at the client *after* the synthesized
+    frame.done event (and hence ignored by the client).
+    This can e.g. be seen in GTK4 clients where the surface state is only
+    updated in `gdk_frame_clock_get_refresh_info` which won't run if
+    there's no frame.done event after the receiving the new state.
+    Thus delay the frame.done event until the Wayland event loop becomes
+    idle as well.
+  * desktop: Bump xdg-shell version. Needed for surface suspension.
+  * view: Add and use set_suspended() virtual function.
+    As per xdg-shell protocol a suspended surface is fully occluded and thus
+    can stop any drawing operations. We toggle the state whenever we update
+    the view's visibility but delay suspension to avoid too quick
+    suspend/resume cycles which e.g. might video players stutter when
+    the window is obscured and made visible again quickly (e.g. on window
+    cycling) as they need to refill their hw-decoder queue).
+    Since clients like GTK send the `ack_configure` but only emit the state
+    change internally on the next frame clock we make sure we send at least
+    one other frame done event in `set_suspended`.
+    We additionally check visibility when the surface gets activated to make
+    sure the surface is taken out of/into suspension when that happens.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/389
+  * desktop: Take locksreens into account when checking visibility.
+    If the overlay layer has a surface covering the whole screen
+    we can't have any visible views.
+  * cursor: Move touch point into its own file. We have more code around
+    touch points.
+  * cursor: Move initialization and finalizing to touch point
+  * cursor: Allow to get touch points
+  * treewide: Use cursor's list of touch points.
+    Let's not track them twice. This unclutters the cursor code as we free
+    it from damage tracking and will allow us to deduplicate the code
+    further.
+  * touch-point: Move output box getter here. The code will be useful for
+    in follow up commits
+  * touch-point: Move all damage tracking here. This ensures we damage the
+    same area in both damaging functions and use the simpler
+    wlr_damage_ring_add_box() rather than wlr_damage_ring_add(). Properly
+    submit new frames when we add damage.
+  * touch-point: Move rendering here. This allow us to make some functions
+    static again and makes the layout match what we do for blings.
+  * touch-point: Add update method
+  * touch-point: Damage when updating and destroying touch points.
+    This makes sure they get cleared properly again
+  * touch-point: Reduce number of debug flag checks.
+    For damage tracking move them into the damage tracking function.
+    For rendering we assume that the renderer only invokes us if needed,
+    assert if that is not the case.
+  * touch-point: Make it a boxed type.
+    This allows us to have it in the type system and e.g. use it as types
+    for properties but for the moment it makes the doc build happy.
+  * timed-animation: Install properties after their definition.
+    Having it past the signals is confusing. Modernize indent while at that.
+  * output-shield: Move initial setup to init() This way we can drop
+    constructed but more importantly just use property setters to tweak
+    values.
+  * output-shield: Don't leak animation. Minor indent cleanup while at
+    that.
+  * output-shield: Allow to set easing function. Make the shield useful in
+    more situations
+  * desktop: Tighten visibility check. Although the surface might cover
+    the full screen it might still have transparent regions (which is
+    e.g. the case for phosh's modal dialogs). So make sure the surface is
+    fully opaque.
+    Fixes: 27ed97295 ("desktop: Take lockscreens into account when checking visibility")
+  * layer-surface: Save one indent level. Use C style comments while at that.
+  * layer-surface: Invalidate layer surface lists less often.
+    It is sufficient if we invalidate the list when the surfaces changes
+    layers or exclusive zone (which can affect the ordering within a layer).
+    This makes us hit the fast path in
+      `phoc_output_get_layer_surfaces_for_layer()``
+    way more often as we don't invalidate on every commit.
+  * layer-shell-effects: Clamp alpha values to [0.0, 1.0]
+  * view: Name timer. Useful for debugging.
+    Fixes 01754f736 ("view: Add and use set_suspended() virtual function")
+  * build: Bump pixman dependency `pixman_region32_empty()` reads so much
+    nicer than `!pixman_region32_not_empty()`.
+    We bump to 0.43.x rather than 0.44 since alpine doesn't have 0.44 yet.
+  * output: Use wlr_output_state_set_damage. Don't manipulate output state
+    directly but use the provided setter.
+  * output: Rerender if we fail to submit the rendering job
+  * render: Fix debug damage tracking. We need to calculate and submit the
+    areas to render for debugging before setting the damage via
+    `wlr_output_state_set_damage()` (as otherwise it will be rendered to
+    the output buffer but the output state doesn't know giving artifacts
+    when flipping in older buffers again). We can also simplify the
+    rendering by making use of use `wlr_render_pass_add_rect()`'s
+    clip_rect to set the damage area rather than splitting it into rects
+    manually. We also change from subtracting damage from the previous
+    frame highlight damaged areas to highlighting the damaged area.
+  * render: Take geometry into account when rendering to a buffer.
+    Otherwise e.g. thumbnails of floating windows with drop shadow are cut
+    off.
+    Fixes a51f7cd13 ("render: Switch thumbnail rendering to new render API")
+  * dir-locals: Set indicator column. Makes indenting a bit simpler
+  * idle-inhibit: Don't access server when async call got cancelled.
+    Make sure we access the server singleton only when async call was
+    successful. Otherwise we might recreate the singleton on shutdown (which
+    can happen in tests).
+  * server: Don't set mainloop twice. We set it a couple of lines upwards
+    already
+  * server: Make debug flags a property. This eases getting notified about
+    changes. For that make sure we generate the enum types.
+  * server: Set debug flags as early as possible.
+    Now that we have a setter anyway, split that out of setup().
+  * debug-control: New interface to control debug settings. It's nice when
+    we can enable things like damage tracking dynamically
+  * server: Instantiate debug control object
+  * docs: Document debug control interface
+  * output: Allow to set fade out easing
+  * output-shield: Allow to set animation duration
+  * output-shield: Allow to check if shield is raised
+  * layer-shell: Only rearrange views when usable area changed.
+    No need to iterate over all views when nothing changed
+  * layout-transactions: Track layout changes. This object tracks whether
+    all clients that got notified about layout changes via configure
+    events have committed their new buffers.  We currently only do the
+    tracking and only for layer surfaces as we want to initially use that
+    for mode changes. We'll add handling of views and buffer tracking (to
+    render the old buffers while the transaction is processing) as follow
+    ups.
+  * layer-surface: Notify transaction about configure events.  We notify
+    the transaction system when we send a `configure` event to a layer
+    surface (potentially kicking off a new transaction). This will later
+    on allow us to render the current buffers while the transaction is
+    ongoing.
+    When a layer surface client commits a new buffer we check if the
+    corresponding ack'ed configure serial is recent enough and if so,
+    inform the transaction system that we have a recent enough buffer for
+    this layer-surface.
+  * layer-shell: Let arrange return if configure events were sent.
+    This allows callers to figure out if a layout transaction is ongoing.
+  * output: Show shield when rearranging layers due to mode change.  When
+    the output geometry changes (due to a new mode, transform or scale
+    change) layer surfaces need to commit new buffers to match the screen.
+    Since we don't want to render non matching buffers on the new output
+    buffer we blank the screen until we received all the needed buffers
+    (or the transaction times out).
+  * wlroots: Backport MR 4973. Touch point tracking was broken.
+  * cursor: Capture serials from touch up events too
+    wlroots commit
+      75ecba44 ("seat: add serials to touch up events")
+    added serials to touch up events too.
+  * output: Drop surface width and height from PhocOutputSurfaceIteratorData.
+    It's unused and just causes confusion about whether that is the actual
+    surface width (which e.g. for views wasn't true).
+  * surface: Add helpers to add and clear damage. This allows
+    e.g. subsurface to track the damage needed due to e.g. moves too.
+  * surface: Don't clear damage on commit. This ensures we don't clear
+    damage added by other means. E.g. for subsurfaces we can have damage
+    added via the subsurface or the surface.  Let the damage iterator on
+    the output clear the external damage instead.
+  * subsurface: Setup subsurface on property assignment. This allows us
+    to drop `constructed` and make things similar to `PhocSurface`.
+  * subsurface: Set subsurface to NULL on finalize.
+    This makes any use after free a more obvious crash
+  * subsurface: Track "external" damage due to moves and stacking changes.
+    Track damage triggered by subsurfaces changing their position in the list
+    of above/below subsurfaces and due to moves relative to the parent
+    surface.
+    Fixes parts of wlroot's 7dfbd877 ("compositor: drop wlr_surface.external_damage")
+  * layer-shell: Track "external" subsurface damage.
+    Track damage incurred by subsurface changing their position in the list
+    of above/below subsurfaces and due to moves relative to the parent
+    surface. This is the same as for view childs.
+    Fixes parts of wlroot's 7dfbd877 ("compositor: drop wlr_surface.external_damage")
+
+ -- Guido Günther <agx@sigxcpu.org>  Sat, 01 Feb 2025 13:09:25 +0100
+
 phoc (0.44.0) experimental; urgency=medium
 
   * ci: Don't wipe libwlroots-dev.
