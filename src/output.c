@@ -115,7 +115,6 @@ typedef struct {
 
   PhocOutput          *output;
   double               ox, oy;
-  int                  width, height;
   float                scale;
 } PhocOutputSurfaceIteratorData;
 
@@ -168,6 +167,16 @@ phoc_debug_damage_region_destroy (PhocDebugDamageRegion *damage)
 
 /**
  * get_surface_box:
+ * @data: The output iterator data
+ * @wlr_surface: The surface
+ * @sx: x coordinate of a offset in surface local coordinates
+ * @sy: y coordinate of a offset in surface local coordinates
+ * @surface_box: The box in output local coordinates taking the surface size and sx, sy
+ *   into account.
+ *
+ * Build a box at `(sx, sy)` in surface's coordinates system
+ * transformed to the output coordinate system using the passed in
+ * iterator data.
  *
  * Returns: `true` if the resulting box intersects with the output
  */
@@ -1184,8 +1193,6 @@ phoc_output_surface_for_each_surface (PhocOutput          *self,
     .output = self,
     .ox = ox,
     .oy = oy,
-    .width = wlr_surface->current.width,
-    .height = wlr_surface->current.height,
     .scale = 1.0
   };
 
@@ -1218,8 +1225,6 @@ phoc_output_xdg_surface_for_each_surface (PhocOutput             *self,
     .output = self,
     .ox = ox,
     .oy = oy,
-    .width = xdg_surface->surface->current.width,
-    .height = xdg_surface->surface->current.height,
     .scale = 1.0
   };
 
@@ -1254,8 +1259,6 @@ phoc_output_view_for_each_surface (PhocOutput          *self,
     .output = self,
     .ox = view->box.x - output_box.x,
     .oy = view->box.y - output_box.y,
-    .width = view->box.width,
-    .height = view->box.height,
     .scale = phoc_view_get_scale (view)
   };
 
@@ -1626,6 +1629,7 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
   pixman_region32_init (&damage);
   wlr_surface_get_effective_damage (wlr_surface, &damage);
   pixman_region32_union (&damage, &damage, phoc_surface_get_damage (surface));
+  phoc_surface_clear_damage (surface);
 
   wlr_region_scale (&damage, &damage, scale);
   wlr_region_scale (&damage, &damage, self->wlr_output->scale);

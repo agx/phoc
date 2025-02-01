@@ -43,8 +43,6 @@ handle_commit (struct wl_listener *listener, void *data)
   PhocSurface *self = wl_container_of (listener, self, commit);
   struct wlr_surface *wlr_surface = self->wlr_surface;
 
-  pixman_region32_clear (&self->damage);
-
   if (wlr_surface->previous.width == wlr_surface->current.width &&
       wlr_surface->previous.height == wlr_surface->current.height &&
       wlr_surface->current.dx == 0 && wlr_surface->current.dy ==  0)
@@ -179,4 +177,53 @@ phoc_surface_get_damage (PhocSurface *self)
   g_assert (PHOC_IS_SURFACE (self));
 
   return &self->damage;
+}
+
+
+void
+phoc_surface_clear_damage (PhocSurface *self)
+{
+  g_assert (PHOC_IS_SURFACE (self));
+
+  pixman_region32_clear (&self->damage);
+}
+
+/**
+ * phoc_surface_add_damage:
+ * @self: The to be damaged surface
+ * @damage: The region in surface local coordinates
+ *
+ * Adds the given region to the surface's damaged region. The damage
+ * will be collected by the `phoc_*_apply_damage()` functions. The
+ * damaged region is not clipped to the surface.
+ *
+ * This is used to add damage triggered by e.g. surface moves or
+ * unmaps (as opposed to buffer damage submitted by the client).
+ */
+void
+phoc_surface_add_damage (PhocSurface *self, pixman_region32_t *damage)
+{
+  g_assert (PHOC_IS_SURFACE (self));
+
+  pixman_region32_union (&self->damage, &self->damage, damage);
+}
+
+/**
+ * phoc_surface_add_damage_box:
+ * @self: The to be damaged surface
+ * @box: The box in surface local coordinates
+ *
+ * Convenience function to add a box to the surface's damaged region.
+ * See [method@Surface.add_damage] for details.
+ */
+void
+phoc_surface_add_damage_box (PhocSurface *self, struct wlr_box *box)
+{
+  pixman_region32_t damage;
+
+  g_assert (PHOC_IS_SURFACE (self));
+
+  pixman_region32_init_rect (&damage, box->x, box->y, box->width, box->height);
+  phoc_surface_add_damage (self, &damage);
+  pixman_region32_fini (&damage);
 }

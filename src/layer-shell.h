@@ -44,6 +44,13 @@ struct _PhocLayerSubsurface {
     PhocLayerPopup      *parent_popup;
     PhocLayerSubsurface *parent_subsurface;
   };
+  struct PhocPrevious {
+    gint32 x;
+    gint32 y;
+    struct wl_list *prev;
+    struct wl_list *next;
+  }                      previous;
+
   struct wl_list link;
 
   struct wlr_subsurface *wlr_subsurface;
@@ -52,6 +59,7 @@ struct _PhocLayerSubsurface {
   struct wl_listener destroy;
   struct wl_listener commit;
   struct wl_listener new_subsurface;
+  struct wl_listener parent_commit;
   struct wl_list subsurfaces; // phoc_layer_subsurface::link
 };
 
