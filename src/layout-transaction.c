@@ -35,7 +35,7 @@ static GParamSpec *props[PROP_LAST_PROP];
 struct _PhocLayoutTransaction {
   GObject               parent;
 
-  guint64               starttime;
+  gint64                starttime;
   guint                 pending_configures;
   guint                 timer_id;
 };
@@ -196,7 +196,7 @@ phoc_layout_transaction_add_dirty (PhocLayoutTransaction *self)
 void
 phoc_layout_transaction_notify_configured (PhocLayoutTransaction *self)
 {
-  guint64 now;
+  gint64 now;
 
   g_assert (PHOC_IS_LAYOUT_TRANSACTION (self));
 
@@ -210,7 +210,7 @@ phoc_layout_transaction_notify_configured (PhocLayoutTransaction *self)
 
   /* All outstanding configures committed buffers */
   now = g_get_monotonic_time ();
-  g_debug ("Layout transaction finished after %ldms", (now - self->starttime) / 1000);
+  g_debug ("Layout transaction finished after %" G_GINT64_FORMAT "ms", (now - self->starttime) / 1000);
   g_clear_handle_id (&self->timer_id, g_source_remove);
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVE]);
 
