@@ -3,7 +3,6 @@ include:
    ref: '891d0bd56c7288e8998c313426cf36a61e238a4e'
    file: '/ci/phosh-common-jobs.yml'
  - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/d03cddbcff35f26861429fc816c00323f48e99af/templates/ci-fairy.yml'
-
 stages:
  - build
  - test+docs
@@ -48,6 +47,7 @@ variables:
         xcb-util-wm-dev libseat-dev hwdata-dev libdisplay-info-dev
   XVFB_RUN: xvfb-run -s -noreset
   DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2025-01-05.1
+  SID_PKGS: libwayland-dev
 
 .build: &build
   script:
@@ -60,15 +60,12 @@ variables:
   - rm -f ../* || true
   # Don't accidentally pull in system wlroots headers
   - eatmydata apt-get -y remove --purge "libwlroots-.*dev"
+  - if [ -n "$SID_PKGS" ]; then
+      echo "deb http://deb.debian.org/debian/ sid main" >> /etc/apt/sources.list.d/sid.list;
+      eatmydata apt-get -y update;
+      apt -y install $SID_PKGS;
+    fi
   - dpkg -l
-
-.before_script_debian_clang: &before_script_debian_clang
-  - eatmydata apt-get update
-  - git clone https://gitlab.freedesktop.org/wayland/wayland.git
-  - cd wayland &&
-    meson setup -Dtests=false -Ddocumentation=false -Ddtd_validation=false _build &&
-    meson install -C _build &&
-    cd ..
 
 .before_script_alpine: &before_script_alpine
   - apk -q add alpine-sdk
@@ -91,7 +88,7 @@ build-with-xwayland-debian-trixie-clang:
   variables:
     CC: clang
     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled --werror
-  before_script: *before_script_debian_clang
+  before_script: *before_script_debian
   <<: *build
   artifacts:
     paths:
@@ -150,7 +147,7 @@ scan-build-native-debian-trixie:
   image: ${DEBIAN_IMAGE}
   needs:
     - build-with-xwayland-debian-trixie-clang
-  before_script: *before_script_debian_clang
+  before_script: *before_script_debian
   script:
     - "SCANBUILD=${PWD}/helpers/scan-build ninja -C _build scan-build"
   artifacts:
