@@ -17,7 +17,6 @@
 #include <wayland-server-core.h>
 #include <wlr/config.h>
 #include <wlr/render/wlr_texture.h>
-#include <wlr/types/wlr_matrix.h>
 #include <phosh-private-protocol.h>
 #include <wlr-screencopy-unstable-v1-protocol.h>
 #include "server.h"

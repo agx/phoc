@@ -537,9 +537,20 @@ handle_new_output (struct wl_listener *listener, void *data)
     return;
   }
 
-  g_signal_connect_swapped (output, "output-destroyed",
-                            G_CALLBACK (on_output_destroyed),
-                            self);
+  g_signal_connect_object (output, "output-destroyed",
+                           G_CALLBACK (on_output_destroyed),
+                           self,
+                           G_CONNECT_SWAPPED);
+}
+
+
+static void
+handle_backend_destroy (struct wl_listener *listener, void *data)
+{
+  PhocDesktop *self = wl_container_of (listener, self, backend_destroy);
+
+  wl_list_remove (&self->new_output.link);
+  wl_list_remove (&self->backend_destroy.link);
 }
 
 
@@ -558,6 +569,9 @@ phoc_desktop_constructed (GObject *object)
 
   self->new_output.notify = handle_new_output;
   wl_signal_add (&wlr_backend->events.new_output, &self->new_output);
+
+  self->backend_destroy.notify = handle_backend_destroy;
+  wl_signal_add (&wlr_backend->events.destroy, &self->backend_destroy);
 
   self->layout = wlr_output_layout_create (wl_display);
   wlr_xdg_output_manager_v1_create (wl_display, self->layout);
@@ -681,8 +695,7 @@ phoc_desktop_finalize (GObject *object)
 
   g_clear_pointer (&priv->views, g_queue_free);
 
-  /* TODO: currently destroys the backend before the desktop */
-  //wl_list_remove (&self->new_output.link);
+  wl_list_remove (&priv->gamma_control_set_gamma.link);
   wl_list_remove (&self->layout_change.link);
   wl_list_remove (&self->xdg_shell_toplevel.link);
   wl_list_remove (&self->layer_shell_surface.link);

@@ -126,6 +126,8 @@ phoc_input_finalize (GObject *object)
 {
   PhocInput *self = PHOC_INPUT (object);
 
+  wl_list_remove (&self->new_input.link);
+
   g_clear_slist (&self->seats, g_object_unref);
 
   G_OBJECT_CLASS (phoc_input_parent_class)->finalize (object);
@@ -228,10 +230,8 @@ phoc_input_get_last_active_seat (PhocInput *self)
     PhocSeat *_seat = PHOC_SEAT (elem->data);
 
     g_assert (PHOC_IS_SEAT (_seat));
-    if (!seat || (seat->seat->last_event.tv_sec > _seat->seat->last_event.tv_sec &&
-                  seat->seat->last_event.tv_nsec > _seat->seat->last_event.tv_nsec)) {
+    if (!seat || phoc_seat_get_last_event_ts (seat) > phoc_seat_get_last_event_ts (_seat))
       seat = _seat;
-    }
   }
   return seat;
 }

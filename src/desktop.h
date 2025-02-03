@@ -69,6 +69,7 @@ struct _PhocDesktop {
   struct wlr_security_context_manager_v1 *security_context_manager_v1;
 
   struct wl_listener new_output;
+  struct wl_listener backend_destroy;
   struct wl_listener layout_change;
   struct wl_listener xdg_shell_toplevel;
   struct wl_listener layer_shell_surface;

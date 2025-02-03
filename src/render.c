@@ -37,7 +37,6 @@
 #include <wlr/render/gles2.h>
 #include <wlr/render/egl.h>
 #include <wlr/types/wlr_compositor.h>
-#include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_buffer.h>
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/util/region.h>

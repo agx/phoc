@@ -1378,7 +1378,7 @@ phoc_cursor_pointer_motion (PhocCursor              *self,
     priv->has_pointer_motion = TRUE;
     phoc_cursor_show (self);
   }
-  phoc_desktop_notify_activity (desktop, self->seat);
+  phoc_seat_notify_activity (self->seat);
 
   wlr_relative_pointer_manager_v1_send_relative_motion (desktop->relative_pointer_manager,
                                                         self->seat->seat,
@@ -1452,13 +1452,12 @@ handle_pointer_motion_absolute (struct wl_listener *listener, void *data)
 static void
 handle_pointer_button (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = wl_container_of (listener, self, button);
   struct wlr_pointer_button_event *event = data;
   PhocEventType type;
   bool is_touch = event->pointer->base.type == WLR_INPUT_DEVICE_TOUCH;
 
-  phoc_desktop_notify_activity (desktop, self->seat);
+  phoc_seat_notify_activity (self->seat);
   g_debug ("%s %d is_touch: %d", __func__, __LINE__, is_touch);
   if (!is_touch) {
     type = event->state ? PHOC_EVENT_BUTTON_PRESS : PHOC_EVENT_BUTTON_RELEASE;
@@ -1493,7 +1492,6 @@ phoc_cursor_handle_event (PhocCursor   *self,
 static void
 handle_pointer_axis (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = wl_container_of (listener, self, axis);
   struct wlr_pointer_axis_event *event = data;
   PhocCursorPrivate *priv = phoc_cursor_get_instance_private (self);
@@ -1502,7 +1500,7 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
     priv->has_pointer_motion = TRUE;
     phoc_cursor_show (self);
   }
-  phoc_desktop_notify_activity (desktop, self->seat);
+  phoc_seat_notify_activity (self->seat);
 
   send_pointer_axis (self->seat, self->seat->seat->pointer_state.focused_surface, event);
 }
@@ -1511,10 +1509,9 @@ handle_pointer_axis (struct wl_listener *listener, void *data)
 static void
 handle_pointer_frame (struct wl_listener *listener, void *data)
 {
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   PhocCursor *self = wl_container_of (listener, self, frame);
 
-  phoc_desktop_notify_activity (desktop, self->seat);
+  phoc_seat_notify_activity (self->seat);
   wlr_seat_pointer_notify_frame (self->seat->seat);
 
   // make sure to always send frame events when necessary even when bypassing seat grabs
