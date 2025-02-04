@@ -20,7 +20,7 @@ G_BEGIN_DECLS
 /**
  * PhocSwitchState:
  * @PHOC_SWITCH_STATE_OFF: Switch is off
- * @PHOC_SWITCH_STATE_ON: Swtich is on
+ * @PHOC_SWITCH_STATE_ON: Switch is on
  *
  * State of a switch (e.g. a tablet mode or lid switch).
  */

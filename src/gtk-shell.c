@@ -21,7 +21,7 @@
 /**
  * PhocGtkShell:
  *
- * A minimal implementeation of gtk_shell1 protocol
+ * A minimal implementation of gtk_shell1 protocol
  *
  * Implement enough to raise windows for GTK based applications
  * and other bits needed by gtk when the protocol is bound.

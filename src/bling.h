@@ -25,7 +25,7 @@ struct _PhocBlingInterface
    * PhocBlingInterface::get_box:
    * @self: A bilng
    *
-   * Get a minimal box in layout coordindates that contains the bling
+   * Get a minimal box in layout coordinates that contains the bling
    *
    * Returns: The box
    */
