@@ -91,9 +91,9 @@ phoc_view_child_init_subsurfaces (PhocViewChild *self, struct wlr_surface *surfa
 static bool
 phoc_view_child_is_mapped (PhocViewChild *self)
 {
-  PhocViewChildPrivate *priv =  phoc_view_child_get_instance_private (self);
-
   while (self) {
+    PhocViewChildPrivate *priv = phoc_view_child_get_instance_private (self);
+
     if (!priv->mapped)
       return false;
 
