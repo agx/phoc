@@ -79,6 +79,8 @@ typedef struct _PhocViewPrivate {
   struct wl_listener toplevel_handle_request_activate;
   struct wl_listener toplevel_handle_request_fullscreen;
   struct wl_listener toplevel_handle_request_close;
+  /* ext-foreign-toplevel-list */
+  struct wlr_ext_foreign_toplevel_handle_v1 *ext_foreign_toplevel_v1_handle;
 
   /* Subsurface and popups */
   struct wl_listener surface_new_subsurface;
@@ -207,6 +209,14 @@ view_create_foreign_toplevel_handle (PhocView *self)
 
   wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle, priv->title ?: "");
   wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle, priv->app_id ?: "");
+
+  struct wlr_ext_foreign_toplevel_handle_v1_state foreign_toplevel_state = {
+    .app_id = priv->app_id,
+    .title = priv->title,
+  };
+  priv->ext_foreign_toplevel_v1_handle =
+    wlr_ext_foreign_toplevel_handle_v1_create (desktop->ext_foreign_toplevel_list_v1,
+                                               &foreign_toplevel_state);
 }
 
 
@@ -222,6 +232,9 @@ phoc_view_destroy_toplevel_handle (PhocView *self)
   wl_list_remove (&priv->toplevel_handle_request_close.link);
   wlr_foreign_toplevel_handle_v1_destroy (priv->toplevel_handle);
   priv->toplevel_handle = NULL;
+
+  wlr_ext_foreign_toplevel_handle_v1_destroy (priv->ext_foreign_toplevel_v1_handle);
+  priv->ext_foreign_toplevel_v1_handle = NULL;
 }
 
 
@@ -1371,6 +1384,14 @@ view_set_title (PhocView *view, const char *title)
 
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle, title ?: "");
+
+  if (priv->ext_foreign_toplevel_v1_handle) {
+    struct wlr_ext_foreign_toplevel_handle_v1_state state = {
+      .app_id = priv->app_id,
+      .title = priv->title,
+    };
+    wlr_ext_foreign_toplevel_handle_v1_update_state (priv->ext_foreign_toplevel_v1_handle, &state);
+  }
 }
 
 void
@@ -1442,6 +1463,14 @@ phoc_view_set_app_id (PhocView *view, const char *app_id)
 
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle, app_id ?: "");
+
+  if (priv->ext_foreign_toplevel_v1_handle) {
+    struct wlr_ext_foreign_toplevel_handle_v1_state state = {
+      .app_id = priv->app_id,
+      .title = priv->title,
+    };
+    wlr_ext_foreign_toplevel_handle_v1_update_state (priv->ext_foreign_toplevel_v1_handle, &state);
+  }
 }
 
 
