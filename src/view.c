@@ -204,6 +204,9 @@ view_create_foreign_toplevel_handle (PhocView *self)
   wl_signal_add(&priv->toplevel_handle->events.request_close, &priv->toplevel_handle_request_close);
 
   priv->toplevel_handle->data = self;
+
+  wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle, priv->title ?: "");
+  wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle, priv->app_id ?: "");
 }
 
 
@@ -1276,10 +1279,6 @@ phoc_view_setup (PhocView *view)
                                                  phoc_view_is_fullscreen (view));
   wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle,
                                                 phoc_view_is_maximized (view));
-  wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle,
-                                            priv->title ?: "");
-  wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle,
-                                             priv->app_id ?: "");
   if (view->parent)
     toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
 
