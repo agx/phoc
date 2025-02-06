@@ -13,6 +13,8 @@
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_ext_image_capture_source_v1.h>
+#include <wlr/types/wlr_ext_image_copy_capture_v1.h>
 #include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
@@ -94,6 +96,7 @@ typedef struct _PhocDesktopPrivate {
 
   /* Protocols from wlroots */
   struct wlr_data_control_manager_v1 *data_control_manager_v1;
+  struct wlr_ext_image_copy_capture_manager_v1 *ext_image_copy_capture_manager_v1;
   struct wlr_idle_notifier_v1 *idle_notifier_v1;
   struct wlr_screencopy_manager_v1 *screencopy_manager_v1;
   struct wl_listener gamma_control_set_gamma;
@@ -656,6 +659,9 @@ phoc_desktop_constructed (GObject *object)
   self->virtual_pointer_new.notify = phoc_handle_virtual_pointer;
 
   priv->screencopy_manager_v1 = wlr_screencopy_manager_v1_create (wl_display);
+  priv->ext_image_copy_capture_manager_v1 =
+    wlr_ext_image_copy_capture_manager_v1_create (wl_display, 1);
+  wlr_ext_output_image_capture_source_manager_v1_create (wl_display, 1);
 
   self->xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create (wl_display);
   wl_signal_add (&self->xdg_decoration_manager->events.new_toplevel_decoration,
@@ -1164,6 +1170,7 @@ phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *
     global == self->ext_foreign_toplevel_list_v1->global ||
     global == priv->screencopy_manager_v1->global ||
     global == self->export_dmabuf_manager_v1->global ||
+    global == priv->ext_image_copy_capture_manager_v1->global ||
     global == self->foreign_toplevel_manager_v1->global ||
     global == self->gamma_control_manager_v1->global ||
     global == self->input_method->global ||
@@ -1173,8 +1180,7 @@ phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *
     global == self->output_power_manager_v1->global ||
     global == self->security_context_manager_v1->global ||
     global == self->virtual_keyboard->global ||
-    global == self->virtual_pointer->global
-    );
+    global == self->virtual_pointer->global);
 
   return is_priv;
 }

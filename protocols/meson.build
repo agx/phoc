@@ -7,6 +7,9 @@ wayland_scanner = find_program('wayland-scanner')
 wayland_protocols = [
   [wl_protocol_dir, 'stable/tablet/tablet-v2.xml'],
   [wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
+  [wl_protocol_dir, 'staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml'],
+  [wl_protocol_dir, 'staging/ext-image-capture-source/ext-image-capture-source-v1.xml'],
+  [wl_protocol_dir, 'staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml'],
   [wl_protocol_dir, 'unstable/pointer-constraints/pointer-constraints-unstable-v1.xml'],
   [wl_protocol_dir, 'unstable/xdg-decoration/xdg-decoration-unstable-v1.xml'],
   ['gtk-shell.xml'],
