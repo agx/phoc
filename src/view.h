@@ -59,8 +59,8 @@ typedef struct _PhocView PhocView;
 struct _PhocView {
   GObject parent_instance;
 
-  PhocDesktop *desktop;
-
+  /* (x, y): surface position in layout coordinates
+   * (width, height): geometry width and height */
   struct wlr_box box;
   struct wlr_box saved;
 
