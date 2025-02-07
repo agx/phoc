@@ -155,7 +155,7 @@ Released February 2024
 
 phoc 0.35.0
 -----------
-Released Januar 2024
+Released January 2024
 * Make using dtrace probes easy and add some useful tracing scripts
 * Fix more popup and fullscreen related issues
 * Update to wlroots 0.17.1
