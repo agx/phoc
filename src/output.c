@@ -1156,13 +1156,12 @@ phoc_output_for_each_surface_iterator (struct wlr_surface *wlr_surface,
                                        void               *_data)
 {
   PhocOutputSurfaceIteratorData *data = _data;
-
   struct wlr_box box;
-  bool intersects = get_surface_box (data, wlr_surface, sx, sy, &box);
+  bool intersects;
 
-  if (!intersects) {
+  intersects = get_surface_box (data, wlr_surface, sx, sy, &box);
+  if (!intersects)
     return;
-  }
 
   data->user_iterator (data->output, wlr_surface, &box, data->scale, data->user_data);
 }
