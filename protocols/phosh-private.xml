@@ -111,7 +111,7 @@
       <entry name="already_subscribed" value="2"
              summary="accelerator has already been subscribed to"/>
       <entry name="misc_error" value="3"
-             summary="an miscellaneous error has occured"/>
+             summary="an miscellaneous error has occurred"/>
     </enum>
     <event name="accelerator_activated_event" since="5">
       <description summary="Report an accelerator press">
@@ -154,7 +154,7 @@
 
     <event name="ungrab_success_event" since="5">
       <description summary="Report unsubscription success">
-        A previous accelerator ungrab request has suceeded.
+        A previous accelerator ungrab request has succeeded.
       </description>
       <arg name="action" type="uint" summary="The unsubscribed action"/>
     </event>

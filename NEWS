@@ -1,3 +1,16 @@
+phoc 0.45~rc1
+-------------
+Released February 2025
+* Improve popup reposition and submit less but more correct damage
+* Fix render to buffer for views with geometry with output scale
+* Backport several fixes and cleanups from our branch tracking
+  wlroots 0.19.x
+* Make `PhocViewChild` and `PhocView` a bit more boring
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/383
+* Contributors:
+    * Guido Günther
+
 phoc 0.45~beta1
 ---------------
 Released February 2025
@@ -155,7 +168,7 @@ Released February 2024
 
 phoc 0.35.0
 -----------
-Released Januar 2024
+Released January 2024
 * Make using dtrace probes easy and add some useful tracing scripts
 * Fix more popup and fullscreen related issues
 * Update to wlroots 0.17.1

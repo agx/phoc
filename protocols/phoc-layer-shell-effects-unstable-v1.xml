@@ -211,7 +211,7 @@
 
     <event name="dragged">
       <description summary="A drag is ongoing">
-        The is draging the surface.
+        The is dragging the surface.
 
         TODO: indicate drag (by user) vs slide (by compositor)
       </description>
