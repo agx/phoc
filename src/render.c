@@ -301,6 +301,10 @@ view_render_to_buffer_iterator (struct wlr_surface *surface, int sx, int sy, voi
   phoc_view_get_geometry (data->view, &geo);
   wlr_surface_get_buffer_source_box (surface, &src_box);
 
+  float src_scale = MIN (src_box.width / surface->current.width,
+                         src_box.height / surface->current.height);
+  phoc_utils_scale_box (&geo, src_scale);
+
   /* Geometry needs to be fully within the surface so we don't sample
    * out of bounds. For other cases (e.g. the geometry being extended
    * due to subsurfaces) just use the surface verbatim */
