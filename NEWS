@@ -1,3 +1,16 @@
+phoc 0.45~rc1
+-------------
+Released February 2025
+* Improve popup reposition and submit less but more correct damage
+* Fix render to buffer for views with geometry with output scale
+* Backport several fixes and cleanups from our branch tracking
+  wlroots 0.19.x
+* Make `PhocViewChild` and `PhocView` a bit more boring
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/383
+* Contributors:
+    * Guido Günther
+
 phoc 0.45~beta1
 ---------------
 Released February 2025

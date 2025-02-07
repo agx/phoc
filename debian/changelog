@@ -1,3 +1,84 @@
+phoc (0.45~rc1) experimental; urgency=medium
+
+  * ci: Use Wayland from Debian again. It's recent enough to work with clang
+  * ci: Allow to fetch packages from Debian sid.
+    Similar to what we do in phosh. We pull in wayland to fix the clang build.
+  * layout-transaction: Fix format specifier.
+    This unbreaks the build on 32bit. While at that adjust the types since
+    g_get_monotonic_time() returns uses a signed type.
+  * treewide: Drop wlr_matrix.h include.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/4971
+    This can be backported
+  * seat: Track activity on seat. This will allow us to remember the timestamp
+    of the last event.
+  * seat: Track last event timestamp on seat. wlroots will dropped support
+    in 0b720ae5 ("seat: drop last_event")
+  * view: Move destroying toplevel handle to separate method
+  * view: Move foreign toplevel handling upwards.
+    We want static methods at the top and this is a good opportunity
+  * view: Use `self` in view_create_foreign_toplevel_handle()
+    For consistency. Old code used `view` and we're cleaning it up when
+    convenient.
+  * view: Disconnect foreign toplevel listeners.
+    Ensure the signals get disconnected before destroying the object
+  * xdg-surface: Sort handlers by surface type
+  * server: Dispose input earlier.
+    Needed to disconnect the signals from the backend.
+  * input: Disconnect new_input signal
+  * desktop: Use g_signal_connect_object. Ensures outputs don't invoke
+    `output-destroyed` when the desktop is already gone on shutdown.
+  * seat: Disconnect signals when seat goes away
+  * desktop: Disconnect gamma control listener
+  * layer-shell-effects: Remove destroy listeners
+  * layer-shell-effects: Remove commit listeners
+  * desktop: Handle backend destroy.
+    This allows us to clean up properly
+  * popup: Use the output's layout coordinates. No need to get them from
+    the layout again. Easier to access and improves readability.
+  * popup: Move finding of unconstrain box to view.
+    This will make unifying layer-surface and view code simpler.
+  * view: Try harder to find a suitable popup output.
+    If the top left corner isn't on screen use another available output.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/383
+  * keybindings: Use for loop - easier to read
+  * view: Use GSList for child surfaces.
+    Will be more convenient when we clean up view childs.
+    Since the children remove themselves from the list on dispose we can't
+    use plain g_clear_slist().
+  * view-child: Add and use getter for parent
+  * view-child: Add and use getter for wlr_surface
+  * view-child: Add and use setter for mapped
+  * view: Use `self`.  No need to retrieve the view again from the child.
+  * view-child: Make it a proper derivable class.
+    This will make it simpler to extract parts common with LayerSurfaces
+    Fixes 6a7bf210a ("view: Make view-child a GObject")
+  * view-child: Simplify removal from parent. Introduce a small helper so
+    that removing a view child from another view child becomes simple.
+  * view-child: Get the correct parent. We failed to updated priv inside
+    the loop so we'd always retrieve the same parent leading to an endless
+    loop.
+    Fixes fb8bfb370 ("view-child: Make it a proper derivable class")
+  * view: Don't mention buffer damage. This tracks "external" damage too now.
+  * view: Document box coordinates. The values in there are confusing.
+  * view-child: Don't access view->desktop directly. Get it from the
+    server singleton.
+  * seat: Don't access desktop via view. Get it from the server singleton
+  * xdg-surface: Don't access desktop via view. Get it from the server
+    singleton
+  * view: Drop desktop.
+    We could consider making it private but lets just use the singleton as
+    we want to fold PhocDesktop into PhocServer anyway.
+  * render: Take scale into account when rendering to a buffer with geometry.
+    The geometry is in layout coordinates space so we need to scale it.
+    Fixes 9a88cade7 ("render: Take geometry into account when rendering to a buffer")
+  * xdg-popup: Damage old area when repositioning popup.
+    Reduce the submitted damage by only damaging the area before the popup
+    got repositioned rather than the whole view's surface tree (which didn't
+    even work for the case where the popup is outside the parent, see e.g.
+    Chatty's spell check popover in floating window mode).
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 07 Feb 2025 12:33:46 +0100
+
 phoc (0.45~beta1) experimental; urgency=medium
 
   * wlroots: Fix build with libliftoff 0.5. This makes bisecting a bit
