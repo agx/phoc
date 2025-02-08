@@ -135,6 +135,12 @@ phoc_debug_control_set_server (PhocDebugControl *self, PhocServer *server)
                                  GUINT_TO_POINTER (flag),
                                  NULL);
   }
+
+  g_object_bind_property (server,
+                          "log-domains",
+                          self,
+                          "log-domains",
+                          G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
 }
 
 
