@@ -30,6 +30,10 @@
 #include "settings.h"
 #include "server.h"
 
+
+static GLogLevelFlags wlroots_info_log_level = G_LOG_LEVEL_INFO;
+
+
 G_NORETURN static void
 print_version (void)
 {
@@ -59,7 +63,7 @@ log_glib (enum wlr_log_importance verbosity, const char *fmt, va_list args)
     level = G_LOG_LEVEL_CRITICAL;
     break;
   case WLR_INFO:
-    level = G_LOG_LEVEL_INFO;
+    level = wlroots_info_log_level;
     break;
   case WLR_DEBUG:
     level = G_LOG_LEVEL_DEBUG;
@@ -123,7 +127,7 @@ main (int argc, char **argv)
   g_autofree gchar *exec = NULL;
   PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
-  gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE;
+  gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE, verbose = FALSE;
   PhocConfig *config;
 
   setup_signals ();
@@ -137,6 +141,8 @@ main (int argc, char **argv)
      "Whether to expect a shell to attach", NULL},
     {"xwayland", 'X', 0, G_OPTION_ARG_NONE, &xwayland,
      "Whether to start XWayland", NULL},
+    {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
+     "Whether to provide more verbose output", NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &version,
      "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -152,6 +158,9 @@ main (int argc, char **argv)
 
   if (version)
     print_version ();
+
+  if (verbose)
+    wlroots_info_log_level = G_LOG_LEVEL_MESSAGE;
 
   setlocale (LC_MESSAGES, "");
   textdomain (GETTEXT_PACKAGE);
