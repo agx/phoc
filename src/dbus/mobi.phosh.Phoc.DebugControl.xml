@@ -22,6 +22,12 @@
         Whether the compositor highlights damaged areas.
     -->
     <property name="DamageTracking" type="b" access="readwrite"/>
+    <!--
+        LogDomains:
+
+        The current log domains
+    -->
+    <property name="LogDomains" type="as" access="readwrite"/>
 
   </interface>
 </node>

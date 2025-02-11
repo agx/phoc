@@ -34,6 +34,7 @@
 enum {
   PROP_0,
   PROP_DEBUG_FLAGS,
+  PROP_LOG_DOMAINS,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -53,6 +54,7 @@ typedef struct _PhocServer {
   PhocInput           *input;
   PhocConfig          *config;
   PhocServerFlags      flags;
+  GStrv                log_domains;
   PhocServerDebugFlags debug_flags;
   PhocDebugControl    *debug_control;
 
@@ -366,6 +368,9 @@ phoc_server_set_property (GObject      *object,
   case PROP_DEBUG_FLAGS:
     phoc_server_set_debug_flags (self, g_value_get_flags (value));
     break;
+  case PROP_LOG_DOMAINS:
+    phoc_server_set_log_domains (self, g_value_get_boxed (value));
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     break;
@@ -384,6 +389,9 @@ phoc_server_get_property (GObject    *object,
   switch (property_id) {
   case PROP_DEBUG_FLAGS:
     g_value_set_flags (value, phoc_server_get_debug_flags (self));
+    break;
+  case PROP_LOG_DOMAINS:
+    g_value_set_boxed (value, phoc_server_get_log_domains (self));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -433,6 +441,8 @@ phoc_server_finalize (GObject *object)
   wl_display_terminate (self->wl_display);
   g_clear_pointer (&self->wl_display, wl_display_destroy);
 
+  g_clear_pointer (&self->log_domains, g_strfreev);
+
   G_OBJECT_CLASS (phoc_server_parent_class)->finalize (object);
 }
 
@@ -457,6 +467,15 @@ phoc_server_class_init (PhocServerClass *klass)
                         PHOC_TYPE_SERVER_DEBUG_FLAGS,
                         PHOC_SERVER_DEBUG_FLAG_NONE,
                         G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PhocServer:log-domains
+   *
+   * The current log domains
+   */
+  props[PROP_LOG_DOMAINS] =
+    g_param_spec_boxed ("log-domains", "", "",
+                        G_TYPE_STRV,
+                        G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
@@ -465,9 +484,14 @@ phoc_server_class_init (PhocServerClass *klass)
 static void
 phoc_server_init (PhocServer *self)
 {
+  const char *messages_debug;
   g_autoptr (GError) err = NULL;
 
   self->dt_compatibles = gm_device_tree_get_compatibles (NULL, &err);
+
+  messages_debug = g_getenv ("G_MESSAGES_DEBUG");
+  if (messages_debug)
+    self->log_domains = g_strsplit (messages_debug, " ", -1);
 }
 
 /**
@@ -706,6 +730,48 @@ phoc_server_get_debug_flags (PhocServer *self)
   g_assert (PHOC_IS_SERVER (self));
 
   return self->debug_flags;
+}
+
+/**
+ * phoc_server_set_log_domains:
+ * @self: The server
+ * @log_domains: The log domains
+ *
+ * Set the currently enabled logging domains
+ */
+void
+phoc_server_set_log_domains (PhocServer *self, const char *const *log_domains)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  if (!self->log_domains && !log_domains)
+    return;
+
+  if (self->log_domains && log_domains &&
+      g_strv_equal ((const char *const *)self->log_domains, log_domains)) {
+    return;
+  }
+
+  g_strfreev (self->log_domains);
+  self->log_domains = g_strdupv ((GStrv)log_domains);
+
+  g_log_writer_default_set_debug_domains (log_domains);
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_LOG_DOMAINS]);
+}
+
+/**
+ * phoc_server_get_log_domains:
+ * @self: The server
+ *
+ * Get the logging domains
+ */
+const char *const *
+phoc_server_get_log_domains (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return (const char *const *)self->log_domains;
 }
 
 /**

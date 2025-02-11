@@ -28,7 +28,7 @@ pkgdatadir = prefix / datadir / meson.project_name()
 
 cc = meson.get_compiler('c')
 
-glib_ver = '2.70'
+glib_ver = '2.80'
 glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
 glib_ver_cmp = '>=@0@'.format(glib_ver)
 
