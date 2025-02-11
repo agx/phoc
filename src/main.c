@@ -30,6 +30,10 @@
 #include "settings.h"
 #include "server.h"
 
+
+static GLogLevelFlags wlroots_info_log_level = G_LOG_LEVEL_INFO;
+
+
 G_NORETURN static void
 print_version (void)
 {
@@ -44,13 +48,14 @@ setup_signals (void)
 
   /* wlroots uses this to talk to xwayland, block it before
      we spawn other threads */
-  sigemptyset(&mask);
-  sigaddset(&mask, SIGUSR1);
-  sigprocmask(SIG_BLOCK, &mask, NULL);
+  sigemptyset (&mask);
+  sigaddset (&mask, SIGUSR1);
+  sigprocmask (SIG_BLOCK, &mask, NULL);
 }
 
 static void
-log_glib(enum wlr_log_importance verbosity, const char *fmt, va_list args) {
+log_glib (enum wlr_log_importance verbosity, const char *fmt, va_list args)
+{
   int level;
 
   switch (verbosity) {
@@ -58,7 +63,7 @@ log_glib(enum wlr_log_importance verbosity, const char *fmt, va_list args) {
     level = G_LOG_LEVEL_CRITICAL;
     break;
   case WLR_INFO:
-    level = G_LOG_LEVEL_INFO;
+    level = wlroots_info_log_level;
     break;
   case WLR_DEBUG:
     level = G_LOG_LEVEL_DEBUG;
@@ -76,30 +81,22 @@ log_glib(enum wlr_log_importance verbosity, const char *fmt, va_list args) {
 
 static GDebugKey debug_keys[] =
 {
- { .key = "auto-maximize",
-   .value = PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE,
- },
- { .key = "damage-tracking",
-   .value = PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING,
- },
- { .key = "no-quit",
-   .value = PHOC_SERVER_DEBUG_FLAG_NO_QUIT,
- },
- { .key = "touch-points",
-   .value = PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS,
- },
- { .key = "layer-shell",
-   .value = PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL,
- },
- { .key = "cutouts",
-   .value = PHOC_SERVER_DEBUG_FLAG_CUTOUTS,
- },
- { .key = "disable-animations",
-   .value = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
- },
- { .key = "force-shell-reveal",
-   .value = PHOC_SERVER_DEBUG_FLAG_FORCE_SHELL_REVEAL,
- },
+  { .key = "auto-maximize",
+    .value = PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE,},
+  { .key = "damage-tracking",
+    .value = PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING,},
+  { .key = "no-quit",
+    .value = PHOC_SERVER_DEBUG_FLAG_NO_QUIT,},
+  { .key = "touch-points",
+    .value = PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS,},
+  { .key = "layer-shell",
+    .value = PHOC_SERVER_DEBUG_FLAG_LAYER_SHELL,},
+  { .key = "cutouts",
+    .value = PHOC_SERVER_DEBUG_FLAG_CUTOUTS,},
+  { .key = "disable-animations",
+    .value = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,},
+  { .key = "force-shell-reveal",
+    .value = PHOC_SERVER_DEBUG_FLAG_FORCE_SHELL_REVEAL,},
 };
 
 
@@ -109,31 +106,31 @@ parse_debug_env (void)
   const char *debugenv;
   PhocServerDebugFlags flags = PHOC_SERVER_DEBUG_FLAG_NONE;
 
-  debugenv = g_getenv("PHOC_DEBUG");
+  debugenv = g_getenv ("PHOC_DEBUG");
   if (!debugenv)
     return flags;
 
-  return g_parse_debug_string(debugenv,
-                              debug_keys,
-                              G_N_ELEMENTS (debug_keys));
+  return g_parse_debug_string (debugenv,
+                               debug_keys,
+                               G_N_ELEMENTS (debug_keys));
 }
 
 
 int
-main(int argc, char **argv)
+main (int argc, char **argv)
 {
-  g_autoptr(GOptionContext) opt_context = NULL;
-  g_autoptr(GError) err = NULL;
-  g_autoptr(GMainLoop) loop = NULL;
-  g_autoptr(PhocServer) server = NULL;
+  g_autoptr (GOptionContext) opt_context = NULL;
+  g_autoptr (GError) err = NULL;
+  g_autoptr (GMainLoop) loop = NULL;
+  g_autoptr (PhocServer) server = NULL;
   g_autofree gchar *config_path = NULL;
   g_autofree gchar *exec = NULL;
   PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
-  gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE;
+  gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE, verbose = FALSE;
   PhocConfig *config;
 
-  setup_signals();
+  setup_signals ();
 
   const GOptionEntry options [] = {
     {"config", 'C', 0, G_OPTION_ARG_STRING, &config_path,
@@ -144,6 +141,8 @@ main(int argc, char **argv)
      "Whether to expect a shell to attach", NULL},
     {"xwayland", 'X', 0, G_OPTION_ARG_NONE, &xwayland,
      "Whether to start XWayland", NULL},
+    {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
+     "Whether to provide more verbose output", NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &version,
      "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -157,9 +156,11 @@ main(int argc, char **argv)
     return 1;
   }
 
-  if (version) {
+  if (version)
     print_version ();
-  }
+
+  if (verbose)
+    wlroots_info_log_level = G_LOG_LEVEL_MESSAGE;
 
   setlocale (LC_MESSAGES, "");
   textdomain (GETTEXT_PACKAGE);
@@ -167,7 +168,7 @@ main(int argc, char **argv)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 
   debug_flags = parse_debug_env ();
-  wlr_log_init(WLR_DEBUG, log_glib);
+  wlr_log_init (WLR_DEBUG, log_glib);
   server = phoc_server_get_default ();
   if (server == NULL) {
     /* phoc_server_get_default already printed an error */
