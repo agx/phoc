@@ -185,12 +185,12 @@ phoc_layout_transaction_add_layer_dirty (PhocLayoutTransaction *self)
   self->pending_layer_configures++;
   if (pending) {
     g_debug ("Layout transaction adding %dth pending configure", self->pending_layer_configures);
-    self->starttime = g_get_monotonic_time ();
     return;
   }
 
   /* Outstanding configures. Transaction started */
   g_debug ("Starting new layout transaction");
+  self->starttime = g_get_monotonic_time ();
   self->layer_timer_id = g_timeout_add_once (TIMEOUT_LAYER_MS, on_timeout_expired, self);
   g_source_set_name_by_id (self->layer_timer_id, "[phoc] layout transaction timer");
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVE]);
