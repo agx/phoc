@@ -23,7 +23,7 @@
  * them have committed new matching buffers.
  */
 
-#define TIMEOUT_LAYER_MS 250
+#define TIMEOUT_LAYER_MS 3000
 
 enum {
   PROP_0,
@@ -50,6 +50,18 @@ apply_transaction (PhocLayoutTransaction *self)
 
 
 static void
+abort_transaction (PhocLayoutTransaction *self)
+{
+  g_return_if_fail (self->pending_layer_configures);
+
+  apply_transaction (self);
+
+  self->pending_layer_configures = 0;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVE]);
+}
+
+
+static void
 on_timeout_expired (gpointer user_data)
 {
   PhocLayoutTransaction *self = PHOC_LAYOUT_TRANSACTION (user_data);
@@ -57,7 +69,7 @@ on_timeout_expired (gpointer user_data)
   self->layer_timer_id = 0;
   g_warning ("Timeout (%dms) expired with %u configures pending",
              TIMEOUT_LAYER_MS, self->pending_layer_configures);
-  apply_transaction (self);
+  abort_transaction (self);
 }
 
 
