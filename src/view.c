@@ -79,6 +79,8 @@ typedef struct _PhocViewPrivate {
   struct wl_listener toplevel_handle_request_activate;
   struct wl_listener toplevel_handle_request_fullscreen;
   struct wl_listener toplevel_handle_request_close;
+  /* ext-foreign-toplevel-list */
+  struct wlr_ext_foreign_toplevel_handle_v1 *ext_foreign_toplevel_v1_handle;
 
   /* Subsurface and popups */
   struct wl_listener surface_new_subsurface;
@@ -204,6 +206,17 @@ view_create_foreign_toplevel_handle (PhocView *self)
   wl_signal_add(&priv->toplevel_handle->events.request_close, &priv->toplevel_handle_request_close);
 
   priv->toplevel_handle->data = self;
+
+  wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle, priv->title ?: "");
+  wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle, priv->app_id ?: "");
+
+  struct wlr_ext_foreign_toplevel_handle_v1_state foreign_toplevel_state = {
+    .app_id = priv->app_id,
+    .title = priv->title,
+  };
+  priv->ext_foreign_toplevel_v1_handle =
+    wlr_ext_foreign_toplevel_handle_v1_create (desktop->ext_foreign_toplevel_list_v1,
+                                               &foreign_toplevel_state);
 }
 
 
@@ -219,6 +232,9 @@ phoc_view_destroy_toplevel_handle (PhocView *self)
   wl_list_remove (&priv->toplevel_handle_request_close.link);
   wlr_foreign_toplevel_handle_v1_destroy (priv->toplevel_handle);
   priv->toplevel_handle = NULL;
+
+  wlr_ext_foreign_toplevel_handle_v1_destroy (priv->ext_foreign_toplevel_v1_handle);
+  priv->ext_foreign_toplevel_v1_handle = NULL;
 }
 
 
@@ -991,10 +1007,9 @@ view_center (PhocView *view, PhocOutput *output)
     struct wlr_output *wlr_output = wlr_output_layout_output_at (desktop->layout,
                                                                  cursor->cursor->x,
                                                                  cursor->cursor->y);
-    if (!wlr_output) {
-      // empty layout
+    /* empty layout */
+    if (!wlr_output)
       return false;
-    }
     output = PHOC_OUTPUT (wlr_output->data);
   }
 
@@ -1132,7 +1147,7 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
     phoc_view_appear_activated (self, true);
 
     if (phoc_desktop_has_views (desktop)) {
-      // mapping a new stack may make the old stack disappear, so damage its area
+      /* Mapping a new stack may make the old stack disappear, so damage its area */
       PhocView *top_view = phoc_desktop_get_view_by_index (desktop, 0);
       while (top_view) {
         phoc_view_damage_whole (top_view);
@@ -1277,10 +1292,6 @@ phoc_view_setup (PhocView *view)
                                                  phoc_view_is_fullscreen (view));
   wlr_foreign_toplevel_handle_v1_set_maximized (priv->toplevel_handle,
                                                 phoc_view_is_maximized (view));
-  wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle,
-                                            priv->title ?: "");
-  wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle,
-                                             priv->app_id ?: "");
   if (view->parent)
     toplevel_handle = phoc_view_get_toplevel_handle (view->parent);
 
@@ -1373,12 +1384,20 @@ view_set_title (PhocView *view, const char *title)
 
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_title (priv->toplevel_handle, title ?: "");
+
+  if (priv->ext_foreign_toplevel_v1_handle) {
+    struct wlr_ext_foreign_toplevel_handle_v1_state state = {
+      .app_id = priv->app_id,
+      .title = priv->title,
+    };
+    wlr_ext_foreign_toplevel_handle_v1_update_state (priv->ext_foreign_toplevel_v1_handle, &state);
+  }
 }
 
 void
 view_set_parent (PhocView *view, PhocView *parent)
 {
-  // setting a new parent may cause a cycle
+  /* Setting a new parent may cause a cycle */
   PhocView *node = parent;
   PhocViewPrivate *priv;
   struct wlr_foreign_toplevel_handle_v1 *toplevel_handle = NULL;
@@ -1444,6 +1463,14 @@ phoc_view_set_app_id (PhocView *view, const char *app_id)
 
   if (priv->toplevel_handle)
     wlr_foreign_toplevel_handle_v1_set_app_id (priv->toplevel_handle, app_id ?: "");
+
+  if (priv->ext_foreign_toplevel_v1_handle) {
+    struct wlr_ext_foreign_toplevel_handle_v1_state state = {
+      .app_id = priv->app_id,
+      .title = priv->title,
+    };
+    wlr_ext_foreign_toplevel_handle_v1_update_state (priv->ext_foreign_toplevel_v1_handle, &state);
+  }
 }
 
 
@@ -1551,7 +1578,7 @@ phoc_view_finalize (GObject *object)
   if (self->wlr_surface)
     phoc_view_unmap (self);
 
-  // Can happen if fullscreened while unmapped, and hasn't been mapped
+  /* Can happen if fullscreened while unmapped, and hasn't been mapped */
   if (phoc_view_is_fullscreen (self))
     priv->fullscreen_output->fullscreen_view = NULL;
 

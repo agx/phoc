@@ -10,6 +10,7 @@
 #include <time.h>
 #include <wayland-server-core.h>
 #include <wlr/config.h>
+#include <wlr/types/wlr_ext_foreign_toplevel_list_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_input_method_v2.h>
@@ -45,28 +46,29 @@ struct _PhocDesktop {
 
   struct wl_list outputs; // PhocOutput::link
 
-  struct wlr_output_layout *layout;
-  struct wlr_xdg_shell *xdg_shell;
-  struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
   struct wlr_export_dmabuf_manager_v1 *export_dmabuf_manager_v1;
-  struct wlr_server_decoration_manager *server_decoration_manager;
-  struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
-  struct wlr_primary_selection_v1_device_manager *primary_selection_device_manager;
+  struct wlr_ext_foreign_toplevel_list_v1 *ext_foreign_toplevel_list_v1;
+  struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager_v1;
+  struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
   struct wlr_idle *idle;
-  struct wlr_layer_shell_v1 *layer_shell;
   struct wlr_input_method_manager_v2 *input_method;
+  struct wlr_layer_shell_v1 *layer_shell;
+  struct wlr_output_layout *layout;
+  struct wlr_output_manager_v1 *output_manager_v1;
+  struct wlr_output_power_manager_v1 *output_power_manager_v1;
+  struct wlr_pointer_constraints_v1 *pointer_constraints;
+  struct wlr_pointer_gestures_v1 *pointer_gestures;
+  struct wlr_primary_selection_v1_device_manager *primary_selection_device_manager;
+  struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
+  struct wlr_security_context_manager_v1 *security_context_manager_v1;
+  struct wlr_server_decoration_manager *server_decoration_manager;
+  struct wlr_tablet_manager_v2 *tablet_v2;
   struct wlr_text_input_manager_v3 *text_input;
   struct wlr_virtual_keyboard_manager_v1 *virtual_keyboard;
   struct wlr_virtual_pointer_manager_v1 *virtual_pointer;
-  struct wlr_tablet_manager_v2 *tablet_v2;
-  struct wlr_pointer_constraints_v1 *pointer_constraints;
-  struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager_v1;
-  struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
-  struct wlr_pointer_gestures_v1 *pointer_gestures;
-  struct wlr_output_manager_v1 *output_manager_v1;
-  struct wlr_output_power_manager_v1 *output_power_manager_v1;
   struct wlr_xdg_activation_v1 *xdg_activation_v1;
-  struct wlr_security_context_manager_v1 *security_context_manager_v1;
+  struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
+  struct wlr_xdg_shell *xdg_shell;
 
   struct wl_listener new_output;
   struct wl_listener backend_destroy;

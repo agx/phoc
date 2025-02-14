@@ -56,6 +56,7 @@
 
 /* Maximum protocol versions we support */
 #define PHOC_FRACTIONAL_SCALE_VERSION 1
+#define PHOC_EXT_FOREIGN_TOPLEVEL_LIST_VERSION 1
 #define PHOC_XDG_SHELL_VERSION 6
 #define PHOC_LAYER_SHELL_VERSION 3
 
@@ -652,6 +653,8 @@ phoc_desktop_constructed (GObject *object)
 
   wlr_presentation_create (wl_display, wlr_backend);
   self->foreign_toplevel_manager_v1 = wlr_foreign_toplevel_manager_v1_create (wl_display);
+  self->ext_foreign_toplevel_list_v1 =
+    wlr_ext_foreign_toplevel_list_v1_create (wl_display, PHOC_EXT_FOREIGN_TOPLEVEL_LIST_VERSION);
   self->relative_pointer_manager = wlr_relative_pointer_manager_v1_create (wl_display);
   self->pointer_gestures = wlr_pointer_gestures_v1_create (wl_display);
 
@@ -1120,6 +1123,7 @@ phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *
     global == phoc_phosh_private_get_global (priv->phosh) ||
     global == phoc_layer_shell_effects_get_global (priv->layer_shell_effects) ||
     global == priv->data_control_manager_v1->global ||
+    global == self->ext_foreign_toplevel_list_v1->global ||
     global == priv->screencopy_manager_v1->global ||
     global == self->export_dmabuf_manager_v1->global ||
     global == self->foreign_toplevel_manager_v1->global ||

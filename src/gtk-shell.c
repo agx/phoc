@@ -59,19 +59,20 @@ static PhocGtkSurface *phoc_gtk_surface_from_resource (struct wl_resource *resou
 
 
 static void
-handle_set_dbus_properties(struct wl_client *client,
-                           struct wl_resource *resource,
-                           const char *application_id,
-                           const char *app_menu_path,
-                           const char *menubar_path,
-                           const char *window_object_path,
-                           const char *application_object_path,
-                           const char *unique_bus_name)
+handle_set_dbus_properties (struct wl_client   *client,
+                            struct wl_resource *resource,
+                            const char         *application_id,
+                            const char         *app_menu_path,
+                            const char         *menubar_path,
+                            const char         *window_object_path,
+                            const char         *application_object_path,
+                            const char         *unique_bus_name)
 {
   PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
   PhocView *view;
 
-  g_debug ("Setting app-id %s for surface %p (res %p)", application_id, gtk_surface->wlr_surface, resource);
+  g_debug ("Setting app-id %s for surface %p (res %p)", application_id, gtk_surface->wlr_surface,
+           resource);
   if (!gtk_surface->wlr_surface)
     return;
 
@@ -83,32 +84,36 @@ handle_set_dbus_properties(struct wl_client *client,
     phoc_view_set_app_id (view, application_id);
 }
 
+
 static void
-handle_set_modal(struct wl_client *client,
-                 struct wl_resource *resource)
+handle_set_modal (struct wl_client   *client,
+                  struct wl_resource *resource)
 {
   g_debug ("%s not implemented", __func__);
 }
 
+
 static void
-handle_unset_modal(struct wl_client *client,
+handle_unset_modal (struct wl_client   *client,
                     struct wl_resource *resource)
 {
   g_debug ("%s not implemented", __func__);
 }
 
+
 static void
-handle_present(struct wl_client *client,
-               struct wl_resource *resource,
-               uint32_t time)
+handle_present (struct wl_client   *client,
+                struct wl_resource *resource,
+                uint32_t            time)
 {
   g_debug ("%s not implemented", __func__);
 }
 
+
 static void
-handle_request_focus(struct wl_client *client,
-                     struct wl_resource *resource,
-                     const char *startup_id)
+handle_request_focus (struct wl_client   *client,
+                      struct wl_resource *resource,
+                      const char         *startup_id)
 {
   PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
   PhocSeat *seat = phoc_server_get_last_active_seat (phoc_server_get_default ());
@@ -132,19 +137,19 @@ static const struct gtk_surface1_interface gtk_surface1_impl = {
 };
 
 static void
-gtk_surface_handle_resource_destroy(struct wl_resource *resource)
+gtk_surface_handle_resource_destroy (struct wl_resource *resource)
 {
   PhocGtkSurface *gtk_surface = phoc_gtk_surface_from_resource (resource);
 
-  g_debug ("Destroying gtk_surface %p (res %p)", gtk_surface,
-           gtk_surface->resource);
+  g_debug ("Destroying gtk_surface %p (res %p)", gtk_surface, gtk_surface->resource);
+
   if (gtk_surface->wlr_surface) {
-    wl_list_remove(&gtk_surface->wlr_surface_handle_destroy.link);
+    wl_list_remove (&gtk_surface->wlr_surface_handle_destroy.link);
     gtk_surface->wlr_surface = NULL;
   }
 
   if (gtk_surface->xdg_surface) {
-    wl_list_remove(&gtk_surface->xdg_surface_handle_destroy.link);
+    wl_list_remove (&gtk_surface->xdg_surface_handle_destroy.link);
     wl_list_remove (&gtk_surface->xdg_surface_handle_configure.link);
     gtk_surface->xdg_surface = NULL;
   }
@@ -159,8 +164,7 @@ static void
 handle_wlr_surface_handle_destroy (struct wl_listener *listener,
                                    void               *data)
 {
-  PhocGtkSurface *gtk_surface =
-    wl_container_of(listener, gtk_surface, wlr_surface_handle_destroy);
+  PhocGtkSurface *gtk_surface = wl_container_of (listener, gtk_surface, wlr_surface_handle_destroy);
 
   /* Make sure we don't try to raise an already gone surface */
   gtk_surface->wlr_surface = NULL;
@@ -170,7 +174,7 @@ handle_wlr_surface_handle_destroy (struct wl_listener *listener,
 static void
 handle_xdg_surface_handle_destroy (struct wl_listener *listener, void *data)
 {
-  PhocGtkSurface *gtk_surface = wl_container_of(listener, gtk_surface, xdg_surface_handle_destroy);
+  PhocGtkSurface *gtk_surface = wl_container_of (listener, gtk_surface, xdg_surface_handle_destroy);
 
   /* Make sure we don't try to configure an already gone xdg surface */
   gtk_surface->xdg_surface = NULL;
@@ -274,67 +278,71 @@ send_configure (PhocGtkSurface *gtk_surface)
 
 
 static void
-handle_xdg_surface_handle_configure(struct wl_listener *listener,
-                                    void               *data)
+handle_xdg_surface_handle_configure (struct wl_listener *listener,
+                                     void               *data)
 {
-  PhocGtkSurface *gtk_surface = wl_container_of(listener, gtk_surface, xdg_surface_handle_configure);
+  PhocGtkSurface *gtk_surface = wl_container_of (listener, gtk_surface,
+                                                 xdg_surface_handle_configure);
 
   send_configure (gtk_surface);
 }
 
 
 static void
-handle_get_gtk_surface(struct wl_client *client,
-                       struct wl_resource *gtk_shell_resource,
-                       uint32_t id,
-                       struct wl_resource *surface_resource)
+handle_get_gtk_surface (struct wl_client   *client,
+                        struct wl_resource *gtk_shell_resource,
+                        uint32_t            id,
+                        struct wl_resource *surface_resource)
 {
   struct wlr_surface *wlr_surface = wlr_surface_from_resource (surface_resource);
   PhocGtkSurface *gtk_surface;
 
   gtk_surface = g_new0 (PhocGtkSurface, 1);
 
-  int version = wl_resource_get_version(gtk_shell_resource);
+  int version = wl_resource_get_version (gtk_shell_resource);
   gtk_surface->gtk_shell = phoc_gtk_shell_from_resource (gtk_shell_resource);
-  gtk_surface->resource = wl_resource_create(client,
-                                             &gtk_surface1_interface, version, id);
+  gtk_surface->resource = wl_resource_create (client,
+                                              &gtk_surface1_interface, version, id);
   if (gtk_surface->resource == NULL) {
     g_free (gtk_surface);
-    wl_client_post_no_memory(client);
+    wl_client_post_no_memory (client);
     return;
   }
 
   g_debug ("New gtk_surface_surface %p (res %p)", gtk_surface,
            gtk_surface->resource);
-  wl_resource_set_implementation(gtk_surface->resource,
-                                 &gtk_surface1_impl,
-                                 gtk_surface,
-                                 gtk_surface_handle_resource_destroy);
+  wl_resource_set_implementation (gtk_surface->resource,
+                                  &gtk_surface1_impl,
+                                  gtk_surface,
+                                  gtk_surface_handle_resource_destroy);
 
   gtk_surface->wlr_surface = wlr_surface;
 
   gtk_surface->wlr_surface_handle_destroy.notify = handle_wlr_surface_handle_destroy;
-  wl_signal_add(&wlr_surface->events.destroy, &gtk_surface->wlr_surface_handle_destroy);
+  wl_signal_add (&wlr_surface->events.destroy, &gtk_surface->wlr_surface_handle_destroy);
 
   gtk_surface->xdg_surface = wlr_xdg_surface_try_from_wlr_surface (wlr_surface);
   if (gtk_surface->xdg_surface) {
     gtk_surface->xdg_surface_handle_destroy.notify = handle_xdg_surface_handle_destroy;
-    wl_signal_add(&gtk_surface->xdg_surface->events.destroy, &gtk_surface->xdg_surface_handle_destroy);
+    wl_signal_add (&gtk_surface->xdg_surface->events.destroy,
+                   &gtk_surface->xdg_surface_handle_destroy);
 
     gtk_surface->xdg_surface_handle_configure.notify = handle_xdg_surface_handle_configure;
-    wl_signal_add(&gtk_surface->xdg_surface->events.configure, &gtk_surface->xdg_surface_handle_configure);
+    wl_signal_add (&gtk_surface->xdg_surface->events.configure,
+                   &gtk_surface->xdg_surface_handle_configure);
   }
 
-  wl_signal_init(&gtk_surface->events.destroy);
+  wl_signal_init (&gtk_surface->events.destroy);
 
   gtk_surface->gtk_shell->surfaces = g_slist_prepend (gtk_surface->gtk_shell->surfaces,
                                                       gtk_surface);
 }
 
+
 static void
-handle_set_startup_id(struct wl_client *client,
-                      struct wl_resource *resource,
-                      const char *startup_id)
+handle_set_startup_id (struct wl_client   *client,
+                       struct wl_resource *resource,
+                       const char         *startup_id)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
   g_debug ("%s: %s", __func__, startup_id);
@@ -347,18 +355,20 @@ handle_set_startup_id(struct wl_client *client,
   }
 }
 
+
 static void
-handle_system_bell(struct wl_client *client,
-                   struct wl_resource *resource,
-                   struct wl_resource *surface)
+handle_system_bell (struct wl_client   *client,
+                    struct wl_resource *resource,
+                    struct wl_resource *surface)
 {
   g_debug ("%s not implemented", __func__);
 }
 
+
 static void
-handle_notify_launch(struct wl_client *client,
-                     struct wl_resource *resource,
-                     const char *startup_id)
+handle_notify_launch (struct wl_client   *client,
+                      struct wl_resource *resource,
+                      const char         *startup_id)
 {
   PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
 
@@ -371,8 +381,9 @@ handle_notify_launch(struct wl_client *client,
   }
 }
 
+
 static void
-gtk_shell1_handle_resource_destroy(struct wl_resource *resource)
+gtk_shell1_handle_resource_destroy (struct wl_resource *resource)
 {
   PhocGtkShell *gtk_shell = phoc_gtk_shell_from_resource (resource);
 
@@ -381,6 +392,7 @@ gtk_shell1_handle_resource_destroy(struct wl_resource *resource)
                                          resource);
 }
 
+
 static const struct gtk_shell1_interface gtk_shell1_impl = {
   handle_get_gtk_surface,
   handle_set_startup_id,
@@ -388,19 +400,19 @@ static const struct gtk_shell1_interface gtk_shell1_impl = {
   handle_notify_launch,
 };
 
+
 static void
-gtk_shell_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
+gtk_shell_bind (struct wl_client *client, void *data, uint32_t version, uint32_t id)
 {
   PhocGtkShell *gtk_shell = data;
-  struct wl_resource *resource  = wl_resource_create(client, &gtk_shell1_interface,
-                                                     version, id);
-  wl_resource_set_implementation(resource,
-                                 &gtk_shell1_impl,
-                                 gtk_shell,
-                                 gtk_shell1_handle_resource_destroy);
+  struct wl_resource *resource;
 
-  gtk_shell->resources = g_slist_prepend (gtk_shell->resources,
-                                          resource);
+  resource = wl_resource_create (client, &gtk_shell1_interface, version, id);
+  wl_resource_set_implementation (resource,
+                                  &gtk_shell1_impl,
+                                  gtk_shell,
+                                  gtk_shell1_handle_resource_destroy);
+  gtk_shell->resources = g_slist_prepend (gtk_shell->resources, resource);
 
   gtk_shell1_send_capabilities (resource, 0);
   return;
@@ -422,20 +434,24 @@ phoc_gtk_shell_create (PhocDesktop *desktop, struct wl_display *display)
     return NULL;
 
   g_info ("Initializing gtk-shell interface");
-  gtk_shell->global = wl_global_create(display, &gtk_shell1_interface, 3, gtk_shell, gtk_shell_bind);
-
+  gtk_shell->global = wl_global_create (display,
+                                        &gtk_shell1_interface,
+                                        3,
+                                        gtk_shell,
+                                        gtk_shell_bind);
   if (!gtk_shell->global)
     return NULL;
 
   return gtk_shell;
 }
 
+
 void
 phoc_gtk_shell_destroy (PhocGtkShell *gtk_shell)
 {
   g_clear_pointer (&gtk_shell->resources, g_slist_free);
   g_clear_pointer (&gtk_shell->surfaces, g_slist_free);
-  wl_global_destroy(gtk_shell->global);
+  wl_global_destroy (gtk_shell->global);
   g_free (gtk_shell);
 }
 
@@ -447,7 +463,8 @@ phoc_gtk_shell_destroy (PhocGtkShell *gtk_shell)
  * Returns: (nullable): The `PhocGtkSurface` or `NULL`
  */
 PhocGtkSurface *
-phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell *self, struct wlr_surface *wlr_surface)
+phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell       *self,
+                                                 struct wlr_surface *wlr_surface)
 {
   g_return_val_if_fail (self, NULL);
 
@@ -461,19 +478,18 @@ phoc_gtk_shell_get_gtk_surface_from_wlr_surface (PhocGtkShell *self, struct wlr_
   return NULL;
 }
 
+
 static PhocGtkShell *
 phoc_gtk_shell_from_resource (struct wl_resource *resource)
 {
-  g_assert(wl_resource_instance_of(resource, &gtk_shell1_interface,
-                                   &gtk_shell1_impl));
-  return wl_resource_get_user_data(resource);
+  g_assert (wl_resource_instance_of (resource, &gtk_shell1_interface, &gtk_shell1_impl));
+  return wl_resource_get_user_data (resource);
 }
 
 static PhocGtkSurface *
 phoc_gtk_surface_from_resource (struct wl_resource *resource)
 {
-  g_assert(wl_resource_instance_of (resource, &gtk_surface1_interface,
-                                    &gtk_surface1_impl));
+  g_assert (wl_resource_instance_of (resource, &gtk_surface1_interface, &gtk_surface1_impl));
   return wl_resource_get_user_data (resource);
 }
 
