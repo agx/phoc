@@ -583,19 +583,21 @@ phoc_layer_surface_covers_output (PhocLayerSurface *self)
 void
 phoc_layer_surface_send_configure (PhocLayerSurface *self)
 {
+  guint32 pending_serial;
   g_assert (PHOC_IS_LAYER_SURFACE (self));
 
   /* We're not part of a transaction yet but need to */
   if (!self->pending_serial)
     phoc_layout_transaction_add_layer_dirty (phoc_layout_transaction_get_default ());
 
+  pending_serial = wlr_layer_surface_v1_configure (self->layer_surface,
+                                                   self->geo.width,
+                                                   self->geo.height);
   g_debug ("Layersurface %p: current pending serial: %d, new pending serial %d",
            self,
            self->pending_serial,
-           self->layer_surface->current.configure_serial);
-  self->pending_serial = wlr_layer_surface_v1_configure (self->layer_surface,
-                                                         self->geo.width,
-                                                         self->geo.height);
+           pending_serial);
+  self->pending_serial = pending_serial;
 }
 
 /**
