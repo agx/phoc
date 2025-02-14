@@ -1,18 +1,5 @@
-phoc 0.45~rc1
--------------
-Released February 2025
-* Improve popup reposition and submit less but more correct damage
-* Fix render to buffer for views with geometry with output scale
-* Backport several fixes and cleanups from our branch tracking
-  wlroots 0.19.x
-* Make `PhocViewChild` and `PhocView` a bit more boring
-* Issues fixed:
-    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/383
-* Contributors:
-    * Guido Günther
-
-phoc 0.45~beta1
----------------
+phoc 0.45.0
+-----------
 Released February 2025
 * Use wlroots 0.18.x API (currently 0.18.2)
 * Support xdg-shell's surface suspend for fully occluded windows
@@ -21,10 +8,17 @@ Released February 2025
 * Fix touch point and damage tracking debugging
 * Allow to enable/disable touch point and damage tracking debugging at
   runtime
+* Allow to tweak logging at runtime
+* Allow for more useful startup logging
 * Lots of internal modernization, cleanup and robustness fixes
+* Improve popup reposition and submit less but more correct damage
+* Backport several fixes and cleanups from our branch tracking
+  wlroots 0.19.x
+* Make `PhocViewChild` and `PhocView` a bit more boring
 * Issues fixed:
     * https://gitlab.gnome.org/World/Phosh/phosh/-/issues/1161
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/389
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/383
 * Contributors:
     * Guido Günther
 

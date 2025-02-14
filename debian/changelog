@@ -1,3 +1,34 @@
+phoc (0.45.0) experimental; urgency=medium
+
+  * build: Bump glib dependency to 2.80.
+    We want g_log_writer_default_set_debug_domains()
+  * server: Allow to set log domains
+  * debug-control: Allow to set and get log domains at runtime.
+  * main: Add --verbose option
+    wlroots uses `info` for informative (non-debug) messages, info log level
+    isn't printed by glib though, so allow to use `message` for it.
+    We often ask ourselves: Which renderer and which backend was in use?
+    Which GL extensions were detected. wlroots prints this on startup but it
+    is very noisy, so add an option `-v` we can add to `phosh-session` but
+    not use when people use phoc for nested testing, etc.
+  * layout-transaction: Improve naming and debug messages.
+    We want to track configure for layer surfaces and views
+    separately so add use proper naming.
+    This triggers some reindent due to the rather long names now.
+  * layout-transaction: Abort transaction on timeout.
+    So far we only printed a message. We bump the timeout while at that
+    until phosh catches up.
+  * layout-transaction: Track starttime when transaction starts.
+    We were adding it when we received additional configures
+  * layout-transaction: Simplify.
+    No need for a temporary variable to track whether this is a
+    new transaction
+  * layer-surface: Print pending configures.
+    We printed the last ack'ed configure but that is less useful than the
+    old and new pending configure.
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 14 Feb 2025 11:07:45 +0100
+
 phoc (0.45~rc1) experimental; urgency=medium
 
   * ci: Use Wayland from Debian again. It's recent enough to work with clang
@@ -1265,7 +1296,7 @@ phoc (0.36.0) experimental; urgency=medium
   * testlib: Add G_NORETURN.
     This makes building with clang less noisy
   * build: Disable -Wcast-align with clang.
-    This triggers for Wayland's wl_container_of() where it doesn' matter for
+    This triggers for Wayland's wl_container_of() where it doesn't matter for
     us.
   * keybindings: Drop unused function
   * phosh-private: Cast enum.
@@ -1302,7 +1333,7 @@ phoc (0.35.0) experimental; urgency=medium
   [ Guido Günther ]
   * build: Allow to build with released wlroots 0.17.0.
     0.17.0-dev is greater than 0.17.0
-  * packging: Fix phosh relationship
+  * packaging: Fix phosh relationship
     phosh 0.34.0 switched to ext-idle-notify
   * packaging: Drop default -Dembed-wlroots=disabled.
     Otherwise we end up with
@@ -2803,7 +2834,7 @@ phoc (0.24.0) experimental; urgency=medium
   * doc: Add small getting started document.
     Add some hints how to run phoc from sources on constrained
     devices like phones.
-  * server: Align enum valus at '='
+  * server: Align enum values at '='
     This matches what we e.g. do in view.h.
   * layer-shell-effects: Use wlr_layer_surface consistently.
     This is similar in spirit than 88b1550aff32c639b1056ee76207295cb46723f5
@@ -3135,7 +3166,7 @@ phoc (0.13.0) byzantium; urgency=medium
   * Drop ini file parser
   * settings: Use GKeyFile
   * settings: Don't exit when parsing settings
-  * settings: Drop remainin users of roots_config_*
+  * settings: Drop remaining users of roots_config_*
   * settings: Use g_free() to match the g_* allocations
   * settings: Drop unused prefixes
   * settings: Use g_assert()
