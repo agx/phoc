@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Phosh Developers
+ * Copyright (C) 2024-2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -23,7 +23,7 @@
  * them have committed new matching buffers.
  */
 
-#define TIMEOUT_MS 250
+#define TIMEOUT_LAYER_MS 3000
 
 enum {
   PROP_0,
@@ -36,8 +36,8 @@ struct _PhocLayoutTransaction {
   GObject               parent;
 
   gint64                starttime;
-  guint                 pending_configures;
-  guint                 timer_id;
+  guint                 pending_layer_configures;
+  guint                 layer_timer_id;
 };
 G_DEFINE_TYPE (PhocLayoutTransaction, phoc_layout_transaction, G_TYPE_OBJECT)
 
@@ -45,8 +45,19 @@ G_DEFINE_TYPE (PhocLayoutTransaction, phoc_layout_transaction, G_TYPE_OBJECT)
 static void
 apply_transaction (PhocLayoutTransaction *self)
 {
-  g_debug ("Applying layout transaction");
-  /* TODO: Drop all saved buffers so rendering picks up the committed ones */
+  g_debug ("Would apply layout transaction");
+}
+
+
+static void
+abort_transaction (PhocLayoutTransaction *self)
+{
+  g_return_if_fail (self->pending_layer_configures);
+
+  apply_transaction (self);
+
+  self->pending_layer_configures = 0;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVE]);
 }
 
 
@@ -55,10 +66,10 @@ on_timeout_expired (gpointer user_data)
 {
   PhocLayoutTransaction *self = PHOC_LAYOUT_TRANSACTION (user_data);
 
-  self->timer_id = 0;
+  self->layer_timer_id = 0;
   g_warning ("Timeout (%dms) expired with %u configures pending",
-             TIMEOUT_MS, self->pending_configures);
-  apply_transaction (self);
+             TIMEOUT_LAYER_MS, self->pending_layer_configures);
+  abort_transaction (self);
 }
 
 
@@ -86,7 +97,7 @@ phoc_layout_transaction_dispose (GObject *object)
 {
   PhocLayoutTransaction *self = PHOC_LAYOUT_TRANSACTION (object);
 
-  g_clear_handle_id (&self->timer_id, g_source_remove);
+  g_clear_handle_id (&self->layer_timer_id, g_source_remove);
 
   G_OBJECT_CLASS (phoc_layout_transaction_parent_class)->dispose (object);
 }
@@ -152,66 +163,64 @@ phoc_layout_transaction_is_active (PhocLayoutTransaction *self)
 {
   g_assert (PHOC_IS_LAYOUT_TRANSACTION (self));
 
-  return self->pending_configures > 0;
+  return self->pending_layer_configures > 0;
 }
 
 /**
- * phoc_layout_transaction_add_dirty:
+ * phoc_layout_transaction_add_layer_dirty:
  * @self: The transaction
  *
- * Invoked by views / layer surfaces when they want to become part of
+ * Invoked by layer surfaces when they want to become part of
  * a layout transaction. If the number of outstanding configures isn't
  * 0 we consider the transaction dirty (in progress).
  */
 void
-phoc_layout_transaction_add_dirty (PhocLayoutTransaction *self)
+phoc_layout_transaction_add_layer_dirty (PhocLayoutTransaction *self)
 {
-  guint pending;
-
   g_assert (PHOC_IS_LAYOUT_TRANSACTION (self));
 
-  pending = self->pending_configures;
-  self->pending_configures++;
-  if (pending) {
-    g_debug ("Layout transaction adding %dth pending configure", self->pending_configures);
-    self->starttime = g_get_monotonic_time ();
+  self->pending_layer_configures++;
+  if (self->pending_layer_configures > 1) {
+    g_debug ("Layout transaction, adding %dth pending configure", self->pending_layer_configures);
     return;
   }
 
   /* Outstanding configures. Transaction started */
   g_debug ("Starting new layout transaction");
-  self->timer_id = g_timeout_add_once (TIMEOUT_MS, on_timeout_expired, self);
-  g_source_set_name_by_id (self->timer_id, "[phoc] layout transaction timer");
+  self->starttime = g_get_monotonic_time ();
+  self->layer_timer_id = g_timeout_add_once (TIMEOUT_LAYER_MS, on_timeout_expired, self);
+  g_source_set_name_by_id (self->layer_timer_id, "[phoc] layout transaction timer");
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVE]);
 }
 
 /**
- * phoc_layout_transaction_notify_configured:
+ * phoc_layout_transaction_notify_layer_configured:
  * @self: The transaction
  *
- * Invoked by views / layer surfaces when they handle a commit and
+ * Invoked by layer surfaces when they handle a commit and
  * they were part of a transaction. If the number of outstanding
  * configures drops to 0 we apply the transaction.
  */
 void
-phoc_layout_transaction_notify_configured (PhocLayoutTransaction *self)
+phoc_layout_transaction_notify_layer_configured (PhocLayoutTransaction *self)
 {
   gint64 now;
 
   g_assert (PHOC_IS_LAYOUT_TRANSACTION (self));
 
-  g_return_if_fail (self->pending_configures > 0);
+  g_return_if_fail (self->pending_layer_configures > 0);
 
-  self->pending_configures--;
-  if (self->pending_configures) {
-    g_debug ("Layout transaction has %u configures pending", self->pending_configures);
+  self->pending_layer_configures--;
+  if (self->pending_layer_configures) {
+    g_debug ("Layout transaction has %u configures pending", self->pending_layer_configures);
     return;
   }
 
   /* All outstanding configures committed buffers */
   now = g_get_monotonic_time ();
-  g_debug ("Layout transaction finished after %" G_GINT64_FORMAT "ms", (now - self->starttime) / 1000);
-  g_clear_handle_id (&self->timer_id, g_source_remove);
+  g_debug ("Layout transaction finished after %" G_GINT64_FORMAT "ms",
+           (now - self->starttime) / 1000);
+  g_clear_handle_id (&self->layer_timer_id, g_source_remove);
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACTIVE]);
 
   apply_transaction (self);

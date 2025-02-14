@@ -158,7 +158,7 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   if (self->pending_serial &&
       self->layer_surface->current.configure_serial >= self->pending_serial) {
     g_debug ("layer-surface ack'ed serial %d", self->layer_surface->current.configure_serial);
-    phoc_layout_transaction_notify_configured (phoc_layout_transaction_get_default ());
+    phoc_layout_transaction_notify_layer_configured (phoc_layout_transaction_get_default ());
     self->pending_serial = 0;
   }
 }
@@ -583,19 +583,21 @@ phoc_layer_surface_covers_output (PhocLayerSurface *self)
 void
 phoc_layer_surface_send_configure (PhocLayerSurface *self)
 {
+  guint32 pending_serial;
   g_assert (PHOC_IS_LAYER_SURFACE (self));
 
   /* We're not part of a transaction yet but need to */
   if (!self->pending_serial)
-    phoc_layout_transaction_add_dirty (phoc_layout_transaction_get_default ());
+    phoc_layout_transaction_add_layer_dirty (phoc_layout_transaction_get_default ());
 
-  g_debug ("Layersurface %p, Pending_serial: %d, serial %d",
+  pending_serial = wlr_layer_surface_v1_configure (self->layer_surface,
+                                                   self->geo.width,
+                                                   self->geo.height);
+  g_debug ("Layersurface %p: current pending serial: %d, new pending serial %d",
            self,
            self->pending_serial,
-           self->layer_surface->current.configure_serial);
-  self->pending_serial = wlr_layer_surface_v1_configure (self->layer_surface,
-                                                         self->geo.width,
-                                                         self->geo.height);
+           pending_serial);
+  self->pending_serial = pending_serial;
 }
 
 /**
