@@ -177,14 +177,11 @@ phoc_layout_transaction_is_active (PhocLayoutTransaction *self)
 void
 phoc_layout_transaction_add_layer_dirty (PhocLayoutTransaction *self)
 {
-  guint pending;
-
   g_assert (PHOC_IS_LAYOUT_TRANSACTION (self));
 
-  pending = self->pending_layer_configures;
   self->pending_layer_configures++;
-  if (pending) {
-    g_debug ("Layout transaction adding %dth pending configure", self->pending_layer_configures);
+  if (self->pending_layer_configures > 1) {
+    g_debug ("Layout transaction, adding %dth pending configure", self->pending_layer_configures);
     return;
   }
 
