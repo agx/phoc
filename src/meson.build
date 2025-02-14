@@ -93,6 +93,8 @@ sources = files(
   'server.h',
   'settings.c',
   'settings.h',
+  'spinner.c',
+  'spinner.h',
   'surface.c',
   'surface.h',
   'subsurface.c',
