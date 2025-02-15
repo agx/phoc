@@ -11,9 +11,9 @@
 #include "phoc-config.h"
 
 #include "color-rect.h"
+#include "output-shield.h"
 #include "phoc-animation.h"
 #include "server.h"
-#include "output-shield.h"
 
 #include "render-private.h"
 
