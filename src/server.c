@@ -242,7 +242,7 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
     /* Shell is gone, raise shields */
     /* TODO: prevent input without a shell attached */
     wl_list_for_each (output, &self->desktop->outputs, link)
-      phoc_output_raise_shield (output);
+      phoc_output_raise_shield (output, TRUE);
   }
 }
 

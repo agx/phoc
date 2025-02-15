@@ -736,7 +736,7 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
     if (configure_sent &&
         !priv->modeset_shield &&
         !phoc_output_shield_is_raised (priv->shield)) {
-      phoc_output_raise_shield (self);
+      phoc_output_raise_shield (self, FALSE);
       priv->modeset_shield = TRUE;
     }
   }
@@ -2105,12 +2105,13 @@ phoc_output_lower_shield (PhocOutput *self, PhocEasing easing, guint duration)
 /**
  * phoc_output_raise_shield:
  * @self: The output to raise the shield for
+ * @show_spinner: Whether to animate a spinner on the raised shield
  *
  * Raise an output shield will be put in place to hide the outputs
- * current content.
+ * current content. A spinner can be displayed on the raised shield.
  */
 void
-phoc_output_raise_shield (PhocOutput *self)
+phoc_output_raise_shield (PhocOutput *self, gboolean show_spinner)
 {
   PhocOutputPrivate *priv;
 
@@ -2120,7 +2121,7 @@ phoc_output_raise_shield (PhocOutput *self)
   if (priv->shield == NULL)
     priv->shield = phoc_output_shield_new (self);
 
-  phoc_output_shield_raise (priv->shield, FALSE);
+  phoc_output_shield_raise (priv->shield, show_spinner);
 }
 
 /**
