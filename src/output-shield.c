@@ -14,10 +14,12 @@
 #include "output-shield.h"
 #include "phoc-animation.h"
 #include "server.h"
+#include "spinner.h"
 
 #include "render-private.h"
 
 #define PHOC_ANIM_DURATION_SHIELD_MS 250 /* ms */
+#define SPINNER_SIZE 32
 
 enum {
   PROP_0,
@@ -37,6 +39,7 @@ struct _PhocOutputShield {
   GObject             parent;
 
   PhocColorRect      *color_rect;
+  PhocSpinner        *spinner;
   PhocOutput         *output;
   PhocTimedAnimation *animation;
   PhocPropertyEaser  *easer;
@@ -133,6 +136,8 @@ stop_render (PhocOutputShield *self)
   PhocRenderer *renderer = phoc_server_get_renderer (phoc_server_get_default ());
 
   phoc_bling_unmap (PHOC_BLING (self->color_rect));
+  if (self->spinner)
+    phoc_bling_unmap (PHOC_BLING (self->spinner));
 
   g_clear_signal_handler (&self->render_end_id, renderer);
 }
@@ -146,11 +151,13 @@ on_render (PhocOutputShield *self, PhocRenderContext *ctx)
     return;
 
   phoc_bling_render (PHOC_BLING (self->color_rect), ctx);
+  if (self->spinner)
+    phoc_bling_render (PHOC_BLING (self->spinner), ctx);
 }
 
 
 static void
-start_render (PhocOutputShield *self)
+start_render (PhocOutputShield *self, gboolean show_spinner)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktop *desktop = phoc_server_get_desktop (server);
@@ -162,8 +169,21 @@ start_render (PhocOutputShield *self)
     return;
 
   wlr_output_layout_get_box (desktop->layout, output, &output_box);
+
   phoc_color_rect_set_box (self->color_rect, &output_box);
   phoc_bling_map (PHOC_BLING (self->color_rect));
+
+  if (show_spinner && !self->spinner) {
+    int lx, ly;
+
+    lx = output_box.x + output_box.width * 0.5 - SPINNER_SIZE * 0.5;
+    ly = output_box.y + output_box.height * 0.5 - SPINNER_SIZE * 0.5;
+
+    self->spinner = phoc_spinner_new (PHOC_ANIMATABLE (self), lx, ly, SPINNER_SIZE);
+  }
+
+  if (show_spinner)
+    phoc_bling_map (PHOC_BLING (self->spinner));
 
   self->render_end_id = g_signal_connect_swapped (renderer,
                                                   "render-end",
@@ -191,6 +211,7 @@ phoc_output_shield_finalize (GObject *object)
   g_clear_object (&self->color_rect);
   g_clear_object (&self->easer);
   g_clear_object (&self->animation);
+  g_clear_object (&self->spinner);
 
   G_OBJECT_CLASS (phoc_output_shield_parent_class)->finalize (object);
 }
@@ -273,14 +294,16 @@ phoc_output_shield_new (PhocOutput *output)
                        NULL);
 }
 
+
 /**
  * phoc_output_shield_raise:
  * @self: The shield
+ * @show_spinner: Whether to show a spinner on the raised shield
  *
- * Draw the shield to cover the whole output.
+ * Draw the shield to cover the whole output. A spinner can optionally be displayed on the shield.
  */
 void
-phoc_output_shield_raise (PhocOutputShield *self)
+phoc_output_shield_raise (PhocOutputShield *self, gboolean show_spinner)
 {
   g_return_if_fail (PHOC_IS_OUTPUT_SHIELD (self));
 
@@ -288,7 +311,7 @@ phoc_output_shield_raise (PhocOutputShield *self)
 
   phoc_color_rect_set_alpha (self->color_rect, 1.0f);
 
-  start_render (self);
+  start_render (self, show_spinner);
 }
 
 /**
@@ -302,8 +325,9 @@ phoc_output_shield_lower (PhocOutputShield *self)
 {
   g_return_if_fail (PHOC_IS_OUTPUT_SHIELD (self));
 
-  start_render (self);
+  start_render (self, false);
   phoc_timed_animation_play (self->animation);
+  g_clear_object (&self->spinner);
 }
 
 

@@ -2120,7 +2120,7 @@ phoc_output_raise_shield (PhocOutput *self)
   if (priv->shield == NULL)
     priv->shield = phoc_output_shield_new (self);
 
-  phoc_output_shield_raise (priv->shield);
+  phoc_output_shield_raise (priv->shield, FALSE);
 }
 
 /**
