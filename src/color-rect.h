@@ -20,6 +20,7 @@ G_DECLARE_FINAL_TYPE (PhocColorRect, phoc_color_rect, PHOC, COLOR_RECT, GObject)
 PhocColorRect      *phoc_color_rect_new                         (PhocBox       *box,
                                                                  PhocColor     *color);
 PhocBox             phoc_color_rect_get_box                     (PhocColorRect *self) G_GNUC_WARN_UNUSED_RESULT;
+void                phoc_color_rect_set_box                     (PhocColorRect *self, PhocBox *box);
 PhocColor           phoc_color_rect_get_color                   (PhocColorRect *self) G_GNUC_WARN_UNUSED_RESULT;
 void                phoc_color_rect_set_color                   (PhocColorRect *self,
                                                                  PhocColor     *color);
