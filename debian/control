@@ -21,6 +21,7 @@ Build-Depends:
  libwlroots-0.18-dev <!pkg.phoc.embedwlroots>,
  xwayland (>= 1.23.0),
 # For wlroots subproject build
+ glslang-tools <pkg.phoc.embedwlroots>,
  hwdata <pkg.phoc.embedwlroots>,
  libcap-dev <pkg.phoc.embedwlroots>,
  liblcms2-dev <pkg.phoc.embedwlroots>,
