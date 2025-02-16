@@ -47,7 +47,6 @@ variables:
         xcb-util-wm-dev libseat-dev hwdata-dev libdisplay-info-dev
   XVFB_RUN: xvfb-run -s -noreset
   DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2025-01-05.1
-  SID_PKGS: libwayland-dev
 
 .build: &build
   script:
