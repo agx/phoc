@@ -83,6 +83,8 @@ To toggle individual values:
 
   busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl TouchPoints b true
   busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl DamageTracking b true
+  busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl LogDomains as 1 all
+  busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl LogDomains as 2 phoc-seat phoc-layer-surface
 
 Note that the flags are not considered stable API so can change
 between releases.
