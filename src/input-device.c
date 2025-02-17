@@ -21,6 +21,9 @@
 
 #define PHOC_INPUT_DEVICE_SELF(p) PHOC_PRIV_CONTAINER(PHOC_INPUT_DEVICE, PhocInputDevice, (p))
 
+typedef struct udev_device udev_device;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (udev_device, udev_device_unref);
+
 enum {
   PROP_0,
   PROP_SEAT,
@@ -53,6 +56,27 @@ typedef struct _PhocInputDevicePrivate {
 } PhocInputDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PhocInputDevice, phoc_input_device, G_TYPE_OBJECT)
+
+
+static gboolean
+phoc_input_device_has_udev_property (PhocInputDevice *self, const char *prop_name)
+{
+  struct libinput_device *dev_handle;
+  g_autoptr (udev_device) udev_dev = NULL;
+  const char *value;
+
+  dev_handle = phoc_input_device_get_libinput_device_handle (self);
+  udev_dev = libinput_device_get_udev_device (dev_handle);
+
+  if (!udev_dev)
+    return FALSE;
+
+  value = udev_device_get_property_value (udev_dev, prop_name);
+  if (g_strcmp0 (value, "1") == 0)
+    return TRUE;
+
+  return FALSE;
+}
 
 
 static void
@@ -298,6 +322,11 @@ phoc_input_device_get_is_keyboard (PhocInputDevice *self)
   if (libinput_device_keyboard_has_key (ldev, KEY_A) &&
       libinput_device_keyboard_has_key (ldev, KEY_ENTER) &&
       libinput_device_keyboard_has_key (ldev, KEY_SPACE)) {
+    priv->is_keyboard = 1;
+    goto out;
+  }
+
+  if (phoc_input_device_has_udev_property (self, "ID_INPUT_KEYBOARD")) {
     priv->is_keyboard = 1;
     goto out;
   }
