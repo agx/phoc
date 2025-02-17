@@ -67,6 +67,12 @@ ENVIRONMENT VARIABLES
       - ``disable-animations``: Disable animations
       - ``force-shell-reveal``: Always reveal shell over fullscreen apps
 
+UDEV PROPERTIES
+---------------
+
+Apart from the udev properties for wakeup keys documented in ``gmobile.udev(5)`` phoc uses
+``ID_INPUT_KEYBOARD`` to identify hardware keyboards. You can use ``hwdb`` to override these.
+
 DBUS INTERFACE
 --------------
 
