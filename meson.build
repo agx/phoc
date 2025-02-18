@@ -62,7 +62,7 @@ if not embed_wlroots.disabled()
   # Try first to find wlroots as a subproject, then as a system dependency
   wlroots_proj = subproject(
     'wlroots',
-    default_options: ['examples=false', 'renderers=gles2'],
+    default_options: ['examples=false', 'renderers=gles2,vulkan'],
     required: false,
   )
 
