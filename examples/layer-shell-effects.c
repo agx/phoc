@@ -39,10 +39,10 @@ static struct zphoc_draggable_layer_surface_v1 *drag_surface;
 static struct zphoc_alpha_layer_surface_v1 *alpha_surface;
 static struct wl_output *wl_output;
 
-struct wl_surface *wl_surface;
-struct wl_egl_window *egl_window;
-struct wlr_egl_surface *egl_surface;
-struct wl_callback *frame_callback;
+static struct wl_surface *wl_surface;
+static struct wl_egl_window *egl_window;
+static struct wlr_egl_surface *egl_surface;
+static struct wl_callback *frame_callback;
 
 static uint32_t layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
 static uint32_t anchor;
@@ -61,7 +61,6 @@ struct wl_cursor_image *cursor_image;
 struct wl_surface *cursor_surface, *input_surface;
 
 static struct {
-  struct timespec last_frame;
   float           color[3];
 } demo;
 
@@ -144,9 +143,6 @@ static void
 draw (void)
 {
   eglMakeCurrent (egl_display, egl_surface, egl_surface, egl_context);
-  struct timespec ts;
-
-  clock_gettime (CLOCK_MONOTONIC, &ts);
 
   switch (drag_state) {
   case folded:
@@ -188,8 +184,6 @@ draw (void)
   wl_callback_add_listener (frame_callback, &frame_listener, NULL);
 
   eglSwapBuffers (egl_display, egl_surface);
-
-  demo.last_frame = ts;
 }
 
 static void
