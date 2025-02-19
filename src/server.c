@@ -50,6 +50,7 @@ typedef struct _PhocServer {
   GObject              parent;
 
   gboolean             inited;
+  gboolean             show_spinner;
 
   PhocInput           *input;
   PhocConfig          *config;
@@ -236,13 +237,15 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
     /* Shell is up, lower shields */
     wl_list_for_each (output, &self->desktop->outputs, link)
       phoc_output_lower_shield (output, PHOC_EASING_EASE_IN_CUBIC, 0);
+    /* don't show session init spinner again */
+    self->show_spinner = FALSE;
     break;
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN:
   default:
     /* Shell is gone, raise shields */
     /* TODO: prevent input without a shell attached */
     wl_list_for_each (output, &self->desktop->outputs, link)
-      phoc_output_raise_shield (output, TRUE);
+      phoc_output_raise_shield (output, self->show_spinner);
   }
 }
 
@@ -487,6 +490,8 @@ phoc_server_init (PhocServer *self)
   const char *messages_debug;
   g_autoptr (GError) err = NULL;
 
+  /* show a spinner the first time output shield is raised */
+  self->show_spinner = TRUE;
   self->dt_compatibles = gm_device_tree_get_compatibles (NULL, &err);
 
   messages_debug = g_getenv ("G_MESSAGES_DEBUG");
