@@ -1,6 +1,9 @@
 /*
  * Copyright (C) 2020 Purism SPC
+ *               2025 The Phosh Developers
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
  * Author: Guido Günther <agx@sigxcpu.org>
  */
 
@@ -13,8 +16,9 @@
 #include <sys/mman.h>
 
 struct task_data {
-  PhocTestClientFunc func;
-  gpointer data;
+  PhocTestClientFunc   func;
+  PhocTestOutputConfig output_config;
+  gpointer             data;
 };
 
 
@@ -164,14 +168,15 @@ static void
 output_handle_mode (void *data, struct wl_output *wl_output,
                     uint32_t flags, int32_t width, int32_t height, int32_t refresh)
 {
-  PhocTestOutput *output = data;
+  PhocTestClientGlobals *globals = data;
+  PhocTestOutputConfig output_config = globals->output_config;
 
   if ((flags & WL_OUTPUT_MODE_CURRENT) != 0) {
-    /* Make sure we got the right mode to not mess up screenshot comparisons */
-    g_assert_cmpint (width, ==, 1024);
-    g_assert_cmpint (height, ==, 768);
-    output->width = width;
-    output->height = height;
+    /* Output must have the configure mode */
+    g_assert_cmpint (width, ==, output_config.width);
+    g_assert_cmpint (height, ==, output_config.height);
+    globals->output.width = width;
+    globals->output.height = height;
   }
 }
 
@@ -187,7 +192,10 @@ static void
 output_handle_scale (void *data, struct wl_output *wl_output,
                      int32_t scale)
 {
-  g_assert_cmpint (scale, ==, 1);
+  PhocTestClientGlobals *globals = data;
+  PhocTestOutputConfig output_config = globals->output_config;
+
+  g_assert_cmpint(scale, ==, ceil(output_config.scale));
 }
 
 
@@ -337,7 +345,7 @@ registry_handle_global (void               *data,
     g_assert_null (globals->output.output);
     globals->output.output = wl_registry_bind (registry, name,
                                                &wl_output_interface, 3);
-    wl_output_add_listener (globals->output.output, &output_listener, &globals->output);
+    wl_output_add_listener (globals->output.output, &output_listener, globals);
   } else if (!g_strcmp0 (interface, xdg_wm_base_interface.name)) {
     globals->xdg_shell = wl_registry_bind (registry, name,
                                            &xdg_wm_base_interface, 1);
@@ -390,9 +398,11 @@ wl_client_run (GTask *task, gpointer source, gpointer data, GCancellable *cancel
   struct wl_registry *registry;
   gboolean success = FALSE;
   struct task_data *td = data;
-  PhocTestClientGlobals globals = { 0 };
+  PhocTestClientGlobals globals = {
+    .output_config = td->output_config,
+    .display = wl_display_connect (NULL),
+  };
 
-  globals.display = wl_display_connect (NULL);
   g_assert_nonnull (globals.display);
   registry = wl_display_get_registry (globals.display);
   wl_registry_add_listener (registry, &registry_listener, &globals);
@@ -454,15 +464,84 @@ on_timer_expired (gpointer unused)
   g_assert_not_reached ();
 }
 
+
+static PhocConfig *
+build_compositor_config (PhocTestClientIface *iface)
+{
+  PhocConfig *config;
+  PhocTestOutputConfig *output_config;
+  g_autofree char *config_str = NULL;
+  const char *transform;
+
+  g_assert (iface);
+  output_config = &iface->output_config;
+
+  if (!output_config->width)
+    output_config->width = 1024;
+  if (!output_config->height)
+    output_config->height = 768;
+
+  if (G_APPROX_VALUE (output_config->scale, 0.0, FLT_EPSILON))
+    output_config->scale = 1.0;
+
+  switch (output_config->transform) {
+  case WL_OUTPUT_TRANSFORM_NORMAL:
+    transform = "normal";
+    break;
+  case WL_OUTPUT_TRANSFORM_90:
+    transform = "90";
+    break;
+  case WL_OUTPUT_TRANSFORM_180:
+    transform = "180";
+    break;
+  case WL_OUTPUT_TRANSFORM_270:
+    transform = "270";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED:
+    transform = "flipped";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_90:
+    transform = "flipped-90";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_180:
+    transform = "flipped-180";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_270:
+    transform = "flipped-270";
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  config_str = g_strdup_printf (
+    "[core]\n"
+    "xwayland=false\n"
+    "\n"
+    "[output:*%%*%%*]\n"
+    "mode=%dx%d\n"
+    "scale=%.2f\n"
+    "rotate=%s\n",
+    iface->output_config.width,
+    iface->output_config.height,
+    iface->output_config.scale,
+    transform);
+
+  config = phoc_config_new_from_data (config_str);
+  config->xwayland = iface->xwayland;
+
+  return config;
+}
+
 /**
  * phoc_test_client_run:
+ * @timeout: Abort test after timeout seconds
+ * @iface: Test client interface
+ * @data: Data passed verbatim to the test and prepare functions
  *
- * timeout: Abort test after timeout seconds
- * func: The test function to run
- * data: Data passed to the test function
+ * Run `func` from the test client iface in a Wayland client
+ * configured by the other parameters in the test client iface.
  *
- * Run func in a wayland client connected to compositor instance. The
- * test function is expected to return %TRUE on success and %FALSE
+ * The test function is expected to return %TRUE on success and %FALSE
  * otherwise.
  */
 void
@@ -472,23 +551,23 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
   struct task_data td = { .data = data };
   g_autoptr (PhocServer) server = phoc_server_get_default ();
   g_autoptr (GMainLoop) loop = g_main_loop_new (NULL, FALSE);
-  g_autoptr (GTask) wl_client_task = g_task_new (NULL, NULL,
-                                                 on_wl_client_finish,
-                                                 loop);
-  if (iface)
-    td.func = iface->client_run;
+  g_autoptr (GTask) wl_client_task = g_task_new (NULL, NULL, on_wl_client_finish, loop);
 
-  phoc_server_set_debug_flags (server,
-                               iface ? iface->debug_flags : PHOC_SERVER_DEBUG_FLAG_NONE);
+  config = build_compositor_config (iface);
+  if (!config)
+    config = phoc_config_new_from_file (TEST_PHOC_INI);
 
-  config = (iface && iface->config) ? iface->config : phoc_config_new_from_file (TEST_PHOC_INI);
+  phoc_server_set_debug_flags (server, iface->debug_flags);
   g_assert_true (PHOC_IS_SERVER (server));
   g_assert_true (config);
-  g_assert_true (phoc_server_setup (server, config, NULL, loop,
-                                    PHOC_SERVER_FLAG_NONE));
+  g_assert_true (phoc_server_setup (server, config, NULL, loop, PHOC_SERVER_FLAG_NONE));
   if (iface && iface->server_prepare)
     g_assert_true (iface->server_prepare (server, data));
 
+  if (iface) {
+    td.func = iface->client_run;
+    td.output_config = iface->output_config;
+  }
   g_task_set_task_data (wl_client_task, &td, NULL);
   g_task_run_in_thread (wl_client_task, wl_client_run);
   g_timeout_add_seconds_once (timeout, on_timer_expired, NULL);
@@ -563,7 +642,6 @@ foreign_toplevel_compare (gconstpointer data, gconstpointer title)
 }
 
 /**
- *
  * phoc_test_client_get_foreign_toplevel_handle:
  *
  * Get the PhocTestForeignToplevel for a toplevel with the given title
@@ -582,9 +660,7 @@ phoc_test_client_get_foreign_toplevel_handle (PhocTestClientGlobals *globals,
   return list->data;
 }
 
-
 /**
- *
  * phoc_test_client_capture_frame:
  *
  * Capture the given wlr_screencopy_frame and return its screenshot buffer
@@ -599,8 +675,7 @@ phoc_test_client_capture_frame (PhocTestClientGlobals           *globals,
   frame->globals = globals;
   g_assert_false (frame->done);
 
-  zwlr_screencopy_frame_v1_add_listener (handle,
-                                         &screencopy_frame_listener, frame);
+  zwlr_screencopy_frame_v1_add_listener (handle, &screencopy_frame_listener, frame);
   while (!frame->done && wl_display_dispatch (globals->display) != -1) {
   }
   g_assert_true (frame->done);
@@ -629,7 +704,6 @@ phoc_test_client_capture_frame (PhocTestClientGlobals           *globals,
 }
 
 /**
- *
  * phoc_test_client_capture_output:
  *
  * Capture the given output and return its screenshot buffer
@@ -652,7 +726,6 @@ phoc_test_client_capture_output (PhocTestClientGlobals *globals,
 }
 
 /**
- *
  * phoc_test_buffer_equal:
  *
  * Compare two buffers
@@ -670,8 +743,7 @@ phoc_test_buffer_equal (PhocTestBuffer *buf1, PhocTestBuffer *buf2)
   g_assert_true (buf2->format == WL_SHM_FORMAT_XRGB8888
                  || buf2->format == WL_SHM_FORMAT_ARGB8888);
 
-  if (buf1->width != buf2->width ||
-      buf1->height != buf2->height)
+  if (buf1->width != buf2->width || buf1->height != buf2->height)
     return FALSE;
 
   for (guint y = 0; y < buf1->height; y++) {
@@ -858,7 +930,6 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
   xdg_toplevel_handle_close,
 };
 
-
 /**
  * phoc_test_xdg_toplevel_new:
  * @globals: The wayland globals
@@ -869,6 +940,8 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
  * Creates a xdg toplevel with the given property for use in tests.
  * If width and/or height are 0, defaults will be used. Free with
  * `phoc_test_xdg_toplevel_free`.
+ *
+ * Returns: The toplevel surface
  */
 PhocTestXdgToplevelSurface *
 phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
@@ -881,8 +954,7 @@ phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
   xs->wl_surface = wl_compositor_create_surface (globals->compositor);
   g_assert_nonnull (xs->wl_surface);
 
-  xs->xdg_surface = xdg_wm_base_get_xdg_surface (globals->xdg_shell,
-                                                 xs->wl_surface);
+  xs->xdg_surface = xdg_wm_base_get_xdg_surface (globals->xdg_shell, xs->wl_surface);
   g_assert_nonnull (xs->wl_surface);
   xdg_surface_add_listener (xs->xdg_surface,
                             &xdg_surface_listener, xs);
@@ -919,6 +991,8 @@ phoc_test_xdg_toplevel_new (PhocTestClientGlobals *globals,
  * `phoc_test_xdg_toplevel_free`.
  *
  * This functions also attaches a buffer with the given color.
+ *
+ * Returns: The toplevel surface
  */
 PhocTestXdgToplevelSurface *
 phoc_test_xdg_toplevel_new_with_buffer (PhocTestClientGlobals *globals,
@@ -1002,7 +1076,7 @@ phoc_test_setup (PhocTestFixture *fixture, gconstpointer data)
 
   fixture->bus = g_test_dbus_new (G_TEST_DBUS_NONE);
 
-  /* Preserve x11 display for xvfb-run */
+  /* Preserve X11 display for xvfb-run */
   display = g_getenv ("DISPLAY");
 
   g_test_dbus_up (fixture->bus);
@@ -1061,7 +1135,7 @@ phoc_test_teardown (PhocTestFixture *fixture, gconstpointer unused)
 
   g_autoptr (GFile) file = g_file_new_for_path (fixture->tmpdir);
 
-  /* Preserve x11 display for xvfb-run */
+  /* Preserve X11 display for xvfb-run */
   display = g_getenv ("DISPLAY");
 
   g_test_dbus_down (fixture->bus);
