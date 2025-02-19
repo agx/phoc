@@ -16,6 +16,8 @@ if grep -vE  '('\
 '|argument iterator: Unresolved type: .wlr_surface_iterator_func_t.'\
 '|argument [a-z_]+: Unresolved type: .pixman_region32_t'\
 '|return value: Unresolved type: .pixman_region32_t'\
+'|return value: Unresolved type: .cairo_t'\
+'|symbol=.cairo_t.'\
 ')' "${LOG}" | grep -i ' warning:'; then
     echo "Found new warning."
     exit 1
