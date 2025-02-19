@@ -1,6 +1,9 @@
 /*
  * Copyright (C) 2020 Purism SPC
+ *               2025 The Phosh Developers
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
  * Author: Guido Günther <agx@sigxcpu.org>
  */
 
@@ -13,8 +16,9 @@
 #include <sys/mman.h>
 
 struct task_data {
-  PhocTestClientFunc func;
-  gpointer data;
+  PhocTestClientFunc   func;
+  PhocTestOutputConfig output_config;
+  gpointer             data;
 };
 
 
@@ -165,11 +169,12 @@ output_handle_mode (void *data, struct wl_output *wl_output,
                     uint32_t flags, int32_t width, int32_t height, int32_t refresh)
 {
   PhocTestClientGlobals *globals = data;
+  PhocTestOutputConfig output_config = globals->output_config;
 
   if ((flags & WL_OUTPUT_MODE_CURRENT) != 0) {
-    /* Make sure we got the right mode to not mess up screenshot comparisons */
-    g_assert_cmpint (width, ==, 1024);
-    g_assert_cmpint (height, ==, 768);
+    /* Output must have the configure mode */
+    g_assert_cmpint (width, ==, output_config.width);
+    g_assert_cmpint (height, ==, output_config.height);
     globals->output.width = width;
     globals->output.height = height;
   }
@@ -187,7 +192,10 @@ static void
 output_handle_scale (void *data, struct wl_output *wl_output,
                      int32_t scale)
 {
-  g_assert_cmpint (scale, ==, 1);
+  PhocTestClientGlobals *globals = data;
+  PhocTestOutputConfig output_config = globals->output_config;
+
+  g_assert_cmpint(scale, ==, ceil(output_config.scale));
 }
 
 
@@ -390,9 +398,11 @@ wl_client_run (GTask *task, gpointer source, gpointer data, GCancellable *cancel
   struct wl_registry *registry;
   gboolean success = FALSE;
   struct task_data *td = data;
-  PhocTestClientGlobals globals = { 0 };
+  PhocTestClientGlobals globals = {
+    .output_config = td->output_config,
+    .display = wl_display_connect (NULL),
+  };
 
-  globals.display = wl_display_connect (NULL);
   g_assert_nonnull (globals.display);
   registry = wl_display_get_registry (globals.display);
   wl_registry_add_listener (registry, &registry_listener, &globals);
@@ -454,6 +464,74 @@ on_timer_expired (gpointer unused)
   g_assert_not_reached ();
 }
 
+
+static PhocConfig *
+build_compositor_config (PhocTestClientIface *iface)
+{
+  PhocConfig *config;
+  PhocTestOutputConfig *output_config;
+  g_autofree char *config_str = NULL;
+  const char *transform;
+
+  g_assert (iface);
+  output_config = &iface->output_config;
+
+  if (!output_config->width)
+    output_config->width = 1024;
+  if (!output_config->height)
+    output_config->height = 768;
+
+  if (G_APPROX_VALUE (output_config->scale, 0.0, FLT_EPSILON))
+    output_config->scale = 1.0;
+
+  switch (output_config->transform) {
+  case WL_OUTPUT_TRANSFORM_NORMAL:
+    transform = "normal";
+    break;
+  case WL_OUTPUT_TRANSFORM_90:
+    transform = "90";
+    break;
+  case WL_OUTPUT_TRANSFORM_180:
+    transform = "180";
+    break;
+  case WL_OUTPUT_TRANSFORM_270:
+    transform = "270";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED:
+    transform = "flipped";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_90:
+    transform = "flipped-90";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_180:
+    transform = "flipped-180";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_270:
+    transform = "flipped-270";
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+
+  config_str = g_strdup_printf (
+    "[core]\n"
+    "xwayland=false\n"
+    "\n"
+    "[output:*%%*%%*]\n"
+    "mode=%dx%d\n"
+    "scale=%.2f\n"
+    "rotate=%s\n",
+    iface->output_config.width,
+    iface->output_config.height,
+    iface->output_config.scale,
+    transform);
+
+  config = phoc_config_new_from_data (config_str);
+  config->xwayland = iface->xwayland;
+
+  return config;
+}
+
 /**
  * phoc_test_client_run:
  * @timeout: Abort test after timeout seconds
@@ -475,18 +553,21 @@ phoc_test_client_run (gint timeout, PhocTestClientIface *iface, gpointer data)
   g_autoptr (GMainLoop) loop = g_main_loop_new (NULL, FALSE);
   g_autoptr (GTask) wl_client_task = g_task_new (NULL, NULL, on_wl_client_finish, loop);
 
-  if (iface)
-    td.func = iface->client_run;
+  config = build_compositor_config (iface);
+  if (!config)
+    config = phoc_config_new_from_file (TEST_PHOC_INI);
 
-  phoc_server_set_debug_flags (server, iface ? iface->debug_flags : PHOC_SERVER_DEBUG_FLAG_NONE);
-
-  config = (iface && iface->config) ? iface->config : phoc_config_new_from_file (TEST_PHOC_INI);
+  phoc_server_set_debug_flags (server, iface->debug_flags);
   g_assert_true (PHOC_IS_SERVER (server));
   g_assert_true (config);
   g_assert_true (phoc_server_setup (server, config, NULL, loop, PHOC_SERVER_FLAG_NONE));
   if (iface && iface->server_prepare)
     g_assert_true (iface->server_prepare (server, data));
 
+  if (iface) {
+    td.func = iface->client_run;
+    td.output_config = iface->output_config;
+  }
   g_task_set_task_data (wl_client_task, &td, NULL);
   g_task_run_in_thread (wl_client_task, wl_client_run);
   g_timeout_add_seconds_once (timeout, on_timer_expired, NULL);

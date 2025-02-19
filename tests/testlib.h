@@ -1,7 +1,8 @@
 /*
  * Copyright (C) 2020 Purism SPC
+ *               2025 The Phosh Developers
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
- * Author: Guido Günther <agx@sigxcpu.org>
  */
 #include "server.h"
 
@@ -38,6 +39,14 @@ typedef struct _PhocTestScreencopyFrame {
 } PhocTestScreencopyFrame;
 
 
+typedef struct _PhocTestOutputConfig {
+  guint width;
+  guint height;
+  float scale;
+  enum wl_output_transform transform;
+} PhocTestOutputConfig;
+
+
 typedef struct _PhocTestOutput {
   struct wl_output *output;
   guint32 width, height;
@@ -57,9 +66,10 @@ struct _PhocTestClientGlobals {
   struct zxdg_decoration_manager_v1 *decoration_manager;
   GSList *foreign_toplevels;
   struct phosh_private *phosh;
-  struct gtk_shell1 *gtk_shell1;
+  struct gtk_shell1   *gtk_shell1;
   /* TODO: handle multiple outputs */
-  PhocTestOutput output;
+  PhocTestOutput       output;
+  PhocTestOutputConfig output_config;
 
   guint32 formats;
 };
@@ -71,8 +81,10 @@ typedef struct _PhocTestForeignToplevel {
   PhocTestClientGlobals *globals;
 } PhocTestForeignToplevel;
 
+
 typedef gboolean (* PhocTestServerFunc) (PhocServer *server, gpointer data);
 typedef gboolean (* PhocTestClientFunc) (PhocTestClientGlobals *globals, gpointer data);
+
 
 typedef struct PhocTestClientIface {
   /* Prepare function runs in server context */
@@ -80,7 +92,8 @@ typedef struct PhocTestClientIface {
   PhocTestClientFunc   client_run;
   PhocServerFlags      server_flags;
   PhocServerDebugFlags debug_flags;
-  PhocConfig          *config;
+  gboolean             xwayland;
+  PhocTestOutputConfig output_config;
 } PhocTestClientIface;
 
 

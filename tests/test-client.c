@@ -14,7 +14,9 @@
 static void
 test_phoc_client_noop (void)
 {
-  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, NULL, NULL);
+  PhocTestClientIface iface = { 0 };
+
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
 }
 
 static gboolean
