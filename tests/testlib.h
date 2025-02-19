@@ -29,6 +29,7 @@ typedef struct _PhocTestBuffer {
   gboolean valid;
 } PhocTestBuffer;
 
+
 typedef struct _PhocTestScreencopyFrame {
   PhocTestBuffer buffer;
   gboolean done;
@@ -36,13 +37,15 @@ typedef struct _PhocTestScreencopyFrame {
   PhocTestClientGlobals *globals;
 } PhocTestScreencopyFrame;
 
+
 typedef struct _PhocTestOutput {
   struct wl_output *output;
   guint32 width, height;
   PhocTestScreencopyFrame screenshot;
 } PhocTestOutput;
 
-typedef struct _PhocTestClientGlobals {
+
+struct _PhocTestClientGlobals {
   struct wl_display *display;
   struct wl_compositor *compositor;
   struct wl_shm *shm;
@@ -59,7 +62,8 @@ typedef struct _PhocTestClientGlobals {
   PhocTestOutput output;
 
   guint32 formats;
-} PhocTestClientGlobals;
+};
+
 
 typedef struct _PhocTestForeignToplevel {
   char* title;
@@ -79,6 +83,7 @@ typedef struct PhocTestClientIface {
   PhocConfig          *config;
 } PhocTestClientIface;
 
+
 typedef struct _PhocTestXdgToplevelSurface
 {
   struct wl_surface *wl_surface;
@@ -91,6 +96,7 @@ typedef struct _PhocTestXdgToplevelSurface
   gboolean configured;
   gboolean toplevel_configured;
 } PhocTestXdgToplevelSurface;
+
 
 typedef struct _PhocTestFixture {
   GTestDBus   *bus;
