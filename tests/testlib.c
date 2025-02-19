@@ -164,14 +164,14 @@ static void
 output_handle_mode (void *data, struct wl_output *wl_output,
                     uint32_t flags, int32_t width, int32_t height, int32_t refresh)
 {
-  PhocTestOutput *output = data;
+  PhocTestClientGlobals *globals = data;
 
   if ((flags & WL_OUTPUT_MODE_CURRENT) != 0) {
     /* Make sure we got the right mode to not mess up screenshot comparisons */
     g_assert_cmpint (width, ==, 1024);
     g_assert_cmpint (height, ==, 768);
-    output->width = width;
-    output->height = height;
+    globals->output.width = width;
+    globals->output.height = height;
   }
 }
 
@@ -337,7 +337,7 @@ registry_handle_global (void               *data,
     g_assert_null (globals->output.output);
     globals->output.output = wl_registry_bind (registry, name,
                                                &wl_output_interface, 3);
-    wl_output_add_listener (globals->output.output, &output_listener, &globals->output);
+    wl_output_add_listener (globals->output.output, &output_listener, globals);
   } else if (!g_strcmp0 (interface, xdg_wm_base_interface.name)) {
     globals->xdg_shell = wl_registry_bind (registry, name,
                                            &xdg_wm_base_interface, 1);
