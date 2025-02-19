@@ -27,4 +27,6 @@ guint                 phoc_property_easer_set_props        (PhocPropertyEaser  *
                                                             const gchar        *first_property_name,
                                                             ...) G_GNUC_NULL_TERMINATED;
 
+double phoc_lerp (double a, double b, double t);
+
 G_END_DECLS

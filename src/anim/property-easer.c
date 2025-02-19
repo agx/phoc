@@ -87,7 +87,7 @@ G_DEFINE_TYPE (PhocPropertyEaser, phoc_property_easer, G_TYPE_OBJECT)
  *
  * Since: 1.0
  */
-static double
+double
 phoc_lerp (double a, double b, double t)
 {
   /* a + (b - a) * t */
