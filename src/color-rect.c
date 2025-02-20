@@ -113,9 +113,7 @@ phoc_color_rect_set_property (GObject      *object,
     phoc_color_rect_damage_box (self);
     break;
   case PROP_BOX:
-    phoc_color_rect_damage_box (self);
-    self->box = *(PhocBox*)g_value_get_boxed (value);
-    phoc_color_rect_damage_box (self);
+    phoc_color_rect_set_box (self, g_value_get_boxed (value));
     break;
   case PROP_COLOR:
     phoc_color_rect_set_color (self, g_value_get_boxed (value));
@@ -352,6 +350,23 @@ phoc_color_rect_get_box (PhocColorRect *self)
   g_assert (PHOC_IS_COLOR_RECT (self));
 
   return self->box;
+}
+
+/**
+ * phoc_color_rect_set_box:
+ * @self: The color rectangle
+ * @box: The new bounding box for this color rectangle
+ *
+ * Sets the rectangles coordinates and size as box.
+ */
+void
+phoc_color_rect_set_box (PhocColorRect *self, PhocBox *box)
+{
+  g_assert (PHOC_IS_COLOR_RECT (self));
+
+  phoc_color_rect_damage_box (self);
+  self->box = *box;
+  phoc_color_rect_damage_box (self);
 }
 
 /**
