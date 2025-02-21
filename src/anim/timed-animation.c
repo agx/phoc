@@ -123,10 +123,13 @@ set_dispose_on_done (PhocTimedAnimation *self, gboolean dispose_on_done)
 static void
 stop_animation (PhocTimedAnimation *self)
 {
-  if (self->frame_callback_id) {
+  if (!self->frame_callback_id)
+    return;
+
+  if (self->animatable)
     phoc_animatable_remove_frame_callback (self->animatable, self->frame_callback_id);
-    self->frame_callback_id = 0;
-  }
+
+  self->frame_callback_id = 0;
 }
 
 
