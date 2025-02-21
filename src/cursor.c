@@ -1216,6 +1216,9 @@ phoc_cursor_update_position (PhocCursor *self, uint32_t time)
       double dx = self->cursor->x - self->offs_x;
       double dy = self->cursor->y - self->offs_y;
       PhocOutput *output = phoc_desktop_layout_get_output (desktop, self->cursor->x, self->cursor->y);
+      if (!output)
+        return;
+
       struct wlr_box output_box;
       wlr_output_layout_get_box (desktop->layout, output->wlr_output, &output_box);
 
