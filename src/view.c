@@ -87,11 +87,141 @@ typedef struct _PhocViewPrivate {
   GSList            *child_surfaces;
 } PhocViewPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (PhocView, phoc_view, G_TYPE_OBJECT)
+static void phoc_view_child_root_iface_init (PhocChildRootInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PhocView, phoc_view, G_TYPE_OBJECT,
+                         G_ADD_PRIVATE (PhocView)
+                         G_IMPLEMENT_INTERFACE (PHOC_TYPE_CHILD_ROOT,
+                                                phoc_view_child_root_iface_init))
+
+
 #define PHOC_VIEW_SELF(p) PHOC_PRIV_CONTAINER(PHOC_VIEW, PhocView, (p))
 
 static bool view_center (PhocView *view, PhocOutput *output);
 
+/* {{{ PhocChildRoot interface */
+
+static void
+phoc_view_child_root_get_box (PhocChildRoot *root, struct wlr_box *box)
+{
+  PhocView *self = PHOC_VIEW (root);
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  phoc_view_get_box (self, box);
+}
+
+
+static gboolean
+phoc_view_child_root_is_mapped (PhocChildRoot *root)
+{
+  PhocView *self = PHOC_VIEW (root);
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  return !!phoc_view_is_mapped (self);
+}
+
+
+static void
+phoc_view_child_root_apply_damage (PhocChildRoot *root)
+{
+  PhocView *self = PHOC_VIEW (root);
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  phoc_view_apply_damage (self);
+}
+
+
+static void
+phoc_view_child_root_add_child (PhocChildRoot *root, PhocViewChild *child)
+{
+  PhocView *self = PHOC_VIEW (root);
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_VIEW_CHILD (child));
+  priv = phoc_view_get_instance_private (self);
+
+  priv->child_surfaces = g_slist_prepend (priv->child_surfaces, child);
+}
+
+
+static void
+phoc_view_child_root_remove_child (PhocChildRoot *root, PhocViewChild *child)
+{
+  PhocView *self = PHOC_VIEW (root);
+  PhocViewPrivate *priv;
+
+  g_assert (PHOC_IS_VIEW (self));
+  g_assert (PHOC_IS_VIEW_CHILD (child));
+  priv = phoc_view_get_instance_private (self);
+
+  priv->child_surfaces = g_slist_remove (priv->child_surfaces, child);
+}
+
+
+static gboolean
+phoc_view_child_root_unconstrain_popup (PhocChildRoot *root, struct wlr_box *box)
+{
+  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
+  PhocView *self = PHOC_VIEW (root);
+  struct wlr_surface_output *surface_output;
+  struct wlr_box usable_area;
+  struct wlr_box geom;
+  PhocOutput *output;
+
+  g_assert (PHOC_IS_VIEW (self));
+
+  if (!phoc_view_is_mapped (self))
+    return FALSE;
+
+  /* Try top left corner of the view's geometry: */
+  phoc_view_get_geometry (self, &geom);
+  output = phoc_desktop_layout_get_output (desktop, self->box.x + geom.x, self->box.y + geom.y);
+  if (!output && wl_list_empty (&self->wlr_surface->current_outputs))
+    return FALSE;
+
+  /* Otherwise just take the first output */
+  surface_output = wl_container_of (self->wlr_surface->current_outputs.next, surface_output, link);
+  output = PHOC_OUTPUT (surface_output->output->data);
+  g_assert (PHOC_IS_OUTPUT (output));
+
+  if (!output) {
+    g_warning ("No output found for view %p at %d,%d", self, self->box.x, self->box.y);
+    return FALSE;
+  }
+
+  usable_area = output->usable_area;
+  usable_area.x += output->lx;
+  usable_area.y += output->ly;
+
+  /* the output box expressed in the coordinate system of the toplevel parent
+   * of the popup */
+  *box = (struct wlr_box) {
+    .x = usable_area.x - self->box.x,
+    .y = usable_area.y - self->box.y,
+    .width = usable_area.width,
+    .height = usable_area.height,
+  };
+
+  return TRUE;
+}
+
+
+static void
+phoc_view_child_root_iface_init (PhocChildRootInterface *iface)
+{
+  iface->get_box = phoc_view_child_root_get_box;
+  iface->is_mapped = phoc_view_child_root_is_mapped;
+  iface->apply_damage = phoc_view_child_root_apply_damage;
+  iface->add_child = phoc_view_child_root_add_child;
+  iface->remove_child = phoc_view_child_root_remove_child;
+  iface->unconstrain_popup = phoc_view_child_root_unconstrain_popup;
+}
+
+/* }}} */
 
 static void
 toggle_decoration (PhocView *self)
@@ -1042,15 +1172,15 @@ view_center (PhocView *view, PhocOutput *output)
 
 
 static void
-phoc_view_init_subsurfaces (PhocView *view, struct wlr_surface *surface)
+phoc_view_init_subsurfaces (PhocView *self)
 {
   struct wlr_subsurface *subsurface;
 
-  wl_list_for_each (subsurface, &surface->current.subsurfaces_below, current.link)
-    phoc_subsurface_new (view, subsurface);
+  wl_list_for_each (subsurface, &self->wlr_surface->current.subsurfaces_below, current.link)
+    phoc_subsurface_new (PHOC_CHILD_ROOT (self), subsurface);
 
-  wl_list_for_each (subsurface, &surface->current.subsurfaces_above, current.link)
-    phoc_subsurface_new (view, subsurface);
+  wl_list_for_each (subsurface, &self->wlr_surface->current.subsurfaces_above, current.link)
+    phoc_subsurface_new (PHOC_CHILD_ROOT (self), subsurface);
 }
 
 
@@ -1061,7 +1191,7 @@ phoc_view_handle_surface_new_subsurface (struct wl_listener *listener, void *dat
   PhocView *self = PHOC_VIEW_SELF (priv);
   struct wlr_subsurface *wlr_subsurface = data;
 
-  phoc_subsurface_new (self, wlr_subsurface);
+  phoc_subsurface_new (PHOC_CHILD_ROOT (self), wlr_subsurface);
 }
 
 static gchar *
@@ -1139,7 +1269,7 @@ phoc_view_map (PhocView *self, struct wlr_surface *surface)
   g_assert (self->wlr_surface == NULL);
   self->wlr_surface = surface;
 
-  phoc_view_init_subsurfaces (self, self->wlr_surface);
+  phoc_view_init_subsurfaces (self);
   priv->surface_new_subsurface.notify = phoc_view_handle_surface_new_subsurface;
   wl_signal_add (&self->wlr_surface->events.new_subsurface, &priv->surface_new_subsurface);
 
@@ -2273,32 +2403,6 @@ phoc_view_arrange (PhocView *self, PhocOutput *output, gboolean center)
     view_center (self, output);
 }
 
-
-void
-phoc_view_add_child (PhocView *self, PhocViewChild *child)
-{
-  PhocViewPrivate *priv;
-
-  g_assert (PHOC_IS_VIEW (self));
-  g_assert (PHOC_IS_VIEW_CHILD (child));
-  priv = phoc_view_get_instance_private (self);
-
-  priv->child_surfaces = g_slist_prepend (priv->child_surfaces, child);
-}
-
-
-void
-phoc_view_remove_child (PhocView *self, PhocViewChild *child)
-{
-  PhocViewPrivate *priv;
-
-  g_assert (PHOC_IS_VIEW (self));
-  g_assert (PHOC_IS_VIEW_CHILD (child));
-  priv = phoc_view_get_instance_private (self);
-
-  priv->child_surfaces = g_slist_remove (priv->child_surfaces, child);
-}
-
 /**
  * phoc_view_set_always_on_top:
  * @self: a view
@@ -2359,60 +2463,4 @@ phoc_view_set_visibility (PhocView *self, gboolean visibility)
   priv->visibility = visibility;
 
   phoc_view_set_suspended (self, !visibility);
-}
-
-/**
- * phoc_view_get_popup_unconstrain_region:
- * @self: The view
- * @box: (inout): The box
- *
- * Get the area to unconstrain a popup to relative to the parent
- * toplevels top left corner.
- *
- * Returns: Whether an unconstrain area was found
- */
-gboolean
-phoc_view_get_popup_unconstrain_region (PhocView *self, struct wlr_box *box)
-{
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-  struct wlr_surface_output *surface_output;
-  struct wlr_box usable_area;
-  struct wlr_box geom;
-  PhocOutput *output;
-
-  g_assert (PHOC_IS_VIEW (self));
-
-  if (!phoc_view_is_mapped (self))
-    return FALSE;
-
-  /* Try top left corner of the view's geometry: */
-  phoc_view_get_geometry (self, &geom);
-  output = phoc_desktop_layout_get_output (desktop, self->box.x + geom.x, self->box.y + geom.y);
-  if (!output && wl_list_empty (&self->wlr_surface->current_outputs))
-    return FALSE;
-
-  /* Otherwise just take the first output */
-  surface_output = wl_container_of (self->wlr_surface->current_outputs.next, surface_output, link);
-  output = PHOC_OUTPUT (surface_output->output->data);
-  g_assert (PHOC_IS_OUTPUT (output));
-
-  if (!output) {
-    g_warning ("No output found for view %p at %d,%d", self, self->box.x, self->box.y);
-    return FALSE;
-  }
-
-  usable_area = output->usable_area;
-  usable_area.x += output->lx;
-  usable_area.y += output->ly;
-
-  /* the output box expressed in the coordinate system of the toplevel parent
-   * of the popup */
-  *box = (struct wlr_box) {
-    .x = usable_area.x - self->box.x,
-    .y = usable_area.y - self->box.y,
-    .width = usable_area.width,
-    .height = usable_area.height,
-  };
-
-  return TRUE;
 }

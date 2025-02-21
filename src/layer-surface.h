@@ -39,6 +39,7 @@ struct _PhocLayerSurface {
   float              alpha;
   bool               mapped;
 
+  GSList            *child_surfaces;
   /* Last not yet ACKed serial */
   uint32_t           pending_serial;
 };

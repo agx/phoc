@@ -139,12 +139,15 @@ struct wlr_output *
             phoc_output_get_wlr_output (PhocOutput *output);
 void        phoc_output_damage_whole (PhocOutput *output);
 void        phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole);
-void        phoc_output_damage_whole_drag_icon (PhocOutput   *self,
-                                                PhocDragIcon *icon);
-void        phoc_output_damage_from_surface (PhocOutput *self, struct wlr_surface *surface,
-                                             double ox, double oy);
-void        phoc_output_damage_whole_surface (PhocOutput *self, struct wlr_surface *surface,
-                                              double ox, double oy);
+void        phoc_output_damage_from_layer_surface (PhocOutput       *self,
+                                                   PhocLayerSurface *layer_surface,
+                                                   gboolean          whole);
+void        phoc_output_damage_from_drag_icon (PhocOutput *self, PhocDragIcon *icon);
+void        phoc_output_damage_from_surface (PhocOutput         *self,
+                                             struct wlr_surface *wlr_surface,
+                                             double              ox,
+                                             double              oy,
+                                             gboolean            whole);
 
 void        phoc_output_update_shell_reveal (PhocOutput *self);
 void        phoc_output_force_shell_reveal (PhocOutput *self, gboolean force);

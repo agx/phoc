@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "child-root.h"
+
 #include <glib-object.h>
 
 #include <wlr/types/wlr_compositor.h>
@@ -13,7 +15,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _PhocView PhocView;
+typedef struct _PhocChildRoot PhocChildRoot;
 
 #define PHOC_TYPE_VIEW_CHILD (phoc_view_child_get_type ())
 
@@ -40,7 +42,7 @@ typedef struct _PhocViewChildClass
 
 #define PHOC_TYPE_VIEW_CHILD (phoc_view_child_get_type ())
 
-PhocView *            phoc_view_child_get_view (PhocViewChild *self);
+PhocChildRoot *       phoc_view_child_get_root (PhocViewChild *self);
 void                  phoc_view_child_apply_damage (PhocViewChild *self);
 void                  phoc_view_child_damage_whole (PhocViewChild *self);
 void                  phoc_view_child_get_pos (PhocViewChild *self, int *sx, int *sy);
