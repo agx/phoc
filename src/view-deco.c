@@ -19,7 +19,7 @@
 
 #define PHOC_DECO_BORDER_WIDTH      4
 #define PHOC_DECO_TITLEBAR_HEIGHT  12
-#define PHOC_DECO_COLOR            ((struct wlr_render_color){ 0.2, 0.2, 0.2, 1.0 })
+#define PHOC_DECO_COLOR(alpha)     ((struct wlr_render_color){ 0.2, 0.2, 0.2, (alpha) })
 
 /**
  * PhocViewDeco:
@@ -71,6 +71,9 @@ phoc_view_deco_bling_render (PhocBling *bling, PhocRenderContext *ctx)
 {
   struct wlr_box box = phoc_view_deco_bling_get_box (bling);
 
+  if (ctx->alpha == 0.0)
+    return;
+
   box.x -= ctx->output->lx;
   box.y -= ctx->output->ly;
   phoc_utils_scale_box (&box, ctx->output->wlr_output->scale);
@@ -86,7 +89,7 @@ phoc_view_deco_bling_render (PhocBling *bling, PhocRenderContext *ctx)
 
   wlr_render_pass_add_rect(ctx->render_pass, &(struct wlr_render_rect_options){
       .box = box,
-      .color = PHOC_DECO_COLOR,
+      .color = PHOC_DECO_COLOR (ctx->alpha),
       .clip = &damage,
     });
   pixman_region32_fini (&damage);
