@@ -36,8 +36,9 @@
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/gles2.h>
 #include <wlr/render/egl.h>
-#include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_alpha_modifier_v1.h>
 #include <wlr/types/wlr_buffer.h>
+#include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/util/region.h>
 #include <wlr/util/transform.h>
@@ -176,6 +177,7 @@ render_surface_iterator (PhocOutput         *output,
   PhocRenderContext *ctx = data;
   struct wlr_output *wlr_output = output->wlr_output;
   float alpha = ctx->alpha;
+  const struct wlr_alpha_modifier_surface_v1_state *alpha_modifier_state;
 
   struct wlr_texture *texture = wlr_surface_get_texture (surface);
   if (!texture)
@@ -192,7 +194,18 @@ render_surface_iterator (PhocOutput         *output,
   phoc_utils_scale_box (&clip_box, scale);
   phoc_utils_scale_box (&clip_box, wlr_output->scale);
 
-  render_texture (output, texture, &src_box, &dst_box, &clip_box, surface->current.transform, alpha, ctx);
+  alpha_modifier_state = wlr_alpha_modifier_v1_get_surface_state (surface);
+  if (alpha_modifier_state)
+    alpha *= (float)alpha_modifier_state->multiplier;
+
+  render_texture (output,
+                  texture,
+                  &src_box,
+                  &dst_box,
+                  &clip_box,
+                  surface->current.transform,
+                  alpha,
+                  ctx);
 
   wlr_presentation_surface_scanned_out_on_output (surface, wlr_output);
 }
