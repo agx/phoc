@@ -934,9 +934,6 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
     if (was_fullscreen)
       priv->fullscreen_output->fullscreen_view = NULL;
 
-    struct wlr_box view_box;
-    phoc_view_get_box (view, &view_box);
-
     view_save (view);
 
     struct wlr_box output_box;
