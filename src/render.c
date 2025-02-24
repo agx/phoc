@@ -130,7 +130,7 @@ phoc_renderer_get_property (GObject    *object,
 static void
 render_texture (PhocOutput               *output,
                 struct wlr_texture       *texture,
-                const struct wlr_fbox    *_src_box,
+                const struct wlr_fbox    *src_box,
                 const struct wlr_box     *dst_box,
                 const struct wlr_box     *clip_box,
                 enum wl_output_transform  surface_transform,
@@ -139,7 +139,6 @@ render_texture (PhocOutput               *output,
 {
   pixman_region32_t damage;
   struct wlr_box proj_box = *dst_box;
-  struct wlr_fbox src_box = {0};
   enum wl_output_transform transform;
 
   if (alpha == 0.0)
@@ -148,16 +147,13 @@ render_texture (PhocOutput               *output,
   if (!phoc_utils_is_damaged (&proj_box, ctx->damage, clip_box, &damage))
     goto buffer_damage_finish;
 
-  if (_src_box)
-    src_box = *_src_box;
-
   phoc_output_transform_box (output, &proj_box);
   phoc_output_transform_damage (output, &damage);
   transform = wlr_output_transform_compose (surface_transform, output->wlr_output->transform);
 
   wlr_render_pass_add_texture (ctx->render_pass, &(struct wlr_render_texture_options) {
       .texture = texture,
-      .src_box = src_box,
+      .src_box = *src_box,
       .dst_box = proj_box,
       .transform = transform,
       .alpha = &alpha,
