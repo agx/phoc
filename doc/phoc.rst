@@ -67,6 +67,12 @@ ENVIRONMENT VARIABLES
       - ``disable-animations``: Disable animations
       - ``force-shell-reveal``: Always reveal shell over fullscreen apps
 
+UDEV PROPERTIES
+---------------
+
+Apart from the udev properties for wakeup keys documented in ``gmobile.udev(5)`` phoc uses
+``ID_INPUT_KEYBOARD`` to identify hardware keyboards. You can use ``hwdb`` to override these.
+
 DBUS INTERFACE
 --------------
 
@@ -83,6 +89,8 @@ To toggle individual values:
 
   busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl TouchPoints b true
   busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl DamageTracking b true
+  busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl LogDomains as 1 all
+  busctl --user set-property mobi.phosh.Phoc.DebugControl /mobi/phosh/Phoc/DebugControl mobi.phosh.Phoc.DebugControl LogDomains as 2 phoc-seat phoc-layer-surface
 
 Note that the flags are not considered stable API so can change
 between releases.
