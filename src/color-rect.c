@@ -10,8 +10,6 @@
 
 #include "phoc-config.h"
 #include "color-rect.h"
-#include "server.h"
-#include "desktop.h"
 #include "output.h"
 #include "utils.h"
 
@@ -56,29 +54,6 @@ G_DEFINE_TYPE_WITH_CODE (PhocColorRect, phoc_color_rect, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (PHOC_TYPE_BLING, bling_interface_init))
 
 
-static void
-phoc_color_rect_damage_box (PhocColorRect *self)
-{
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-  PhocOutput *output;
-
-  if (!self->mapped)
-    return;
-
-  wl_list_for_each (output, &desktop->outputs, link) {
-    struct wlr_box damage_box = self->box;
-    bool intersects = wlr_output_layout_intersects (desktop->layout, output->wlr_output, &self->box);
-    if (!intersects)
-      continue;
-
-    damage_box.x -= output->lx;
-    damage_box.y -= output->ly;
-    phoc_utils_scale_box (&damage_box, output->wlr_output->scale);
-
-    if (wlr_damage_ring_add_box (&output->damage_ring, &damage_box))
-      wlr_output_schedule_frame (output->wlr_output);
-  }
-}
 
 
 static void
@@ -92,25 +67,25 @@ phoc_color_rect_set_property (GObject      *object,
   switch (property_id) {
   case PROP_X:
     /* Damage the old box's area */
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     self->box.x = g_value_get_int (value);
     /* Damage the new box's area */
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     break;
   case PROP_Y:
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     self->box.y = g_value_get_int (value);
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     break;
   case PROP_WIDTH:
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     self->box.width = g_value_get_uint (value);
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     break;
   case PROP_HEIGHT:
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     self->box.height = g_value_get_uint (value);
-    phoc_color_rect_damage_box (self);
+    phoc_bling_damage_box (PHOC_BLING (self));
     break;
   case PROP_BOX:
     phoc_color_rect_set_box (self, g_value_get_boxed (value));
@@ -227,7 +202,7 @@ bling_map (PhocBling *bling)
   PhocColorRect *self = PHOC_COLOR_RECT (bling);
 
   self->mapped = TRUE;
-  phoc_color_rect_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
 }
 
 
@@ -236,7 +211,7 @@ bling_unmap (PhocBling *bling)
 {
   PhocColorRect *self = PHOC_COLOR_RECT (bling);
 
-  phoc_color_rect_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
   self->mapped = FALSE;
 }
 
@@ -364,9 +339,9 @@ phoc_color_rect_set_box (PhocColorRect *self, PhocBox *box)
 {
   g_assert (PHOC_IS_COLOR_RECT (self));
 
-  phoc_color_rect_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
   self->box = *box;
-  phoc_color_rect_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
 }
 
 /**
@@ -388,7 +363,7 @@ phoc_color_rect_set_color (PhocColorRect *self, PhocColor *color)
 
   alpha = self->color.alpha;
   self->color = *color;
-  phoc_color_rect_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COLOR]);
   if (!G_APPROX_VALUE (self->color.alpha, alpha, FLT_EPSILON))
@@ -427,7 +402,7 @@ phoc_color_rect_set_alpha (PhocColorRect *self, float alpha)
     return;
 
   self->color.alpha = alpha;
-  phoc_color_rect_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ALPHA]);
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COLOR]);

@@ -11,9 +11,7 @@
 #include "phoc-config.h"
 
 #include "bling.h"
-#include "desktop.h"
 #include "output.h"
-#include "server.h"
 #include "view-deco.h"
 #include "utils.h"
 
@@ -69,32 +67,6 @@ phoc_view_deco_bling_get_box (PhocBling *bling)
 
 
 static void
-phoc_view_deco_damage_box (PhocViewDeco *self)
-{
-  PhocDesktop *desktop = phoc_server_get_desktop (phoc_server_get_default ());
-  PhocOutput *output;
-
-  if (!self->mapped)
-    return;
-
-  wl_list_for_each (output, &desktop->outputs, link) {
-    struct wlr_box damage_box = phoc_bling_get_box (PHOC_BLING (self));
-    bool intersects = wlr_output_layout_intersects (desktop->layout, output->wlr_output, &damage_box);
-    if (!intersects)
-      continue;
-
-    damage_box.x -= output->lx;
-    damage_box.y -= output->ly;
-    phoc_utils_scale_box (&damage_box, output->wlr_output->scale);
-
-    if (wlr_damage_ring_add_box (&output->damage_ring, &damage_box))
-      wlr_output_schedule_frame (output->wlr_output);
-  }
-}
-
-
-
-static void
 phoc_view_deco_bling_render (PhocBling *bling, PhocRenderContext *ctx)
 {
   struct wlr_box box = phoc_view_deco_bling_get_box (bling);
@@ -127,7 +99,7 @@ phoc_view_deco_bling_map (PhocBling *bling)
   PhocViewDeco *self = PHOC_VIEW_DECO (bling);
 
   self->mapped = TRUE;
-  phoc_view_deco_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
 }
 
 
@@ -136,7 +108,7 @@ phoc_view_deco_bling_unmap (PhocBling *bling)
 {
   PhocViewDeco *self = PHOC_VIEW_DECO (bling);
 
-  phoc_view_deco_damage_box (self);
+  phoc_bling_damage_box (PHOC_BLING (self));
   self->mapped = FALSE;
 }
 

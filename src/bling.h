@@ -69,5 +69,6 @@ PhocBox                 phoc_bling_get_box                       (PhocBling    *
 void                    phoc_bling_map                           (PhocBling    *self);
 void                    phoc_bling_unmap                         (PhocBling    *self);
 gboolean                phoc_bling_is_mapped                     (PhocBling    *self);
+void                    phoc_bling_damage_box                    (PhocBling    *self);
 
 G_END_DECLS
