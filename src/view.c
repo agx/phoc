@@ -934,9 +934,6 @@ phoc_view_set_fullscreen (PhocView *view, bool fullscreen, PhocOutput *output)
     if (was_fullscreen)
       priv->fullscreen_output->fullscreen_view = NULL;
 
-    struct wlr_box view_box;
-    phoc_view_get_box (view, &view_box);
-
     view_save (view);
 
     struct wlr_box output_box;
@@ -1738,14 +1735,10 @@ phoc_view_for_each_surface_default (PhocView                    *self,
 static void
 phoc_view_get_geometry_default (PhocView *self, struct wlr_box *geom)
 {
-  PhocViewPrivate *priv;
-
-  priv = phoc_view_get_instance_private (self);
-
   geom->x = 0;
   geom->y = 0;
-  geom->width = self->box.width * priv->scale;
-  geom->height = self->box.height * priv->scale;
+  geom->width = self->box.width;
+  geom->height = self->box.height;
 }
 
 
