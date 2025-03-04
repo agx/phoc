@@ -1768,6 +1768,14 @@ phoc_view_get_wlr_surface_at_default (PhocView *self,
   return wlr_surface_surface_at (self->wlr_surface, sx, sy, sub_x, sub_y);
 }
 
+
+static float
+phoc_view_get_alpha_default (PhocView *self)
+{
+  return 1.0;
+}
+
+
 G_NORETURN
 static void
 phoc_view_resize_default (PhocView *self, uint32_t width, uint32_t height)
@@ -1835,6 +1843,7 @@ phoc_view_class_init (PhocViewClass *klass)
   view_class->set_tiled = phoc_view_set_tiled_default;
   view_class->set_suspended = phoc_view_set_suspended_default;
   view_class->get_wlr_surface_at = phoc_view_get_wlr_surface_at_default;
+  view_class->get_alpha = phoc_view_get_alpha_default;
   /* Mandatory */
   view_class->resize = phoc_view_resize_default;
   view_class->move_resize = phoc_view_move_resize_default;
@@ -2142,7 +2151,7 @@ phoc_view_get_alpha (PhocView *self)
   g_assert (PHOC_IS_VIEW (self));
   priv = phoc_view_get_instance_private (self);
 
-  return priv->alpha;
+  return priv->alpha * PHOC_VIEW_GET_CLASS (self)->get_alpha (self);
 }
 
 /**

@@ -104,6 +104,7 @@ struct _PhocView {
  *     The implementation is optional.
  * @get_wlr_surface_at: Get the wlr_surface at the give coordinates.
  *     The implementation is optional.
+ * @get_alpha: Get the view's alpha value.
  */
 typedef struct _PhocViewClass
 {
@@ -125,6 +126,7 @@ typedef struct _PhocViewClass
   struct wlr_surface *
        (*get_wlr_surface_at) (PhocView *self, double sx, double sy, double *sub_x, double *sub_y);
   pid_t (*get_pid)           (PhocView *self);
+  float (*get_alpha)         (PhocView *self);
 } PhocViewClass;
 
 
