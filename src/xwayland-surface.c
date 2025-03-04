@@ -49,6 +49,7 @@ typedef struct _PhocXWaylandSurface {
   struct wl_listener set_title;
   struct wl_listener set_class;
   struct wl_listener set_startup_id;
+  struct wl_listener set_opacity;
 
   struct wl_listener surface_commit;
 } PhocXWaylandSurface;
@@ -254,6 +255,20 @@ get_pid (PhocView *view)
 }
 
 
+static float
+get_alpha (PhocView *view)
+{
+#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
+  PhocXWaylandSurface *self = PHOC_XWAYLAND_SURFACE (view);
+
+
+  return self->xwayland_surface->opacity;
+#else
+  return 1.0;
+#endif
+}
+
+
 static void
 phoc_xwayland_surface_set_property (GObject      *object,
                                     guint         property_id,
@@ -406,6 +421,19 @@ handle_set_startup_id (struct wl_listener *listener, void *data)
     g_debug ("Setting view %p via token '%s' as pending activation", PHOC_VIEW (self),token);
   }
 }
+
+
+#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
+static void
+handle_set_opacity (struct wl_listener *listener, void *data)
+{
+  PhocXWaylandSurface *self = wl_container_of (listener, self, set_opacity);
+
+  g_debug ("Updated opacity %f", self->xwayland_surface->opacity);
+  phoc_view_damage_whole (PHOC_VIEW (self));
+}
+#endif
+
 
 static void
 handle_surface_commit (struct wl_listener *listener, void *data)
@@ -565,6 +593,11 @@ phoc_xwayland_surface_constructed (GObject *object)
   self->set_startup_id.notify = handle_set_startup_id;
   wl_signal_add(&surface->events.set_startup_id, &self->set_startup_id);
 
+#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
+  self->set_opacity.notify = handle_set_opacity;
+  wl_signal_add (&surface->events.set_opacity, &self->set_opacity);
+#endif
+
   wl_list_init (&self->map.link);
   wl_list_init (&self->unmap.link);
 }
@@ -586,6 +619,9 @@ phoc_xwayland_surface_finalize (GObject *object)
   wl_list_remove(&self->set_title.link);
   wl_list_remove(&self->set_class.link);
   wl_list_remove(&self->set_startup_id.link);
+#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
+  wl_list_remove (&self->set_opacity.link);
+#endif
 
   self->xwayland_surface->data = NULL;
 
@@ -613,6 +649,7 @@ phoc_xwayland_surface_class_init (PhocXWaylandSurfaceClass *klass)
   view_class->set_maximized = set_maximized;
   view_class->close = _close;
   view_class->get_pid = get_pid;
+  view_class->get_alpha = get_alpha;
 
   /**
    * PhocXWaylandSurface:wlr-xwayland-surface:
