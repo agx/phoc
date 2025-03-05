@@ -36,8 +36,9 @@
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/gles2.h>
 #include <wlr/render/egl.h>
-#include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_alpha_modifier_v1.h>
 #include <wlr/types/wlr_buffer.h>
+#include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/util/region.h>
 #include <wlr/util/transform.h>
@@ -130,7 +131,7 @@ phoc_renderer_get_property (GObject    *object,
 static void
 render_texture (PhocOutput               *output,
                 struct wlr_texture       *texture,
-                const struct wlr_fbox    *_src_box,
+                const struct wlr_fbox    *src_box,
                 const struct wlr_box     *dst_box,
                 const struct wlr_box     *clip_box,
                 enum wl_output_transform  surface_transform,
@@ -139,7 +140,6 @@ render_texture (PhocOutput               *output,
 {
   pixman_region32_t damage;
   struct wlr_box proj_box = *dst_box;
-  struct wlr_fbox src_box = {0};
   enum wl_output_transform transform;
 
   if (alpha == 0.0)
@@ -148,16 +148,13 @@ render_texture (PhocOutput               *output,
   if (!phoc_utils_is_damaged (&proj_box, ctx->damage, clip_box, &damage))
     goto buffer_damage_finish;
 
-  if (_src_box)
-    src_box = *_src_box;
-
   phoc_output_transform_box (output, &proj_box);
   phoc_output_transform_damage (output, &damage);
   transform = wlr_output_transform_compose (surface_transform, output->wlr_output->transform);
 
   wlr_render_pass_add_texture (ctx->render_pass, &(struct wlr_render_texture_options) {
       .texture = texture,
-      .src_box = src_box,
+      .src_box = *src_box,
       .dst_box = proj_box,
       .transform = transform,
       .alpha = &alpha,
@@ -180,6 +177,7 @@ render_surface_iterator (PhocOutput         *output,
   PhocRenderContext *ctx = data;
   struct wlr_output *wlr_output = output->wlr_output;
   float alpha = ctx->alpha;
+  const struct wlr_alpha_modifier_surface_v1_state *alpha_modifier_state;
 
   struct wlr_texture *texture = wlr_surface_get_texture (surface);
   if (!texture)
@@ -196,7 +194,18 @@ render_surface_iterator (PhocOutput         *output,
   phoc_utils_scale_box (&clip_box, scale);
   phoc_utils_scale_box (&clip_box, wlr_output->scale);
 
-  render_texture (output, texture, &src_box, &dst_box, &clip_box, surface->current.transform, alpha, ctx);
+  alpha_modifier_state = wlr_alpha_modifier_v1_get_surface_state (surface);
+  if (alpha_modifier_state)
+    alpha *= (float)alpha_modifier_state->multiplier;
+
+  render_texture (output,
+                  texture,
+                  &src_box,
+                  &dst_box,
+                  &clip_box,
+                  surface->current.transform,
+                  alpha,
+                  ctx);
 
   wlr_presentation_surface_scanned_out_on_output (surface, wlr_output);
 }

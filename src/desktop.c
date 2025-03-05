@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <wlr/config.h>
+#include <wlr/types/wlr_alpha_modifier_v1.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_control_v1.h>
@@ -651,6 +652,7 @@ phoc_desktop_constructed (GObject *object)
   self->pointer_constraint.notify = handle_pointer_constraint;
   wl_signal_add (&self->pointer_constraints->events.new_constraint, &self->pointer_constraint);
 
+  wlr_alpha_modifier_v1_create (wl_display);
   wlr_presentation_create (wl_display, wlr_backend);
   self->foreign_toplevel_manager_v1 = wlr_foreign_toplevel_manager_v1_create (wl_display);
   self->ext_foreign_toplevel_list_v1 =

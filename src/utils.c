@@ -161,9 +161,7 @@ phoc_utils_is_damaged (const struct wlr_box    *box,
                        const struct wlr_box    *clip_box,
                        pixman_region32_t       *out_damage)
 {
-  pixman_region32_init (out_damage);
-  pixman_region32_union_rect (out_damage, out_damage,
-                              box->x, box->y, box->width, box->height);
+  pixman_region32_init_rect (out_damage, box->x, box->y, box->width, box->height);
   pixman_region32_intersect (out_damage, out_damage, damage);
 
   if (clip_box) {
@@ -171,7 +169,7 @@ phoc_utils_is_damaged (const struct wlr_box    *box,
                                     clip_box->x, clip_box->y, clip_box->width, clip_box->height);
   }
 
-  return !!pixman_region32_not_empty (out_damage);
+  return !pixman_region32_empty (out_damage);
 }
 
 
