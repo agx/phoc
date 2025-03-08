@@ -1,10 +1,9 @@
 [wrap-git]
 directory=wlroots-0.19.x
 url=https://gitlab.freedesktop.org/wlroots/wlroots.git
-revision=d305934ebe6852785a1f425ee96861f0b7280d76
+revision=fef4f3637a5dfb7022887dfb36ccdd69932d2753
 depth=1
 
 # Phoc specific patches
 diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch,
- wlroots/0001-xwm-Handle-NET_WM_WINDOW_OPACITY.patch,
- wlroots/0001-seat-Don-t-forget-to-destroy-touch-points-on-touch-u.patch
+ wlroots/0001-xwm-Handle-NET_WM_WINDOW_OPACITY.patch
