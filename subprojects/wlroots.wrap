@@ -1,9 +1,8 @@
 [wrap-git]
 directory=wlroots-0.19.x
 url=https://gitlab.freedesktop.org/wlroots/wlroots.git
-revision=fef4f3637a5dfb7022887dfb36ccdd69932d2753
+revision=e752e3ec06fc7c2b83079a5980218ae359b1c869
 depth=1
 
 # Phoc specific patches
-diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch,
- wlroots/0001-xwm-Handle-NET_WM_WINDOW_OPACITY.patch
+diff_files = wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch

@@ -84,22 +84,6 @@ if get_option('xwayland').enabled() and not wlroots_has_xwayland
 endif
 have_xwayland = get_option('xwayland').enabled()
 
-have_xwayland_set_opacity = false
-if have_xwayland
-  if embed_wlroots.disabled()
-    opacity_inc = []
-    opacity_dep = wlroots
-  else
-    opacity_inc = include_directories('subprojects/wlroots/include')
-    opacity_dep = []
-  endif
-  have_xwayland_set_opacity = cc.has_member('struct wlr_xwayland_surface', 'events.set_opacity',
-                                            args: '-DWLR_USE_UNSTABLE',
-                                            prefix: '#include <wlr/xwayland.h>',
-                                            include_directories: opacity_inc,
-                                            dependencies: opacity_dep)
-endif
-
 use_dtrace = false
 if not get_option('dtrace').disabled()
   has_sdt = cc.has_header('sys/sdt.h')
@@ -179,8 +163,6 @@ config_h.set('PHOC_XWAYLAND', have_xwayland,
 	     description: 'Whether xwayland is enabled')
 config_h.set('PHOC_USE_DTRACE', use_dtrace,
 	     description: 'Whether tracing via dtrace/stp is enabled')
-config_h.set('PHOC_HAVE_XWAYLAND_SET_OPACITY', have_xwayland_set_opacity,
-	     description: 'Whether we have wlr_xwayland_surface.set_opacity')
 
 phoc_config_h = configure_file(
   output: 'phoc-config.h',
@@ -208,7 +190,6 @@ summary({
      'wlroots version': wlroots.version(),
      'wlroots as subproject': not embed_wlroots.disabled() and wlroots_proj.found(),
      'Xwayland': have_xwayland,
-     'Xwayland set_opacity': have_xwayland_set_opacity,
      'Documentation': get_option('gtk_doc'),
      'Manual pages': get_option('man'),
      'Tracing': use_dtrace,
