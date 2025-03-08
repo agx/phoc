@@ -84,6 +84,18 @@ if get_option('xwayland').enabled() and not wlroots_has_xwayland
 endif
 have_xwayland = get_option('xwayland').enabled()
 
+have_xwayland_set_opacity = false
+if have_xwayland
+  if not embed_wlroots.disabled()
+    have_xwayland_set_opacity = true
+  elif cc.has_member('struct wlr_xwayland_surface', 'set_opacity',
+                     args: '-DWLR_USE_UNSTABLE',
+                     prefix: '#include <wlr/xwayland.h>',
+                     dependencies: wlroots)
+    have_xwayland_set_opacity = true
+  endif
+endif
+
 use_dtrace = false
 if not get_option('dtrace').disabled()
   has_sdt = cc.has_header('sys/sdt.h')
@@ -163,6 +175,8 @@ config_h.set('PHOC_XWAYLAND', have_xwayland,
 	     description: 'Whether xwayland is enabled')
 config_h.set('PHOC_USE_DTRACE', use_dtrace,
 	     description: 'Whether tracing via dtrace/stp is enabled')
+config_h.set('PHOC_HAVE_XWAYLAND_SET_OPACITY', have_xwayland_set_opacity,
+	     description: 'Whether we have wlr_xwayland_surface.set_opacity')
 
 phoc_config_h = configure_file(
   output: 'phoc-config.h',
@@ -190,6 +204,7 @@ summary({
      'wlroots version': wlroots.version(),
      'wlroots as subproject': not embed_wlroots.disabled() and wlroots_proj.found(),
      'Xwayland': have_xwayland,
+     'Xwayland set_opacity': have_xwayland_set_opacity,
      'Documentation': get_option('gtk_doc'),
      'Manual pages': get_option('man'),
      'Tracing': use_dtrace,
@@ -199,11 +214,4 @@ summary({
   section: 'Build',
 )
 
-# gnome.post_install() is available since meson 0.59.0
-# Distributions use their own tooling (e.g. postinst, triggers, etc)
-# so it is okay if the post_install() is not run on distro builds
-if meson.version().version_compare('>=0.59.0')
-  gnome.post_install(
-    glib_compile_schemas: true,
-  )
-endif
+gnome.post_install(glib_compile_schemas: true)
