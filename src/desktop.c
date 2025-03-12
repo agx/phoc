@@ -567,8 +567,6 @@ phoc_desktop_constructed (GObject *object)
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
 
-  wl_list_init (&self->outputs);
-
   self->new_output.notify = handle_new_output;
   wl_signal_add (&wlr_backend->events.new_output, &self->new_output);
 
@@ -761,6 +759,8 @@ static void
 phoc_desktop_init (PhocDesktop *self)
 {
   PhocDesktopPrivate *priv;
+
+  wl_list_init (&self->outputs);
 
   priv = phoc_desktop_get_instance_private (self);
   priv->views = g_queue_new ();
