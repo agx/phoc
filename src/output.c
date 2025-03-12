@@ -1522,6 +1522,25 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
   }
 }
 
+
+struct for_each_surface_data {
+  PhocOutput          *output;
+  gboolean             visible_only;
+  PhocSurfaceIterator  iterator;
+  gpointer             user_data;
+};
+
+static gboolean
+for_each_surface_iter (PhocDesktop *desktop, PhocView *view, gpointer user_data)
+{
+  struct for_each_surface_data *data = user_data;
+
+  if (!data->visible_only || phoc_desktop_view_check_visibility (desktop, view))
+    phoc_output_view_for_each_surface (data->output, view, data->iterator, data->user_data);
+
+  return TRUE;
+}
+
 /**
  * phoc_output_for_each_surface:
  * @self: the output
@@ -1553,12 +1572,14 @@ phoc_output_for_each_surface (PhocOutput          *self,
     }
 #endif
   } else {
-    for (GList *l = phoc_desktop_get_views (desktop)->tail; l; l = l->prev) {
-      PhocView *view = PHOC_VIEW (l->data);
-
-      if (!visible_only || phoc_desktop_view_check_visibility (desktop, view))
-        phoc_output_view_for_each_surface (self, view, iterator, user_data);
-    }
+    phoc_desktop_for_each_view (desktop,
+                                for_each_surface_iter,
+                                (gpointer)&(struct for_each_surface_data){
+                                  .output = self,
+                                  .iterator = iterator,
+                                  .user_data = user_data,
+                                  .visible_only = visible_only,
+                                });
   }
 
   phoc_output_drag_icons_for_each_surface (self, input, iterator, user_data);
