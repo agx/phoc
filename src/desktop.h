@@ -97,50 +97,64 @@ struct _PhocDesktop {
   GHashTable *input_output_map;
 };
 
-PhocDesktop *phoc_desktop_new (void);
+PhocDesktop *           phoc_desktop_new (void);
 
-GQueue      *phoc_desktop_get_views         (PhocDesktop *self);
-void         phoc_desktop_move_view_to_top  (PhocDesktop *self, PhocView *view);
-gboolean     phoc_desktop_has_views         (PhocDesktop *self);
-PhocView    *phoc_desktop_get_view_by_index (PhocDesktop *self, guint index);
-void         phoc_desktop_insert_view       (PhocDesktop *self, PhocView *view);
-gboolean     phoc_desktop_remove_view       (PhocDesktop *self, PhocView *view);
+GQueue *                phoc_desktop_get_views                    (PhocDesktop *self);
+void                    phoc_desktop_move_view_to_top             (PhocDesktop *self,
+                                                                   PhocView    *view);
+gboolean                phoc_desktop_has_views                    (PhocDesktop *self);
+PhocView *              phoc_desktop_get_view_by_index            (PhocDesktop *self,
+                                                                    guint       index);
+void                    phoc_desktop_insert_view                  (PhocDesktop *self,
+                                                                   PhocView    *view);
+gboolean                phoc_desktop_remove_view                  (PhocDesktop *self,
+                                                                   PhocView    *view);
 
-void         phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean on);
-gboolean     phoc_desktop_get_auto_maximize (PhocDesktop *self);
-void         phoc_desktop_set_scale_to_fit (PhocDesktop *self, gboolean on);
-gboolean     phoc_desktop_get_scale_to_fit (PhocDesktop *self);
-gboolean     phoc_desktop_get_enable_animations (PhocDesktop *self);
-PhocOutput  *phoc_desktop_find_output (PhocDesktop *self,
-                                       const char  *make,
-                                       const char  *model,
-                                       const char  *serial);
-PhocOutput *phoc_desktop_find_output_by_name (PhocDesktop *self, const char *name);
-PhocOutput *phoc_desktop_get_builtin_output (PhocDesktop *self);
-PhocOutput *phoc_desktop_layout_get_output (PhocDesktop *self, double lx, double ly);
+void                    phoc_desktop_set_auto_maximize            (PhocDesktop *self,
+                                                                   gboolean     on);
+gboolean                phoc_desktop_get_auto_maximize            (PhocDesktop *self);
+void                    phoc_desktop_set_scale_to_fit             (PhocDesktop *self,
+                                                                   gboolean     on);
+gboolean                phoc_desktop_get_scale_to_fit             (PhocDesktop *self);
+gboolean                phoc_desktop_get_enable_animations        (PhocDesktop *self);
+PhocOutput  *           phoc_desktop_find_output                  (PhocDesktop *self,
+                                                                  const char  *make,
+                                                                  const char  *model,
+                                                                  const char  *serial);
+PhocOutput *            phoc_desktop_find_output_by_name          (PhocDesktop *self,
+                                                                  const char  *name);
+PhocOutput *            phoc_desktop_get_builtin_output           (PhocDesktop *self);
+PhocOutput *            phoc_desktop_layout_get_output            (PhocDesktop *self,
+                                                                  double       lx,
+                                                                  double       ly);
 
-struct wlr_surface *phoc_desktop_wlr_surface_at (PhocDesktop *desktop,
-                                                 double       lx,
-                                                 double       ly,
-                                                 double      *sx,
-                                                 double      *sy,
-                                                 PhocView   **view);
-gboolean phoc_desktop_view_check_visibility (PhocDesktop *self, PhocView *view);
-void     phoc_desktop_set_view_always_on_top (PhocDesktop *self, PhocView *view, gboolean on_top);
+struct wlr_surface *    phoc_desktop_wlr_surface_at               (PhocDesktop *desktop,
+                                                                  double       lx,
+                                                                  double       ly,
+                                                                  double      *sx,
+                                                                  double      *sy,
+                                                                  PhocView   **view);
+gboolean                phoc_desktop_view_check_visibility       (PhocDesktop *self,
+                                                                  PhocView    *view);
+void                    phoc_desktop_set_view_always_on_top      (PhocDesktop *self,
+                                                                  PhocView    *view,
+                                                                  gboolean     on_top);
 
-PhocLayerSurface  *phoc_desktop_layer_surface_at(PhocDesktop *self,
-                                                 double lx, double ly,
-                                                 double *sx, double *sy);
+PhocLayerSurface *      phoc_desktop_layer_surface_at            (PhocDesktop *self,
+                                                                  double       lx,
+                                                                  double       ly,
+                                                                  double      *sx,
+                                                                  double      *sy);
 PhocDraggableLayerSurface *
-                     phoc_desktop_get_draggable_layer_surface    (PhocDesktop *self,
+                        phoc_desktop_get_draggable_layer_surface (PhocDesktop *self,
                                                                   PhocLayerSurface *layer_surface);
-GSList              *phoc_desktop_get_layer_surface_stacks       (PhocDesktop *self);
+GSList *                phoc_desktop_get_layer_surface_stacks    (PhocDesktop *self);
 
-PhocGtkShell        *phoc_desktop_get_gtk_shell                  (PhocDesktop *self);
-PhocPhoshPrivate    *phoc_desktop_get_phosh_private              (PhocDesktop *self);
+PhocGtkShell *          phoc_desktop_get_gtk_shell               (PhocDesktop *self);
+PhocPhoshPrivate *      phoc_desktop_get_phosh_private           (PhocDesktop *self);
 
-void                 phoc_desktop_notify_activity                (PhocDesktop *self,
+void                    phoc_desktop_notify_activity             (PhocDesktop *self,
                                                                   PhocSeat    *seat);
 
-gboolean phoc_desktop_is_privileged_protocol (PhocDesktop            *self,
-                                              const struct wl_global *global);
+gboolean                phoc_desktop_is_privileged_protocol      (PhocDesktop            *self,
+                                                                  const struct wl_global *global);
