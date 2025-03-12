@@ -1281,6 +1281,31 @@ phoc_desktop_remove_view (PhocDesktop *self, PhocView *view)
   return g_queue_remove (priv->views, view);
 }
 
+/**
+ * phoc_desktop_for_each_view:
+ * @self: The desktop
+ * @view_iter:(scope call): The iterator
+ * @user_data: The user data
+ *
+ * Invokes `view_iter` on all views passing in `user_data`.
+ */
+void
+phoc_desktop_for_each_view (PhocDesktop *self, PhocDesktopViewIter view_iter, gpointer user_data)
+{
+  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  for (GList *l = priv->views->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
+    gboolean cont;
+
+    cont = (*view_iter)(self, view, user_data);
+    if (!cont)
+      return;
+  }
+}
+
 
 static void
 on_always_on_top_animation_done (PhocTimedAnimation *anim, PhocColorRect *rect)

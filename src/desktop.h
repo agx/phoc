@@ -97,6 +97,19 @@ struct _PhocDesktop {
   GHashTable *input_output_map;
 };
 
+/**
+ * PhocDesktopViewIter:
+ * @self: The desktop
+ * @view: The view
+ * @user_data: The user data
+ *
+ * The iterator function that is invoked by `phoc_desktop_for_each_view`.
+ * The iterator can return `FALSE` if iterating further views should be stopped.
+ *
+ * Returns: `TRUE` if the iteration should continue.
+ */
+typedef gboolean (*PhocDesktopViewIter)(PhocDesktop *self, PhocView *view, gpointer user_data);
+
 PhocDesktop *           phoc_desktop_new (void);
 
 GQueue *                phoc_desktop_get_views                    (PhocDesktop *self);
@@ -109,6 +122,9 @@ void                    phoc_desktop_insert_view                  (PhocDesktop *
                                                                    PhocView    *view);
 gboolean                phoc_desktop_remove_view                  (PhocDesktop *self,
                                                                    PhocView    *view);
+void                    phoc_desktop_for_each_view                (PhocDesktop        *self,
+                                                                   PhocDesktopViewIter view_iter,
+                                                                   gpointer            user_data);
 
 void                    phoc_desktop_set_auto_maximize            (PhocDesktop *self,
                                                                    gboolean     on);
