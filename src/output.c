@@ -600,7 +600,7 @@ phoc_output_draw (PhocOutput *self)
   pixman_region32_fini (&frame_damage);
 
   /* Check if we can delegate the fullscreen surface to the output */
-  if (phoc_output_has_fullscreen_view (self))
+  if (self->fullscreen_view)
     scanned_out = scan_out_fullscreen_view (self, self->fullscreen_view, &pending);
 
   if (scanned_out)
@@ -1961,21 +1961,6 @@ phoc_output_is_match (PhocOutput *self,
            g_strcmp0 (self->wlr_output->serial, serial) == 0);
 
   return match;
-}
-
-/**
- * phoc_output_has_fullscreen_view:
- * @self: The #PhocOutput
- *
- * Returns: %TRUE if the output has a fullscreen view attached,
- *          %FALSE otherwise.
- */
-gboolean
-phoc_output_has_fullscreen_view (PhocOutput *self)
-{
-  g_assert (PHOC_IS_OUTPUT (self));
-
-  return phoc_view_is_mapped (self->fullscreen_view);
 }
 
 
