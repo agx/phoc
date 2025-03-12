@@ -795,6 +795,29 @@ phoc_desktop_new (void)
   return g_object_new (PHOC_TYPE_DESKTOP, NULL);
 }
 
+
+struct toggle_auto_max_data {
+  PhocInput   *input;
+  gboolean     enable;
+};
+
+
+static gboolean
+toggle_auto_max_iterator (PhocDesktop *self, PhocView *view, gpointer user_data)
+{
+  struct toggle_auto_max_data *data = user_data;
+
+  if (data->enable) {
+    phoc_view_auto_maximize (view);
+    phoc_view_appear_activated (view, true);
+  } else {
+    /* Disabling auto-maximize leaves all views in their current position */
+    phoc_view_appear_activated (view, phoc_input_view_has_focus (data->input, view));
+  }
+
+  return TRUE;
+}
+
 /**
  * phoc_desktop_set_auto_maximize:
  *
@@ -803,8 +826,8 @@ phoc_desktop_new (void)
 void
 phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
 {
-  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
   PhocServer *server = phoc_server_get_default();
+  PhocInput *input = phoc_server_get_input (server);
 
   if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE))) {
     if (enable == FALSE)
@@ -815,24 +838,12 @@ phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
   g_debug ("auto-maximize: %d", enable);
   self->maximize = enable;
 
-  /* Disabling auto-maximize leaves all views in their current position */
-  if (!enable) {
-    PhocInput *input = phoc_server_get_input (server);
-
-    for (GList *l = priv->views->head; l; l = l->next) {
-      PhocView *view = PHOC_VIEW (l->data);
-
-      phoc_view_appear_activated (view, phoc_input_view_has_focus (input, view));
-    }
-    return;
-  }
-
-  for (GList *l = priv->views->head; l; l = l->next) {
-    PhocView *view = PHOC_VIEW (l->data);
-
-    phoc_view_auto_maximize (view);
-    phoc_view_appear_activated (view, true);
-  }
+  phoc_desktop_for_each_view (self,
+                              toggle_auto_max_iterator,
+                              (gpointer)&(struct toggle_auto_max_data) {
+                                .input = input,
+                                .enable = enable,
+                              });
 }
 
 gboolean
