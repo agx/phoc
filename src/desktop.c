@@ -378,11 +378,32 @@ phoc_desktop_view_check_visibility (PhocDesktop *self, PhocView *view)
   return visible;
 }
 
+
+struct move_to_layout_space_data {
+  double center_x;
+  double center_y;
+};
+
+
+static gboolean
+move_to_layout_space_iter (PhocDesktop *self, PhocView *view, gpointer user_data)
+{
+  struct move_to_layout_space_data *data = user_data;
+  struct wlr_box box;
+
+  phoc_view_get_box (view, &box);
+  if (wlr_output_layout_intersects (self->layout, NULL, &box))
+    return TRUE;
+
+  phoc_view_move (view, data->center_x - box.width / 2, data->center_y - box.height / 2);
+  return TRUE;
+}
+
+
 static void
 handle_layout_change (struct wl_listener *listener, void *data)
 {
   PhocDesktop *self;
-  PhocDesktopPrivate *priv;
   struct wlr_output *center_output;
   struct wlr_box center_output_box;
   double center_x, center_y;
@@ -393,22 +414,17 @@ handle_layout_change (struct wl_listener *listener, void *data)
   if (center_output == NULL)
     return;
 
-  priv = phoc_desktop_get_instance_private (self);
   wlr_output_layout_get_box (self->layout, center_output, &center_output_box);
   center_x = center_output_box.x + center_output_box.width / 2;
   center_y = center_output_box.y + center_output_box.height / 2;
 
   /* Make sure all views are on an existing output */
-  for (GList *l = priv->views->head; l; l = l->next) {
-    PhocView *view = PHOC_VIEW (l->data);
-    struct wlr_box box;
-
-    phoc_view_get_box (view, &box);
-    if (wlr_output_layout_intersects (self->layout, NULL, &box))
-      continue;
-
-    phoc_view_move (view, center_x - box.width / 2, center_y - box.height / 2);
-  }
+  phoc_desktop_for_each_view (self,
+                              move_to_layout_space_iter,
+                               (gpointer)&(struct move_to_layout_space_data) {
+                                 .center_x = center_x,
+                                 .center_y = center_y,
+                               });
 
   /* Damage all outputs since the move above damaged old layout space */
   wl_list_for_each(output, &self->outputs, link)
