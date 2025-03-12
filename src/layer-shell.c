@@ -262,6 +262,14 @@ phoc_layer_shell_find_osk (PhocOutput *output)
   return NULL;
 }
 
+
+static gboolean
+view_arrange_iter (PhocDesktop *desktop, PhocView *view, gpointer unused)
+{
+  phoc_view_arrange (view, NULL, desktop->maximize);
+  return TRUE;
+}
+
 /**
  * phoc_layer_shell_arrange:
  * @output: The output to arrange
@@ -302,12 +310,7 @@ phoc_layer_shell_arrange (PhocOutput *output)
   if (usable_area_changed) {
     g_debug ("Usable area changed, rearranging views");
     output->usable_area = usable_area;
-
-    for (GList *l = phoc_desktop_get_views (desktop)->head; l; l = l->next) {
-      PhocView *view = PHOC_VIEW (l->data);
-
-      phoc_view_arrange (view, NULL, output->desktop->maximize);
-    }
+    phoc_desktop_for_each_view (desktop, view_arrange_iter, NULL);
   }
 
   /* Arrange non-exlusive surfaces from top->bottom */
