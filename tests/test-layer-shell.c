@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2020 Purism SPC
+ *               2025 The Phosh Devlopers
+ *
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Author: Guido Günther <agx@sigxcpu.org>
  */
@@ -9,12 +11,170 @@
 #include <wayland-client-protocol.h>
 
 typedef struct _PhocTestLayerSurface {
-  struct wl_surface *wl_surface;
+  struct wl_surface            *wl_surface;
   struct zwlr_layer_surface_v1 *layer_surface;
-  PhocTestBuffer buffer;
-  guint32 width, height;
-  gboolean configured;
+  PhocTestBuffer                buffer;
+  guint32                       width, height;
+  gboolean                      configured;
 } PhocTestLayerSurface;
+
+
+typedef struct _PhocTestPopup {
+  struct wl_surface            *wl_surface;
+  struct xdg_surface           *xdg_surface;
+  struct xdg_popup             *xdg_popup;
+  PhocTestBuffer                buffer;
+  guint32                       width, height;
+  gboolean                      configured;
+  guint32                       repositioned;
+} PhocTestPopup;
+
+
+static void
+handle_xdg_popup_configure (void             *data,
+                            struct xdg_popup *xdg_popup,
+                            int32_t           x,
+                            int32_t           y,
+                            int32_t           width,
+                            int32_t           height)
+{
+  PhocTestPopup *popup = data;
+
+  popup->width = width;
+  popup->height = height;
+  popup->configured = TRUE;
+}
+
+
+static void
+phoc_test_popup_destroy (PhocTestPopup *popup)
+{
+  xdg_popup_destroy (popup->xdg_popup);
+  popup->xdg_popup = NULL;
+  xdg_surface_destroy (popup->xdg_surface);
+  popup->xdg_surface = NULL;
+  wl_surface_destroy (popup->wl_surface);
+  popup->wl_surface = NULL;
+}
+
+
+static void
+handle_xdg_popup_done (void *data, struct xdg_popup *xdg_popup)
+{
+  PhocTestPopup *popup = data;
+
+  phoc_test_popup_destroy (popup);
+}
+
+
+static void
+handle_xdg_popup_repositioned (void             *data,
+                               struct xdg_popup *xdg_popup,
+                               uint32_t          token)
+{
+  PhocTestPopup *popup = data;
+
+  popup->repositioned = token;
+}
+
+
+static const struct xdg_popup_listener xdg_popup_listener = {
+  .configure = handle_xdg_popup_configure,
+  .popup_done = handle_xdg_popup_done,
+  .repositioned = handle_xdg_popup_repositioned,
+};
+
+
+static void
+handle_xdg_surface_handle_configure (void *data, struct xdg_surface *xdg_surface, uint32_t serial)
+{
+  xdg_surface_ack_configure (xdg_surface, serial);
+}
+
+
+static const struct xdg_surface_listener xdg_surface_listener = {
+  .configure = handle_xdg_surface_handle_configure,
+};
+
+
+static PhocTestPopup *
+phoc_test_popup_new (PhocTestClientGlobals *globals,
+                     guint32                x,
+                     guint32                y,
+                     guint32                width,
+                     guint32                height,
+                     guint32                color,
+                     PhocTestLayerSurface  *parent)
+
+{
+  struct xdg_positioner *xdg_positioner;
+  PhocTestPopup *popup = g_new0 (PhocTestPopup, 1);
+
+  popup->wl_surface = wl_compositor_create_surface (globals->compositor);
+  g_assert_nonnull (popup->wl_surface);
+  popup->xdg_surface =  xdg_wm_base_get_xdg_surface (globals->xdg_shell, popup->wl_surface);
+  g_assert_nonnull (popup->xdg_surface);
+  xdg_positioner = xdg_wm_base_create_positioner (globals->xdg_shell);
+  g_assert_nonnull (xdg_positioner);
+
+  xdg_positioner_set_size (xdg_positioner, width, height);
+  xdg_positioner_set_offset (xdg_positioner, 0, 0);
+  xdg_positioner_set_anchor_rect (xdg_positioner, x, y, 1, 1);
+  xdg_positioner_set_anchor (xdg_positioner, XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT);
+
+  popup->xdg_popup = xdg_surface_get_popup (popup->xdg_surface, NULL, xdg_positioner);
+  g_assert_nonnull (popup->xdg_popup);
+
+  zwlr_layer_surface_v1_get_popup (parent->layer_surface, popup->xdg_popup);
+
+  xdg_surface_add_listener (popup->xdg_surface, &xdg_surface_listener, popup);
+  xdg_popup_add_listener (popup->xdg_popup, &xdg_popup_listener, popup);
+
+  wl_surface_commit (popup->wl_surface);
+  wl_display_roundtrip (globals->display);
+
+  xdg_positioner_destroy (xdg_positioner);
+
+  g_assert_true (popup->configured);
+  phoc_test_client_create_shm_buffer (globals,
+                                      &popup->buffer,
+                                      popup->width,
+                                      popup->height,
+                                      WL_SHM_FORMAT_XRGB8888);
+
+  for (int i = 0; i < popup->width * popup->height * 4; i += 4)
+    *(guint32*)(popup->buffer.shm_data + i) = color;
+
+  wl_surface_attach (popup->wl_surface, popup->buffer.wl_buffer, 0, 0);
+  wl_surface_damage (popup->wl_surface, 0, 0, popup->width, popup->height);
+  wl_surface_commit (popup->wl_surface);
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+
+  return popup;
+}
+
+
+static void
+phoc_test_popup_reposition (PhocTestClientGlobals *globals, PhocTestPopup *popup)
+{
+  struct xdg_positioner *xdg_positioner;
+  guint token = 0x1234;
+
+  xdg_positioner = xdg_wm_base_create_positioner (globals->xdg_shell);
+  g_assert_nonnull (xdg_positioner);
+  /* Reposition a bit */
+  xdg_positioner_set_size (xdg_positioner, popup->width, popup->height);
+  xdg_positioner_set_offset (xdg_positioner, 10, 10);
+  xdg_positioner_set_anchor_rect (xdg_positioner, 1, 1, 1, 1);
+  xdg_positioner_set_anchor (xdg_positioner, XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT);
+
+  xdg_popup_reposition (popup->xdg_popup, xdg_positioner, token);
+  wl_display_dispatch (globals->display);
+  wl_display_roundtrip (globals->display);
+  g_assert_cmpint (popup->repositioned, ==, token);
+}
+
 
 static void
 layer_surface_configure (void                         *data,
@@ -214,6 +374,42 @@ test_layer_shell_set_layer (void)
 }
 
 
+static gboolean
+test_client_layer_shell_popup (PhocTestClientGlobals *globals, gpointer data)
+{
+  PhocTestLayerSurface *ls_green;
+  PhocTestPopup *popup;
+
+  ls_green = phoc_test_layer_surface_new (globals, 0, HEIGHT, 0xFF00FF00,
+                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+                                          | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+                                          | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
+                                          0);
+  g_assert_nonnull (ls_green);
+  popup = phoc_test_popup_new (globals, 10, 10, 100, 100, 0xFF00FF00, ls_green);
+  g_assert_nonnull (popup);
+
+  phoc_test_popup_reposition (globals, popup);
+
+  phoc_test_popup_destroy (popup);
+  phoc_test_layer_surface_free (ls_green);
+
+  wl_display_roundtrip (globals->display);
+
+  phoc_assert_screenshot (globals, "empty.png");
+  return TRUE;
+}
+
+
+static void
+test_layer_shell_popup (void)
+{
+  PhocTestClientIface iface = { .client_run = test_client_layer_shell_popup };
+
+  phoc_test_client_run (TEST_PHOC_CLIENT_TIMEOUT, &iface, NULL);
+}
+
+
 gint
 main (gint argc, gchar *argv[])
 {
@@ -222,6 +418,7 @@ main (gint argc, gchar *argv[])
   PHOC_TEST_ADD ("/phoc/layer-shell/anchor", test_layer_shell_anchor);
   PHOC_TEST_ADD ("/phoc/layer-shell/exclusive_zone", test_layer_shell_exclusive_zone);
   PHOC_TEST_ADD ("/phoc/layer-shell/set_layer", test_layer_shell_set_layer);
+  PHOC_TEST_ADD ("/phoc/layer-shell/popup", test_layer_shell_popup);
 
   return g_test_run ();
 }
