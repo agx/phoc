@@ -1,14 +1,16 @@
+---
 include:
- - project: 'guidog/meta-phosh'
-   ref: '891d0bd56c7288e8998c313426cf36a61e238a4e'
-   file: '/ci/phosh-common-jobs.yml'
- - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/d03cddbcff35f26861429fc816c00323f48e99af/templates/ci-fairy.yml'
+  - project: 'guidog/meta-phosh'
+    ref: '891d0bd56c7288e8998c313426cf36a61e238a4e'
+    file: '/ci/phosh-common-jobs.yml'
+  - remote: 'https://gitlab.gnome.org/Infrastructure/Mirrors/lorry-mirrors/gitlab_freedesktop_org/freedesktop/ci-templates/-/raw/d03cddbcff35f26861429fc816c00323f48e99af/templates/ci-fairy.yml'
+
 stages:
- - build
- - test+docs
- - style-checks
- - package
- - deploy
+  - build
+  - test+docs
+  - style-checks
+  - package
+  - deploy
 
 workflow:
   rules:
@@ -75,7 +77,7 @@ build-with-xwayland-debian-trixie:
   image: ${DEBIAN_IMAGE}
   before_script: *before_script_debian
   variables:
-     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true
+    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled -Db_coverage=true
   <<: *build
   artifacts:
     paths:
@@ -98,7 +100,7 @@ build-with-xwayland-alpinelinux-edge:
   image: alpine:edge
   before_script: *before_script_alpine
   variables:
-     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled
+    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=enabled
   <<: *build
   allow_failure: true
 
@@ -107,7 +109,7 @@ build-without-xwayland-alpinelinux-edge:
   image: alpine:edge
   before_script: *before_script_alpine
   variables:
-     BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=disabled
+    BUILD_ARGS: -Dembed-wlroots=enabled -Dxwayland=disabled
   <<: *build
   allow_failure: true
 
@@ -132,7 +134,7 @@ unit-test-with-xwayland-debian-trixie:
 asan-test-native-debian-trixie:
   stage: test+docs
   image: ${DEBIAN_IMAGE}
-  tags: [ asan ]
+  tags: [asan]
   needs: []
   before_script: *before_script_debian
   script:
@@ -212,7 +214,7 @@ check-commit-log:
     GIT_DEPTH: "100"
   needs: []
   script: |
-    ci-fairy check-commits --junit-xml=commit-message-junit-report.xml
+    ci-fairy check-commits --signed-off-by --junit-xml=commit-message-junit-report.xml
   artifacts:
     reports:
       junit: commit-message-junit-report.xml
