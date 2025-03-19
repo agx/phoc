@@ -300,6 +300,13 @@ phoc_output_init (PhocOutput *self)
 
   wl_list_init (&self->layer_surfaces);
 
+  wl_list_init (&priv->damage.link);
+  wl_list_init (&priv->frame.link);
+  wl_list_init (&priv->needs_frame.link);
+  wl_list_init (&priv->request_state.link);
+  wl_list_init (&self->commit.link);
+  wl_list_init (&self->output_destroy.link);
+
   priv->scale_filter = PHOC_OUTPUT_SCALE_FILTER_AUTO;
 
   priv->renderer = g_object_ref (phoc_server_get_renderer (server));
