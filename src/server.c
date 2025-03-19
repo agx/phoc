@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2019 Purism SPC
- *               2023-2024 The Phosh Developers
+ *               2023-2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Author: Guido Günther <agx@sigxcpu.org>
@@ -489,6 +489,8 @@ phoc_server_init (PhocServer *self)
 {
   const char *messages_debug;
   g_autoptr (GError) err = NULL;
+
+  wl_list_init (&self->new_surface.link);
 
   /* show a spinner the first time output shield is raised */
   self->show_spinner = TRUE;
