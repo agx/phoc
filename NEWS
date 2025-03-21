@@ -1,3 +1,21 @@
+phoc 0.46~rc1
+-------------
+Released March 2025
+* New protocols: ext-foreign-toplevel-info, alpha-modifier-v1 protocol
+* Add (optional) spinner animation to output shield
+* Unify layer-surface and xdg-surface subsurface and popup handling
+* Check `ID_INPUT_KEYBOARD` to identify hardware keyboards. This
+  allows e.g. flip phones to mark their T9 style keyboard as such.
+* Allow X11 surfaces to use transparency
+* Fix subsurface scaling when rendering to buffer
+* Another round of fixes, internal cleanups and improvements
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/395
+* Contributors:
+    * Guido Günther
+    * Sam Day
+    * Sebastian Krzyszkowiak
+
 phoc 0.45.0
 -----------
 Released February 2025

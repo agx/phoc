@@ -1,3 +1,187 @@
+phoc (0.46~rc1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * desktop: Sort protocols alphabetically
+  * view: Move setting of toplevel and app-id upwards.
+    This ensures we do it in the same place when adding support
+    for ext-foreign-toplevel-v1
+  * treewide: Implement ext-foreign-toplevel-info.
+    See wlroots MR
+      https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/4543
+    Test client: https://git.sr.ht/~leon_plickat/lswt
+      ./lswt --force-protocol ext-foreign-toplevel-list-v1
+  * ci: Pull libwayland-dev from trixie again. It is recent enough now
+  * ci: Update ci image
+  * build: Enable vulkan rendrer.
+    Pull in the glslang for that
+  * examples: Make more variables static.
+    Remove some unused code while at that
+  * testlib: Don't typedef globals twice. Update some vertical indent
+    while at that.
+  * testlib: Pass globals to mode handler
+  * tests: Build config from parameters.
+    Rather than having config file data rather build from parameters
+    so we can tweak things more easily.
+    This allows us to check e.g. the output mode at runtime rather than hard
+    coding it.
+  * tests: Test scaled and transformed xdg surface as well.
+    Should catch the most prominent damage tracking regressions
+  * child-root: New interface that is the root of a ViewChild tree.
+    We want either a layer surface or a view to be the root so introduce an
+    interface. We call it `PhocRootChild` to not interfere with other
+    possible roots (e.g. the root of a view tree).
+    As a follow up we want to rename the `PhocViewChild` to just
+    `PhocChild`.
+  * view: Implement child-root interface.
+    We implement the interface and make the view's children use it.
+  * layer-surface: Rename phoc_layer_surface_damage.
+    Make it match what we do for views
+  * layer-surface: Add child-root interface.
+    Currently unused
+  * view: Simplify phoc_view_init_subsurfaces.
+    No need to pass the wlr_surface we track.
+  * layer-surface: Use PhocViewChild for subsurfaces and popups.
+    No need to have the same code in two places
+  * layer-surface: Let damage functions damage all surfaces.
+    The damage functions so far ignored popups but the corresponding
+    functions for views take those into account so do the same here too.
+    This fixes the problem where popups in the wlr-layer-surface demo aren't
+    being animated.
+  * output: Use wlr_layer_surface_v1_for_each_surface.
+    No need to roll our own
+  * output: Name drag-icon damage func like the others.
+    We always damage the whole icon so we don't need a boolean parameter
+  * output: Name surface damage-func like the others
+  * layer-surface: Assert that the surface is unmapped
+    wlroots API guarantees that so no need to damage anything again.
+  * timed-animation: Handle gone animatable more gracefully.
+    When the animatable gets disposed the weak ref gets cleared.
+    Handle that case gracefully rather than crashing so users
+    of the animation machinery don't need to worry (which is the
+    whole point of the weak ref).
+    Reported-by: Sebastian Krzyszkowiak <dos@dosowisko.net>
+  * docs: Add setting log domains to examples
+  * input-device: Cache is_keyboard check.
+    It will become more involved in the next commit and we don't want to
+    repeat that each time.
+  * input-device: Check for ID_INPUT_KEYBOARD udev property.
+    This is set by udev and can be overwritten via hwdb allowing us to
+    handle cases like the T9 keypads on flip phones.
+    We can't use libinput_device_has_capability as that includes
+    ID_INPUT_KEY as well.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/395
+  * docs: Document use of ID_INPUT_KEYBOARD
+  * utils: Simplify phoc_utils_is_damaged.
+    We can use pixman_region32_init_rect directly and avoid the confusing
+    !!pixman_region32_not_empty().
+  * render: Assume src_box is always set.
+    We have a single caller that always sets it
+  * render: Apply alpha from alpha-modifier-v1 protocol
+  * output: Use wlr_damage_ring_rotate_buffer
+    `wlr_damage_ring_get_buffer_damage` will go away in 0.19 and we then
+    just need to drop the last parameter from `wlr_swapchain_acquire`.
+  * meson: Drop conditional.
+    We require meson 0.64 anyway
+  * wlroots: Backport wlr_xwayland_surface.set_opacity.
+    See https://gitlab.freedesktop.org/wlroots/wlroots/-/merge_requests/4995
+  * build: Check for wlr_xwayland_surface.set_opacity
+  * view: Allow derived classes to provide alpha.
+    So far we only had "internal" alpha used by the blending animation. Add
+    a vfunc so derived classes can provide alpha values used when rendering.
+  * xwayland-surface: Get opacity when available.
+    Helps: #397
+  * ci: Use GNOME's mirror for ci-fairy
+  * subprojects/wlroots: Use GNOME mirror. Fewer external dependencies.
+
+  [ Sam Day ]
+  * color-rect: Add setter for `box`
+    When we switch PhocOutputShield to use a PhocColorRect, we need to be
+    able to construct it with an empty box and then set the correct
+    dimensions later when the shield is raised.
+  * output-shield: Render a PhocColorRect.
+    Instead of managing an alpha prop and drawing a rect directly, use
+    PhocColorRect. This removes some duplicated code and a TODO.
+    Today, PhocBling only has machinery in place to trivialize its
+    attachment to the render tree via a PhocView. That's not appropriate for
+    our use-case here, so we just map/unmap/render the bling via its
+    interface directly.
+    It's expected that eventually broader support for PhocBling rendering
+    will exist. This will simplify PhocOutputShield further, as it will then
+    no longer need to attach to the render pass.
+  * bling: Add phoc_bling_damage_box helper method.
+    Often, when a PhocBling needs to damage outputs, it simply needs to
+    damage the whole region it occupies. This new phoc_bling_damage_box
+    makes that trivial.
+  * color-rect: Use phoc_bling_damage_box.
+    This method was adapted from phoc_color_rect_damage_box in the first
+    place.
+  * view-deco: Use phoc_bling_damage_box.
+    This PhocBling has simple damage tracking needs similar to
+    PhocColorRect. So we can use the new helper method here and DRY things
+    up a bit.
+  * property-easer: Make phoc_lerp public.
+    It's a simple enough function, but nicer to use this one than to
+    duplicate it elsewhere.
+  * cairo-texture: Introduce PhocCairoTexture.
+    This object wraps up the bits necessary to create a wlr_texture that is
+    backed by a Cairo image surface. It's adapted from the wlroots
+    cairo-buffer example code.
+    It will be used in the next commit to handle rendering for PhocSpinner.
+  * spinner: Introduce PhocSpinner.
+    Based heavily on AdwSpinnerPaintable.
+    It's rendered as a PhocBling. On being mapped, a PhocCairoTexture will
+    be constructed. Each frame is drawn with Cairo and then uploaded to a
+    texture.
+  * output-shield: Reorder includes.
+    I did this instead of checking if I left the stove on for the fifteenth
+    time tonight.
+  * output-shield: Support displaying a spinner
+    phoc_output_shield_raise now allows callers to specify if a spinner
+    should be displayed on the raised shield.
+    The spinner is automatically disposed when the shield is lowered.
+  * output: Show spinner on output-shield in shell mode.
+    The spinner will be displayed on the output shield when the shell hasn't
+    come up yet. It will not be displayed when modesetting, however.
+  * server: Only show a spinner once.
+    When in shell mode, we show a spinner before the shell has notified it's
+    up. If it goes away, we don't want to show the spinner again.
+
+  [ Sebastian Krzyszkowiak ]
+  * cursor: Don't crash when the output goes away during window movement
+  * render: Fix subsurface scaling when rendering to buffer.
+    Scale needs to be calculated against view geometry and be constant
+    across the whole tree, otherwise different subsurfaces are going
+    to be rendered at different scales.
+    Sampling out of buffer's bounds is not a concern, since we only ever
+    sample from its source box. For geometry handling, it's enough to make
+    sure the destination position takes geometry into account and the rest
+    gets cropped by destination buffer's bounds.
+    Since destination box by definition operates in a different coordinate
+    system than source box, we can stay in layout coordinates the whole time
+    until the very end and entirely avoid problems with subsurfaces having
+    different buffer scale than their parent surfaces.
+    Fixes a51f7cd13 ("render: Switch thumbnail rendering to new render API")
+    Fixes 9a88cade7 ("render: Take geometry into account when rendering to a buffer")
+  * view: Clean up unused get_box call.
+    Fixes 075d93fc8 ("view: Move state saving into dedicated function")
+  * view: Don't multiply by scale in get_geometry_default.
+    View geometry shouldn't be affected by its scale.
+    This had no chance to cause any troubles so far since the only contexts
+    in which this function gets called are those where priv->scale always
+    equals 1 (namely, XWayland views that don't support scale-to-fit),
+    but let's fix this so it won't bite anyone in the future.
+    Fixes 60cf1d813 ("Scale down oversized views")
+  * render: Avoid rendering textures with alpha set to zero.
+    No need to waste the cycles on rendering something that won't affect
+    the resulting image.
+  * view-deco: Handle alpha value when drawing decorations.
+    It's not entirely correct as the decoration gets also drawn behind
+    the actual surface, but it's good enough for the kind of decoration
+    we have there right now and it's better than drawing an opaque
+    decoration underneath a translucent view.
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 21 Mar 2025 18:10:14 +0100
+
 phoc (0.45.0) experimental; urgency=medium
 
   * build: Bump glib dependency to 2.80.
