@@ -61,7 +61,7 @@ to see if anything broke.
 
 ## Configuration
 
-phoc's behaviour can be configured via `GSettings`. For your convienience,
+phoc's behaviour can be configured via `GSettings`. For your convenience,
 a set of scripts to manipulate config values is available in `helpers`
 directory.
 
@@ -84,17 +84,22 @@ for more information.
 
 phoc uses glib so the `G_MESSAGES_DEBUG` environment variable can be
 used to enable more log messages and `G_DEBUG` to assert on warnings
-and criticals. The log domains all start with `phoc-` and are usally
+and criticals. The log domains all start with `phoc-` and are usually
 `phoc-<sourcefile>`. All wlroots related messages are logged with
 `phoc-wlroots`.
 For more details on these environment variables, read the [documentation for GLib][4].
 
-There's also a `PHOC_DEBUG` enviroment variable to turn on some debugging
+There's also a `PHOC_DEBUG` environment variable to turn on some debugging
 features. Use `PHOC_DEBUG=help phoc` to see supported flags.
 
 ## API docs
 
 API documentation is available at <https://world.pages.gitlab.gnome.org/Phosh/phoc/>
+
+## Getting in Touch
+
+- Issue tracker: <https://gitlab.gnome.org/World/Phosh/phoc/issues>
+- Matrix: <https://matrix.to/#/#phosh:sigxcpu.org>
 
 [1]: https://gitlab.freedesktop.org/wlroots/
 [2]: debian/control
