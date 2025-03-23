@@ -205,7 +205,7 @@ handle_idle_inhibitor_v1 (struct wl_listener *listener, void *data)
   inhibitor->view = phoc_view_from_wlr_surface (wlr_inhibitor->surface);
   if (inhibitor->view) {
     g_signal_connect_swapped (inhibitor->view,
-                              "notify::mapped",
+                              "notify::is-mapped",
                               G_CALLBACK (on_view_mapped_changed),
                               inhibitor);
     on_view_mapped_changed (inhibitor, NULL, inhibitor->view);
