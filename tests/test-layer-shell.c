@@ -55,6 +55,9 @@ phoc_test_popup_destroy (PhocTestPopup *popup)
   popup->xdg_surface = NULL;
   wl_surface_destroy (popup->wl_surface);
   popup->wl_surface = NULL;
+  phoc_test_buffer_free (&popup->buffer);
+
+  g_free (popup);
 }
 
 
@@ -173,6 +176,8 @@ phoc_test_popup_reposition (PhocTestClientGlobals *globals, PhocTestPopup *popup
   wl_display_dispatch (globals->display);
   wl_display_roundtrip (globals->display);
   g_assert_cmpint (popup->repositioned, ==, token);
+
+  xdg_positioner_destroy (xdg_positioner);
 }
 
 
