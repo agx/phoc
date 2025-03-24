@@ -348,7 +348,7 @@ registry_handle_global (void               *data,
     wl_output_add_listener (globals->output.output, &output_listener, globals);
   } else if (!g_strcmp0 (interface, xdg_wm_base_interface.name)) {
     globals->xdg_shell = wl_registry_bind (registry, name,
-                                           &xdg_wm_base_interface, 1);
+                                           &xdg_wm_base_interface, 3);
     xdg_wm_base_add_listener (globals->xdg_shell, &wm_base_listener, NULL);
   } else if (!g_strcmp0 (interface, zwlr_layer_shell_v1_interface.name)) {
     globals->layer_shell = wl_registry_bind (registry, name,

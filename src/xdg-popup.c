@@ -109,7 +109,8 @@ popup_handle_reposition (struct wl_listener *listener, void *data)
 {
   PhocXdgPopup *self = wl_container_of (listener, self, reposition);
 
-  if (self->wlr_popup->base->surface) {
+  if (self->wlr_popup->base->surface &&
+      wlr_xdg_surface_try_from_wlr_surface (self->wlr_popup->parent)) {
     double sx, sy;
 
     self->repositioned = TRUE;
