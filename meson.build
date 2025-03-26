@@ -86,14 +86,18 @@ have_xwayland = get_option('xwayland').enabled()
 
 have_xwayland_set_opacity = false
 if have_xwayland
-  if not embed_wlroots.disabled()
-    have_xwayland_set_opacity = true
-  elif cc.has_member('struct wlr_xwayland_surface', 'set_opacity',
-                     args: '-DWLR_USE_UNSTABLE',
-                     prefix: '#include <wlr/xwayland.h>',
-                     dependencies: wlroots)
-    have_xwayland_set_opacity = true
+  if embed_wlroots.disabled()
+    opacity_inc = []
+    opacity_dep = wlroots
+  else
+    opacity_inc = include_directories('subprojects/wlroots/include')
+    opacity_dep = []
   endif
+  have_xwayland_set_opacity = cc.has_member('struct wlr_xwayland_surface', 'events.set_opacity',
+                                            args: '-DWLR_USE_UNSTABLE',
+                                            prefix: '#include <wlr/xwayland.h>',
+                                            include_directories: opacity_inc,
+                                            dependencies: opacity_dep)
 endif
 
 use_dtrace = false

@@ -184,12 +184,11 @@ check-consistency:
 check-dist:
   stage: test+docs
   extends: .phosh-check-dist
+  image: ${DEBIAN_IMAGE}
   variables:
-    MESON_DIST_OPTIONS: --no-tests
-    # Actually we'd like to build against the included subproject but that would
-    # fail due the unapplied patches:
-    # https://github.com/mesonbuild/meson/issues/13102#issuecomment-2745240559
-    MESON_OPTIONS: -Dembed-wlroots=disabled
+    DEB_BUILD_PROFILES: 'pkg.phoc.embedwlroots'
+    MESON_DIST_OPTIONS: --no-tests --include-subprojects
+    MESON_OPTIONS: -Dembed-wlroots=enabled
 
 check-format:
   stage: style-checks
