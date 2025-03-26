@@ -1,3 +1,35 @@
+phoc (0.46~rc2) experimental; urgency=medium
+
+  * server: Init new_surface link early.
+    The object can fail initialization so we might remove the link that
+    never got initialized.
+  * output: Init signal links early.
+    The object can fail initialization so we might remove the links that
+    never got initialized.
+  * xdg-popup: Ignore reposition for layer-shell.
+    GTK4 likes to reposition popups however for layer-shell this doesn't
+    work as wlr_xdg_popup_get_position is tied to xdg-surface and asserts if
+    passed in a layer-surface. Skip the reposition in this case.
+    Another approach would be to not connect the signal in the first place
+    when handling `new_popup`.
+    This fixes a crash with cameractl (https://gitlab.com/NekoCWD/cameractrl.git)
+  * ci: Add a dist check.
+    Let's make sure we catch future subproject trouble early
+  * tests: Fix leaks in layer shell test.
+    Fixes 350e4de65 ("xdg-popup: Ignore reposition for layer-shell")
+  * build: Probe for opacity for embedded wlroots too.
+    This allows us to continue the subprojects in the tarball.
+    Since we can't use the `wlroots` dependency as internal dependency we
+    specify the include path.
+  * ci: Add subprojects to tarball again.
+    With the previous commit feature detection works in the unpatched
+    wlroots sources as subproject too.
+    Since we now embed wlroots we need to add its build-deps via
+    `DEB_BUILD_PROFILE` so `meson setup` can pass. We thus use our image
+    with the pre-installed build dependencies.
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 26 Mar 2025 19:47:04 +0100
+
 phoc (0.46~rc1) experimental; urgency=medium
 
   [ Guido Günther ]
