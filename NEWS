@@ -1,4 +1,4 @@
-phoc 0.46~rc1
+phoc 0.46~rc2
 -------------
 Released March 2025
 * New protocols: ext-foreign-toplevel-info, alpha-modifier-v1 protocol
