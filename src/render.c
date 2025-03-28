@@ -362,7 +362,8 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
   buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
   if (!buffer) {
     wlr_drm_format_set_finish (&fmt_set);
-    g_return_val_if_reached (false);
+    g_warning ("Failed to allocate buffer");
+    return false;
   }
 
   render_pass = wlr_renderer_begin_buffer_pass (self->wlr_renderer, buffer, NULL);
