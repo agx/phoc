@@ -367,6 +367,12 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
   }
 
   render_pass = wlr_renderer_begin_buffer_pass (self->wlr_renderer, buffer, NULL);
+  if (!render_pass) {
+    wlr_drm_format_set_finish (&fmt_set);
+    g_warning ("Failed to start render pass");
+    return false;
+  }
+
   wlr_render_pass_add_rect (render_pass, &(struct wlr_render_rect_options){
       .color = { 0, 0, 0, 0 },
       .blend_mode = WLR_RENDER_BLEND_MODE_NONE,
