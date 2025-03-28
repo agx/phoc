@@ -356,7 +356,7 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
 
   width = shm_buffer->width;
   height = shm_buffer->height;
-  wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_INVALID);
+  wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_LINEAR);
   fmt = wlr_drm_format_set_get (&fmt_set, DRM_FORMAT_ARGB8888);
 
   buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
