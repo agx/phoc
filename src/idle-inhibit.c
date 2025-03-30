@@ -41,7 +41,6 @@ typedef struct _PhocIdleInhibitorV1 {
   PhocIdleInhibit              *idle_inhibit;
   PhocView                     *view;
   guint                         cookie;
-  GCancellable                 *cancellable;
 
   struct wlr_idle_inhibitor_v1 *wlr_inhibitor;
 
@@ -49,17 +48,20 @@ typedef struct _PhocIdleInhibitorV1 {
 } PhocIdleInhibitorV1;
 
 
+static void phoc_idle_inhibitor_v1_release (PhocIdleInhibitorV1 *inhibitor);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocIdleInhibitorV1, phoc_idle_inhibitor_v1_release);
+
+
 static void
 on_screensaver_inhibit_finish (GObject *source, GAsyncResult *res, gpointer user_data)
 {
-  PhocIdleInhibitorV1 *inhibitor = user_data;
+  g_autoptr (PhocIdleInhibitorV1) inhibitor = user_data;
   g_autoptr (GVariant) ret = NULL;
   g_autoptr (GError) err = NULL;
 
   ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &err);
   if (ret == NULL) {
-    if (!g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-      g_warning ("Failed to inhibit " SCREENSAVER_BUS_NAME ": %s", err->message);
+    g_warning ("Failed to inhibit " SCREENSAVER_BUS_NAME ": %s", err->message);
     return;
   }
 
@@ -87,9 +89,9 @@ screensaver_idle_inhibit (PhocIdleInhibit *self, PhocIdleInhibitorV1 *inhibitor,
                      g_variant_new ("(ss)", app_id, _("Inhibiting idle session")),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
-                     inhibitor->cancellable,
+                     NULL,
                      on_screensaver_inhibit_finish,
-                     inhibitor);
+                     g_rc_box_acquire (inhibitor));
 }
 
 
@@ -102,8 +104,7 @@ on_screensaver_idle_uninhibit_finish (GObject *source, GAsyncResult *res, gpoint
 
   ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &err);
   if (ret == NULL) {
-    if (!g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-      g_warning ("Failed to " SCREENSAVER_BUS_NAME " uninhibit: %s", err->message);
+    g_warning ("Failed to " SCREENSAVER_BUS_NAME " uninhibit: %s", err->message);
     return;
   }
 
@@ -126,7 +127,7 @@ screensaver_idle_uninhibit (PhocIdleInhibit *self, PhocIdleInhibitorV1 *inhibito
                      g_variant_new ("(u)", inhibitor->cookie),
                      G_DBUS_CALL_FLAGS_NO_AUTO_START,
                      -1,
-                     inhibitor->cancellable,
+                     NULL,
                      on_screensaver_idle_uninhibit_finish,
                      GUINT_TO_POINTER (inhibitor->cookie));
   inhibitor->cookie = 0;
@@ -134,20 +135,25 @@ screensaver_idle_uninhibit (PhocIdleInhibit *self, PhocIdleInhibitorV1 *inhibito
 
 
 static void
-phoc_idle_inhibit_destroy_inhibitor_v1 (PhocIdleInhibit *self, PhocIdleInhibitorV1 *inhibitor)
+phoc_idle_inhibitor_v1_cleanup (PhocIdleInhibitorV1 *inhibitor)
 {
+  PhocIdleInhibit *self = inhibitor->idle_inhibit;
+
   screensaver_idle_uninhibit (self, inhibitor);
 
-  /* We go away but view sticks around so disconnect signals */
+  /* Inhibitor goes away but view sticks around so disconnect signals */
   if (inhibitor->view)
     g_signal_handlers_disconnect_by_data (inhibitor->view, inhibitor);
 
   self->inhibitors_v1 = g_slist_remove (self->inhibitors_v1, inhibitor);
   wl_list_remove (&inhibitor->inhibitor_v1_destroy.link);
+}
 
-  g_cancellable_cancel (inhibitor->cancellable);
-  g_clear_object (&inhibitor->cancellable);
-  g_free (inhibitor);
+
+static void
+phoc_idle_inhibitor_v1_release (PhocIdleInhibitorV1 *inhibitor)
+{
+  g_rc_box_release_full (inhibitor, (GDestroyNotify) phoc_idle_inhibitor_v1_cleanup);
 }
 
 
@@ -157,7 +163,7 @@ handle_inhibitor_v1_destroy (struct wl_listener *listener, void *data)
   PhocIdleInhibitorV1 *inhibitor = wl_container_of (listener, inhibitor, inhibitor_v1_destroy);
 
   g_debug ("Idle inhibitor v1 (%p) destroyed", inhibitor);
-  phoc_idle_inhibit_destroy_inhibitor_v1 (inhibitor->idle_inhibit, inhibitor);
+  phoc_idle_inhibitor_v1_release (inhibitor);
 }
 
 
@@ -189,13 +195,12 @@ handle_idle_inhibitor_v1 (struct wl_listener *listener, void *data)
 {
   struct wlr_idle_inhibitor_v1 *wlr_inhibitor = data;
   PhocIdleInhibit *self = wl_container_of (listener, self, new_idle_inhibitor_v1);
-  PhocIdleInhibitorV1 *inhibitor = g_new0 (PhocIdleInhibitorV1, 1);
+  PhocIdleInhibitorV1 *inhibitor = g_rc_box_new0 (PhocIdleInhibitorV1);
 
   g_debug ("New idle inhibitor v1 (%p)", inhibitor);
 
   inhibitor->idle_inhibit = self;
   inhibitor->wlr_inhibitor = wlr_inhibitor;
-  inhibitor->cancellable = g_cancellable_new ();
 
   self->inhibitors_v1 = g_slist_prepend (self->inhibitors_v1, inhibitor);
 
@@ -205,7 +210,7 @@ handle_idle_inhibitor_v1 (struct wl_listener *listener, void *data)
   inhibitor->view = phoc_view_from_wlr_surface (wlr_inhibitor->surface);
   if (inhibitor->view) {
     g_signal_connect_swapped (inhibitor->view,
-                              "notify::mapped",
+                              "notify::is-mapped",
                               G_CALLBACK (on_view_mapped_changed),
                               inhibitor);
     on_view_mapped_changed (inhibitor, NULL, inhibitor->view);
@@ -290,7 +295,7 @@ phoc_idle_inhibit_destroy (PhocIdleInhibit *self)
   g_clear_object (&self->cancellable);
 
   for (GSList *l = self->inhibitors_v1; l; l = l->next)
-    phoc_idle_inhibit_destroy_inhibitor_v1 (self, l->data);
+    phoc_idle_inhibitor_v1_release (l->data);
   g_slist_free (self->inhibitors_v1);
 
   g_clear_object (&self->screensaver_proxy);
