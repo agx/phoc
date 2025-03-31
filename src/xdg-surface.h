@@ -14,17 +14,17 @@
 
 G_BEGIN_DECLS
 
-#define PHOC_TYPE_XDG_SURFACE (phoc_xdg_surface_get_type ())
+#define PHOC_TYPE_XDG_TOPLEVEL (phoc_xdg_toplevel_get_type ())
 
-G_DECLARE_FINAL_TYPE (PhocXdgSurface, phoc_xdg_surface, PHOC, XDG_SURFACE, PhocView)
+G_DECLARE_FINAL_TYPE (PhocXdgToplevel, phoc_xdg_toplevel, PHOC, XDG_TOPLEVEL, PhocView)
 
-PhocXdgSurface     *phoc_xdg_surface_new (struct wlr_xdg_toplevel *xdg_toplevel);
-void                phoc_xdg_surface_get_geometry (PhocXdgSurface *self, struct wlr_box *geom);
-struct wlr_surface *phoc_xdg_surface_get_wlr_surface_at (PhocXdgSurface *self,
-                                                         double           sx,
-                                                         double           sy,
-                                                         double          *sub_x,
-                                                         double          *sub_y);
+PhocXdgToplevel    *phoc_xdg_toplevel_new (struct wlr_xdg_toplevel *xdg_toplevel);
+void                phoc_xdg_toplevel_get_geometry (PhocXdgToplevel *self, struct wlr_box *geom);
+struct wlr_surface *phoc_xdg_toplevel_get_wlr_surface_at (PhocXdgToplevel *self,
+                                                          double           sx,
+                                                          double           sy,
+                                                          double          *sub_x,
+                                                          double          *sub_y);
 
 void                phoc_handle_xdg_shell_toplevel (struct wl_listener *listener, void *data);
 

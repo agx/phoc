@@ -13,11 +13,11 @@
 
 G_BEGIN_DECLS
 
-void               phoc_xdg_surface_set_decoration (PhocXdgSurface            *self,
-                                                    PhocXdgToplevelDecoration *decoration);
+void               phoc_xdg_toplevel_set_decoration        (PhocXdgToplevel           *self,
+                                                            PhocXdgToplevelDecoration *decoration);
 PhocXdgToplevelDecoration *
-                   phoc_xdg_surface_get_decoration (PhocXdgSurface        *self);
+                   phoc_xdg_toplevel_get_decoration        (PhocXdgToplevel *self);
 struct wlr_xdg_surface *
-                   phoc_xdg_surface_get_wlr_xdg_surface (PhocXdgSurface   *self);
+                   phoc_xdg_toplevel_get_wlr_xdg_surface   (PhocXdgToplevel *self);
 
 G_END_DECLS
