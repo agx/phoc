@@ -15,10 +15,10 @@
 
 typedef struct _PhocXdgToplevelDecoration {
   struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration;
-  PhocXdgToplevel *surface;
-  struct wl_listener destroy;
-  struct wl_listener request_mode;
-  struct wl_listener surface_commit;
+  PhocXdgToplevel                       *toplevel;
+  struct wl_listener                     destroy;
+  struct wl_listener                     request_mode;
+  struct wl_listener                     surface_commit;
 } PhocXdgToplevelDecoration;
 
 
@@ -29,10 +29,10 @@ decoration_handle_destroy (struct wl_listener *listener, void *data)
 
   g_debug ("Destroy xdg toplevel decoration %p", decoration);
 
-  if (decoration->surface) {
-    phoc_xdg_toplevel_set_decoration (decoration->surface, NULL);
-    phoc_view_set_decorated (PHOC_VIEW (decoration->surface), FALSE);
-    g_signal_handlers_disconnect_by_data (decoration->surface, decoration);
+  if (decoration->toplevel) {
+    phoc_xdg_toplevel_set_decoration (decoration->toplevel, NULL);
+    phoc_view_set_decorated (PHOC_VIEW (decoration->toplevel), FALSE);
+    g_signal_handlers_disconnect_by_data (decoration->toplevel, decoration);
   }
   wl_list_remove (&decoration->destroy.link);
   wl_list_remove (&decoration->request_mode.link);
@@ -61,7 +61,7 @@ decoration_handle_surface_commit (struct wl_listener *listener, void *data)
 
   bool decorated = decoration->wlr_decoration->current.mode ==
     WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
-  phoc_view_set_decorated (PHOC_VIEW (decoration->surface), decorated);
+  phoc_view_set_decorated (PHOC_VIEW (decoration->toplevel), decorated);
 }
 
 
@@ -70,7 +70,7 @@ on_xdg_surface_destroy (PhocXdgToplevel *surface, PhocXdgToplevelDecoration *dec
 {
   g_assert (PHOC_IS_XDG_TOPLEVEL (surface));
 
-  decoration->surface = NULL;
+  decoration->toplevel = NULL;
 }
 
 
@@ -86,7 +86,7 @@ phoc_handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
   g_debug ("New xdg toplevel decoration %p", decoration);
 
   decoration->wlr_decoration = wlr_decoration;
-  decoration->surface = xdg_toplevel;
+  decoration->toplevel = xdg_toplevel;
   phoc_xdg_toplevel_set_decoration (xdg_toplevel, decoration);
 
   decoration->destroy.notify = decoration_handle_destroy;
