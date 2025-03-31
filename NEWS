@@ -1,5 +1,5 @@
-phoc 0.46~rc2
--------------
+phoc 0.46.0
+-----------
 Released March 2025
 * New protocols: ext-foreign-toplevel-info, alpha-modifier-v1 protocol
 * Add (optional) spinner animation to output shield
@@ -8,9 +8,11 @@ Released March 2025
   allows e.g. flip phones to mark their T9 style keyboard as such.
 * Allow X11 surfaces to use transparency
 * Fix subsurface scaling when rendering to buffer
+* Avoid stale inhibitors when forwarding to gnome-session
 * Another round of fixes, internal cleanups and improvements
 * Issues fixed:
     * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/395
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/398
 * Contributors:
     * Guido Günther
     * Sam Day

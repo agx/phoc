@@ -1,3 +1,18 @@
+phoc (0.46.0) experimental; urgency=medium
+
+  * idle-inhibit: Fix mapped property name.
+    The property is called `is-mapped`
+  * idle-inhibit: Hold reference while taking inhibitor.
+    If an inhibit is followed by an uninhibit the inhibit call might
+    get cancelled, we thus never get the cookie and thus can't clean
+    up the inhibitor. Fix this by not cancelling inhibotor calls but
+    rater taking a reference while getting the inhibitor is in flight.
+    The simplest thing would be to use sync DBus calls but that could block
+    the compositor.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/398
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 30 Mar 2025 16:11:21 +0200
+
 phoc (0.46~rc2) experimental; urgency=medium
 
   * server: Init new_surface link early.
