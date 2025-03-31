@@ -356,16 +356,23 @@ phoc_renderer_render_view_to_buffer (PhocRenderer      *self,
 
   width = shm_buffer->width;
   height = shm_buffer->height;
-  wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_INVALID);
+  wlr_drm_format_set_add (&fmt_set, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_LINEAR);
   fmt = wlr_drm_format_set_get (&fmt_set, DRM_FORMAT_ARGB8888);
 
   buffer = wlr_allocator_create_buffer (self->wlr_allocator, width, height, fmt);
   if (!buffer) {
     wlr_drm_format_set_finish (&fmt_set);
-    g_return_val_if_reached (false);
+    g_warning ("Failed to allocate buffer");
+    return false;
   }
 
   render_pass = wlr_renderer_begin_buffer_pass (self->wlr_renderer, buffer, NULL);
+  if (!render_pass) {
+    wlr_drm_format_set_finish (&fmt_set);
+    g_warning ("Failed to start render pass");
+    return false;
+  }
+
   wlr_render_pass_add_rect (render_pass, &(struct wlr_render_rect_options){
       .color = { 0, 0, 0, 0 },
       .blend_mode = WLR_RENDER_BLEND_MODE_NONE,
