@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "xdg-surface.h"
+#include "xdg-toplevel.h"
 #include "xdg-toplevel-decoration.h"
 
 #include <glib-object.h>

@@ -51,7 +51,7 @@
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 #include "gesture-swipe.h"
 #include "layer-shell-effects.h"
-#include "xdg-surface.h"
+#include "xdg-toplevel.h"
 #include "xdg-toplevel-decoration.h"
 #include "xwayland-surface.h"
 

@@ -15,8 +15,8 @@
 #include "server.h"
 #include "view-private.h"
 #include "xdg-popup.h"
-#include "xdg-surface.h"
-#include "xdg-surface-private.h"
+#include "xdg-toplevel.h"
+#include "xdg-toplevel-private.h"
 #include "xdg-toplevel-decoration.h"
 
 #include <wlr/types/wlr_xdg_decoration_v1.h>

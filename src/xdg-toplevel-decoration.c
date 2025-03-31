@@ -1,13 +1,13 @@
 #define G_LOG_DOMAIN "phoc-xdg-toplevel-decoration"
 
 #include "phoc-config.h"
-#include "xdg-surface-private.h"
+#include "xdg-toplevel-private.h"
 #include "xdg-toplevel-decoration.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
 #include <wlr/types/wlr_xdg_shell.h>
-#include "xdg-surface.h"
+#include "xdg-toplevel.h"
 #include "desktop.h"
 #include "server.h"
 #include "utils.h"
