@@ -378,11 +378,32 @@ phoc_desktop_view_check_visibility (PhocDesktop *self, PhocView *view)
   return visible;
 }
 
+
+struct move_to_layout_space_data {
+  double center_x;
+  double center_y;
+};
+
+
+static gboolean
+move_to_layout_space_iter (PhocDesktop *self, PhocView *view, gpointer user_data)
+{
+  struct move_to_layout_space_data *data = user_data;
+  struct wlr_box box;
+
+  phoc_view_get_box (view, &box);
+  if (wlr_output_layout_intersects (self->layout, NULL, &box))
+    return TRUE;
+
+  phoc_view_move (view, data->center_x - box.width / 2, data->center_y - box.height / 2);
+  return TRUE;
+}
+
+
 static void
 handle_layout_change (struct wl_listener *listener, void *data)
 {
   PhocDesktop *self;
-  PhocDesktopPrivate *priv;
   struct wlr_output *center_output;
   struct wlr_box center_output_box;
   double center_x, center_y;
@@ -393,22 +414,17 @@ handle_layout_change (struct wl_listener *listener, void *data)
   if (center_output == NULL)
     return;
 
-  priv = phoc_desktop_get_instance_private (self);
   wlr_output_layout_get_box (self->layout, center_output, &center_output_box);
   center_x = center_output_box.x + center_output_box.width / 2;
   center_y = center_output_box.y + center_output_box.height / 2;
 
   /* Make sure all views are on an existing output */
-  for (GList *l = priv->views->head; l; l = l->next) {
-    PhocView *view = PHOC_VIEW (l->data);
-    struct wlr_box box;
-
-    phoc_view_get_box (view, &box);
-    if (wlr_output_layout_intersects (self->layout, NULL, &box))
-      continue;
-
-    phoc_view_move (view, center_x - box.width / 2, center_y - box.height / 2);
-  }
+  phoc_desktop_for_each_view (self,
+                              move_to_layout_space_iter,
+                               (gpointer)&(struct move_to_layout_space_data) {
+                                 .center_x = center_x,
+                                 .center_y = center_y,
+                               });
 
   /* Damage all outputs since the move above damaged old layout space */
   wl_list_for_each(output, &self->outputs, link)
@@ -566,8 +582,6 @@ phoc_desktop_constructed (GObject *object)
   struct wlr_backend *wlr_backend = phoc_server_get_backend (server);
 
   G_OBJECT_CLASS (phoc_desktop_parent_class)->constructed (object);
-
-  wl_list_init (&self->outputs);
 
   self->new_output.notify = handle_new_output;
   wl_signal_add (&wlr_backend->events.new_output, &self->new_output);
@@ -762,6 +776,8 @@ phoc_desktop_init (PhocDesktop *self)
 {
   PhocDesktopPrivate *priv;
 
+  wl_list_init (&self->outputs);
+
   priv = phoc_desktop_get_instance_private (self);
   priv->views = g_queue_new ();
   priv->enable_animations = TRUE;
@@ -779,6 +795,29 @@ phoc_desktop_new (void)
   return g_object_new (PHOC_TYPE_DESKTOP, NULL);
 }
 
+
+struct toggle_auto_max_data {
+  PhocInput   *input;
+  gboolean     enable;
+};
+
+
+static gboolean
+toggle_auto_max_iterator (PhocDesktop *self, PhocView *view, gpointer user_data)
+{
+  struct toggle_auto_max_data *data = user_data;
+
+  if (data->enable) {
+    phoc_view_auto_maximize (view);
+    phoc_view_appear_activated (view, true);
+  } else {
+    /* Disabling auto-maximize leaves all views in their current position */
+    phoc_view_appear_activated (view, phoc_input_view_has_focus (data->input, view));
+  }
+
+  return TRUE;
+}
+
 /**
  * phoc_desktop_set_auto_maximize:
  *
@@ -787,8 +826,8 @@ phoc_desktop_new (void)
 void
 phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
 {
-  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
   PhocServer *server = phoc_server_get_default();
+  PhocInput *input = phoc_server_get_input (server);
 
   if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_AUTO_MAXIMIZE))) {
     if (enable == FALSE)
@@ -799,24 +838,12 @@ phoc_desktop_set_auto_maximize (PhocDesktop *self, gboolean enable)
   g_debug ("auto-maximize: %d", enable);
   self->maximize = enable;
 
-  /* Disabling auto-maximize leaves all views in their current position */
-  if (!enable) {
-    PhocInput *input = phoc_server_get_input (server);
-
-    for (GList *l = priv->views->head; l; l = l->next) {
-      PhocView *view = PHOC_VIEW (l->data);
-
-      phoc_view_appear_activated (view, phoc_input_view_has_focus (input, view));
-    }
-    return;
-  }
-
-  for (GList *l = priv->views->head; l; l = l->next) {
-    PhocView *view = PHOC_VIEW (l->data);
-
-    phoc_view_auto_maximize (view);
-    phoc_view_appear_activated (view, true);
-  }
+  phoc_desktop_for_each_view (self,
+                              toggle_auto_max_iterator,
+                              (gpointer)&(struct toggle_auto_max_data) {
+                                .input = input,
+                                .enable = enable,
+                              });
 }
 
 gboolean
@@ -1279,6 +1306,31 @@ phoc_desktop_remove_view (PhocDesktop *self, PhocView *view)
   priv = phoc_desktop_get_instance_private (self);
 
   return g_queue_remove (priv->views, view);
+}
+
+/**
+ * phoc_desktop_for_each_view:
+ * @self: The desktop
+ * @view_iter:(scope call): The iterator
+ * @user_data: The user data
+ *
+ * Invokes `view_iter` on all views passing in `user_data`.
+ */
+void
+phoc_desktop_for_each_view (PhocDesktop *self, PhocDesktopViewIter view_iter, gpointer user_data)
+{
+  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  for (GList *l = priv->views->head; l; l = l->next) {
+    PhocView *view = PHOC_VIEW (l->data);
+    gboolean cont;
+
+    cont = (*view_iter)(self, view, user_data);
+    if (!cont)
+      return;
+  }
 }
 
 

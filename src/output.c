@@ -600,7 +600,7 @@ phoc_output_draw (PhocOutput *self)
   pixman_region32_fini (&frame_damage);
 
   /* Check if we can delegate the fullscreen surface to the output */
-  if (phoc_output_has_fullscreen_view (self))
+  if (self->fullscreen_view)
     scanned_out = scan_out_fullscreen_view (self, self->fullscreen_view, &pending);
 
   if (scanned_out)
@@ -1522,6 +1522,25 @@ phoc_output_drag_icons_for_each_surface (PhocOutput          *self,
   }
 }
 
+
+struct for_each_surface_data {
+  PhocOutput          *output;
+  gboolean             visible_only;
+  PhocSurfaceIterator  iterator;
+  gpointer             user_data;
+};
+
+static gboolean
+for_each_surface_iter (PhocDesktop *desktop, PhocView *view, gpointer user_data)
+{
+  struct for_each_surface_data *data = user_data;
+
+  if (!data->visible_only || phoc_desktop_view_check_visibility (desktop, view))
+    phoc_output_view_for_each_surface (data->output, view, data->iterator, data->user_data);
+
+  return TRUE;
+}
+
 /**
  * phoc_output_for_each_surface:
  * @self: the output
@@ -1553,12 +1572,14 @@ phoc_output_for_each_surface (PhocOutput          *self,
     }
 #endif
   } else {
-    for (GList *l = phoc_desktop_get_views (desktop)->tail; l; l = l->prev) {
-      PhocView *view = PHOC_VIEW (l->data);
-
-      if (!visible_only || phoc_desktop_view_check_visibility (desktop, view))
-        phoc_output_view_for_each_surface (self, view, iterator, user_data);
-    }
+    phoc_desktop_for_each_view (desktop,
+                                for_each_surface_iter,
+                                (gpointer)&(struct for_each_surface_data){
+                                  .output = self,
+                                  .iterator = iterator,
+                                  .user_data = user_data,
+                                  .visible_only = visible_only,
+                                });
   }
 
   phoc_output_drag_icons_for_each_surface (self, input, iterator, user_data);
@@ -1961,21 +1982,6 @@ phoc_output_is_match (PhocOutput *self,
            g_strcmp0 (self->wlr_output->serial, serial) == 0);
 
   return match;
-}
-
-/**
- * phoc_output_has_fullscreen_view:
- * @self: The #PhocOutput
- *
- * Returns: %TRUE if the output has a fullscreen view attached,
- *          %FALSE otherwise.
- */
-gboolean
-phoc_output_has_fullscreen_view (PhocOutput *self)
-{
-  g_assert (PHOC_IS_OUTPUT (self));
-
-  return phoc_view_is_mapped (self->fullscreen_view);
 }
 
 

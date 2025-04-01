@@ -789,25 +789,21 @@ void
 phoc_handle_xdg_shell_toplevel (struct wl_listener *listener, void *data)
 {
   struct wlr_xdg_toplevel *toplevel = data;
-
-  if (toplevel->base->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-    g_debug ("New xdg popup");
-    return;
-  }
+  PhocXdgSurface *self;
 
   g_assert (toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
   PhocDesktop *desktop = wl_container_of (listener, desktop, xdg_shell_toplevel);
   g_debug ("new xdg toplevel: title=%s, app_id=%s", toplevel->title, toplevel->app_id);
 
   wlr_xdg_surface_ping (toplevel->base);
-  PhocXdgSurface *phoc_surface = phoc_xdg_surface_new (toplevel->base);
+  self = phoc_xdg_surface_new (toplevel->base);
 
   /* Check for app-id override coming from gtk-shell */
   PhocGtkShell *gtk_shell = phoc_desktop_get_gtk_shell (desktop);
   PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (gtk_shell,
                                                                                  toplevel->base->surface);
   if (gtk_surface && phoc_gtk_surface_get_app_id (gtk_surface))
-    phoc_view_set_app_id (PHOC_VIEW (phoc_surface), phoc_gtk_surface_get_app_id (gtk_surface));
+    phoc_view_set_app_id (PHOC_VIEW (self), phoc_gtk_surface_get_app_id (gtk_surface));
   else
-    phoc_view_set_app_id (PHOC_VIEW (phoc_surface), toplevel->app_id);
+    phoc_view_set_app_id (PHOC_VIEW (self), toplevel->app_id);
 }

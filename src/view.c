@@ -1574,18 +1574,18 @@ bind_scale_to_fit_setting (PhocView *self)
 
 
 void
-phoc_view_set_app_id (PhocView *view, const char *app_id)
+phoc_view_set_app_id (PhocView *self, const char *app_id)
 {
   PhocViewPrivate *priv;
 
-  g_assert (PHOC_IS_VIEW (view));
-  priv = phoc_view_get_instance_private (view);
+  g_assert (PHOC_IS_VIEW (self));
+  priv = phoc_view_get_instance_private (self);
 
   if (g_strcmp0 (priv->app_id, app_id)) {
     g_free (priv->app_id);
     priv->app_id = g_strdup (app_id);
 
-    bind_scale_to_fit_setting (view);
+    bind_scale_to_fit_setting (self);
   }
 
   if (priv->toplevel_handle)

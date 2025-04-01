@@ -26,11 +26,6 @@
 
 #include <drm_fourcc.h>
 
-/* help older (0.8.2) libxkbcommon */
-#ifndef XKB_KEY_XF86RotationLockToggle
-# define XKB_KEY_XF86RotationLockToggle 0x1008FFB7
-#endif
-
 /**
  * PhocPhoshPrivate:
  *
