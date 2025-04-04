@@ -29,6 +29,8 @@ OPTIONS
    Path to the configuration file. (default: phoc.ini).
 ``-E``, ``--exec EXECUTABLE``
    Executable (session) that will be run at startup
+``--socket``
+   Wayland socket to listen on for client connections
 ``-S``, ``--shell``
    Whether to expect a shell to attach
 ``-X``, ``--xwayland``

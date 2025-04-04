@@ -42,6 +42,7 @@ typedef struct _PhocConfig {
   GSList          *outputs;
 
   char            *config_path;
+  char            *socket;
 } PhocConfig;
 
 PhocConfig       *phoc_config_new_from_file (const char *config_path);

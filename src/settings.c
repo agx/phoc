@@ -357,6 +357,7 @@ phoc_config_destroy (PhocConfig *config)
   g_slist_free_full (config->outputs, (GDestroyNotify)phoc_output_config_destroy);
   g_object_unref (config->keybindings);
 
+  g_free (config->socket);
   g_free (config->config_path);
   g_free (config);
 }
