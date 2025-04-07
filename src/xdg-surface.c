@@ -646,7 +646,7 @@ phoc_xdg_surface_constructed (GObject *object)
 
   /* Register wlr_xdg_surface handlers */
   self->destroy.notify = handle_destroy;
-  wl_signal_add (&self->xdg_surface->events.destroy, &self->destroy);
+  wl_signal_add (&self->xdg_surface->toplevel->events.destroy, &self->destroy);
 
   self->new_popup.notify = handle_new_popup;
   wl_signal_add (&self->xdg_surface->events.new_popup, &self->new_popup);
