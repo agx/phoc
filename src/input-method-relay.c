@@ -425,7 +425,7 @@ relay_handle_new_input_method (struct wl_listener *listener, void *data)
     return;
   }
 
-  g_debug ("Input method available");
+  g_debug ("Input method available: %p", input_method);
   relay->input_method = input_method;
 
   wl_signal_add (&relay->input_method->events.commit, &relay->input_method_commit);
