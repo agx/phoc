@@ -548,6 +548,8 @@ phoc_server_setup (PhocServer      *self,
                    GMainLoop       *mainloop,
                    PhocServerFlags  flags)
 {
+  const char *socket = NULL;
+
   g_assert (!self->inited);
 
   self->config = config;
@@ -557,9 +559,15 @@ phoc_server_setup (PhocServer      *self,
   self->input = phoc_input_new ();
   self->session_exec = g_strdup (exec);
 
-  const char *socket = wl_display_add_socket_auto (self->wl_display);
+  if (config->socket) {
+    if (wl_display_add_socket (self->wl_display, config->socket) == 0)
+      socket = config->socket;
+  } else {
+    socket = wl_display_add_socket_auto (self->wl_display);
+  }
+
   if (!socket) {
-    g_warning("Unable to open wayland socket: %s", strerror(errno));
+    g_warning ("Unable to open wayland socket: %s", strerror (errno));
     wlr_backend_destroy (self->backend);
     return FALSE;
   }

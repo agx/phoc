@@ -124,7 +124,7 @@ main (int argc, char **argv)
   g_autoptr (GMainLoop) loop = NULL;
   g_autoptr (PhocServer) server = NULL;
   g_autofree gchar *config_path = NULL;
-  g_autofree gchar *exec = NULL;
+  g_autofree gchar *exec = NULL, *socket = NULL;
   PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
   gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE, verbose = FALSE;
@@ -143,6 +143,8 @@ main (int argc, char **argv)
      "Whether to start XWayland", NULL},
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
      "Whether to provide more verbose output", NULL},
+    {"socket", 0, 0, G_OPTION_ARG_STRING, &socket,
+     "Name of socket to listen on", NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &version,
      "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -184,6 +186,8 @@ main (int argc, char **argv)
     return EXIT_FAILURE;
   if (xwayland)
     config->xwayland = TRUE;
+  if (socket)
+    config->socket = g_steal_pointer (&socket);
 
   loop = g_main_loop_new (NULL, FALSE);
   if (!phoc_server_setup (server, config, exec, loop, flags))
