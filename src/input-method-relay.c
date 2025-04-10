@@ -176,6 +176,10 @@ handle_im_destroy (struct wl_listener *listener, void *data)
                                             text_input->input->focused_surface);
     wlr_text_input_v3_send_leave (text_input->input);
   }
+
+  wl_list_remove (&relay->input_method_destroy.link);
+  wl_list_remove (&relay->input_method_commit.link);
+  wl_list_remove (&relay->input_method_grab_keyboard.link);
 }
 
 
