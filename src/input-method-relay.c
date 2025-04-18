@@ -176,6 +176,10 @@ handle_im_destroy (struct wl_listener *listener, void *data)
                                             text_input->input->focused_surface);
     wlr_text_input_v3_send_leave (text_input->input);
   }
+
+  wl_list_remove (&relay->input_method_destroy.link);
+  wl_list_remove (&relay->input_method_commit.link);
+  wl_list_remove (&relay->input_method_grab_keyboard.link);
 }
 
 
@@ -382,7 +386,7 @@ phoc_text_input_create (PhocInputMethodRelay *relay, struct wlr_text_input_v3 *t
 
 
 static void
-relay_handle_text_input (struct wl_listener *listener, void *data)
+relay_handle_new_text_input (struct wl_listener *listener, void *data)
 {
   PhocInputMethodRelay *relay = wl_container_of (listener, relay, text_input_new);
   struct wlr_text_input_v3 *wlr_text_input = data;
@@ -409,7 +413,7 @@ relay_handle_text_input (struct wl_listener *listener, void *data)
 
 
 static void
-relay_handle_input_method (struct wl_listener *listener, void *data)
+relay_handle_new_input_method (struct wl_listener *listener, void *data)
 {
   PhocInputMethodRelay *relay = wl_container_of (listener, relay, input_method_new);
   struct wlr_input_method_v2 *input_method = data;
@@ -425,7 +429,7 @@ relay_handle_input_method (struct wl_listener *listener, void *data)
     return;
   }
 
-  g_debug ("Input method available");
+  g_debug ("Input method available: %p", input_method);
   relay->input_method = input_method;
 
   wl_signal_add (&relay->input_method->events.commit, &relay->input_method_commit);
@@ -454,10 +458,10 @@ phoc_input_method_relay_init (PhocSeat *seat, PhocInputMethodRelay *relay)
   relay->seat = seat;
   wl_list_init (&relay->text_inputs);
 
-  relay->text_input_new.notify = relay_handle_text_input;
+  relay->text_input_new.notify = relay_handle_new_text_input;
   wl_signal_add (&desktop->text_input->events.text_input, &relay->text_input_new);
 
-  relay->input_method_new.notify = relay_handle_input_method;
+  relay->input_method_new.notify = relay_handle_new_input_method;
   wl_signal_add (&desktop->input_method->events.input_method, &relay->input_method_new);
 }
 
