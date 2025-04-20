@@ -43,29 +43,29 @@ static GParamSpec *props[PROP_LAST_PROP];
  * For details on how to setup such an object see [func@handle_xdg_shell_toplevel].
  */
 typedef struct _PhocXdgToplevel {
-  PhocView view;
+  PhocView                   view;
 
-  struct wlr_xdg_toplevel *xdg_toplevel;
+  struct wlr_xdg_toplevel   *xdg_toplevel;
 
-  struct wlr_box saved_geometry;
+  struct wlr_box             saved_geometry;
 
-  struct wl_listener destroy;
-  struct wl_listener new_popup;
-  struct wl_listener map;
-  struct wl_listener unmap;
-  struct wl_listener request_move;
-  struct wl_listener request_resize;
-  struct wl_listener request_maximize;
-  struct wl_listener request_fullscreen;
-  struct wl_listener set_title;
-  struct wl_listener set_app_id;
-  struct wl_listener set_parent;
+  struct wl_listener         destroy;
+  struct wl_listener         new_popup;
+  struct wl_listener         map;
+  struct wl_listener         unmap;
+  struct wl_listener         request_move;
+  struct wl_listener         request_resize;
+  struct wl_listener         request_maximize;
+  struct wl_listener         request_fullscreen;
+  struct wl_listener         set_title;
+  struct wl_listener         set_app_id;
+  struct wl_listener         set_parent;
 
-  struct wl_listener surface_commit;
+  struct wl_listener         surface_commit;
 
-  struct wl_event_source *frame_done_idle;
+  struct wl_event_source    *frame_done_idle;
 
-  uint32_t pending_move_resize_configure_serial;
+  uint32_t                   pending_move_resize_configure_serial;
 
   PhocXdgToplevelDecoration *decoration;
 } PhocXdgToplevel;
@@ -221,7 +221,7 @@ move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height
 }
 
 static bool
-want_scaling(PhocView *view)
+want_scaling (PhocView *view)
 {
   return true;
 }
@@ -289,14 +289,14 @@ set_fullscreen (PhocView *view, bool fullscreen)
 }
 
 static void
-_close(PhocView *view)
+_close (PhocView *view)
 {
   struct wlr_xdg_toplevel *xdg_toplevel = PHOC_XDG_TOPLEVEL (view)->xdg_toplevel;
   struct wlr_xdg_popup *popup, *tmp = NULL;
 
-  wl_list_for_each_safe (popup, tmp, &xdg_toplevel->base->popups, link) {
+  wl_list_for_each_safe (popup, tmp, &xdg_toplevel->base->popups, link)
     wlr_xdg_popup_destroy (popup);
-  }
+
   wlr_xdg_toplevel_send_close (xdg_toplevel);
 
   send_frame_done_if_not_visible (PHOC_XDG_TOPLEVEL (view));
@@ -403,8 +403,8 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     view_set_title (PHOC_VIEW (self), self->xdg_toplevel->title);
     /* We don't do window menus or minimize */
     phoc_xdg_toplevel_set_capabilities (self,
-                                       WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE |
-                                       WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
+                                        WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE |
+                                        WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
   }
 
   if (!xdg_toplevel->base->surface->mapped)
@@ -444,9 +444,9 @@ handle_surface_commit (struct wl_listener *listener, void *data)
   if (self->saved_geometry.x != geometry.x || self->saved_geometry.y != geometry.y) {
     float scale = phoc_view_get_scale (view);
 
-    view_update_position(view,
-                         view->box.x + (self->saved_geometry.x - geometry.x) * scale,
-                         view->box.y + (self->saved_geometry.y - geometry.y) * scale);
+    view_update_position (view,
+                          view->box.x + (self->saved_geometry.x - geometry.x) * scale,
+                          view->box.y + (self->saved_geometry.y - geometry.y) * scale);
   }
   self->saved_geometry = geometry;
 }
@@ -603,7 +603,7 @@ handle_new_popup (struct wl_listener *listener, void *data)
 static void
 phoc_xdg_toplevel_constructed (GObject *object)
 {
-  PhocXdgToplevel *self = PHOC_XDG_TOPLEVEL(object);
+  PhocXdgToplevel *self = PHOC_XDG_TOPLEVEL (object);
 
   g_assert (self->xdg_toplevel);
 
@@ -653,22 +653,22 @@ phoc_xdg_toplevel_constructed (GObject *object)
 static void
 phoc_xdg_toplevel_finalize (GObject *object)
 {
-  PhocXdgToplevel *self = PHOC_XDG_TOPLEVEL(object);
+  PhocXdgToplevel *self = PHOC_XDG_TOPLEVEL (object);
 
   g_clear_pointer (&self->frame_done_idle, wl_event_source_remove);
 
-  wl_list_remove(&self->surface_commit.link);
-  wl_list_remove(&self->destroy.link);
-  wl_list_remove(&self->new_popup.link);
-  wl_list_remove(&self->map.link);
-  wl_list_remove(&self->unmap.link);
-  wl_list_remove(&self->request_move.link);
-  wl_list_remove(&self->request_resize.link);
-  wl_list_remove(&self->request_maximize.link);
-  wl_list_remove(&self->request_fullscreen.link);
-  wl_list_remove(&self->set_title.link);
-  wl_list_remove(&self->set_app_id.link);
-  wl_list_remove(&self->set_parent.link);
+  wl_list_remove (&self->surface_commit.link);
+  wl_list_remove (&self->destroy.link);
+  wl_list_remove (&self->new_popup.link);
+  wl_list_remove (&self->map.link);
+  wl_list_remove (&self->unmap.link);
+  wl_list_remove (&self->request_move.link);
+  wl_list_remove (&self->request_resize.link);
+  wl_list_remove (&self->request_maximize.link);
+  wl_list_remove (&self->request_fullscreen.link);
+  wl_list_remove (&self->set_title.link);
+  wl_list_remove (&self->set_app_id.link);
+  wl_list_remove (&self->set_parent.link);
   self->xdg_toplevel->base->data = NULL;
 
   G_OBJECT_CLASS (phoc_xdg_toplevel_parent_class)->finalize (object);
@@ -733,8 +733,8 @@ phoc_xdg_toplevel_get_geometry (PhocXdgToplevel *self, struct wlr_box *geom)
 }
 
 void
-phoc_xdg_toplevel_set_decoration (PhocXdgToplevel            *self,
-                                 PhocXdgToplevelDecoration *decoration)
+phoc_xdg_toplevel_set_decoration (PhocXdgToplevel           *self,
+                                  PhocXdgToplevelDecoration *decoration)
 {
   g_assert (PHOC_IS_XDG_TOPLEVEL (self));
 
@@ -763,20 +763,22 @@ phoc_xdg_toplevel_get_wlr_xdg_surface (PhocXdgToplevel *self)
 void
 phoc_handle_xdg_shell_toplevel (struct wl_listener *listener, void *data)
 {
+  PhocDesktop *desktop = wl_container_of (listener, desktop, xdg_shell_toplevel);
   struct wlr_xdg_toplevel *toplevel = data;
+  PhocGtkShell *gtk_shell;
+  PhocGtkSurface *gtk_surface;
   PhocXdgToplevel *self;
 
   g_assert (toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
-  PhocDesktop *desktop = wl_container_of (listener, desktop, xdg_shell_toplevel);
   g_debug ("new xdg toplevel: title=%s, app_id=%s", toplevel->title, toplevel->app_id);
 
   wlr_xdg_surface_ping (toplevel->base);
   self = phoc_xdg_toplevel_new (toplevel);
 
   /* Check for app-id override coming from gtk-shell */
-  PhocGtkShell *gtk_shell = phoc_desktop_get_gtk_shell (desktop);
-  PhocGtkSurface *gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (gtk_shell,
-                                                                                 toplevel->base->surface);
+  gtk_shell = phoc_desktop_get_gtk_shell (desktop);
+  gtk_surface = phoc_gtk_shell_get_gtk_surface_from_wlr_surface (gtk_shell,
+                                                                 toplevel->base->surface);
   if (gtk_surface && phoc_gtk_surface_get_app_id (gtk_surface))
     phoc_view_set_app_id (PHOC_VIEW (self), phoc_gtk_surface_get_app_id (gtk_surface));
   else
