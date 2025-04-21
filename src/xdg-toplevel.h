@@ -27,5 +27,6 @@ struct wlr_surface *phoc_xdg_toplevel_get_wlr_surface_at (PhocXdgToplevel *self,
                                                           double          *sub_y);
 
 void                phoc_handle_xdg_shell_toplevel (struct wl_listener *listener, void *data);
+gboolean            phoc_xdg_toplevel_is_initialized (PhocXdgToplevel *self);
 
 G_END_DECLS
