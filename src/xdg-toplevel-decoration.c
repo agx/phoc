@@ -41,18 +41,19 @@ decoration_handle_destroy (struct wl_listener *listener, void *data)
   free (decoration);
 }
 
+
 static void
 decoration_handle_request_mode (struct wl_listener *listener, void *data)
 {
   PhocXdgToplevelDecoration *decoration = wl_container_of (listener, decoration, request_mode);
-
   enum wlr_xdg_toplevel_decoration_v1_mode mode = decoration->wlr_decoration->requested_mode;
 
-  if (mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_NONE) {
+  if (mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_NONE)
     mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
-  }
+
   wlr_xdg_toplevel_decoration_v1_set_mode (decoration->wlr_decoration, mode);
 }
+
 
 static void
 decoration_handle_surface_commit (struct wl_listener *listener, void *data)
@@ -98,7 +99,10 @@ phoc_handle_xdg_toplevel_decoration (struct wl_listener *listener, void *data)
   decoration->surface_commit.notify = decoration_handle_surface_commit;
   wl_signal_add (&wlr_xdg_surface->surface->events.commit, &decoration->surface_commit);
 
-  g_signal_connect (xdg_toplevel, "surface-destroy", G_CALLBACK (on_xdg_surface_destroy), decoration);
+  g_signal_connect (xdg_toplevel,
+                    "surface-destroy",
+                    G_CALLBACK (on_xdg_surface_destroy),
+                    decoration);
 
   decoration_handle_request_mode (&decoration->request_mode, wlr_decoration);
 }
