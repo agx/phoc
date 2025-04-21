@@ -38,7 +38,7 @@ decoration_handle_destroy (struct wl_listener *listener, void *data)
   wl_list_remove (&decoration->request_mode.link);
   wl_list_remove (&decoration->surface_commit.link);
 
-  free (decoration);
+  g_free (decoration);
 }
 
 
