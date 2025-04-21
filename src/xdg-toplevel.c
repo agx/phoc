@@ -405,6 +405,9 @@ handle_surface_commit (struct wl_listener *listener, void *data)
     phoc_xdg_toplevel_set_capabilities (self,
                                         WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE |
                                         WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
+
+    if (self->decoration)
+      phoc_xdg_toplevel_decoration_set_mode (self->decoration);
   }
 
   if (!xdg_toplevel->base->surface->mapped)
