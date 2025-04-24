@@ -212,7 +212,7 @@ move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height
   if (wlr_xdg_toplevel->scheduled.width == constrained_width &&
       wlr_xdg_toplevel->scheduled.height == constrained_height) {
     view_update_position (view, x, y);
-  } else {
+  } else if (self->xdg_toplevel->base->initialized) {
     self->pending_move_resize_configure_serial =
       wlr_xdg_toplevel_set_size (wlr_xdg_toplevel, constrained_width, constrained_height);
   }
