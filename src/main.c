@@ -127,7 +127,8 @@ main (int argc, char **argv)
   g_autofree gchar *exec = NULL, *socket = NULL;
   PhocServerFlags flags = PHOC_SERVER_FLAG_NONE;
   PhocServerDebugFlags debug_flags = PHOC_SERVER_DEBUG_FLAG_NONE;
-  gboolean version = FALSE, shell_mode = FALSE, xwayland = FALSE, verbose = FALSE;
+  gboolean version = FALSE, shell_mode = FALSE, verbose = FALSE;
+  gboolean xwayland = FALSE, no_xwayland = FALSE;
   PhocConfig *config;
 
   setup_signals ();
@@ -141,6 +142,8 @@ main (int argc, char **argv)
      "Whether to expect a shell to attach", NULL},
     {"xwayland", 'X', 0, G_OPTION_ARG_NONE, &xwayland,
      "Whether to start XWayland", NULL},
+    {"no-xwayland", 0, 0, G_OPTION_ARG_NONE, &no_xwayland,
+     "Whether to disable XWayland", NULL},
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
      "Whether to provide more verbose output", NULL},
     {"socket", 0, 0, G_OPTION_ARG_STRING, &socket,
@@ -184,10 +187,13 @@ main (int argc, char **argv)
   config = phoc_config_new_from_file (config_path);
   if (config == NULL)
     return EXIT_FAILURE;
-  if (xwayland)
-    config->xwayland = TRUE;
   if (socket)
     config->socket = g_steal_pointer (&socket);
+
+  if (xwayland)
+    config->xwayland = TRUE;
+  else if (no_xwayland)
+    config->xwayland = FALSE;
 
   loop = g_main_loop_new (NULL, FALSE);
   if (!phoc_server_setup (server, config, exec, loop, flags))
