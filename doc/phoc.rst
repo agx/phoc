@@ -35,6 +35,8 @@ OPTIONS
    Whether to expect a shell to attach
 ``-X``, ``--xwayland``
    Whether to start XWayland
+``--no-xwayland``
+   Whether to disable XWayland
 ``--version``
    Show version information
 
