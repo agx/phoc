@@ -1,3 +1,88 @@
+phoc (0.47~rc1) experimental; urgency=medium
+
+  * render: Use plain g_warning. This gives us a better error message
+  * render: Don't crash when begin buffer pass fails.
+    This can happen when e.g. the renderer doesn't find a suitable modifier.
+  * render: Use linear modifier.
+    The Vulkan renderer isn't happy with invalid and we want a linear layout
+    anyway.
+  * xdg-surface: Drop needless check for popups. They have their own
+    handler
+  * xdg-surface: Properly name self
+  * output: Drop has_fullscreen_view.
+    It is only used in PhocOutput and the `is_mapped` check is
+    performed in `scan_out_fullscreen_view()` anyway.
+  * desktop: Init output list early.
+    This allows us to iterate them
+  * desktop: Add helper to iterate all views.
+    We will later on switch this to iterate all views on all workspaces thus
+    having us leak the workspace details into fewer places.
+  * desktop: Use phoc_desktop_for_each_view in handle_layout_change.
+    Use the iterator to move all views into valid layout space.
+  * desktop: Use phoc_desktop_for_each_view set_auto_maximize.
+    Use the iterator to toggle maximize on all views.
+  * layer-shell: Use phoc_desktop_for_each_view.
+    This also removes a needless output->desktop->maximize indirection.
+  * output: Use phoc_desktop_for_each_view.
+    Avoid open coding surface iteration. This will allow us to implicitly
+    iterate over workspaces.
+  * phosh-private: Drop fallback for old libxkbcommon before 0.8.2.
+    Debian oldoldstable has 0.8.2.
+  * xdg-surface: Destroy object when toplevel role goes away.
+    The xdg-surface might be around for longer
+    Tested-by: anteater
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/399
+  * server: Allow to give Wayland listening socket on the command line.
+    This is useful for tests that want a deterministic socket path:
+      phoc --socket=whatever
+    or
+      phoc --socket=/path/to/whatever
+  * input-method-relay: Use better naming.
+    Name the handler like the methods and the "new" makes it also
+    distinguishable from the handler of the created text-inputs /
+    input-methods itself.
+  * input-method-relay: Print address of new input method.
+    Be a bit more helpful when debugging so we can tell different ones
+    apart.
+  * input-method-relay: Disconnect signals on destroy.
+    We should do it anyway and this will trigger an assertion in wlroots
+    0.19.x.
+  * xdg-surface: Use an xdg-toplevel
+    xdg-surfaces can have popup and toplevel roles. This class is concerned
+    with the toplevel only.
+    We can thus drop the toplevel role checks.
+  * xdg-surface: Rename type from XdgSurface to XdgToplevel.
+    This renames the GObject type but not yet the source files. We also
+    only make minimal changes in e.g. XdgToplevelDecoration.
+  * xdg-surfae: Rename source files to xdg-toplevel.
+    Done in a separate commit to ease review.
+  * xdg-toplevel-decoration: Rename surface to toplevel
+  * xdg-popup: Destroy object when role goes away.
+    We want to destroy the object when the role goes away rather
+    than the underlying xdg-surface.
+  * output: Disconnect signals early enough.
+    Disconnect in output_destroy to make future wlroots' assertions happy
+  * gtk-shell: Disconnect signals earlier.
+    Otherwise we assert with newer wlroots.
+  * toplevel-decoration: Fix indent
+  * toplevel-decoration: Use g_free()
+    Just to match the `g_new0`
+  * toplevel: Add getter for initialized state
+  * toplevel-decoration: Only set mode when initialized.
+    Otherwise we assert in `wlr_xdg_surface_schedule_configure` as this
+    needs to happen past role commit in wlroots 0.19.x. In wlroots 0.18 this
+    avoids the
+      [types/xdg_shell/wlr_xdg_surface.c:169] A configure is scheduled for an uninitialized xdg_surface …>
+    warning.
+    Instead we need to catch up with the set state in XdgToplevel's
+    `handle_surface_commit`.
+  * main: Allow to disable XWayland.
+    We enable it by default so let's have an option to override it.
+  * doc: Document --no-xwayland option.
+    Add it to the respective manual page
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 07 May 2025 13:51:06 +0200
+
 phoc (0.46.0) experimental; urgency=medium
 
   * idle-inhibit: Fix mapped property name.

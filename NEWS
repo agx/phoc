@@ -1,3 +1,14 @@
+phoc 0.47~rc1
+-------------
+Released May 2025
+* Allow to use wlroot's Vulkan renderer
+* Several crash and robustness fixes
+* Add --socket and --no-xwayland options
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/399
+* Contributors:
+    * Guido Günther
+
 phoc 0.46.0
 -----------
 Released March 2025
