@@ -1,3 +1,9 @@
+phoc (0.47.0) experimental; urgency=medium
+
+  * No changes over 0.47~rc1
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 16 May 2025 20:21:35 +0200
+
 phoc (0.47~rc1) experimental; urgency=medium
 
   * render: Use plain g_warning. This gives us a better error message

@@ -1,5 +1,5 @@
-phoc 0.47~rc1
--------------
+phoc 0.47.0
+-----------
 Released May 2025
 * Allow to use wlroot's Vulkan renderer
 * Several crash and robustness fixes
