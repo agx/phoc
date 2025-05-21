@@ -93,6 +93,8 @@ sources = files(
   'server.h',
   'settings.c',
   'settings.h',
+  'shortcuts-inhibit.c',
+  'shortcuts-inhibit.h',
   'spinner.c',
   'spinner.h',
   'surface.c',

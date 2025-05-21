@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
+ *               2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -394,31 +395,36 @@ phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_keyboard_key_event *eve
   uint32_t modifiers;
   const xkb_keysym_t *keysyms;
   size_t keysyms_len;
+  PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
+  PhocSeat *seat = phoc_input_device_get_seat (input_device);
+  bool shortcuts_inhibit = phoc_seat_shortcuts_inhibited (seat);
 
   /* Handle translated keysyms */
   keysyms_len = keyboard_keysyms_translated (self, keycode, &keysyms, &modifiers);
   pressed_keysyms_update (self->pressed_keysyms_translated, keysyms, keysyms_len, event->state);
-  handled = keyboard_execute_binding (self,
-                                      self->pressed_keysyms_translated, modifiers, keysyms,
-                                      keysyms_len, event->state);
+  if (!shortcuts_inhibit){
+    handled = keyboard_execute_binding (self,
+                                        self->pressed_keysyms_translated, modifiers, keysyms,
+                                        keysyms_len, event->state);
+  }
 
   keysyms_len = keyboard_keysyms_raw (self, keycode, &keysyms, &modifiers);
   pressed_keysyms_update (self->pressed_keysyms_raw, keysyms, keysyms_len,
                           event->state);
   /*  Handle raw keysyms */
-  if (!handled) {
+  if (!handled && !shortcuts_inhibit) {
     handled = keyboard_execute_binding (self,
                                         self->pressed_keysyms_raw, modifiers, keysyms,
                                         keysyms_len, event->state);
   }
 
   /* Check for the super key */
-  if (!handled)
+  if (!handled && !shortcuts_inhibit)
     handled = keyboard_execute_super_key (self, keysyms, keysyms_len, modifiers, event->time_msec,
                                           event->state);
 
   /* Handle subscribed keysyms */
-  if (!handled) {
+  if (!handled && !shortcuts_inhibit) {
     handled = keyboard_execute_subscribed_binding (self,
                                                    self->pressed_keysyms_raw, modifiers,
                                                    keysyms, keysyms_len, event->time_msec,
@@ -426,7 +432,6 @@ phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_keyboard_key_event *eve
   }
 
   if (!handled) {
-    PhocInputDevice *input_device = PHOC_INPUT_DEVICE (self);
     struct wlr_input_device *device = phoc_input_device_get_device (input_device);
     struct wlr_input_method_keyboard_grab_v2 *grab = phoc_keyboard_get_grab (self);
 
@@ -438,7 +443,6 @@ phoc_keyboard_handle_key (PhocKeyboard *self, struct wlr_keyboard_key_event *eve
                                                   event->keycode,
                                                   event->state);
     } else {
-      PhocSeat *seat = phoc_input_device_get_seat (input_device);
       wlr_seat_set_keyboard (seat->seat, wlr_keyboard_from_input_device (device));
       wlr_seat_keyboard_notify_key (seat->seat,
                                     event->time_msec,

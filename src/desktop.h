@@ -14,6 +14,7 @@
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_input_method_v2.h>
+#include <wlr/types/wlr_keyboard_shortcuts_inhibit_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_management_v1.h>
@@ -52,6 +53,7 @@ struct _PhocDesktop {
   struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
   struct wlr_idle *idle;
   struct wlr_input_method_manager_v2 *input_method;
+  struct wlr_keyboard_shortcuts_inhibit_manager_v1 *keyboard_shortcuts_inhibit;
   struct wlr_layer_shell_v1 *layer_shell;
   struct wlr_output_layout *layout;
   struct wlr_output_manager_v1 *output_manager_v1;
@@ -72,6 +74,7 @@ struct _PhocDesktop {
 
   struct wl_listener new_output;
   struct wl_listener backend_destroy;
+  struct wl_listener keyboard_shortcuts_inhibit_new_inhibitor;
   struct wl_listener layout_change;
   struct wl_listener xdg_shell_toplevel;
   struct wl_listener layer_shell_surface;

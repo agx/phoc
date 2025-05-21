@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
+ *               2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -10,6 +11,7 @@
 #include "input.h"
 #include "input-method-relay.h"
 #include "layer-shell.h"
+#include "shortcuts-inhibit.h"
 
 #include <wlr/types/wlr_switch.h>
 
@@ -52,6 +54,7 @@ typedef struct _PhocSeat {
 
   PhocDragIcon                   *drag_icon; /* (nullable) */
 
+  GSList                         *keyboard_shortcuts_inhibitors; /* (element-type PhocKeyboardShortcutsInhibit) */
   GSList                         *keyboards; /* (element-type PhocKeyboard) */
   GSList                         *pointers;  /* (element-type PhocPointer) */
   GSList                         *switches;  /* (element-type PhocSwitch) */
@@ -169,3 +172,7 @@ void               phoc_seat_update_last_button_serial (PhocSeat *self, uint32_t
 uint32_t           phoc_seat_get_last_button_or_touch_serial (PhocSeat *self);
 void               phoc_seat_notify_activity (PhocSeat *self);
 gint64             phoc_seat_get_last_event_ts (PhocSeat *self);
+
+gboolean           phoc_seat_shortcuts_inhibited (const PhocSeat *self);
+void               phoc_seat_add_shortcuts_inhibit (PhocSeat                                   *self,
+                                                    struct wlr_keyboard_shortcuts_inhibitor_v1 *inhibitor);
