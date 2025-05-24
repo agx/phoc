@@ -119,6 +119,7 @@ phoc_drag_icon_handle_destroy (struct wl_listener *listener, void *data)
   self->seat->drag_icon = NULL;
 
   wl_list_remove (&self->surface_commit.link);
+  wl_list_remove (&self->map.link);
   wl_list_remove (&self->unmap.link);
   wl_list_remove (&self->destroy.link);
   free (self);
