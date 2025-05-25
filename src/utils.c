@@ -153,6 +153,9 @@ phoc_utils_scale_box (struct wlr_box *box, float scale)
  * If the optional `clip_box` is specified the damage is clipped to
  * that box.
  *
+ * Coordinates of the given boxes and regions need to be in output
+ * buffer local coordinates.
+ *
  * Returns: %TRUE on overlap otherwise %FALSE
  */
 gboolean

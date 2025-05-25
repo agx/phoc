@@ -127,6 +127,8 @@ phoc_bling_damage_box (PhocBling *self)
     damage_box.y -= output->ly;
     phoc_utils_scale_box (&damage_box, output->wlr_output->scale);
 
+    /* Transform to damage ring buffer local coordinates */
+    phoc_output_transform_box (output, &damage_box);
     wlr_damage_ring_add_box (&output->damage_ring, &damage_box);
   }
 }

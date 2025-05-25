@@ -148,8 +148,6 @@ render_texture (PhocOutput               *output,
   if (!phoc_utils_is_damaged (&proj_box, ctx->damage, clip_box, &damage))
     goto buffer_damage_finish;
 
-  phoc_output_transform_box (output, &proj_box);
-  phoc_output_transform_damage (output, &damage);
   transform = wlr_output_transform_compose (surface_transform, output->wlr_output->transform);
 
   wlr_render_pass_add_texture (ctx->render_pass, &(struct wlr_render_texture_options) {
@@ -191,8 +189,11 @@ render_surface_iterator (PhocOutput         *output,
 
   phoc_utils_scale_box (&dst_box, scale);
   phoc_utils_scale_box (&dst_box, wlr_output->scale);
+  phoc_output_transform_box (output, &dst_box);
+
   phoc_utils_scale_box (&clip_box, scale);
   phoc_utils_scale_box (&clip_box, wlr_output->scale);
+  phoc_output_transform_box (output, &clip_box);
 
   alpha_modifier_state = wlr_alpha_modifier_v1_get_surface_state (surface);
   if (alpha_modifier_state)
@@ -426,7 +427,6 @@ render_damage (PhocRenderer *self, PhocRenderContext *ctx)
 
     pixman_region32_init (&clip);
     pixman_region32_copy (&clip, &damage->region);
-    phoc_output_transform_damage (ctx->output, &clip);
 
     /* Using an empty box makes us clip the damage from the whole output buffer */
     wlr_render_pass_add_rect (ctx->render_pass, &(struct wlr_render_rect_options){
@@ -456,25 +456,19 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
   struct wlr_output *wlr_output = output->wlr_output;
   PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
   pixman_region32_t *damage = ctx->damage;
-  pixman_region32_t transformed_damage;
 
   g_assert (PHOC_IS_RENDERER (self));
-
-  pixman_region32_init (&transformed_damage);
 
   if (!pixman_region32_not_empty (damage)) {
     /* Output isn't damaged but needs buffer swap */
     goto renderer_end;
   }
 
-  pixman_region32_copy (&transformed_damage, damage);
-  phoc_output_transform_damage (output, &transformed_damage);
-
   wlr_render_pass_add_rect (ctx->render_pass,
                             &(struct wlr_render_rect_options){
                               .box = { .width = wlr_output->width, .height = wlr_output->height },
                               .color = COLOR_BLACK,
-                              .clip = &transformed_damage,
+                              .clip = damage,
                             });
 
   /* If a view is fullscreen on this output, render it */
@@ -521,7 +515,6 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
   render_layer (ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, ctx);
 
  renderer_end:
-  pixman_region32_fini (&transformed_damage);
   wlr_output_add_software_cursors_to_render_pass (wlr_output, ctx->render_pass, damage);
 
   if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS)))
