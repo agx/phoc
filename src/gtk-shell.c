@@ -143,11 +143,8 @@ gtk_surface_handle_resource_destroy (struct wl_resource *resource)
 
   g_debug ("Destroying gtk_surface %p (res %p)", gtk_surface, gtk_surface->resource);
 
-  if (gtk_surface->wlr_surface)
-    gtk_surface->wlr_surface = NULL;
-
-  if (gtk_surface->xdg_surface)
-    gtk_surface->xdg_surface = NULL;
+  gtk_surface->wlr_surface = NULL;
+  gtk_surface->xdg_surface = NULL;
 
   gtk_surface->gtk_shell->surfaces = g_slist_remove (gtk_surface->gtk_shell->surfaces,
                                                      gtk_surface);
