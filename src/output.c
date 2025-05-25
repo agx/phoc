@@ -1,3 +1,4 @@
+
 #define G_LOG_DOMAIN "phoc-output"
 
 #include "phoc-config.h"
@@ -511,21 +512,6 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
 
 
 static void
-get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
-{
-  int width, height;
-  enum wl_output_transform transform;
-
-  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
-
-  pixman_region32_init (frame_damage);
-
-  transform = wlr_output_transform_invert (self->wlr_output->transform);
-  wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
-}
-
-
-static void
 build_debug_damage_tracking (PhocOutput *self)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -600,7 +586,8 @@ phoc_output_draw (PhocOutput *self)
   if (G_UNLIKELY (priv->gamma_lut_changed))
     phoc_output_set_gamma_lut (self, &pending);
 
-  get_frame_damage (self, &frame_damage);
+  pixman_region32_init (&frame_damage);
+  pixman_region32_copy (&frame_damage, &self->damage_ring.current);
   wlr_output_state_set_damage (&pending, &frame_damage);
   pixman_region32_fini (&frame_damage);
 
@@ -1793,7 +1780,10 @@ phoc_output_damage_region (PhocOutput *self, const pixman_region32_t *region)
     return FALSE;
   }
 
+  /* Transform to damage ring buffer local coordinates */
+  phoc_output_transform_damage (self, &clipped);
   wlr_damage_ring_add (&self->damage_ring, &clipped);
+
   pixman_region32_fini (&clipped);
   wlr_output_schedule_frame (self->wlr_output);
   return TRUE;
@@ -1815,10 +1805,13 @@ phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box)
   int width, height;
 
   wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+
   clipped = (struct wlr_box) { .x = 0, .y = 0, .width = width, .height = height };
   if (!wlr_box_intersection (&clipped, &clipped, box))
     return FALSE;
 
+  /* Transform to damage ring buffer local coordinates */
+  phoc_output_transform_box (self, &clipped);
   wlr_damage_ring_add_box (&self->damage_ring, &clipped);
 
   wlr_output_schedule_frame (self->wlr_output);
