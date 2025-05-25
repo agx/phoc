@@ -428,8 +428,8 @@ handle_layout_change (struct wl_listener *listener, void *data)
                                });
 
   /* Damage all outputs since the move above damaged old layout space */
-  wl_list_for_each(output, &self->outputs, link)
-    phoc_output_damage_whole(output);
+  wl_list_for_each (output, &self->outputs, link)
+    phoc_output_damage_whole (output);
 }
 
 
