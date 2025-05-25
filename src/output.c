@@ -1659,14 +1659,13 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
 
 
 static void
-damage_whole_view (PhocOutput *self, PhocView  *view)
+damage_view_blings (PhocOutput *self, PhocView  *view)
 {
   GSList *blings;
   struct wlr_box box;
 
-  if (!phoc_view_is_mapped (view)) {
+  if (!phoc_view_is_mapped (view))
     return;
-  }
 
   blings = phoc_view_get_blings (view);
   if (G_LIKELY (!blings))
@@ -1702,7 +1701,7 @@ phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole)
   }
 
   if (whole)
-    damage_whole_view (self, view);
+    damage_view_blings (self, view);
 
   phoc_output_view_for_each_surface (self, view, damage_surface_iterator, &whole);
 }
