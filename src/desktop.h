@@ -36,7 +36,7 @@
 
 #include "settings.h"
 
-#define PHOC_TYPE_DESKTOP (phoc_desktop_get_type())
+#define PHOC_TYPE_DESKTOP (phoc_desktop_get_type ())
 
 G_DECLARE_FINAL_TYPE (PhocDesktop, phoc_desktop, PHOC, DESKTOP, GObject);
 
