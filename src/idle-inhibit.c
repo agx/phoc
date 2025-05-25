@@ -146,7 +146,6 @@ phoc_idle_inhibitor_v1_cleanup (PhocIdleInhibitorV1 *inhibitor)
     g_signal_handlers_disconnect_by_data (inhibitor->view, inhibitor);
 
   self->inhibitors_v1 = g_slist_remove (self->inhibitors_v1, inhibitor);
-  wl_list_remove (&inhibitor->inhibitor_v1_destroy.link);
 }
 
 
@@ -161,6 +160,8 @@ static void
 handle_inhibitor_v1_destroy (struct wl_listener *listener, void *data)
 {
   PhocIdleInhibitorV1 *inhibitor = wl_container_of (listener, inhibitor, inhibitor_v1_destroy);
+
+  wl_list_remove (&inhibitor->inhibitor_v1_destroy.link);
 
   g_debug ("Idle inhibitor v1 (%p) destroyed", inhibitor);
   phoc_idle_inhibitor_v1_release (inhibitor);
