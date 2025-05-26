@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
- *               2023-2024 The Phosh Developers
+ *               2023-2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later or MIT
  */
@@ -1875,6 +1875,7 @@ phoc_seat_finalize (GObject *object)
   wlr_seat_destroy (self->seat);
   g_clear_pointer (&priv->name, g_free);
 
+  g_clear_pointer (&self->keyboard_shortcuts_inhibitors, g_slist_free);
   g_clear_pointer (&self->keyboards, g_slist_free);
   g_clear_pointer (&self->pointers, g_slist_free);
   g_clear_pointer (&self->switches, g_slist_free);
@@ -2078,3 +2079,43 @@ phoc_seat_get_last_event_ts (PhocSeat *self)
 
   return priv->last_event_ts;
 }
+
+
+gboolean
+phoc_seat_shortcuts_inhibited (const PhocSeat *self)
+{
+  struct wlr_surface *focused_surface = self->seat->keyboard_state.focused_surface;
+  PhocKeyboardShortcutsInhibit* inhibit;
+
+  for (GSList *l = self->keyboard_shortcuts_inhibitors; l; l = l->next) {
+    inhibit = PHOC_KEYBOARD_SHORTCUTS_INHIBIT (l->data);
+    if (phoc_keyboard_shortcuts_inhibit_get_surface (inhibit) == focused_surface)
+      return TRUE;
+  }
+  return FALSE;
+}
+
+
+static void
+on_shortcuts_inhibit_destroy (PhocSeat *self, PhocKeyboardShortcutsInhibit* inhibit)
+{
+  self->keyboard_shortcuts_inhibitors = g_slist_remove (self->keyboard_shortcuts_inhibitors,
+                                                        inhibit);
+  g_object_unref (inhibit);
+}
+
+
+void
+phoc_seat_add_shortcuts_inhibit (PhocSeat                                   *self,
+                                 struct wlr_keyboard_shortcuts_inhibitor_v1 *inhibitor)
+{
+  PhocKeyboardShortcutsInhibit *inhibit;
+  inhibit = phoc_keyboard_shortcuts_inhibit_new (inhibitor);
+
+  self->keyboard_shortcuts_inhibitors = g_slist_prepend (self->keyboard_shortcuts_inhibitors,
+                                                         inhibit);
+  g_signal_connect_swapped (inhibit, "destroy",
+                            G_CALLBACK (on_shortcuts_inhibit_destroy),
+                            self);
+}
+

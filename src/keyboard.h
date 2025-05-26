@@ -1,4 +1,5 @@
 /* Copyright (C) 2019 Purism SPC
+ *               2025 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *

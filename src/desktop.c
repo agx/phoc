@@ -42,6 +42,7 @@
 #include "output.h"
 #include "seat.h"
 #include "server.h"
+#include "shortcuts-inhibit.h"
 #include "color-rect.h"
 #include "timed-animation.h"
 #include "utils.h"
@@ -594,12 +595,12 @@ phoc_desktop_constructed (GObject *object)
   self->layout_change.notify = handle_layout_change;
   wl_signal_add (&self->layout->events.change, &self->layout_change);
 
-  self->xdg_shell = wlr_xdg_shell_create(wl_display, PHOC_XDG_SHELL_VERSION);
+  self->xdg_shell = wlr_xdg_shell_create (wl_display, PHOC_XDG_SHELL_VERSION);
   wl_signal_add (&self->xdg_shell->events.new_toplevel, &self->xdg_shell_toplevel);
   self->xdg_shell_toplevel.notify = phoc_handle_xdg_shell_toplevel;
 
   self->layer_shell = wlr_layer_shell_v1_create (wl_display, PHOC_LAYER_SHELL_VERSION);
-  wl_signal_add(&self->layer_shell->events.new_surface, &self->layer_shell_surface);
+  wl_signal_add (&self->layer_shell->events.new_surface, &self->layer_shell_surface);
   self->layer_shell_surface.notify = phoc_handle_layer_shell_surface;
   priv->layer_shell_effects = phoc_layer_shell_effects_new ();
 
@@ -642,6 +643,12 @@ phoc_desktop_constructed (GObject *object)
   wl_signal_add (&self->virtual_keyboard->events.new_virtual_keyboard,
                  &self->virtual_keyboard_new);
   self->virtual_keyboard_new.notify = phoc_handle_virtual_keyboard;
+
+  self->keyboard_shortcuts_inhibit = wlr_keyboard_shortcuts_inhibit_v1_create (wl_display);
+  self->keyboard_shortcuts_inhibit_new_inhibitor.notify =
+    phoc_handle_keyboard_shortcuts_inhibit_new_inhibitor;
+  wl_signal_add (&self->keyboard_shortcuts_inhibit->events.new_inhibitor,
+                 &self->keyboard_shortcuts_inhibit_new_inhibitor);
 
   self->virtual_pointer = wlr_virtual_pointer_manager_v1_create (wl_display);
   wl_signal_add (&self->virtual_pointer->events.new_virtual_pointer, &self->virtual_pointer_new);
@@ -720,6 +727,7 @@ phoc_desktop_finalize (GObject *object)
   wl_list_remove (&self->layer_shell_surface.link);
   wl_list_remove (&self->xdg_toplevel_decoration.link);
   wl_list_remove (&self->virtual_keyboard_new.link);
+  wl_list_remove (&self->keyboard_shortcuts_inhibit_new_inhibitor.link);
   wl_list_remove (&self->virtual_pointer_new.link);
   wl_list_remove (&self->pointer_constraint.link);
   wl_list_remove (&self->output_manager_apply.link);
@@ -1158,6 +1166,7 @@ phoc_desktop_is_privileged_protocol (PhocDesktop *self, const struct wl_global *
     global == self->foreign_toplevel_manager_v1->global ||
     global == self->gamma_control_manager_v1->global ||
     global == self->input_method->global ||
+    global == self->keyboard_shortcuts_inhibit->global ||
     global == self->layer_shell->global ||
     global == self->output_manager_v1->global ||
     global == self->output_power_manager_v1->global ||
