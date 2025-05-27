@@ -19,8 +19,10 @@ test_env.set('WLR_RENDERER', 'pixman')
 test_env.set('XDG_RUNTIME_DIR', meson.current_build_dir())
 
 # For -Db_sanitize=address
-test_env.set('LSAN_OPTIONS',
-             'suppressions=@0@/data/leak-suppress.txt'.format(meson.project_source_root()))
+test_env.set(
+  'LSAN_OPTIONS',
+  'suppressions=@0@/data/leak-suppress.txt'.format(meson.project_source_root()),
+)
 test_env.set('ASAN_OPTIONS', 'fast_unwind_on_malloc=0')
 
 test_cflags = [
@@ -28,9 +30,7 @@ test_cflags = [
   '-DTEST_PHOC_CLIENT_TIMEOUT=10',
 ]
 
-test_link_args = [
-  '-fPIC',
-]
+test_link_args = ['-fPIC']
 
 tests = [
   'client',
@@ -49,37 +49,33 @@ tests = [
 ]
 
 if have_xwayland == true
-  tests += [
-  'xwayland',
-]
+  tests += ['xwayland']
 endif
 
-phoctest_sources = [
-  'testlib.c',
-  'testlib-layer-shell.c',
-]
+phoctest_sources = ['testlib.c', 'testlib-layer-shell.c']
 
-phoctest_lib = static_library('phoctest',
-  [
-    phoctest_sources,
-    client_protos_headers,
-    protos_sources,
-  ],
+phoctest_lib = static_library(
+  'phoctest',
+  [phoctest_sources, client_protos_headers, protos_sources],
   c_args: test_cflags,
-  dependencies: [libphoc_dep, wayland_client])
+  dependencies: [libphoc_dep, wayland_client],
+)
 
 phoctest_dep = declare_dependency(
   include_directories: include_directories('.'),
-  link_with: phoctest_lib)
+  link_with: phoctest_lib,
+)
 
 # Unit tests
 foreach test : tests
-  t = executable('test-@0@'.format(test),
-                 ['test-@0@.c'.format(test)],
-                 c_args: test_cflags,
-                 pie: true,
-                 link_args: test_link_args,
-                 dependencies: [phoctest_dep, libphoc_dep])
+  t = executable(
+    'test-@0@'.format(test),
+    ['test-@0@.c'.format(test)],
+    c_args: test_cflags,
+    pie: true,
+    link_args: test_link_args,
+    dependencies: [phoctest_dep, libphoc_dep],
+  )
   test(test, t, env: test_env)
 endforeach
 

@@ -15,17 +15,20 @@ phoc_dbus_client_protos = []
 #
 phoc_dbus_server_protos = [
   # Sorted by xml filename:
-  ['phoc-dbus-debug-control','mobi.phosh.Phoc.DebugControl.xml', 'mobi.phosh.Phoc'],
+  ['phoc-dbus-debug-control', 'mobi.phosh.Phoc.DebugControl.xml', 'mobi.phosh.Phoc'],
 ]
 
 foreach p : phoc_dbus_client_protos + phoc_dbus_server_protos
   name = p[0]
   xml = p[1]
   prefix = p[2]
-  targets = gnome.gdbus_codegen(name, xml,
-                                interface_prefix: prefix,
-                                install_header: false,
-                                namespace: phoc_dbus_prefix)
+  targets = gnome.gdbus_codegen(
+    name,
+    xml,
+    interface_prefix: prefix,
+    install_header: false,
+    namespace: phoc_dbus_prefix,
+  )
   phoc_dbus_sources += targets[0]
   phoc_dbus_headers += targets[1]
 endforeach
