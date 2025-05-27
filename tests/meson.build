@@ -1,4 +1,6 @@
-if get_option('tests')
+if not get_option('tests')
+  subdir_done()
+endif
 
 test_env = environment()
 test_env.set('G_TEST_SRCDIR', meson.current_source_dir())
@@ -81,4 +83,3 @@ foreach test : tests
   test(test, t, env: test_env)
 endforeach
 
-endif
