@@ -252,6 +252,11 @@ check-markdown:
   extends:
     - .phosh-check-markdown
 
+check-meson:
+  stage: style-checks
+  extends:
+    - .phosh-check-meson
+
 package-deb-debian-trixie:arm64:
   stage: package
   variables:
