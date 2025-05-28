@@ -43,7 +43,7 @@ Files:
  tests/data/phosh,tiny.json
  tests/phoc.ini
  tests/screenshots/*
-Copyright: The Phoc authors
+Copyright: The Phosh Developers
 License: GPL-3.0-or-later
 
 # These were initially developed in rootston under MIT
@@ -72,11 +72,10 @@ Files:
  src/view.h
  src/virtual.c
  src/virtual.h
- src/xcursor.h
  src/xdg-toplevel-decoration.c
 Copyright:
  The wlroots authors
- The Phoc authors
+ The Phosh Developers
 License: GPL-3.0-or-later or MIT
 
 # No point in adding indiviual information to tiny files or
