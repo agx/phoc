@@ -79,6 +79,8 @@ sources = files(
   'output-shield.h',
   'output.c',
   'output.h',
+  'outputs-states.c',
+  'outputs-states.h',
   'phoc-types.c',
   'phoc-types.h',
   'phosh-private.c',
