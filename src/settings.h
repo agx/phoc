@@ -15,6 +15,12 @@ typedef struct _PhocOutputModeConfig {
   drmModeModeInfo info;
 } PhocOutputModeConfig;
 
+/**
+ * PhocOutputConfig: (free-func phoc_config_destroy) (copy-func none)
+ *
+ * An output configuration. This is used when parsing the config file as well as the
+ * outputs states db
+ */
 typedef struct _PhocOutputConfig {
   char                    *name;
   bool                     enable;
@@ -51,5 +57,10 @@ void              phoc_config_destroy       (PhocConfig *config);
 PhocOutputConfig *phoc_config_get_output    (PhocConfig *config, PhocOutput *output);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocConfig, phoc_config_destroy)
+
+PhocOutputConfig *phoc_output_config_new (const char *name);
+void              phoc_output_config_destroy (PhocOutputConfig *oc);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocOutputConfig, phoc_output_config_destroy)
 
 G_END_DECLS
