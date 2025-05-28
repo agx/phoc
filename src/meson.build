@@ -155,6 +155,7 @@ phoc_deps = [
   gmobile_dep,
   gnome_desktop,
   gsettings_desktop_schemas_dep,
+  gvdb_dep,
   math,
   pixman,
   udev,

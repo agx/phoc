@@ -122,6 +122,7 @@ Files:
  src/phoc.ini.example
  subprojects/gi-docgen.wrap
  subprojects/gmobile.wrap
+ subprojects/gvdb.wrap
  subprojects/wlroots.wrap
 Copyright: The Phoc authors
 License: GPL-3.0-or-later

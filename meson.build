@@ -50,6 +50,7 @@ gmobile_dep = dependency(
   fallback: ['gmobile', 'gmobile_dep'],
   default_options: ['examples=false', 'introspection=false', 'gtk_doc=false', 'tests=false'],
 )
+gvdb_dep = subproject('gvdb', default_options: ['tests=false']).get_variable('gvdb_dep')
 embed_wlroots = get_option('embed-wlroots')
 
 if not embed_wlroots.disabled()
