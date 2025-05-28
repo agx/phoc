@@ -47,6 +47,7 @@
 #include "shortcuts-inhibit.h"
 #include "color-rect.h"
 #include "timed-animation.h"
+#include "outputs-states.h"
 #include "utils.h"
 #include "view.h"
 #include "virtual.h"
@@ -93,6 +94,8 @@ typedef struct _PhocDesktopPrivate {
 
   GSettings             *settings;
   GSettings             *interface_settings;
+
+  PhocOutputsStates     *outputs_states;
 
   /* Protocols from wlroots */
   struct wlr_data_control_manager_v1 *data_control_manager_v1;
@@ -751,6 +754,7 @@ phoc_desktop_finalize (GObject *object)
   g_clear_object (&priv->device_state);
   g_clear_pointer (&self->layout, wlr_output_layout_destroy);
 
+  g_clear_object (&priv->outputs_states);
   g_hash_table_remove_all (self->input_output_map);
   g_hash_table_unref (self->input_output_map);
 
@@ -790,6 +794,8 @@ static void
 phoc_desktop_init (PhocDesktop *self)
 {
   PhocDesktopPrivate *priv;
+  g_autoptr (GError) err = NULL;
+  gboolean success;
 
   wl_list_init (&self->outputs);
 
@@ -801,6 +807,10 @@ phoc_desktop_init (PhocDesktop *self)
                                                   g_str_equal,
                                                   g_free,
                                                   NULL);
+  priv->outputs_states = phoc_outputs_states_new (NULL);
+  success = phoc_outputs_states_load (priv->outputs_states, &err);
+  if (!success)
+    g_debug ("Failed to load output states: %s", err->message);
 }
 
 
@@ -1430,4 +1440,145 @@ phoc_desktop_set_view_always_on_top (PhocDesktop *self, PhocView *view, gboolean
   /* Raise children recursively */
   wl_list_for_each_reverse (child, &view->stack, parent_link)
     phoc_desktop_set_view_always_on_top (self, child, on_top);
+}
+
+
+static int
+cmp_output_name (gconstpointer a, gconstpointer b)
+{
+  const PhocOutputConfig *config1 = *((PhocOutputConfig **) a);
+  const PhocOutputConfig *config2 = *((PhocOutputConfig **) b);
+
+  return g_ascii_strcasecmp (config1->name, config2->name);
+}
+
+
+static GPtrArray *
+build_output_configs (PhocDesktop *self)
+{
+  PhocOutput *output;
+  g_autoptr (GPtrArray) output_configs = NULL;
+
+  output_configs = g_ptr_array_new_full (5, (GDestroyNotify) phoc_output_config_destroy);
+  wl_list_for_each (output, &self->outputs, link) {
+    const char *identifier = phoc_output_get_identifier (output);
+    PhocOutputConfig *oc;
+
+    oc = phoc_output_config_new (identifier);
+    oc->transform = output->wlr_output->transform;
+    oc->scale = output->wlr_output->scale;
+    if (output->wlr_output->current_mode) {
+      oc->mode.width = output->wlr_output->current_mode->width;
+      oc->mode.height = output->wlr_output->current_mode->height;
+      oc->mode.refresh_rate = output->wlr_output->current_mode->refresh / 1000.0;
+    }
+    oc->x = output->lx;
+    oc->y = output->ly;
+
+    g_ptr_array_add (output_configs, oc);
+  }
+
+  /* Sort so identifier doesn't depend on the order of outputs */
+  g_ptr_array_sort (output_configs, cmp_output_name);
+
+  return g_steal_pointer (&output_configs);
+}
+
+
+static char *
+build_identifier (GPtrArray *output_configs)
+{
+  GString *identifier = g_string_new (NULL);
+
+  for (int i = 0; i < output_configs->len; i++) {
+    PhocOutputConfig *oc = g_ptr_array_index (output_configs, i);
+
+    if (i != 0)
+      g_string_append_c (identifier, '%');
+
+    g_string_append (identifier, oc->name);
+  }
+
+  return g_string_free (identifier, FALSE);
+}
+
+
+static void
+on_outputs_states_save_ready (GObject *object, GAsyncResult *res, gpointer data)
+{
+  g_autoptr (GError) err = NULL;
+  gboolean success;
+
+  success = phoc_outputs_states_save_finish (PHOC_OUTPUTS_STATES (object), res, &err);
+  if (!success)
+    g_critical ("Failed so save output states: %s", err->message);
+}
+
+/**
+ * phoc_desktop_save_outputs_state:
+ * @self: The desktop
+ *
+ * Save the current output configuration state.
+ */
+void
+phoc_desktop_save_outputs_state (PhocDesktop *self)
+{
+  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
+  g_autoptr (GPtrArray) output_configs = NULL;
+  g_autofree char *identifier = NULL;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  output_configs = build_output_configs (self);
+  identifier = build_identifier (output_configs);
+
+  phoc_outputs_states_update (priv->outputs_states,
+                              identifier,
+                              g_steal_pointer (&output_configs));
+  phoc_outputs_states_save_async (priv->outputs_states,
+                                  on_outputs_states_save_ready,
+                                  NULL,
+                                  NULL);
+}
+
+/**
+ * phoc_desktop_get_saved_outputs_state:
+ * @self: The desktop
+ * @output_identifier: The output's identifier
+ *
+ * Get the current target output configuration based on the currently
+ * known outputs.
+ *
+ * Returns: (transfer none): The output config
+ */
+PhocOutputConfig *
+phoc_desktop_get_saved_outputs_state (PhocDesktop *self, const char *output_identifier)
+{
+  PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
+  g_autoptr (GPtrArray) current_configs = NULL;
+  GPtrArray *output_configs;
+  g_autofree char *state_identifier = NULL;
+
+  g_assert (PHOC_IS_DESKTOP (self));
+
+  g_debug ("Looking for output state: %s", output_identifier);
+
+  /* Build a stub output configuration to got get an identifier */
+  current_configs = build_output_configs (self);
+  state_identifier = build_identifier (current_configs);
+
+  /* Lookup the state of all outputs */
+  output_configs = phoc_outputs_states_lookup (priv->outputs_states, state_identifier);
+  if (!output_configs)
+    return NULL;
+
+  /* Get the config for the passed in identifier */
+  for (int i = 0; i < output_configs->len; i++) {
+    PhocOutputConfig *oc = g_ptr_array_index (output_configs, i);
+
+    if (g_strcmp0 (output_identifier, oc->name) == 0)
+      return oc;
+  }
+
+  return NULL;
 }

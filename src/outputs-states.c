@@ -430,10 +430,13 @@ phoc_outputs_states_load (PhocOutputsStates *self, GError **err)
 
   mapped_file = g_mapped_file_new (self->state_file, FALSE, &local_err);
   if (!mapped_file) {
-    if (g_error_matches (local_err, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
+    if (g_error_matches (local_err, G_FILE_ERROR, G_IO_ERROR_NOT_FOUND) ||
+        g_error_matches (local_err, G_FILE_ERROR, G_IO_ERROR_NOT_DIRECTORY)) {
       return TRUE;
+    }
 
     g_propagate_error (err, local_err);
+    local_err = NULL;
     return FALSE;
   }
 
