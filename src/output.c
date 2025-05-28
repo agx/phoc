@@ -1821,7 +1821,7 @@ phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box)
 
 static void
 output_manager_apply_config (PhocDesktop                        *desktop,
-                             struct wlr_output_configuration_v1 *config,
+                             struct wlr_output_configuration_v1 *wlr_config_v1,
                              gboolean                            test_only)
 
 {
@@ -1829,7 +1829,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   gboolean ok = TRUE;
 
   /* First disable outputs we need to disable */
-  wl_list_for_each (config_head, &config->heads, link) {
+  wl_list_for_each (config_head, &wlr_config_v1->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     struct wlr_output_state pending;
 
@@ -1851,7 +1851,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   }
 
   /* Then enable outputs that need to */
-  wl_list_for_each (config_head, &config->heads, link) {
+  wl_list_for_each (config_head, &wlr_config_v1->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
     struct wlr_output_state pending;
@@ -1894,11 +1894,11 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   }
 
   if (ok)
-    wlr_output_configuration_v1_send_succeeded (config);
+    wlr_output_configuration_v1_send_succeeded (wlr_config_v1);
   else
-    wlr_output_configuration_v1_send_failed (config);
+    wlr_output_configuration_v1_send_failed (wlr_config_v1);
 
-  wlr_output_configuration_v1_destroy (config);
+  wlr_output_configuration_v1_destroy (wlr_config_v1);
 
   if (!test_only)
     update_output_manager_config (desktop);
