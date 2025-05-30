@@ -1,7 +1,7 @@
 ---
 include:
   - project: 'guidog/meta-phosh'
-    ref: '891d0bd56c7288e8998c313426cf36a61e238a4e'
+    ref: 'a7ec8974bb14258191146c791d8c614322dfd9e1'
     file: '/ci/phosh-common-jobs.yml'
   - project: 'Infrastructure/freedesktop-ci-templates'
     ref: 'd03cddbcff35f26861429fc816c00323f48e99af'
@@ -50,7 +50,7 @@ variables:
         wayland-dev wayland-protocols xcb-util-image-dev xcb-util-renderutil-dev
         xcb-util-wm-dev libseat-dev hwdata-dev libdisplay-info-dev
   XVFB_RUN: xvfb-run -s -noreset
-  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2025-02-16
+  DEBIAN_IMAGE: $CI_REGISTRY/world/phosh/phoc/debian:v0.0.2025-04-13
 
 .build: &build
   script:
@@ -251,6 +251,11 @@ check-markdown:
     PHOSH_MARKDOWN_PATHS: "*.md doc/*.md"
   extends:
     - .phosh-check-markdown
+
+check-meson:
+  stage: style-checks
+  extends:
+    - .phosh-check-meson
 
 package-deb-debian-trixie:arm64:
   stage: package

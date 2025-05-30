@@ -212,7 +212,7 @@ move_resize (PhocView *view, double x, double y, uint32_t width, uint32_t height
   if (wlr_xdg_toplevel->scheduled.width == constrained_width &&
       wlr_xdg_toplevel->scheduled.height == constrained_height) {
     view_update_position (view, x, y);
-  } else {
+  } else if (self->xdg_toplevel->base->initialized) {
     self->pending_move_resize_configure_serial =
       wlr_xdg_toplevel_set_size (wlr_xdg_toplevel, constrained_width, constrained_height);
   }
@@ -312,6 +312,14 @@ for_each_surface (PhocView                    *view,
   wlr_xdg_surface_for_each_surface (xdg_toplevel->base, iterator, user_data);
 }
 
+
+static void
+phoc_xdg_toplevel_get_geometry (PhocXdgToplevel *self, struct wlr_box *geom)
+{
+  *geom = self->xdg_toplevel->base->geometry;
+}
+
+
 static void
 get_geometry (PhocView *view, struct wlr_box *geom)
 {
@@ -324,10 +332,8 @@ get_size (PhocView *view, struct wlr_box *box)
 {
   struct wlr_xdg_toplevel *xdg_toplevel = PHOC_XDG_TOPLEVEL (view)->xdg_toplevel;
 
-  struct wlr_box geo_box;
-  wlr_xdg_surface_get_geometry (xdg_toplevel->base, &geo_box);
-  box->width = geo_box.width;
-  box->height = geo_box.height;
+  box->width = xdg_toplevel->base->geometry.width;
+  box->height = xdg_toplevel->base->geometry.height;
 }
 
 
@@ -729,11 +735,6 @@ phoc_xdg_toplevel_new (struct wlr_xdg_toplevel *wlr_xdg_toplevel)
                        NULL);
 }
 
-void
-phoc_xdg_toplevel_get_geometry (PhocXdgToplevel *self, struct wlr_box *geom)
-{
-  wlr_xdg_surface_get_geometry (self->xdg_toplevel->base, geom);
-}
 
 void
 phoc_xdg_toplevel_set_decoration (PhocXdgToplevel           *self,

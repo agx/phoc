@@ -19,7 +19,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (PhocXdgToplevel, phoc_xdg_toplevel, PHOC, XDG_TOPLEVEL, PhocView)
 
 PhocXdgToplevel    *phoc_xdg_toplevel_new (struct wlr_xdg_toplevel *xdg_toplevel);
-void                phoc_xdg_toplevel_get_geometry (PhocXdgToplevel *self, struct wlr_box *geom);
 struct wlr_surface *phoc_xdg_toplevel_get_wlr_surface_at (PhocXdgToplevel *self,
                                                           double           sx,
                                                           double           sy,

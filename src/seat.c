@@ -298,7 +298,7 @@ handle_tablet_tool_position (PhocCursor             *cursor,
     return;
   }
 
-  if (!wlr_surface_accepts_tablet_v2 (tablet->tablet_v2, surface)) {
+  if (!wlr_surface_accepts_tablet_v2 (surface, tablet->tablet_v2)) {
     wlr_tablet_v2_tablet_tool_notify_proximity_out (phoc_tool->tablet_v2_tool);
     /* XXX: TODO: Fallback pointer semantics */
     return;
@@ -1466,7 +1466,7 @@ phoc_seat_set_focus_view (PhocSeat *seat, PhocView *view)
   if (view && PHOC_IS_XWAYLAND_SURFACE (view)) {
     struct wlr_xwayland_surface *xsurface =
       phoc_xwayland_surface_get_wlr_surface (PHOC_XWAYLAND_SURFACE (view));
-    if (!wlr_xwayland_or_surface_wants_focus (xsurface))
+    if (!wlr_xwayland_surface_override_redirect_wants_focus (xsurface))
       return;
   }
 #endif

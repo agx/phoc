@@ -95,8 +95,7 @@ phoc_touch_point_damage (PhocTouchPoint *self)
       box = phoc_touch_point_get_box (self, output, size, size);
       phoc_utils_scale_box (&box, output->wlr_output->scale);
 
-      if (wlr_damage_ring_add_box (&output->damage_ring, &box))
-        wlr_output_schedule_frame (output->wlr_output);
+      phoc_output_damage_box (output, &box);
     }
   }
 }

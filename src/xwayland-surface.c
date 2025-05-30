@@ -231,7 +231,7 @@ set_maximized (PhocView *view, bool maximized)
 
   g_assert (PHOC_IS_XWAYLAND_SURFACE (view));
   xwayland_surface = PHOC_XWAYLAND_SURFACE (view)->xwayland_surface;
-  wlr_xwayland_surface_set_maximized(xwayland_surface, maximized);
+  wlr_xwayland_surface_set_maximized (xwayland_surface, maximized, maximized);
 }
 
 static void
@@ -258,14 +258,9 @@ get_pid (PhocView *view)
 static float
 get_alpha (PhocView *view)
 {
-#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
   PhocXWaylandSurface *self = PHOC_XWAYLAND_SURFACE (view);
 
-
   return self->xwayland_surface->opacity;
-#else
-  return 1.0;
-#endif
 }
 
 
@@ -423,7 +418,6 @@ handle_set_startup_id (struct wl_listener *listener, void *data)
 }
 
 
-#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
 static void
 handle_set_opacity (struct wl_listener *listener, void *data)
 {
@@ -432,7 +426,6 @@ handle_set_opacity (struct wl_listener *listener, void *data)
   g_debug ("Updated opacity %f", self->xwayland_surface->opacity);
   phoc_view_damage_whole (PHOC_VIEW (self));
 }
-#endif
 
 
 static void
@@ -593,10 +586,8 @@ phoc_xwayland_surface_constructed (GObject *object)
   self->set_startup_id.notify = handle_set_startup_id;
   wl_signal_add(&surface->events.set_startup_id, &self->set_startup_id);
 
-#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
   self->set_opacity.notify = handle_set_opacity;
   wl_signal_add (&surface->events.set_opacity, &self->set_opacity);
-#endif
 
   wl_list_init (&self->map.link);
   wl_list_init (&self->unmap.link);
@@ -619,9 +610,7 @@ phoc_xwayland_surface_finalize (GObject *object)
   wl_list_remove(&self->set_title.link);
   wl_list_remove(&self->set_class.link);
   wl_list_remove(&self->set_startup_id.link);
-#ifdef PHOC_HAVE_XWAYLAND_SET_OPACITY
   wl_list_remove (&self->set_opacity.link);
-#endif
 
   self->xwayland_surface->data = NULL;
 

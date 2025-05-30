@@ -1,3 +1,4 @@
+
 #define G_LOG_DOMAIN "phoc-output"
 
 #include "phoc-config.h"
@@ -397,8 +398,7 @@ phoc_output_handle_damage (struct wl_listener *listener, void *user_data)
   PhocOutput *self = PHOC_OUTPUT_SELF (priv);
   struct wlr_output_event_damage *event = user_data;
 
-  if (wlr_damage_ring_add (&self->damage_ring, event->damage))
-    wlr_output_schedule_frame (self->wlr_output);
+  phoc_output_damage_region (self, event->damage);
 }
 
 
@@ -512,21 +512,6 @@ scan_out_fullscreen_view (PhocOutput *self, PhocView *view, struct wlr_output_st
 
 
 static void
-get_frame_damage (PhocOutput *self, pixman_region32_t *frame_damage)
-{
-  int width, height;
-  enum wl_output_transform transform;
-
-  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
-
-  pixman_region32_init (frame_damage);
-
-  transform = wlr_output_transform_invert (self->wlr_output->transform);
-  wlr_region_transform (frame_damage, &self->damage_ring.current, transform, width, height);
-}
-
-
-static void
 build_debug_damage_tracking (PhocOutput *self)
 {
   PhocServer *server = phoc_server_get_default ();
@@ -568,11 +553,7 @@ build_debug_damage_tracking (PhocOutput *self)
   };
 
   if (pixman_region32_not_empty (&highlight_damage)) {
-    gboolean intersects;
-
-    intersects = wlr_damage_ring_add (&self->damage_ring, &highlight_damage);
-    if (!intersects)
-      g_warning_once ("Damage not on output %p", self);
+    wlr_damage_ring_add (&self->damage_ring, &highlight_damage);
   }
 
   pixman_region32_fini (&highlight_damage);
@@ -605,7 +586,8 @@ phoc_output_draw (PhocOutput *self)
   if (G_UNLIKELY (priv->gamma_lut_changed))
     phoc_output_set_gamma_lut (self, &pending);
 
-  get_frame_damage (self, &frame_damage);
+  pixman_region32_init (&frame_damage);
+  pixman_region32_copy (&frame_damage, &self->damage_ring.current);
   wlr_output_state_set_damage (&pending, &frame_damage);
   pixman_region32_fini (&frame_damage);
 
@@ -619,7 +601,7 @@ phoc_output_draw (PhocOutput *self)
   if (!wlr_output_configure_primary_swapchain (wlr_output, &pending, &wlr_output->swapchain))
     goto out;
 
-  buffer = wlr_swapchain_acquire (wlr_output->swapchain, NULL);
+  buffer = wlr_swapchain_acquire (wlr_output->swapchain);
   if (!buffer)
     goto out;
 
@@ -686,8 +668,7 @@ phoc_output_handle_frame (struct wl_listener *listener, void *data)
   /* Ensure the cutouts are drawn */
   if (G_UNLIKELY (priv->cutouts_texture)) {
     struct wlr_box box = { 0, 0, priv->cutouts_texture->width, priv->cutouts_texture->height };
-    if (wlr_damage_ring_add_box (&self->damage_ring, &box))
-      wlr_output_schedule_frame (self->wlr_output);
+    phoc_output_damage_box (self, &box);
   }
 
   build_debug_damage_tracking (self);
@@ -764,9 +745,6 @@ phoc_output_handle_commit (struct wl_listener *listener, void *data)
 
   if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
                                  WLR_OUTPUT_STATE_TRANSFORM)) {
-    int width, height;
-    wlr_output_transformed_resolution (self->wlr_output, &width, &height);
-    wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
     wlr_output_schedule_frame (self->wlr_output);
   }
 
@@ -1052,7 +1030,6 @@ phoc_output_initable_init (GInitable    *initable,
   update_output_manager_config (self->desktop);
 
   wlr_output_transformed_resolution (self->wlr_output, &width, &height);
-  wlr_damage_ring_set_bounds (&self->damage_ring, width, height);
 
   if (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_CUTOUTS)) {
     priv->cutouts = phoc_cutouts_overlay_new (phoc_server_get_compatibles (server));
@@ -1657,14 +1634,11 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
   }
 
   pixman_region32_translate (&damage, box.x, box.y);
-  if (wlr_damage_ring_add (&self->damage_ring, &damage))
-    wlr_output_schedule_frame (self->wlr_output);
+  phoc_output_damage_region (self, &damage);
   pixman_region32_fini (&damage);
 
-  if (*whole) {
-    if (wlr_damage_ring_add_box (&self->damage_ring, &box))
-      wlr_output_schedule_frame (self->wlr_output);
-  }
+  if (*whole)
+    phoc_output_damage_box (self, &box);
 
   if (!wl_list_empty (&wlr_surface->current.frame_callback_list))
     wlr_output_schedule_frame (self->wlr_output);
@@ -1672,14 +1646,13 @@ damage_surface_iterator (PhocOutput *self, struct wlr_surface *wlr_surface, stru
 
 
 static void
-damage_whole_view (PhocOutput *self, PhocView  *view)
+damage_view_blings (PhocOutput *self, PhocView  *view)
 {
   GSList *blings;
   struct wlr_box box;
 
-  if (!phoc_view_is_mapped (view)) {
+  if (!phoc_view_is_mapped (view))
     return;
-  }
 
   blings = phoc_view_get_blings (view);
   if (G_LIKELY (!blings))
@@ -1693,8 +1666,7 @@ damage_whole_view (PhocOutput *self, PhocView  *view)
     box.y -= self->ly;
     phoc_utils_scale_box (&box, self->wlr_output->scale);
 
-    if (wlr_damage_ring_add_box (&self->damage_ring, &box))
-      wlr_output_schedule_frame (self->wlr_output);
+    phoc_output_damage_box (self, &box);
   }
 }
 
@@ -1716,7 +1688,7 @@ phoc_output_damage_from_view (PhocOutput *self, PhocView *view, bool whole)
   }
 
   if (whole)
-    damage_whole_view (self, view);
+    damage_view_blings (self, view);
 
   phoc_output_view_for_each_surface (self, view, damage_surface_iterator, &whole);
 }
@@ -1781,6 +1753,69 @@ phoc_output_damage_from_surface (PhocOutput         *self,
 {
   phoc_output_surface_for_each_surface (self, wlr_surface, ox, oy,
                                         damage_surface_iterator, &whole);
+}
+
+/**
+ * phoc_output_damage_region:
+ * @self: The output
+ * @region: The damage in output local coordinates
+ *
+ * If damage overlaps with output add it and schedule a frame.
+ *
+ * Returns: `TRUE` if the damage overlapped with the output
+ */
+gboolean
+phoc_output_damage_region (PhocOutput *self, const pixman_region32_t *region)
+{
+  pixman_region32_t clipped;
+  int width, height;
+
+  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+
+  pixman_region32_init (&clipped);
+  pixman_region32_intersect_rect (&clipped, region, 0, 0, width, height);
+
+  if (!pixman_region32_not_empty (&clipped)) {
+    pixman_region32_fini (&clipped);
+    return FALSE;
+  }
+
+  /* Transform to damage ring buffer local coordinates */
+  phoc_output_transform_damage (self, &clipped);
+  wlr_damage_ring_add (&self->damage_ring, &clipped);
+
+  pixman_region32_fini (&clipped);
+  wlr_output_schedule_frame (self->wlr_output);
+  return TRUE;
+}
+
+/**
+ * phoc_output_damage_box:
+ * @self: The output
+ * @box: The damage box in output local coordinates
+ *
+ * If damage overlaps with output add it and schedule a frame.
+ *
+ * Returns: `TRUE` if the damage overlapped with the output
+ */
+gboolean
+phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box)
+{
+  struct wlr_box clipped;
+  int width, height;
+
+  wlr_output_transformed_resolution (self->wlr_output, &width, &height);
+
+  clipped = (struct wlr_box) { .x = 0, .y = 0, .width = width, .height = height };
+  if (!wlr_box_intersection (&clipped, &clipped, box))
+    return FALSE;
+
+  /* Transform to damage ring buffer local coordinates */
+  phoc_output_transform_box (self, &clipped);
+  wlr_damage_ring_add_box (&self->damage_ring, &clipped);
+
+  wlr_output_schedule_frame (self->wlr_output);
+  return TRUE;
 }
 
 

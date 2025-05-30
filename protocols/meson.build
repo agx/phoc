@@ -7,6 +7,9 @@ wayland_scanner = find_program('wayland-scanner')
 wayland_protocols = [
   [wl_protocol_dir, 'stable/tablet/tablet-v2.xml'],
   [wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
+  [wl_protocol_dir, 'staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml'],
+  [wl_protocol_dir, 'staging/ext-image-capture-source/ext-image-capture-source-v1.xml'],
+  [wl_protocol_dir, 'staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml'],
   [wl_protocol_dir, 'unstable/pointer-constraints/pointer-constraints-unstable-v1.xml'],
   [wl_protocol_dir, 'unstable/xdg-decoration/xdg-decoration-unstable-v1.xml'],
   ['gtk-shell.xml'],
@@ -19,9 +22,7 @@ wayland_protocols = [
   ['wlr-screencopy-unstable-v1.xml'],
 ]
 
-wayland_client_protocols = [
-  [wl_protocol_dir, 'staging/ext-idle-notify/ext-idle-notify-v1.xml'],
-]
+wayland_client_protocols = [[wl_protocol_dir, 'staging/ext-idle-notify/ext-idle-notify-v1.xml']]
 
 protos_sources = []
 server_protos_headers = []
@@ -33,32 +34,26 @@ foreach p : wayland_protocols
   base = fs.name(xml)
   proto = fs.stem(base)
 
-  protos_sources += custom_target('@0@ source'.format(proto),
-                                  input: xml,
-                                  output: '@0@-protocol.c'.format(proto),
-                                  command: [wayland_scanner,
-                                            'private-code',
-                                            '@INPUT@',
-                                            '@OUTPUT@']
-                                 )
+  protos_sources += custom_target(
+    '@0@ source'.format(proto),
+    input: xml,
+    output: '@0@-protocol.c'.format(proto),
+    command: [wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@'],
+  )
 
-  server_protos_headers += custom_target('@0@ server header'.format(proto),
-                                         input: xml,
-                                         output: '@0@-protocol.h'.format(proto),
-                                         command: [wayland_scanner,
-                                                   'server-header',
-                                                   '@INPUT@',
-                                                   '@OUTPUT@']
-                                        )
+  server_protos_headers += custom_target(
+    '@0@ server header'.format(proto),
+    input: xml,
+    output: '@0@-protocol.h'.format(proto),
+    command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
+  )
 
-  client_protos_headers += custom_target('@0@ client header'.format(proto),
-                                         input: xml,
-                                         output: '@0@-client-protocol.h'.format(proto),
-                                         command: [wayland_scanner,
-                                                   'client-header',
-                                                   '@INPUT@',
-                                                   '@OUTPUT@']
-                                        )
+  client_protos_headers += custom_target(
+    '@0@ client header'.format(proto),
+    input: xml,
+    output: '@0@-client-protocol.h'.format(proto),
+    command: [wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@'],
+  )
 endforeach
 
 foreach p : wayland_client_protocols
@@ -67,21 +62,17 @@ foreach p : wayland_client_protocols
   base = fs.name(xml)
   proto = fs.stem(base)
 
-  protos_sources += custom_target('@0@ source'.format(proto),
-                                  input: xml,
-                                  output: '@0@-protocol.c'.format(proto),
-                                  command: [wayland_scanner,
-                                            'private-code',
-                                            '@INPUT@',
-                                            '@OUTPUT@']
-                                 )
+  protos_sources += custom_target(
+    '@0@ source'.format(proto),
+    input: xml,
+    output: '@0@-protocol.c'.format(proto),
+    command: [wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@'],
+  )
 
-  client_protos_headers += custom_target('@0@ client header'.format(proto),
-                                         input: xml,
-                                         output: '@0@-client-protocol.h'.format(proto),
-                                         command: [wayland_scanner,
-                                                   'client-header',
-                                                   '@INPUT@',
-                                                   '@OUTPUT@']
-                                        )
+  client_protos_headers += custom_target(
+    '@0@ client header'.format(proto),
+    input: xml,
+    output: '@0@-client-protocol.h'.format(proto),
+    command: [wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@'],
+  )
 endforeach

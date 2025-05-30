@@ -144,7 +144,7 @@ phoc_utils_scale_box (struct wlr_box *box, float scale)
  * @box: The box to check
  * @damage: The damaged area
  * @clip_box:(nullable): Box to clip damage to
- * @overlap_damage: (out): The overlap of the rectangle with the damaged area.
+ * @out_damage: (out): The overlap of the rectangle with the damaged area.
  *   Don't init the pixman region `is_damaged` does that for you.
  *
  * Checks if a given rectangle in `box` overlaps with a given damage area. If so
@@ -152,6 +152,9 @@ phoc_utils_scale_box (struct wlr_box *box, float scale)
  *
  * If the optional `clip_box` is specified the damage is clipped to
  * that box.
+ *
+ * Coordinates of the given boxes and regions need to be in output
+ * buffer local coordinates.
  *
  * Returns: %TRUE on overlap otherwise %FALSE
  */

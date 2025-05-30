@@ -43,8 +43,8 @@ handle_commit (struct wl_listener *listener, void *data)
   PhocSurface *self = wl_container_of (listener, self, commit);
   struct wlr_surface *wlr_surface = self->wlr_surface;
 
-  if (wlr_surface->previous.width == wlr_surface->current.width &&
-      wlr_surface->previous.height == wlr_surface->current.height &&
+  if (wlr_surface->WLR_PRIVATE.previous.width == wlr_surface->current.width &&
+      wlr_surface->WLR_PRIVATE.previous.height == wlr_surface->current.height &&
       wlr_surface->current.dx == 0 && wlr_surface->current.dy ==  0)
     return;
 
@@ -53,8 +53,8 @@ handle_commit (struct wl_listener *listener, void *data)
                               &self->damage,
                               -wlr_surface->current.dx,
                               -wlr_surface->current.dy,
-                              wlr_surface->previous.width,
-                              wlr_surface->previous.height);
+                              wlr_surface->WLR_PRIVATE.previous.width,
+                              wlr_surface->WLR_PRIVATE.previous.height);
 }
 
 

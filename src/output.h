@@ -148,6 +148,8 @@ void        phoc_output_damage_from_surface (PhocOutput         *self,
                                              double              ox,
                                              double              oy,
                                              gboolean            whole);
+gboolean    phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box);
+gboolean    phoc_output_damage_region (PhocOutput *self, const pixman_region32_t *region);
 
 void        phoc_output_update_shell_reveal (PhocOutput *self);
 void        phoc_output_force_shell_reveal (PhocOutput *self, gboolean force);

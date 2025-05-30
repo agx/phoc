@@ -213,6 +213,7 @@ bling_render (PhocBling *bling, PhocRenderContext *ctx)
   box.x -= ctx->output->lx;
   box.y -= ctx->output->ly;
   phoc_utils_scale_box (&box, ctx->output->wlr_output->scale);
+  phoc_output_transform_box (ctx->output, &box);
 
   if (!phoc_utils_is_damaged (&box, ctx->damage, NULL, &damage)) {
     pixman_region32_fini (&damage);
@@ -225,9 +226,6 @@ bling_render (PhocBling *bling, PhocRenderContext *ctx)
     phoc_cairo_texture_update (self->texture);
     self->redraw_spinner = false;
   }
-
-  phoc_output_transform_damage (ctx->output, &damage);
-  phoc_output_transform_box (ctx->output, &box);
 
   options = (struct wlr_render_texture_options) {
     .texture = texture,
