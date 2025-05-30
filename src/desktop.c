@@ -1577,6 +1577,10 @@ phoc_desktop_get_saved_outputs_state (PhocDesktop *self, const char *output_iden
   if (!output_configs)
     return NULL;
 
+  /* TODO: Handle multiple outputs by reconfiguring existing ones too */
+  if (output_configs->len != 1)
+    return NULL;
+
   /* Get the config for the passed in identifier */
   for (int i = 0; i < output_configs->len; i++) {
     PhocOutputConfig *oc = g_ptr_array_index (output_configs, i);
