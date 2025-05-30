@@ -48,6 +48,7 @@ typedef enum _PhocServerDebugFlags {
   PHOC_SERVER_DEBUG_FLAG_CUTOUTS            = 1 << 5,
   PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS = 1 << 6,
   PHOC_SERVER_DEBUG_FLAG_FORCE_SHELL_REVEAL = 1 << 7,
+  PHOC_SERVER_DEBUG_FLAG_IGNORE_STATES      = 1 << 8,
 } PhocServerDebugFlags;
 
 

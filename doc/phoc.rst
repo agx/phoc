@@ -70,6 +70,7 @@ ENVIRONMENT VARIABLES
       - ``cutouts``: Debug display cutouts and notches
       - ``disable-animations``: Disable animations
       - ``force-shell-reveal``: Always reveal shell over fullscreen apps
+      - ``ignore-state``: Ignore any saved output state
 
 UDEV PROPERTIES
 ---------------

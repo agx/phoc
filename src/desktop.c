@@ -1523,6 +1523,7 @@ on_outputs_states_save_ready (GObject *object, GAsyncResult *res, gpointer data)
 void
 phoc_desktop_save_outputs_state (PhocDesktop *self)
 {
+  PhocServer *server = phoc_server_get_default ();
   PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
   g_autoptr (GPtrArray) output_configs = NULL;
   g_autofree char *identifier = NULL;
@@ -1535,6 +1536,10 @@ phoc_desktop_save_outputs_state (PhocDesktop *self)
   phoc_outputs_states_update (priv->outputs_states,
                               identifier,
                               g_steal_pointer (&output_configs));
+
+  if (phoc_server_get_debug_flags (server) & PHOC_SERVER_DEBUG_FLAG_IGNORE_STATES)
+    return;
+
   phoc_outputs_states_save_async (priv->outputs_states,
                                   on_outputs_states_save_ready,
                                   NULL,
