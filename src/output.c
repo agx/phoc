@@ -952,7 +952,7 @@ phoc_output_fill_state (PhocOutput              *self,
     wlr_output_state_set_transform (pending, transform);
   }
 
-  if (output_config && output_config->x > 0 && output_config->y > 0) {
+  if (output_config && output_config->x >= 0 && output_config->y >= 0) {
     wlr_output_layout_add (self->desktop->layout, self->wlr_output, output_config->x,
                            output_config->y);
   } else {
