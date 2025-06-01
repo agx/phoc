@@ -32,7 +32,7 @@ typedef struct _PhocOutputConfig {
 
   struct PhocMode {
     int   width, height;
-    float refresh_rate;
+    float refresh_rate; /* Hz */
   } mode;
   GSList                  *modes;
 
