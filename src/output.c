@@ -1910,7 +1910,6 @@ output_manager_apply_config (PhocDesktop                        *desktop,
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
     struct wlr_output_state pending;
-    struct wlr_box output_box;
     g_autoptr (PhocOutputConfig) oc = NULL;
 
     if (!config_head->state.enabled)
@@ -1922,18 +1921,12 @@ output_manager_apply_config (PhocDesktop                        *desktop,
     if (test_only) {
       ok &= wlr_output_test_state (wlr_output, &pending);
     } else {
-      wlr_output_layout_add (desktop->layout,
-                             wlr_output,
-                             config_head->state.x,
-                             config_head->state.y);
       ok &= wlr_output_commit_state (wlr_output, &pending);
+
+      phoc_output_set_layout_pos (output, oc);
 
       if (output->fullscreen_view)
         phoc_view_set_fullscreen (output->fullscreen_view, true, output);
-
-      wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
-      output->lx = output_box.x;
-      output->ly = output_box.y;
     }
 
     wlr_output_state_finish (&pending);
