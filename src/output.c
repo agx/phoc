@@ -1843,6 +1843,37 @@ phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box)
 }
 
 
+static PhocOutputConfig *
+phoc_output_config_head_to_output_config (PhocOutput                              *self,
+                                          struct wlr_output_configuration_head_v1 *head)
+{
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+  PhocOutputConfig *oc = phoc_output_config_new (phoc_output_get_identifier (self));
+
+  oc->enable = TRUE;
+  if (head->state.mode && !head->state.mode->preferred) {
+    oc->mode.width = head->state.mode->width;
+    oc->mode.height = head->state.mode->height;
+    oc->mode.refresh_rate = head->state.mode->refresh / 1000.0;
+  } else {
+    oc->mode.width = head->state.custom_mode.width;
+    oc->mode.height = head->state.custom_mode.height;
+    oc->mode.refresh_rate = head->state.custom_mode.refresh / 1000.0;
+  }
+
+  oc->transform = head->state.transform;
+  oc->scale = adjust_frac_scale (head->state.scale);
+  oc->scale_filter = priv->scale_filter;
+
+  oc->x = head->state.x;
+  oc->y = head->state.y;
+
+  phoc_output_config_dump (oc, "Head state ");
+
+  return oc;
+}
+
+
 static gboolean
 output_manager_apply_config (PhocDesktop                        *desktop,
                              struct wlr_output_configuration_v1 *wlr_config_v1,
@@ -1880,22 +1911,13 @@ output_manager_apply_config (PhocDesktop                        *desktop,
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
     struct wlr_output_state pending;
     struct wlr_box output_box;
+    g_autoptr (PhocOutputConfig) oc = NULL;
 
     if (!config_head->state.enabled)
       continue;
 
-    wlr_output_state_init (&pending);
-    wlr_output_state_set_enabled (&pending, true);
-    if (config_head->state.mode != NULL) {
-      wlr_output_state_set_mode (&pending, config_head->state.mode);
-    } else {
-      wlr_output_state_set_custom_mode (&pending,
-                                        config_head->state.custom_mode.width,
-                                        config_head->state.custom_mode.height,
-                                        config_head->state.custom_mode.refresh);
-    }
-    wlr_output_state_set_transform (&pending, config_head->state.transform);
-    wlr_output_state_set_scale (&pending, adjust_frac_scale (config_head->state.scale));
+    oc = phoc_output_config_head_to_output_config (output, config_head);
+    phoc_output_fill_state (output, oc, &pending);
 
     if (test_only) {
       ok &= wlr_output_test_state (wlr_output, &pending);
