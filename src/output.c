@@ -957,6 +957,8 @@ phoc_output_fill_state (PhocOutput              *self,
 static void
 phoc_output_set_layout_pos (PhocOutput *self, PhocOutputConfig *output_config)
 {
+  struct wlr_box output_box;
+
   if (output_config && output_config->x >= 0 && output_config->y >= 0) {
     wlr_output_layout_add (self->desktop->layout,
                            self->wlr_output,
@@ -965,6 +967,10 @@ phoc_output_set_layout_pos (PhocOutput *self, PhocOutputConfig *output_config)
   } else {
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
+
+  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
+  self->lx = output_box.x;
+  self->ly = output_box.y;
 }
 
 
@@ -982,7 +988,6 @@ phoc_output_initable_init (GInitable    *initable,
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   PhocOutputConfig *output_config;
   struct wlr_output_state pending;
-  struct wlr_box output_box;
   int width, height;
 
   self->wlr_output->data = self;
@@ -1033,10 +1038,6 @@ phoc_output_initable_init (GInitable    *initable,
   phoc_output_fill_state (self, output_config, &pending);
   phoc_output_set_layout_pos (self, output_config);
   wlr_output_commit_state (self->wlr_output, &pending);
-
-  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
-  self->lx = output_box.x;
-  self->ly = output_box.y;
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
