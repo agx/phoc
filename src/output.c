@@ -1877,11 +1877,14 @@ phoc_output_config_head_to_output_config (PhocOutput                            
 static gboolean
 output_manager_apply_config (PhocDesktop                        *desktop,
                              struct wlr_output_configuration_v1 *wlr_config_v1,
-                             gboolean                            test_only)
-
+                             gboolean                            test_only,
+                             GPtrArray                         **out_configs)
 {
   struct wlr_output_configuration_head_v1 *config_head;
   gboolean ok = TRUE;
+  g_autoptr (GPtrArray) output_configs = NULL;
+
+  output_configs = g_ptr_array_new_full (5, (GDestroyNotify) phoc_output_config_destroy);
 
   /* First disable outputs we need to disable */
   wl_list_for_each (config_head, &wlr_config_v1->heads, link) {
@@ -1930,6 +1933,8 @@ output_manager_apply_config (PhocDesktop                        *desktop,
     }
 
     wlr_output_state_finish (&pending);
+
+    g_ptr_array_add (output_configs, g_steal_pointer (&oc));
   }
 
   if (ok)
@@ -1942,6 +1947,9 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   if (!test_only)
     update_output_manager_config (desktop);
 
+  if (out_configs)
+    *out_configs = g_steal_pointer (&output_configs);
+
   return ok;
 }
 
@@ -1952,11 +1960,12 @@ phoc_handle_output_manager_apply (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
   gboolean success;
+  g_autoptr (GPtrArray) output_configs = NULL;
 
-  success = output_manager_apply_config (desktop, config, FALSE);
+  success = output_manager_apply_config (desktop, config, FALSE, &output_configs);
 
   if (success)
-    phoc_desktop_save_outputs_state (desktop);
+    phoc_desktop_save_outputs_state (desktop, g_steal_pointer (&output_configs));
 }
 
 
@@ -1966,7 +1975,7 @@ phoc_handle_output_manager_test (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
 
-  output_manager_apply_config (desktop, config, TRUE);
+  output_manager_apply_config (desktop, config, TRUE, NULL);
 }
 
 
