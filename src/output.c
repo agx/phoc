@@ -951,9 +951,16 @@ phoc_output_fill_state (PhocOutput              *self,
     wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
     wlr_output_state_set_transform (pending, transform);
   }
+}
 
+
+static void
+phoc_output_set_layout_pos (PhocOutput *self, PhocOutputConfig *output_config)
+{
   if (output_config && output_config->x >= 0 && output_config->y >= 0) {
-    wlr_output_layout_add (self->desktop->layout, self->wlr_output, output_config->x,
+    wlr_output_layout_add (self->desktop->layout,
+                           self->wlr_output,
+                           output_config->x,
                            output_config->y);
   } else {
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
@@ -1024,8 +1031,9 @@ phoc_output_initable_init (GInitable    *initable,
     }
   }
   phoc_output_fill_state (self, output_config, &pending);
-
+  phoc_output_set_layout_pos (self, output_config);
   wlr_output_commit_state (self->wlr_output, &pending);
+
   wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
   self->lx = output_box.x;
   self->ly = output_box.y;
