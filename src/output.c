@@ -919,6 +919,13 @@ phoc_output_fill_state (PhocOutput              *self,
 
     wlr_output_state_set_transform (pending, transform);
     priv->scale_filter = output_config->scale_filter;
+
+    if (output_config->adaptive_sync != PHOC_OUTPUT_ADAPTIVE_SYNC_NONE &&
+        self->wlr_output->adaptive_sync_supported) {
+      bool enabled = output_config->adaptive_sync == PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED;
+
+      wlr_output_state_set_adaptive_sync_enabled (pending, enabled);
+    }
   } else if (enable) {
     enum wl_output_transform transform = WL_OUTPUT_TRANSFORM_NORMAL;
     gboolean has_mode = FALSE;
@@ -1864,6 +1871,13 @@ phoc_output_config_head_to_output_config (PhocOutput                            
   oc->transform = head->state.transform;
   oc->scale = adjust_frac_scale (head->state.scale);
   oc->scale_filter = priv->scale_filter;
+
+  if (self->wlr_output->adaptive_sync_supported) {
+    if (head->state.adaptive_sync_enabled)
+      oc->adaptive_sync = PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED;
+    else
+      oc->adaptive_sync = PHOC_OUTPUT_ADAPTIVE_SYNC_DISABLED;
+  }
 
   oc->x = head->state.x;
   oc->y = head->state.y;
