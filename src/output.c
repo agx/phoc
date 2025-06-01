@@ -903,10 +903,12 @@ phoc_output_fill_state (PhocOutput              *self,
     if (output_config->phys_height)
       self->wlr_output->phys_height = output_config->phys_height;
 
-    if (output_config->mode.width)
+    if (output_config->mode.width &&
+        output_config->mode.height) {
       phoc_output_state_set_mode (self, pending, output_config);
-    else if (preferred_mode != NULL)
+    } else if (preferred_mode != NULL) {
       wlr_output_state_set_mode (pending, preferred_mode);
+    }
 
     if (output_config->scale)
       scale = output_config->scale;
