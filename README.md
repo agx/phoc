@@ -69,13 +69,13 @@ directory.
   the screen. This setting is enabled per application using its reported
   app-id. For instance, to enable scaling of GNOME Maps windows use:
 
-      ./helpers/scale-to-fit org.gnome.Maps on
+      ./tools/scale-to-fit org.gnome.Maps on
 
 - `auto-maximize` toggles automatic maximization of Wayland windows.
   Disabling it allows windows to be resized and moved, which may be desired
   when running phoc on desktop-like setups.
 
-      ./helpers/auto-maximize off
+      ./tools/auto-maximize off
 
 Outputs are configured via `phoc.ini` config file - see [`src/phoc.ini.example`][3]
 for more information.

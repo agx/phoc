@@ -2,7 +2,7 @@
 #
 # Usage:
 #
-# stap --runtime=bpf -v helpers/render-loop.stp _build/src/phoc
+# stap --runtime=bpf -v tools/render-loop.stp _build/src/phoc
 #
 
 probe begin
