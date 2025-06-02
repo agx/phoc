@@ -1010,12 +1010,16 @@ phoc_output_initable_init (GInitable    *initable,
 
   output_config = phoc_config_get_output (config, self);
   /* Restore old output state if any */
-  if (!output_config) {
+  if (output_config) {
+    phoc_output_config_dump (output_config, "Config file ");
+  } else {
     const char *identifier = phoc_output_get_identifier (self);
 
     output_config = phoc_desktop_get_saved_outputs_state (desktop, identifier);
-    if (output_config)
+    if (output_config) {
       g_message ("Loading saved output state for '%s'", identifier);
+      phoc_output_config_dump (output_config, "Saved output state ");
+    }
   }
   phoc_output_fill_state (self, output_config, &pending);
 
