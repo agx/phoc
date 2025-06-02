@@ -208,3 +208,37 @@ phoc_utils_wlr_surface_leave_output (struct wlr_surface *wlr_surface, struct wlr
 
   phoc_utils_wlr_surface_update_scales (wlr_surface);
 }
+
+
+const char *
+phoc_utils_transform_to_str (enum wl_output_transform transform)
+{
+  switch (transform) {
+  case WL_OUTPUT_TRANSFORM_NORMAL:
+    return "normal";
+    break;
+  case WL_OUTPUT_TRANSFORM_90:
+    return "90";
+    break;
+  case WL_OUTPUT_TRANSFORM_180:
+    return "180";
+    break;
+  case WL_OUTPUT_TRANSFORM_270:
+    return "270";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED:
+    return "flipped";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_90:
+    return "flipped-90";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_180:
+    return "flipped-180";
+    break;
+  case WL_OUTPUT_TRANSFORM_FLIPPED_270:
+    return "flipped-270";
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+}
