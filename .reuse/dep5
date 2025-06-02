@@ -108,6 +108,7 @@ Files:
  doc/phoc.ini.rst
  doc/phoc.rst
  doc/phoc.toml.in
+ doc/phoc-outputs-states.rst
  gcovr.cfg
  tools/*
  meson.build
