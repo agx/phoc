@@ -185,10 +185,11 @@ phoc_input_update_cursor_focus (PhocInput *self)
 {
   struct timespec now;
 
-  g_assert (PHOC_IS_INPUT (self));
+  if (!self)
+    return;
 
+  g_assert (PHOC_IS_INPUT (self));
   clock_gettime (CLOCK_MONOTONIC, &now);
-  g_assert_nonnull (self);
 
   for (GSList *elem = phoc_input_get_seats (self); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
