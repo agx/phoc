@@ -2,7 +2,7 @@
 #
 # Usage:
 #
-# stap -v helpers/tracing/activation.stp /usr/bin/phoc /usr/libexec/phosh
+# stap -v tools/tracing/activation.stp /usr/bin/phoc /usr/libexec/phosh
 #
 
 probe begin

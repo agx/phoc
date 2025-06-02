@@ -110,7 +110,7 @@ Files:
  doc/phoc.rst
  doc/phoc.toml.in
  gcovr.cfg
- helpers/*
+ tools/*
  meson.build
  */meson.build
  meson_options.txt

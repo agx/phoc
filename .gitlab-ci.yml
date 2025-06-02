@@ -152,7 +152,7 @@ scan-build-native-debian-trixie:
     - build-with-xwayland-debian-trixie-clang
   before_script: *before_script_debian
   script:
-    - "SCANBUILD=${PWD}/helpers/scan-build ninja -C _build scan-build"
+    - "SCANBUILD=${PWD}/tools/scan-build ninja -C _build scan-build"
   artifacts:
     when: on_failure
     paths:
@@ -168,7 +168,7 @@ build-gtkdoc:
     - git clean -dfx
     - 'echo "Build opts: ${BUILD_ARGS}"'
     - meson . _build $BUILD_ARGS
-    - helpers/doc-check _build
+    - tools/doc-check _build
     - test -f _build/doc/phoc-*/index.html
     - mv _build/doc/phoc-*/ _reference/
   artifacts:

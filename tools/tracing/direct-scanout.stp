@@ -2,7 +2,7 @@
 #
 # Usage:
 #
-# stap -v helpers/tracing/direct-scanout.stp _build/src/phoc
+# stap -v tools/tracing/direct-scanout.stp _build/src/phoc
 #
 
 global scanning_out
