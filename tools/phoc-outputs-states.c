@@ -68,20 +68,27 @@ show_outputs_state (const char *identifier, PhocOutputsStates *outputs_states, g
       g_print ("-");
     g_print ("\n");
 
-    g_print ("  Enabled: %s\n", oc->enable ?  "yes" : "no");
+    g_print ("      Enabled: %s\n", oc->enable ?  "yes" : "no");
 
     if (oc->mode.width && oc->mode.height) {
-      g_print ("     Mode: %dx%d", oc->mode.width, oc->mode.height);
+      g_print ("         Mode: %dx%d", oc->mode.width, oc->mode.height);
       if (oc->mode.refresh_rate)
         g_print ("@%.2f", oc->mode.refresh_rate);
       g_print ("\n");
     }
 
     if (oc->scale)
-      g_print ("    Scale: %f\n", oc->scale);
+      g_print ("        Scale: %f\n", oc->scale);
 
     transform = phoc_utils_transform_to_str (oc->transform);
-    g_print ("Transform: %s\n", transform);
+    g_print ("    Transform: %s\n", transform);
+
+    if (oc->adaptive_sync != PHOC_OUTPUT_ADAPTIVE_SYNC_NONE) {
+      const char *enabled;
+
+      enabled = oc->adaptive_sync == PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED ? "enabled" : "disabled";
+      g_print ("Adaptive sync: %s\n", enabled);
+    }
 
     g_print ("\n");
   }
