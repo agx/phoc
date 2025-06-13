@@ -95,7 +95,15 @@ parse_scale_filter (const char *value)
 
 static const char *output_prefix = "output:";
 
-static PhocOutputConfig *
+/**
+ * phoc_output_config_new:
+ * @name: The name
+ *
+ * Create a new output config
+ *
+ * Returns: (transfer full): The new (empty) configuration
+ */
+PhocOutputConfig *
 phoc_output_config_new (const char *name)
 {
   PhocOutputConfig *oc;
@@ -114,7 +122,7 @@ phoc_output_config_new (const char *name)
 }
 
 
-static void
+void
 phoc_output_config_destroy (PhocOutputConfig *oc)
 {
   g_slist_free_full (oc->modes, g_free);

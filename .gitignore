@@ -14,5 +14,6 @@ po/missing
 po/notexist
 po/phoc.pot
 subprojects/gmobile
+subprojects/gvdb
 subprojects/wlroots
 subprojects/wlroots-0.*.x

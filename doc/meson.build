@@ -45,7 +45,7 @@ if get_option('gtk_doc')
 endif
 
 if get_option('man')
-  manpages = [['phoc', 1], ['phoc.gsettings', 5], ['phoc.ini', 5]]
+  manpages = [['phoc', 1], ['phoc-outputs-states', 1], ['phoc.gsettings', 5], ['phoc.ini', 5]]
 
   rst2man = find_program('rst2man', 'rst2man.py', required: false)
   rst2man_flags = ['--syntax-highlight=none']

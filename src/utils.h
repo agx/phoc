@@ -49,6 +49,6 @@ void       phoc_utils_wlr_surface_enter_output  (struct wlr_surface *wlr_surface
                                                  struct wlr_output  *wlr_output);
 void       phoc_utils_wlr_surface_leave_output  (struct wlr_surface *wlr_surface,
                                                  struct wlr_output  *wlr_output);
-
+const char *phoc_utils_transform_to_str (enum wl_output_transform transform);
 
 G_END_DECLS

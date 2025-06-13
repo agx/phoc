@@ -37,6 +37,7 @@ tests = [
   'color-rect',
   'layer-shell',
   'layer-shell-effects',
+  'outputs-states',
   'phosh-private',
   'property-easer',
   'run',
@@ -78,4 +79,3 @@ foreach test : tests
   )
   test(test, t, env: test_env)
 endforeach
-

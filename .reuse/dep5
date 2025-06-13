@@ -43,7 +43,7 @@ Files:
  tests/data/phosh,tiny.json
  tests/phoc.ini
  tests/screenshots/*
-Copyright: The Phoc authors
+Copyright: The Phosh Developers
 License: GPL-3.0-or-later
 
 # These were initially developed in rootston under MIT
@@ -72,11 +72,10 @@ Files:
  src/view.h
  src/virtual.c
  src/virtual.h
- src/xcursor.h
  src/xdg-toplevel-decoration.c
 Copyright:
  The wlroots authors
- The Phoc authors
+ The Phosh Developers
 License: GPL-3.0-or-later or MIT
 
 # No point in adding indiviual information to tiny files or
@@ -109,6 +108,7 @@ Files:
  doc/phoc.ini.rst
  doc/phoc.rst
  doc/phoc.toml.in
+ doc/phoc-outputs-states.rst
  gcovr.cfg
  tools/*
  meson.build
@@ -123,6 +123,7 @@ Files:
  src/phoc.ini.example
  subprojects/gi-docgen.wrap
  subprojects/gmobile.wrap
+ subprojects/gvdb.wrap
  subprojects/wlroots.wrap
 Copyright: The Phoc authors
 License: GPL-3.0-or-later

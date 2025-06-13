@@ -4,28 +4,26 @@ Source: https://source.puri.sm/Librem5/phoc
 
 Files: *
 Copyright: 2019, 2020 Purism SPC
+  2022-2025, The Phosh Developers
 License: GPL-3+
 
-Files: src/cursor.*
+Files:
+ src/cursor.*
  src/desktop.*
- src/input.*
+ src/input-method-relay.*
  src/keyboard.*
- src/layer-shell.h
- src/layer-shell.c
+ src/layer-shell.*
  src/main.*
  src/output.*
  src/render.*
  src/seat.*
  src/settings.*
  src/switch.*
- src/text_input.*
  src/view.*
- src/xcursor.h
- src/xdg_shell.c
- src/xwayland.c
 Copyright: 2017, Drew DeVault
   2014, Jari Vetoniemi
   2019, Purism SPC
+  2022-2025, The Phosh Developers
 License: GPL-3+ or MIT
 
 Files: debian/*

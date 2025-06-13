@@ -484,34 +484,7 @@ build_compositor_config (PhocTestClientIface *iface)
   if (G_APPROX_VALUE (output_config->scale, 0.0, FLT_EPSILON))
     output_config->scale = 1.0;
 
-  switch (output_config->transform) {
-  case WL_OUTPUT_TRANSFORM_NORMAL:
-    transform = "normal";
-    break;
-  case WL_OUTPUT_TRANSFORM_90:
-    transform = "90";
-    break;
-  case WL_OUTPUT_TRANSFORM_180:
-    transform = "180";
-    break;
-  case WL_OUTPUT_TRANSFORM_270:
-    transform = "270";
-    break;
-  case WL_OUTPUT_TRANSFORM_FLIPPED:
-    transform = "flipped";
-    break;
-  case WL_OUTPUT_TRANSFORM_FLIPPED_90:
-    transform = "flipped-90";
-    break;
-  case WL_OUTPUT_TRANSFORM_FLIPPED_180:
-    transform = "flipped-180";
-    break;
-  case WL_OUTPUT_TRANSFORM_FLIPPED_270:
-    transform = "flipped-270";
-    break;
-  default:
-    g_assert_not_reached ();
-  }
+  transform = phoc_utils_transform_to_str (output_config->transform);
 
   config_str = g_strdup_printf (
     "[core]\n"

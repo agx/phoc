@@ -965,14 +965,16 @@ phoc_output_initable_init (GInitable    *initable,
                            GError      **error)
 {
   PhocServer *server = phoc_server_get_default ();
+  PhocDesktop *desktop = phoc_server_get_desktop (server);
   PhocInput *input = phoc_server_get_input (server);
   PhocRenderer *renderer = phoc_server_get_renderer (server);
+  PhocConfig *config = phoc_server_get_config (phoc_server_get_default ());
   PhocOutput *self = PHOC_OUTPUT (initable);
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+  PhocOutputConfig *output_config;
+  struct wlr_output_state pending;
   struct wlr_box output_box;
   int width, height;
-
-  PhocConfig *config = phoc_server_get_config (phoc_server_get_default ());
 
   self->wlr_output->data = self;
   wl_list_insert (&self->desktop->outputs, &self->link);
@@ -1006,8 +1008,19 @@ phoc_output_initable_init (GInitable    *initable,
   priv->request_state.notify = handle_request_state;
   wl_signal_add (&self->wlr_output->events.request_state, &priv->request_state);
 
-  PhocOutputConfig *output_config = phoc_config_get_output (config, self);
-  struct wlr_output_state pending;
+  output_config = phoc_config_get_output (config, self);
+  /* Restore old output state if any */
+  if (output_config) {
+    phoc_output_config_dump (output_config, "Config file ");
+  } else {
+    const char *identifier = phoc_output_get_identifier (self);
+
+    output_config = phoc_desktop_get_saved_outputs_state (desktop, identifier);
+    if (output_config) {
+      g_message ("Loading saved output state for '%s'", identifier);
+      phoc_output_config_dump (output_config, "Saved output state ");
+    }
+  }
   phoc_output_fill_state (self, output_config, &pending);
 
   wlr_output_commit_state (self->wlr_output, &pending);
@@ -1819,9 +1832,9 @@ phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box)
 }
 
 
-static void
+static gboolean
 output_manager_apply_config (PhocDesktop                        *desktop,
-                             struct wlr_output_configuration_v1 *config,
+                             struct wlr_output_configuration_v1 *wlr_config_v1,
                              gboolean                            test_only)
 
 {
@@ -1829,7 +1842,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   gboolean ok = TRUE;
 
   /* First disable outputs we need to disable */
-  wl_list_for_each (config_head, &config->heads, link) {
+  wl_list_for_each (config_head, &wlr_config_v1->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     struct wlr_output_state pending;
 
@@ -1851,7 +1864,7 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   }
 
   /* Then enable outputs that need to */
-  wl_list_for_each (config_head, &config->heads, link) {
+  wl_list_for_each (config_head, &wlr_config_v1->heads, link) {
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
     struct wlr_output_state pending;
@@ -1894,14 +1907,16 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   }
 
   if (ok)
-    wlr_output_configuration_v1_send_succeeded (config);
+    wlr_output_configuration_v1_send_succeeded (wlr_config_v1);
   else
-    wlr_output_configuration_v1_send_failed (config);
+    wlr_output_configuration_v1_send_failed (wlr_config_v1);
 
-  wlr_output_configuration_v1_destroy (config);
+  wlr_output_configuration_v1_destroy (wlr_config_v1);
 
   if (!test_only)
     update_output_manager_config (desktop);
+
+  return ok;
 }
 
 
@@ -1910,8 +1925,12 @@ phoc_handle_output_manager_apply (struct wl_listener *listener, void *data)
 {
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
+  gboolean success;
 
-  output_manager_apply_config (desktop, config, FALSE);
+  success = output_manager_apply_config (desktop, config, FALSE);
+
+  if (success)
+    phoc_desktop_save_outputs_state (desktop);
 }
 
 
@@ -2323,6 +2342,19 @@ phoc_output_get_name (PhocOutput *self)
 {
   g_assert (PHOC_IS_OUTPUT (self));
   g_assert (self->wlr_output);
+
+  return self->wlr_output->name;
+}
+
+
+const char *
+phoc_output_get_identifier (PhocOutput *self)
+{
+  g_assert (PHOC_IS_OUTPUT (self));
+  g_assert (self->wlr_output);
+
+  if (self->wlr_output->description)
+    return self->wlr_output->description;
 
   return self->wlr_output->name;
 }

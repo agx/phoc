@@ -43,10 +43,12 @@ OPTIONS
 CONFIGURATION
 -------------
 
-Configuration is read from ``phoc.ini``, ``hwdb`` and ``gsettings``.
+Configuration is read from ``phoc.ini``, ``hwdb``, ``gsettings`` and
+``$XDG_STATE_HOME/outputs.gvdb``.
 For details on output configuration see ``phoc.ini(5)``, for details
 on wakeup key configuration via ``hwdb`` see ``gmobile.udev(5)``, for details
-on the gsettings handled by phoc see ``phoc.gsettings(5)``.
+on the gsettings handled by phoc see ``phoc.gsettings(5)``. For details on
+output states see ``phoc-outputs-states``.
 
 ENVIRONMENT VARIABLES
 ---------------------
@@ -70,6 +72,7 @@ ENVIRONMENT VARIABLES
       - ``cutouts``: Debug display cutouts and notches
       - ``disable-animations``: Disable animations
       - ``force-shell-reveal``: Always reveal shell over fullscreen apps
+      - ``ignore-state``: Ignore any saved output state
 
 UDEV PROPERTIES
 ---------------
@@ -102,4 +105,4 @@ between releases.
 See also
 --------
 
-``phoc.ini(5)`` ``phoc.gsettings(5)`` ``gmobile.udev(5)`` ``phosh(1)`` ``busctl``
+``phoc.ini(5)`` ``phoc.gsettings(5)`` ``phoc-outputs-states(1)`` ``gmobile.udev(5)`` ``phosh(1)`` ``busctl``
