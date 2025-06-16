@@ -77,5 +77,5 @@ foreach test : tests
     link_args: test_link_args,
     dependencies: [phoctest_dep, libphoc_dep],
   )
-  test(test, t, env: test_env)
+  test(test, t, depends: compiled_schemas, env: test_env)
 endforeach
