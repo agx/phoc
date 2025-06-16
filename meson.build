@@ -157,10 +157,10 @@ phoc_config_h = configure_file(output: 'phoc-config.h', configuration: config_h)
 
 subdir('po')
 subdir('protocols')
+subdir('data')
 subdir('src')
 subdir('tests')
 subdir('tools')
-subdir('data')
 subdir('doc')
 subdir('examples')
 
