@@ -106,7 +106,7 @@ main (int argc, char **argv)
     {"db", 'd', 0, G_OPTION_ARG_STRING, &db_path, "Path to the outputs states db", "FILENAME"},
     {"raw", 'r', 0, G_OPTION_ARG_NONE, &raw, "Use raw output", NULL},
     {"list", 0, 0, G_OPTION_ARG_NONE, &list, "List saved outputs states", NULL},
-    {"show", 0, 0, G_OPTION_ARG_STRING, &show, "Show saved state", "IDENTIFIER"},
+    {"show", 0, 0, G_OPTION_ARG_STRING, &show, "Show saved state for the given identifier", "IDENTIFIER"},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
   };
 
@@ -142,6 +142,6 @@ main (int argc, char **argv)
     return success ? EXIT_SUCCESS : EXIT_FAILURE;
   }
 
-  g_critical ("No action give, try --help");
+  g_critical ("No action given, try --help");
   return EXIT_FAILURE;
 }
