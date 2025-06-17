@@ -177,6 +177,7 @@ void                    phoc_desktop_notify_activity             (PhocDesktop *s
 
 gboolean                phoc_desktop_is_privileged_protocol      (PhocDesktop            *self,
                                                                   const struct wl_global *global);
-void                    phoc_desktop_save_outputs_state          (PhocDesktop *self);
+void                    phoc_desktop_save_outputs_state          (PhocDesktop *self,
+                                                                  GPtrArray   *output_configs);
 PhocOutputConfig *      phoc_desktop_get_saved_outputs_state     (PhocDesktop *self,
                                                                   const char  *output_identifier);

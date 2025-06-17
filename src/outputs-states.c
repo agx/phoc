@@ -10,6 +10,7 @@
 
 #include "phoc-config.h"
 
+#include "phoc-enums.h"
 #include "outputs-states.h"
 #include "settings.h"
 
@@ -211,6 +212,15 @@ phoc_outputs_states_serialize (GPtrArray *outputs_states, GHashTable *gvdb_data)
       item = gvdb_hash_table_insert (output, "layout-position");
       gvdb_item_set_value (item, g_variant_new ("(ii)", oc->x,  oc->y));
     }
+
+    if (oc->adaptive_sync != PHOC_OUTPUT_ADAPTIVE_SYNC_NONE) {
+      const char *value = "disabled";
+
+      if (oc->adaptive_sync == PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED)
+        value = "enabled";
+      item = gvdb_hash_table_insert (output, "adaptive-sync");
+      gvdb_item_set_value (item, g_variant_new_string (value));
+    }
   }
 }
 
@@ -380,7 +390,7 @@ phoc_outputs_states_deserialize (GvdbTable *gvdb_table, GError **err)
     const char *output_name = output_table_names[i];
     g_autoptr (GvdbTable) output_table = gvdb_table_get_table (outputs_table, output_name);
     g_autoptr (GVariant) transform = NULL, scale = NULL, mode = NULL, layout_pos = NULL;
-    g_autoptr (GVariant) enabled = NULL;
+    g_autoptr (GVariant) enabled = NULL, adaptive_sync = NULL;
     g_autoptr (PhocOutputConfig) oc = phoc_output_config_new (output_name);
 
     g_debug ("Deserializing output state '%s'", output_name);
@@ -411,6 +421,16 @@ phoc_outputs_states_deserialize (GvdbTable *gvdb_table, GError **err)
     layout_pos = gvdb_table_get_value (output_table, "layout-position");
     if (layout_pos && g_variant_is_of_type (layout_pos, G_VARIANT_TYPE ("(ii)")))
       g_variant_get (layout_pos, "(ii)", &oc->x, &oc->y);
+
+    adaptive_sync = gvdb_table_get_value (output_table, "adaptive-sync");
+    if (adaptive_sync && g_variant_is_of_type (adaptive_sync, G_VARIANT_TYPE ("s"))) {
+      const char *val;
+
+      g_variant_get (adaptive_sync, "&s", &val);
+      oc->adaptive_sync = PHOC_OUTPUT_ADAPTIVE_SYNC_DISABLED;
+      if (g_strcmp0 (val, "enabled") == 0)
+        oc->adaptive_sync = PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED;
+    }
 
     g_ptr_array_add (output_configs, g_steal_pointer (&oc));
   }

@@ -1453,38 +1453,6 @@ cmp_output_name (gconstpointer a, gconstpointer b)
 }
 
 
-static GPtrArray *
-build_output_configs (PhocDesktop *self)
-{
-  PhocOutput *output;
-  g_autoptr (GPtrArray) output_configs = NULL;
-
-  output_configs = g_ptr_array_new_full (5, (GDestroyNotify) phoc_output_config_destroy);
-  wl_list_for_each (output, &self->outputs, link) {
-    const char *identifier = phoc_output_get_identifier (output);
-    PhocOutputConfig *oc;
-
-    oc = phoc_output_config_new (identifier);
-    oc->transform = output->wlr_output->transform;
-    oc->scale = output->wlr_output->scale;
-    if (output->wlr_output->current_mode) {
-      oc->mode.width = output->wlr_output->current_mode->width;
-      oc->mode.height = output->wlr_output->current_mode->height;
-      oc->mode.refresh_rate = output->wlr_output->current_mode->refresh / 1000.0;
-    }
-    oc->x = output->lx;
-    oc->y = output->ly;
-
-    g_ptr_array_add (output_configs, oc);
-  }
-
-  /* Sort so identifier doesn't depend on the order of outputs */
-  g_ptr_array_sort (output_configs, cmp_output_name);
-
-  return g_steal_pointer (&output_configs);
-}
-
-
 static char *
 build_identifier (GPtrArray *output_configs)
 {
@@ -1517,20 +1485,21 @@ on_outputs_states_save_ready (GObject *object, GAsyncResult *res, gpointer data)
 /**
  * phoc_desktop_save_outputs_state:
  * @self: The desktop
+ * @output_configs: (transfer full)(element-type PhocOutputConfig): The output configs to save
  *
- * Save the current output configuration state.
+ * Save the passed in output configuration state.
  */
 void
-phoc_desktop_save_outputs_state (PhocDesktop *self)
+phoc_desktop_save_outputs_state (PhocDesktop *self, GPtrArray *output_configs)
 {
   PhocServer *server = phoc_server_get_default ();
   PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
-  g_autoptr (GPtrArray) output_configs = NULL;
   g_autofree char *identifier = NULL;
 
   g_assert (PHOC_IS_DESKTOP (self));
 
-  output_configs = build_output_configs (self);
+  /* Sort so identifier doesn't depend on the order of outputs */
+  g_ptr_array_sort (output_configs, cmp_output_name);
   identifier = build_identifier (output_configs);
 
   phoc_outputs_states_update (priv->outputs_states,
@@ -1562,6 +1531,7 @@ phoc_desktop_get_saved_outputs_state (PhocDesktop *self, const char *output_iden
   PhocDesktopPrivate *priv = phoc_desktop_get_instance_private (self);
   g_autoptr (GPtrArray) current_configs = NULL;
   GPtrArray *output_configs;
+  PhocOutput *output;
   g_autofree char *state_identifier = NULL;
 
   g_assert (PHOC_IS_DESKTOP (self));
@@ -1569,7 +1539,16 @@ phoc_desktop_get_saved_outputs_state (PhocDesktop *self, const char *output_iden
   g_debug ("Looking for output state: %s", output_identifier);
 
   /* Build a stub output configuration to got get an identifier */
-  current_configs = build_output_configs (self);
+  current_configs = g_ptr_array_new_full (5, (GDestroyNotify) phoc_output_config_destroy);
+  wl_list_for_each (output, &self->outputs, link) {
+    const char *identifier = phoc_output_get_identifier (output);
+    PhocOutputConfig *oc;
+
+    oc = phoc_output_config_new (identifier);
+    g_ptr_array_add (current_configs, oc);
+  }
+  /* Sort so identifier doesn't depend on the order of outputs */
+  g_ptr_array_sort (current_configs, cmp_output_name);
   state_identifier = build_identifier (current_configs);
 
   /* Lookup the state of all outputs */

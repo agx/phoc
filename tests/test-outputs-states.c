@@ -6,6 +6,7 @@
  * Author: Guido Günther <agx@sigxcpu.org>
  */
 
+#include "output.h"
 #include "outputs-states.h"
 
 #include "testlib.h"
@@ -39,6 +40,7 @@ test_phoc_outputs_states_single_output (void)
   oc->mode.refresh_rate = 60000;
   oc->x = 123;
   oc->y = 456;
+  oc->adaptive_sync = PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED;
   g_ptr_array_add (output_configs, oc);
 
   phoc_outputs_states_update (outputs_states, "simple-output-config", output_configs);
@@ -65,6 +67,7 @@ test_phoc_outputs_states_single_output (void)
   g_assert_cmpfloat (oc->mode.refresh_rate, ==, 60000);
   g_assert_cmpint (oc->x, ==, 123);
   g_assert_cmpint (oc->y, ==, 456);
+  g_assert_cmpint (oc->adaptive_sync, ==, PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED);
 
   g_assert_finalize_object (outputs_states);
 }

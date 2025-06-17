@@ -32,11 +32,12 @@ typedef struct _PhocOutputConfig {
 
   struct PhocMode {
     int   width, height;
-    float refresh_rate;
+    float refresh_rate; /* Hz */
   } mode;
   GSList                  *modes;
 
   guint                    phys_width, phys_height;
+  gboolean                 adaptive_sync;
 } PhocOutputConfig;
 
 typedef struct _PhocConfig {
@@ -65,7 +66,7 @@ void              phoc_output_config_dump (PhocOutputConfig *oc, const char *pre
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocOutputConfig, phoc_output_config_destroy)
 
 #define phoc_output_config_dump(__oc, __prefix) G_STMT_START {          \
-  g_debug ("%s%s: (%d,%d) (%dx%d@%.2f), enabled: %d, scale: %f, transform: %s", \
+  g_debug ("%s%s: (%d,%d) (%dx%d@%.2f), enabled: %d, scale: %f, transform: %s, vrr: %d", \
            __prefix ?: "",                                              \
            __oc->name,                                                  \
            __oc->x,                                                     \
@@ -75,7 +76,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (PhocOutputConfig, phoc_output_config_destroy)
            __oc->mode.refresh_rate,                                     \
            __oc->enable,                                                \
            __oc->scale,                                                 \
-           phoc_utils_transform_to_str (__oc->transform));              \
+           phoc_utils_transform_to_str (__oc->transform),               \
+           __oc->adaptive_sync);                                        \
   } G_STMT_END
 
 G_END_DECLS

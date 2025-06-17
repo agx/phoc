@@ -75,8 +75,7 @@ parse_modeline (const char *s, drmModeModeInfo *mode)
 }
 
 
-static
-PhocOutputScaleFilter
+static PhocOutputScaleFilter
 parse_scale_filter (const char *value)
 {
   GEnumValue *ev;
@@ -87,6 +86,23 @@ parse_scale_filter (const char *value)
   if (!ev) {
     g_critical ("Got invalid output scale-filter value: %s", value);
     return PHOC_OUTPUT_SCALE_FILTER_AUTO;
+  }
+
+  return ev->value;
+}
+
+
+static PhocOutputAdaptiveSync
+parse_adapative_sync (const char *value)
+{
+  GEnumValue *ev;
+  g_autoptr (GEnumClass) eclass = NULL;
+
+  eclass = G_ENUM_CLASS (g_type_class_ref (phoc_output_adaptive_sync_get_type ()));
+  ev = g_enum_get_value_by_nick (eclass, value);
+  if (!ev) {
+    g_critical ("Got invalid output adaptive-sync value: %s", value);
+    return PHOC_OUTPUT_ADAPTIVE_SYNC_NONE;
   }
 
   return ev->value;
@@ -232,6 +248,8 @@ config_ini_handler (PhocConfig *config, const char *section, const char *name, c
       oc->phys_width = strtol (value, NULL, 10);
     } else if (g_str_equal (name, "phys_height")) {
       oc->phys_height = strtol (value, NULL, 10);
+    } else if (g_str_equal (name, "adaptive-sync")) {
+      oc->adaptive_sync = parse_adapative_sync (value);
     } else {
       g_warning ("Unknown key '%s' in section '%s'", name, section);
     }

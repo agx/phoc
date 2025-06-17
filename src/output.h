@@ -34,6 +34,13 @@ typedef enum _PhocOutputScaleFilter {
 } PhocOutputScaleFilter;
 
 
+typedef enum _PhocOutputAdaptiveSync {
+  PHOC_OUTPUT_ADAPTIVE_SYNC_NONE = 0,
+  PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED = 1,
+  PHOC_OUTPUT_ADAPTIVE_SYNC_DISABLED = 2,
+} PhocOutputAdaptiveSync;
+
+
 typedef struct {
   gint64            when;
   pixman_region32_t region;

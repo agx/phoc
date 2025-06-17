@@ -903,10 +903,12 @@ phoc_output_fill_state (PhocOutput              *self,
     if (output_config->phys_height)
       self->wlr_output->phys_height = output_config->phys_height;
 
-    if (output_config->mode.width)
+    if (output_config->mode.width &&
+        output_config->mode.height) {
       phoc_output_state_set_mode (self, pending, output_config);
-    else if (preferred_mode != NULL)
+    } else if (preferred_mode != NULL) {
       wlr_output_state_set_mode (pending, preferred_mode);
+    }
 
     if (output_config->scale)
       scale = output_config->scale;
@@ -917,6 +919,13 @@ phoc_output_fill_state (PhocOutput              *self,
 
     wlr_output_state_set_transform (pending, transform);
     priv->scale_filter = output_config->scale_filter;
+
+    if (output_config->adaptive_sync != PHOC_OUTPUT_ADAPTIVE_SYNC_NONE &&
+        self->wlr_output->adaptive_sync_supported) {
+      bool enabled = output_config->adaptive_sync == PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED;
+
+      wlr_output_state_set_adaptive_sync_enabled (pending, enabled);
+    }
   } else if (enable) {
     enum wl_output_transform transform = WL_OUTPUT_TRANSFORM_NORMAL;
     gboolean has_mode = FALSE;
@@ -949,13 +958,26 @@ phoc_output_fill_state (PhocOutput              *self,
     wlr_output_state_set_scale (pending, phoc_output_compute_scale (self, pending));
     wlr_output_state_set_transform (pending, transform);
   }
+}
 
-  if (output_config && output_config->x > 0 && output_config->y > 0) {
-    wlr_output_layout_add (self->desktop->layout, self->wlr_output, output_config->x,
+
+static void
+phoc_output_set_layout_pos (PhocOutput *self, PhocOutputConfig *output_config)
+{
+  struct wlr_box output_box;
+
+  if (output_config && output_config->x >= 0 && output_config->y >= 0) {
+    wlr_output_layout_add (self->desktop->layout,
+                           self->wlr_output,
+                           output_config->x,
                            output_config->y);
   } else {
     wlr_output_layout_add_auto (self->desktop->layout, self->wlr_output);
   }
+
+  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
+  self->lx = output_box.x;
+  self->ly = output_box.y;
 }
 
 
@@ -973,7 +995,6 @@ phoc_output_initable_init (GInitable    *initable,
   PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
   PhocOutputConfig *output_config;
   struct wlr_output_state pending;
-  struct wlr_box output_box;
   int width, height;
 
   self->wlr_output->data = self;
@@ -1022,11 +1043,8 @@ phoc_output_initable_init (GInitable    *initable,
     }
   }
   phoc_output_fill_state (self, output_config, &pending);
-
+  phoc_output_set_layout_pos (self, output_config);
   wlr_output_commit_state (self->wlr_output, &pending);
-  wlr_output_layout_get_box (self->desktop->layout, self->wlr_output, &output_box);
-  self->lx = output_box.x;
-  self->ly = output_box.y;
 
   for (GSList *elem = phoc_input_get_seats (input); elem; elem = elem->next) {
     PhocSeat *seat = PHOC_SEAT (elem->data);
@@ -1832,14 +1850,55 @@ phoc_output_damage_box (PhocOutput *self, const struct wlr_box *box)
 }
 
 
+static PhocOutputConfig *
+phoc_output_config_head_to_output_config (PhocOutput                              *self,
+                                          struct wlr_output_configuration_head_v1 *head)
+{
+  PhocOutputPrivate *priv = phoc_output_get_instance_private (self);
+  PhocOutputConfig *oc = phoc_output_config_new (phoc_output_get_identifier (self));
+
+  oc->enable = TRUE;
+  if (head->state.mode && !head->state.mode->preferred) {
+    oc->mode.width = head->state.mode->width;
+    oc->mode.height = head->state.mode->height;
+    oc->mode.refresh_rate = head->state.mode->refresh / 1000.0;
+  } else {
+    oc->mode.width = head->state.custom_mode.width;
+    oc->mode.height = head->state.custom_mode.height;
+    oc->mode.refresh_rate = head->state.custom_mode.refresh / 1000.0;
+  }
+
+  oc->transform = head->state.transform;
+  oc->scale = adjust_frac_scale (head->state.scale);
+  oc->scale_filter = priv->scale_filter;
+
+  if (self->wlr_output->adaptive_sync_supported) {
+    if (head->state.adaptive_sync_enabled)
+      oc->adaptive_sync = PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED;
+    else
+      oc->adaptive_sync = PHOC_OUTPUT_ADAPTIVE_SYNC_DISABLED;
+  }
+
+  oc->x = head->state.x;
+  oc->y = head->state.y;
+
+  phoc_output_config_dump (oc, "Head state ");
+
+  return oc;
+}
+
+
 static gboolean
 output_manager_apply_config (PhocDesktop                        *desktop,
                              struct wlr_output_configuration_v1 *wlr_config_v1,
-                             gboolean                            test_only)
-
+                             gboolean                            test_only,
+                             GPtrArray                         **out_configs)
 {
   struct wlr_output_configuration_head_v1 *config_head;
   gboolean ok = TRUE;
+  g_autoptr (GPtrArray) output_configs = NULL;
+
+  output_configs = g_ptr_array_new_full (5, (GDestroyNotify) phoc_output_config_destroy);
 
   /* First disable outputs we need to disable */
   wl_list_for_each (config_head, &wlr_config_v1->heads, link) {
@@ -1868,42 +1927,28 @@ output_manager_apply_config (PhocDesktop                        *desktop,
     struct wlr_output *wlr_output = config_head->state.output;
     PhocOutput *output = PHOC_OUTPUT (wlr_output->data);
     struct wlr_output_state pending;
-    struct wlr_box output_box;
+    g_autoptr (PhocOutputConfig) oc = NULL;
 
     if (!config_head->state.enabled)
       continue;
 
-    wlr_output_state_init (&pending);
-    wlr_output_state_set_enabled (&pending, true);
-    if (config_head->state.mode != NULL) {
-      wlr_output_state_set_mode (&pending, config_head->state.mode);
-    } else {
-      wlr_output_state_set_custom_mode (&pending,
-                                        config_head->state.custom_mode.width,
-                                        config_head->state.custom_mode.height,
-                                        config_head->state.custom_mode.refresh);
-    }
-    wlr_output_state_set_transform (&pending, config_head->state.transform);
-    wlr_output_state_set_scale (&pending, adjust_frac_scale (config_head->state.scale));
+    oc = phoc_output_config_head_to_output_config (output, config_head);
+    phoc_output_fill_state (output, oc, &pending);
 
     if (test_only) {
       ok &= wlr_output_test_state (wlr_output, &pending);
     } else {
-      wlr_output_layout_add (desktop->layout,
-                             wlr_output,
-                             config_head->state.x,
-                             config_head->state.y);
       ok &= wlr_output_commit_state (wlr_output, &pending);
+
+      phoc_output_set_layout_pos (output, oc);
 
       if (output->fullscreen_view)
         phoc_view_set_fullscreen (output->fullscreen_view, true, output);
-
-      wlr_output_layout_get_box (output->desktop->layout, output->wlr_output, &output_box);
-      output->lx = output_box.x;
-      output->ly = output_box.y;
     }
 
     wlr_output_state_finish (&pending);
+
+    g_ptr_array_add (output_configs, g_steal_pointer (&oc));
   }
 
   if (ok)
@@ -1916,6 +1961,9 @@ output_manager_apply_config (PhocDesktop                        *desktop,
   if (!test_only)
     update_output_manager_config (desktop);
 
+  if (out_configs)
+    *out_configs = g_steal_pointer (&output_configs);
+
   return ok;
 }
 
@@ -1926,11 +1974,12 @@ phoc_handle_output_manager_apply (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
   gboolean success;
+  g_autoptr (GPtrArray) output_configs = NULL;
 
-  success = output_manager_apply_config (desktop, config, FALSE);
+  success = output_manager_apply_config (desktop, config, FALSE, &output_configs);
 
   if (success)
-    phoc_desktop_save_outputs_state (desktop);
+    phoc_desktop_save_outputs_state (desktop, g_steal_pointer (&output_configs));
 }
 
 
@@ -1940,7 +1989,7 @@ phoc_handle_output_manager_test (struct wl_listener *listener, void *data)
   PhocDesktop *desktop = wl_container_of (listener, desktop, output_manager_apply);
   struct wlr_output_configuration_v1 *config = data;
 
-  output_manager_apply_config (desktop, config, TRUE);
+  output_manager_apply_config (desktop, config, TRUE, NULL);
 }
 
 

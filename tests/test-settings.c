@@ -30,7 +30,8 @@ test_phoc_config_output (void)
 
   g_autoptr (PhocConfig) config1 = phoc_config_new_from_data (
     "[output:X11-1]\n"
-    "scale = 3\n");
+    "scale = 3\n"
+    "adaptive-sync = enabled\n");
 
   g_autoptr (PhocConfig) config2 = phoc_config_new_from_data (
     "[output:X11-1]\n"
@@ -41,7 +42,9 @@ test_phoc_config_output (void)
   oc = config1->outputs->data;
   g_assert_cmpint (g_slist_length (config1->outputs), ==, 1);
   g_assert_cmpfloat (oc->scale, ==, 3.0);
+  g_assert_cmpint (oc->adaptive_sync, ==, PHOC_OUTPUT_ADAPTIVE_SYNC_ENABLED);
   g_assert_cmpint (g_slist_length (config1->outputs), ==, 1);
+
 
   g_assert_cmpint (g_slist_length (config2->outputs), ==, 2);
 }
@@ -61,6 +64,7 @@ test_phoc_config_modelines (void)
   oc = config->outputs->data;
   g_assert_cmpint (g_slist_length (config->outputs), ==, 1);
   g_assert_cmpfloat (oc->scale, ==, 3.0);
+  g_assert_cmpint (oc->adaptive_sync, ==, PHOC_OUTPUT_ADAPTIVE_SYNC_NONE);
   g_assert_cmpint (g_slist_length (oc->modes), ==, 2);
 }
 
