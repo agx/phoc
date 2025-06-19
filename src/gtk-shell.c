@@ -143,6 +143,10 @@ gtk_surface_handle_resource_destroy (struct wl_resource *resource)
 
   g_debug ("Destroying gtk_surface %p (res %p)", gtk_surface, gtk_surface->resource);
 
+  wl_list_remove (&gtk_surface->xdg_surface_handle_destroy.link);
+  wl_list_remove (&gtk_surface->xdg_surface_handle_configure.link);
+  wl_list_remove (&gtk_surface->wlr_surface_handle_destroy.link);
+
   gtk_surface->wlr_surface = NULL;
   gtk_surface->xdg_surface = NULL;
 
@@ -158,10 +162,7 @@ handle_wlr_surface_handle_destroy (struct wl_listener *listener,
 {
   PhocGtkSurface *gtk_surface = wl_container_of (listener, gtk_surface, wlr_surface_handle_destroy);
 
-  wl_list_remove (&gtk_surface->wlr_surface_handle_destroy.link);
-
-  /* Make sure we don't try to raise an already gone surface */
-  gtk_surface->wlr_surface = NULL;
+  wl_resource_destroy (gtk_surface->resource);
 }
 
 
@@ -170,11 +171,7 @@ handle_xdg_surface_handle_destroy (struct wl_listener *listener, void *data)
 {
   PhocGtkSurface *gtk_surface = wl_container_of (listener, gtk_surface, xdg_surface_handle_destroy);
 
-  wl_list_remove (&gtk_surface->xdg_surface_handle_destroy.link);
-  wl_list_remove (&gtk_surface->xdg_surface_handle_configure.link);
-
-  /* Make sure we don't try to configure an already gone xdg surface */
-  gtk_surface->xdg_surface = NULL;
+  wl_resource_destroy (gtk_surface->resource);
 }
 
 
