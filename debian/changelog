@@ -1,3 +1,123 @@
+phoc (0.48~rc1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * Use wlroots 0.19
+  * ci: Don't use `remote` to access ci templates.
+    This avoids the 429 error.
+  * drag-icon: Don't forget to unlink map.
+  * xdg-toplevel: Check if surface is initialzed.
+    The whole position/resize logic needs a rework but this avoids the
+    assert  with wlroots 0.19.x.
+  * ci: Update image
+  * build: Bump wayland dependency
+  * output: Rename damage_whole_view.
+    We damage the blings as part of damaging the whole view but the view's
+    surfaces are damaged via phoc_output_view_for_each_surface.
+  * output: Transform to damage ring buffer local coordinates.
+    Damage added to the ring buffer now must be buffer local coordinates
+    thus we transfrom the damage right before adding it to the buffer in
+    phoc_output_damage_{region,box} so callers don't need to bother.
+    This means we no longer need to transform this in get_frame_damage()
+    when getting the frame damage.
+  * render: Use output buffer local coordinates.
+    Since damage is in that coordinate space and we clip to it we need to
+    transfrom the other coordinates before feeding it to
+    phoc_util_is_box_damaged as otherwise the we clip incorrectly.
+  * bling: Use phoc_output_damage_box.
+    This moves all additions to the damage ring to the output class as it
+    should be.
+  * subprojects/wlroots: Use GNOME mirror.
+    Fewer external dependencies
+  * idle-inhibit: Remove destroy listener sooner.
+    If we wait until all refs are dropped in cleanup we can hit wlroots
+    listener checks as they run just past destroy.
+  * build: Use subdir_done(). Avoids one indent level
+  * treewide: Format meson files.
+    This will make it easier to keep them consistent in the future
+    and now is good point in time as we have few outstanding MRs.
+  * treewide: Update ci shared scripts and dotfiles to a7ec897
+  * ci: Check meson format.
+    Make sure we keep meson format happy
+  * helpers: Move to tools/
+    This makes it match what phosh does
+  * build: Add gvdb as subproject.
+    We'll use it to store the outputs states
+  * utils: Add helper to convert output transform to string.
+    We'll need that in more places soon
+  * output: Rename output configuration variable.
+    The name was pretty generic.
+  * settings: Make output_config_{new,destroy} public.
+    We want to use it from output-state too
+  * output-states: Allow to keep track of output state changes.
+    Persist output configuration states so it can be reused for
+    automatic output configuration.
+  * desktop: Save and load output configuration state changes.
+    We trigger persisting output states on config changes and look
+    for a matching output configuration when a new output needs to
+    be configured.
+    Helps: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/255
+  * desktop: Allow to ignore saved outputs states
+  * desktop: Only handle single output configurations.
+    We'll allow for multiple outputs once this got tested more and
+    we feel confident enough to also reconfigure existing outputs
+    in the same output state change transaction.
+  * output: Dump config on state changes
+  * tools: Add tool to inspect saved outputs states
+  * input: Allow for `NULL` input when setting focus.
+    On shutdown we dispose the input before the backend to disconnect
+    the signals so allow for a `NULL` input here to avoid a crash
+    on shutdown.
+    Closes: https://gitlab.gnome.org/World/Phosh/phoc/-/issues/405
+  * build: Build 'data' earlier.
+    This allows us to use the compiled schema files
+  * tests: Depend on compiled schemas
+  * ci: Don't compile schemas.
+    The tests now have a proper dependency
+  * output: Check for width and height when filling mode.
+    Just width is not enough. It's fine to not pass in a
+    refresh rate though.
+  * output: Set layout position for 0,0 too
+    (0,0) is a valid config value and when the user forces it (or
+    we pick it up from the outputs-states we should use it rather
+    than using automatic layout (which would usually yield the same
+    result).
+  * output: Separate output state and layout position
+    phoc_output_fill_state handled both but we want to be able set them independently
+    as e.g. an output state test shouldn't prompt any layout position changes.
+  * output: Move lx,ly update to phoc_output_set_layout_pos.
+    This ensures they stay in sync if we perform all updates that way.
+  * output: Use PhocOutputConfig with head states too.
+    This ensures we have a single place that sets pending output state.
+  * output: Use phoc_output_set_layout_pos when applying head state.
+    We already set (x,y) in `phoc_output_config_head_to_output_config`
+    so we just need to apply it.
+    This brings initial output setup and head config changes even more
+    in line.
+  * desktop: Don't rebuild output configs for state changes.
+    Now that `phoc_output_config_head_to_output_config` builds an
+    output config for filling in the pending state we can use that
+    same config to persist the outputs states.
+    This makes sure we don't have yet another place that needs to
+    keep track of the output configuration. The only thing the
+    desktop needs to care about is to get the identifier right.
+  * settings: Parse adaptive-sync.
+    This will be used to enable/disable VRR aka adaptive-sync
+  * output: Allow to set adaptive sync.
+    It can be set via config or wlr-randr
+  * outputs-states: Save and restore adaptive-sync state
+  * tools: Print adaptive sync state
+  * gtk-shell: Use a single path for freeing resources.
+  * xdg-toplevel: Check initialized in set_fullscreen to not hit a wlroots
+    assertion
+
+  [ Andrey Skvortsov ]
+  * shortcuts-inhibit: Add support for the keyboard shortcuts inhibit protocol.
+    This allows applications receive all keyboard input. It is often used
+    by remote desktop and virtualisation software. It maybe used, when
+    some applications want to temporary override global system shortcuts.
+
+ -- Guido Günther <agx@sigxcpu.org>  Sat, 21 Jun 2025 12:11:11 +0200
+
 phoc (0.47.0) experimental; urgency=medium
 
   * No changes over 0.47~rc1
@@ -2548,7 +2668,7 @@ phoc (0.27.0) experimental; urgency=medium
     by glib.
   * view: Reindent several functions according to codestyle
   * view: Use g_free()
-  * view: Make several members private 
+  * view: Make several members private
   * output: Use phoc_view_is_mapped()
   * text_input: Use phoc_view_is_mapped()
   * view: Make get_wlr_surface_at a virtual functions.
