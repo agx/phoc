@@ -283,10 +283,12 @@ set_suspended (PhocView *view, bool suspended)
 static void
 set_fullscreen (PhocView *view, bool fullscreen)
 {
-  struct wlr_xdg_toplevel *xdg_toplevel = PHOC_XDG_TOPLEVEL (view)->xdg_toplevel;
+  struct wlr_xdg_toplevel *wlr_xdg_toplevel = PHOC_XDG_TOPLEVEL (view)->xdg_toplevel;
 
-  wlr_xdg_toplevel_set_fullscreen (xdg_toplevel, fullscreen);
+  if (wlr_xdg_toplevel->base->initialized)
+    wlr_xdg_toplevel_set_fullscreen (wlr_xdg_toplevel, fullscreen);
 }
+
 
 static void
 _close (PhocView *view)
