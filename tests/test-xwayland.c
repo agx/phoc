@@ -61,7 +61,7 @@ on_xcb_fd (int fd, GIOCondition condition, gpointer user_data)
 
 
 static gboolean
-test_client_xwayland_normal (PhocTestClientGlobals *globals, gpointer data)
+test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
 {
   g_autoptr (GMainContext) client_context = g_main_context_new ();
   g_autoptr (GMainLoop) loop = g_main_loop_new (client_context, FALSE);
@@ -135,11 +135,11 @@ test_client_xwayland_server_prepare (PhocServer *server, gpointer data)
 }
 
 static void
-test_xwayland_normal (void)
+test_xwayland_simple (void)
 {
   PhocTestClientIface iface = {
     .server_prepare = test_client_xwayland_server_prepare,
-    .client_run     = test_client_xwayland_normal,
+    .client_run     = test_client_xwayland_simple,
     .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
     .xwayland       = TRUE,
   };
@@ -152,6 +152,6 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  PHOC_TEST_ADD ("/phoc/xwayland/simple", test_xwayland_normal);
+  PHOC_TEST_ADD ("/phoc/xwayland/simple", test_xwayland_simple);
   return g_test_run ();
 }
