@@ -1,3 +1,23 @@
+phoc 0.48~rc1
+---------------
+Released June 2025
+* Update to wlroots 0.19.0
+* Save output configurations and restore them in the
+  single output case. Note: configuration in phoc.ini takes
+  precedence.
+* Support adapative-sync
+* New protocol support:
+  - shortcuts-inhibit
+  - ext-image-capture-source-v1
+  - ext-image-capture-copy-v1
+* Updated protocol support:
+  - wp_presentation time version 2
+* Issues fixed:
+    * https://gitlab.gnome.org/World/Phosh/phoc/-/issues/405
+* Contributors:
+    * Andrey Skvortsov
+    * Guido Günther
+
 phoc 0.47.0
 -----------
 Released May 2025
