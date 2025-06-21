@@ -79,7 +79,7 @@ on_idle (gpointer data)
   g_test_message ("Creating window");
   cdata->window = xcb_generate_id (cdata->conn);
   /* Create and map the window */
-  xcb_create_window (cdata->conn,                            /* Connection          */
+  xcb_create_window (cdata->conn,                           /* Connection          */
                      XCB_COPY_FROM_PARENT,                  /* depth               */
                      cdata->window,                         /* window Id           */
                      screen->root,                          /* parent window       */
@@ -111,7 +111,6 @@ test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
   };
   int xcb_fd = -1;
 
-  g_test_message ("%s: %d", __func__, __LINE__);
   /* Make sure we poll the xcb connection in this thread */
   g_main_context_push_thread_default (client_context);
   cdata.loop = loop;

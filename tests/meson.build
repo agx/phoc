@@ -24,6 +24,7 @@ test_env.set(
   'suppressions=@0@/data/leak-suppress.txt'.format(meson.project_source_root()),
 )
 test_env.set('ASAN_OPTIONS', 'fast_unwind_on_malloc=0')
+#test_env.set('ASAN_OPTIONS', 'fast_unwind_on_malloc=0:disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=1')
 
 test_cflags = [
   '-DTEST_PHOC_INI="@0@/phoc.ini"'.format(meson.current_source_dir()),
