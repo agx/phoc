@@ -63,6 +63,41 @@ on_xcb_fd (int fd, GIOCondition condition, gpointer user_data)
 }
 
 
+static void
+on_idle (gpointer data)
+{
+  PhocXcbTestClientData *cdata = data;
+  const xcb_setup_t      *setup  = xcb_get_setup (cdata->conn);
+  xcb_screen_iterator_t   iter   = xcb_setup_roots_iterator (setup);
+  xcb_screen_t           *screen = iter.data;
+  uint32_t values[2] = {
+    screen->white_pixel,
+    XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_STRUCTURE_NOTIFY,
+  };
+
+  g_assert (cdata->conn);
+  g_test_message ("Creating window");
+  cdata->window = xcb_generate_id (cdata->conn);
+  /* Create and map the window */
+  xcb_create_window (cdata->conn,                            /* Connection          */
+                     XCB_COPY_FROM_PARENT,                  /* depth               */
+                     cdata->window,                         /* window Id           */
+                     screen->root,                          /* parent window       */
+                     0, 0,                                  /* x, y                */
+                     150, 150,                              /* width, height       */
+                     5,                                     /* border_width        */
+                     XCB_WINDOW_CLASS_INPUT_OUTPUT,         /* class               */
+                     screen->root_visual,                   /* visual              */
+                     XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK, /* needs to match values */
+                     &values);
+  g_test_message ("Mapping window");
+  xcb_map_window (cdata->conn, cdata->window);
+  xcb_flush (cdata->conn);
+  /* Run the main loop in this thread until we timeout of unmap happend */
+  xcb_flush (cdata->conn);
+}
+
+
 static gboolean
 test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
 {
@@ -74,43 +109,21 @@ test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
     .globals = globals,
     .loop = loop,
   };
-  const xcb_setup_t      *setup  = xcb_get_setup (cdata.conn);
-  xcb_screen_iterator_t   iter   = xcb_setup_roots_iterator (setup);
-  xcb_screen_t           *screen = iter.data;
-  xcb_window_t            window = xcb_generate_id (cdata.conn);
-  int                     xcb_fd = -1;
-  uint32_t values[2] = {
-    screen->white_pixel,
-    XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_STRUCTURE_NOTIFY,
-  };
+  int xcb_fd = -1;
 
+  g_test_message ("%s: %d", __func__, __LINE__);
   /* Make sure we poll the xcb connection in this thread */
   g_main_context_push_thread_default (client_context);
   cdata.loop = loop;
-  cdata.window = window;
   xcb_fd = xcb_get_file_descriptor (cdata.conn);
   g_assert (xcb_fd >= 0);
   source = g_unix_fd_source_new (xcb_fd, G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL);
   g_source_set_callback (source, (GSourceFunc) on_xcb_fd, &cdata, NULL);
   g_source_attach (source, client_context);
 
-  /* Create and map the window */
-  xcb_create_window (cdata.conn,                            /* Connection          */
-                     XCB_COPY_FROM_PARENT,                  /* depth               */
-                     window,                                /* window Id           */
-                     screen->root,                          /* parent window       */
-                     0, 0,                                  /* x, y                */
-                     150, 150,                              /* width, height       */
-                     5,                                     /* border_width        */
-                     XCB_WINDOW_CLASS_INPUT_OUTPUT,         /* class               */
-                     screen->root_visual,                   /* visual              */
-                     XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK, /* needs to match values */
-                     &values);
-  xcb_map_window (cdata.conn, window);
-  xcb_flush (cdata.conn);
-  /* Run the main loop in this thread until we timeout of unmap happend */
-  xcb_flush (cdata.conn);
+  g_idle_add_once (on_idle, &cdata);
   g_main_loop_run (cdata.loop);
+
   /* Window should have been mapped and unmapped */
   g_assert_true (cdata.mapped);
   g_assert_true (cdata.unmapped);
