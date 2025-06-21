@@ -104,13 +104,21 @@ test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
   g_autoptr (GMainContext) client_context = g_main_context_new ();
   g_autoptr (GMainLoop) loop = g_main_loop_new (client_context, FALSE);
   g_autoptr (GSource) source = NULL;
-  PhocXcbTestClientData cdata = {
+  PhocXcbTestClientData cdata;
+  int xcb_fd = -1;
+
+#if defined (__has_feature)
+#  if __has_feature (address_sanitizer)
+  g_test_skip ("Running under ASAN can deadlock");
+  return TRUE;
+#  endif
+#endif
+
+  cdata = (PhocXcbTestClientData) {
     .conn = xcb_connect (NULL, NULL),
     .globals = globals,
     .loop = loop,
   };
-  int xcb_fd = -1;
-
   /* Make sure we poll the xcb connection in this thread */
   g_main_context_push_thread_default (client_context);
   cdata.loop = loop;
