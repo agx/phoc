@@ -17,6 +17,7 @@ typedef struct  {
   xcb_connection_t      *conn;
   PhocTestClientGlobals *globals;
   GMainLoop             *loop;
+  xcb_window_t           window;
 
   gboolean               mapped;
   gboolean               unmapped;
@@ -42,13 +43,15 @@ on_xcb_fd (int fd, GIOCondition condition, gpointer user_data)
     return G_SOURCE_CONTINUE;
 
   if ((event->response_type & 0x7f) == XCB_MAP_NOTIFY) {
-    g_debug ("Xcb Window mapped, taking screenshot");
+    g_test_message ("Xcb Window mapped, taking screenshot");
     cdata->mapped = TRUE;
     usleep (20 * 1000);
     phoc_assert_screenshot (cdata->globals, "test-xwayland-simple-1.png");
-    g_main_loop_quit (cdata->loop);
+    g_test_message ("Unmapping window");
+    xcb_unmap_window (cdata->conn, cdata->window);
+    xcb_flush (cdata->conn);
   } else if ((event->response_type & 0x7f) == XCB_UNMAP_NOTIFY) {
-    g_debug ("Xcb Window unmapped, taking screenshot");
+    g_test_message ("Xcb Window unmapped, taking screenshot");
     cdata->unmapped = TRUE;
     usleep (20 * 1000);
     phoc_assert_screenshot (cdata->globals, "empty.png");
@@ -84,6 +87,7 @@ test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
   /* Make sure we poll the xcb connection in this thread */
   g_main_context_push_thread_default (client_context);
   cdata.loop = loop;
+  cdata.window = window;
   xcb_fd = xcb_get_file_descriptor (cdata.conn);
   g_assert (xcb_fd >= 0);
   source = g_unix_fd_source_new (xcb_fd, G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL);
@@ -104,15 +108,11 @@ test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
                      &values);
   xcb_map_window (cdata.conn, window);
   xcb_flush (cdata.conn);
-
-  /* Run the main loop in this thread until we see a mapped event */
-  g_main_loop_run (cdata.loop);
-  g_assert_true (cdata.mapped);
-
-  xcb_unmap_window (cdata.conn, window);
+  /* Run the main loop in this thread until we timeout of unmap happend */
   xcb_flush (cdata.conn);
-  /* Run the main loop in this thread until we see a mapped event */
   g_main_loop_run (cdata.loop);
+  /* Window should have been mapped and unmapped */
+  g_assert_true (cdata.mapped);
   g_assert_true (cdata.unmapped);
 
   xcb_disconnect (cdata.conn);
