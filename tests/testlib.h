@@ -71,7 +71,7 @@ struct _PhocTestClientGlobals {
   PhocTestOutput       output;
   PhocTestOutputConfig output_config;
 
-  guint32 formats;
+  GPtrArray *formats;
 };
 
 

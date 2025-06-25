@@ -17,6 +17,7 @@ typedef struct  {
   xcb_connection_t      *conn;
   PhocTestClientGlobals *globals;
   GMainLoop             *loop;
+  xcb_window_t           window;
 
   gboolean               mapped;
   gboolean               unmapped;
@@ -42,13 +43,15 @@ on_xcb_fd (int fd, GIOCondition condition, gpointer user_data)
     return G_SOURCE_CONTINUE;
 
   if ((event->response_type & 0x7f) == XCB_MAP_NOTIFY) {
-    g_debug ("Xcb Window mapped, taking screenshot");
+    g_test_message ("Xcb Window mapped, taking screenshot");
     cdata->mapped = TRUE;
     usleep (20 * 1000);
     phoc_assert_screenshot (cdata->globals, "test-xwayland-simple-1.png");
-    g_main_loop_quit (cdata->loop);
+    g_test_message ("Unmapping window");
+    xcb_unmap_window (cdata->conn, cdata->window);
+    xcb_flush (cdata->conn);
   } else if ((event->response_type & 0x7f) == XCB_UNMAP_NOTIFY) {
-    g_debug ("Xcb Window unmapped, taking screenshot");
+    g_test_message ("Xcb Window unmapped, taking screenshot");
     cdata->unmapped = TRUE;
     usleep (20 * 1000);
     phoc_assert_screenshot (cdata->globals, "empty.png");
@@ -60,27 +63,62 @@ on_xcb_fd (int fd, GIOCondition condition, gpointer user_data)
 }
 
 
-static gboolean
-test_client_xwayland_normal (PhocTestClientGlobals *globals, gpointer data)
+static void
+on_idle (gpointer data)
 {
-  g_autoptr (GMainContext) client_context = g_main_context_new ();
-  g_autoptr (GMainLoop) loop = g_main_loop_new (client_context, FALSE);
-  g_autoptr (GSource) source = NULL;
-  PhocXcbTestClientData cdata = {
-    .conn = xcb_connect (NULL, NULL),
-    .globals = globals,
-    .loop = loop,
-  };
-  const xcb_setup_t      *setup  = xcb_get_setup (cdata.conn);
+  PhocXcbTestClientData *cdata = data;
+  const xcb_setup_t      *setup  = xcb_get_setup (cdata->conn);
   xcb_screen_iterator_t   iter   = xcb_setup_roots_iterator (setup);
   xcb_screen_t           *screen = iter.data;
-  xcb_window_t            window = xcb_generate_id (cdata.conn);
-  int                     xcb_fd = -1;
   uint32_t values[2] = {
     screen->white_pixel,
     XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_STRUCTURE_NOTIFY,
   };
 
+  g_assert (cdata->conn);
+  g_test_message ("Creating window");
+  cdata->window = xcb_generate_id (cdata->conn);
+  /* Create and map the window */
+  xcb_create_window (cdata->conn,                           /* Connection          */
+                     XCB_COPY_FROM_PARENT,                  /* depth               */
+                     cdata->window,                         /* window Id           */
+                     screen->root,                          /* parent window       */
+                     0, 0,                                  /* x, y                */
+                     150, 150,                              /* width, height       */
+                     5,                                     /* border_width        */
+                     XCB_WINDOW_CLASS_INPUT_OUTPUT,         /* class               */
+                     screen->root_visual,                   /* visual              */
+                     XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK, /* needs to match values */
+                     &values);
+  g_test_message ("Mapping window");
+  xcb_map_window (cdata->conn, cdata->window);
+  xcb_flush (cdata->conn);
+  /* Run the main loop in this thread until we timeout of unmap happend */
+  xcb_flush (cdata->conn);
+}
+
+
+static gboolean
+test_client_xwayland_simple (PhocTestClientGlobals *globals, gpointer data)
+{
+  g_autoptr (GMainContext) client_context = g_main_context_new ();
+  g_autoptr (GMainLoop) loop = g_main_loop_new (client_context, FALSE);
+  g_autoptr (GSource) source = NULL;
+  PhocXcbTestClientData cdata;
+  int xcb_fd = -1;
+
+#if defined (__has_feature)
+#  if __has_feature (address_sanitizer)
+  g_test_skip ("Running under ASAN can deadlock");
+  return TRUE;
+#  endif
+#endif
+
+  cdata = (PhocXcbTestClientData) {
+    .conn = xcb_connect (NULL, NULL),
+    .globals = globals,
+    .loop = loop,
+  };
   /* Make sure we poll the xcb connection in this thread */
   g_main_context_push_thread_default (client_context);
   cdata.loop = loop;
@@ -90,29 +128,11 @@ test_client_xwayland_normal (PhocTestClientGlobals *globals, gpointer data)
   g_source_set_callback (source, (GSourceFunc) on_xcb_fd, &cdata, NULL);
   g_source_attach (source, client_context);
 
-  /* Create and map the window */
-  xcb_create_window (cdata.conn,                            /* Connection          */
-                     XCB_COPY_FROM_PARENT,                  /* depth               */
-                     window,                                /* window Id           */
-                     screen->root,                          /* parent window       */
-                     0, 0,                                  /* x, y                */
-                     150, 150,                              /* width, height       */
-                     5,                                     /* border_width        */
-                     XCB_WINDOW_CLASS_INPUT_OUTPUT,         /* class               */
-                     screen->root_visual,                   /* visual              */
-                     XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK, /* needs to match values */
-                     &values);
-  xcb_map_window (cdata.conn, window);
-  xcb_flush (cdata.conn);
-
-  /* Run the main loop in this thread until we see a mapped event */
+  g_idle_add_once (on_idle, &cdata);
   g_main_loop_run (cdata.loop);
+
+  /* Window should have been mapped and unmapped */
   g_assert_true (cdata.mapped);
-
-  xcb_unmap_window (cdata.conn, window);
-  xcb_flush (cdata.conn);
-  /* Run the main loop in this thread until we see a mapped event */
-  g_main_loop_run (cdata.loop);
   g_assert_true (cdata.unmapped);
 
   xcb_disconnect (cdata.conn);
@@ -135,11 +155,11 @@ test_client_xwayland_server_prepare (PhocServer *server, gpointer data)
 }
 
 static void
-test_xwayland_normal (void)
+test_xwayland_simple (void)
 {
   PhocTestClientIface iface = {
     .server_prepare = test_client_xwayland_server_prepare,
-    .client_run     = test_client_xwayland_normal,
+    .client_run     = test_client_xwayland_simple,
     .debug_flags    = PHOC_SERVER_DEBUG_FLAG_DISABLE_ANIMATIONS,
     .xwayland       = TRUE,
   };
@@ -152,6 +172,6 @@ main (gint argc, gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
 
-  PHOC_TEST_ADD ("/phoc/xwayland/simple", test_xwayland_normal);
+  PHOC_TEST_ADD ("/phoc/xwayland/simple", test_xwayland_simple);
   return g_test_run ();
 }

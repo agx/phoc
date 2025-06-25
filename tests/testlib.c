@@ -133,7 +133,7 @@ shm_format (void *data, struct wl_shm *wl_shm, guint32 format)
 {
   PhocTestClientGlobals *globals = data;
 
-  globals->formats |= (1 << format);
+  g_ptr_array_add (globals->formats, GUINT_TO_POINTER (format));
 }
 
 
@@ -401,6 +401,7 @@ wl_client_run (GTask *task, gpointer source, gpointer data, GCancellable *cancel
   PhocTestClientGlobals globals = {
     .output_config = td->output_config,
     .display = wl_display_connect (NULL),
+    .formats = g_ptr_array_new (),
   };
 
   g_assert_nonnull (globals.display);
@@ -414,7 +415,7 @@ wl_client_run (GTask *task, gpointer source, gpointer data, GCancellable *cancel
   g_assert_nonnull (globals.xdg_shell);
   g_assert_nonnull (globals.gtk_shell1);
 
-  g_assert (globals.formats & (1 << WL_SHM_FORMAT_XRGB8888));
+  g_assert (g_ptr_array_find (globals.formats, GINT_TO_POINTER (WL_SHM_FORMAT_XRGB8888), NULL));
 
   if (td->func)
     success = (td->func)(&globals, td->data);
@@ -432,6 +433,7 @@ wl_client_run (GTask *task, gpointer source, gpointer data, GCancellable *cancel
   g_clear_pointer (&globals.shm, wl_shm_destroy);
   g_clear_pointer (&globals.compositor, wl_compositor_destroy);
   g_clear_pointer (&globals.output.output, wl_output_destroy);
+  g_clear_pointer (&globals.formats, g_ptr_array_unref);
 
   wl_registry_destroy (registry);
 
