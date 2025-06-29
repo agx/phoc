@@ -1,3 +1,24 @@
+phoc (0.48.0) experimental; urgency=medium
+
+  * testlib: Store format in GPtrArray.
+    The current bitfield isn't large enough for large format values
+    which doesn't matter in practice (as we're only interested on
+    small valued) but it trips up clang.
+    We use a GPtrArray instead of a GArray due to the easier searching.
+  * tests/xwayland: Don't quit the main loop in between.
+    Rather unmap after map in the callback. This gives a more
+    expected flow.
+  * tests/xwayland: Move window construction to idle callback.
+    This separates the out the window handling to make things
+    a bit easier to follow.
+  * tests: Make it a bit simpler to create backtraces under asan
+  * tests/xwayland: Skip under ASAN.
+    Under ASAN we ever so often don't see any map event (sometimes
+    also unmap goes missing) although we see other events. So skip
+    the test until we figured out the cause.
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 29 Jun 2025 12:45:36 +0200
+
 phoc (0.48~rc1) experimental; urgency=medium
 
   [ Guido Günther ]
