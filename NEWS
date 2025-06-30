@@ -1,5 +1,5 @@
-phoc 0.48~rc1
----------------
+phoc 0.48.0
+-----------
 Released June 2025
 * Update to wlroots 0.19.0
 * Save output configurations and restore them in the
