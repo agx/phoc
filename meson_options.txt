@@ -22,6 +22,10 @@ option('dtrace',
        type: 'feature', value: 'disabled',
        description: 'Wether to enable systemtap tracing')
 
+option('sysprof',
+       type: 'feature', value: 'disabled',
+       description: 'Wether to enable sysprof tracing')
+
 option('dev-uid',
        type: 'integer', value: 1000,
        description: 'User id for phoc development')
