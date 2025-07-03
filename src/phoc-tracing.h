@@ -21,13 +21,13 @@
 
 #else /* ! PHOC_USE_DTRACE */
 
-# define DTRACE_PROBE(...)  {}
-# define DTRACE_PROBE1(...) {}
-# define DTRACE_PROBE2(...) {}
-# define DTRACE_PROBE3(...) {}
-# define DTRACE_PROBE4(...) {}
-# define DTRACE_PROBE5(...) {}
-# define DTRACE_PROBE6(...) {}
+# define PHOC_DTRACE_PROBE(...)  {}
+# define PHOC_DTRACE_PROBE1(...) {}
+# define PHOC_DTRACE_PROBE2(...) {}
+# define PHOC_DTRACE_PROBE3(...) {}
+# define PHOC_DTRACE_PROBE4(...) {}
+# define PHOC_DTRACE_PROBE5(...) {}
+# define PHOC_DTRACE_PROBE6(...) {}
 
 # define PHOC_TRACE_NO_INLINE /* empty */
 
