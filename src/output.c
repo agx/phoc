@@ -571,6 +571,7 @@ phoc_output_draw (PhocOutput *self)
   struct wlr_buffer *buffer;
   struct wlr_render_pass *render_pass;
   struct wlr_output_state pending = { 0 };
+  PhocServerDebugFlags flags;
 
   if (!wlr_output->enabled)
     return;
@@ -639,6 +640,10 @@ phoc_output_draw (PhocOutput *self)
 
  out:
   wlr_output_state_finish (&pending);
+
+  flags = phoc_server_get_debug_flags (phoc_server_get_default ());
+  if (G_UNLIKELY (flags & PHOC_SERVER_DEBUG_FLAG_DAMAGE_WHOLE))
+    phoc_output_damage_whole (self);
 }
 
 
