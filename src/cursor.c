@@ -440,12 +440,14 @@ send_pointer_button (PhocSeat                    *seat,
 
   if (should_ignore_pointer_grab (seat, surface)) {
     serial = wlr_seat_pointer_send_button (seat->seat, time, button, state);
-    phoc_seat_update_last_button_serial (seat, serial);
+    if (serial)
+      phoc_seat_update_last_button_serial (seat, serial);
     return;
   }
 
   serial = wlr_seat_pointer_notify_button (seat->seat, time, button, state);
-  phoc_seat_update_last_button_serial (seat, serial);
+  if (serial)
+    phoc_seat_update_last_button_serial (seat, serial);
 }
 
 
@@ -492,14 +494,16 @@ send_touch_down (PhocSeat                    *seat,
     seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
     serial = wlr_seat_touch_notify_down (seat->seat, surface, event->time_msec,
                                          event->touch_id, sx, sy);
-    phoc_seat_update_last_touch_serial (seat, serial);
+    if (serial)
+      phoc_seat_update_last_touch_serial (seat, serial);
     seat->seat->touch_state.grab = grab;
     return;
   }
 
   serial = wlr_seat_touch_notify_down (seat->seat, surface, event->time_msec,
                                        event->touch_id, sx, sy);
-  phoc_seat_update_last_touch_serial (seat, serial);
+  if (serial)
+    phoc_seat_update_last_touch_serial (seat, serial);
 }
 
 
@@ -540,13 +544,15 @@ send_touch_up (PhocSeat                  *seat,
     struct wlr_seat_touch_grab *grab = seat->seat->touch_state.grab;
     seat->seat->touch_state.grab = seat->seat->touch_state.default_grab;
     serial = wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
-    phoc_seat_update_last_touch_serial (seat, serial);
+    if (serial)
+      phoc_seat_update_last_touch_serial (seat, serial);
     seat->seat->touch_state.grab = grab;
     return;
   }
 
   serial = wlr_seat_touch_notify_up (seat->seat, event->time_msec, event->touch_id);
-  phoc_seat_update_last_touch_serial (seat, serial);
+  if (serial)
+    phoc_seat_update_last_touch_serial (seat, serial);
 }
 
 
