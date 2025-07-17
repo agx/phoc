@@ -47,10 +47,6 @@ struct _PhocGtkSurface {
   struct wl_listener wlr_surface_handle_destroy;
   struct wl_listener xdg_surface_handle_destroy;
   struct wl_listener xdg_surface_handle_configure;
-
-  struct {
-    struct wl_signal destroy;
-  } events;
 };
 
 
@@ -324,9 +320,10 @@ handle_get_gtk_surface (struct wl_client   *client,
     gtk_surface->xdg_surface_handle_configure.notify = handle_xdg_surface_handle_configure;
     wl_signal_add (&gtk_surface->xdg_surface->events.configure,
                    &gtk_surface->xdg_surface_handle_configure);
+  } else {
+    wl_list_init (&gtk_surface->xdg_surface_handle_configure.link);
+    wl_list_init (&gtk_surface->xdg_surface_handle_destroy.link);
   }
-
-  wl_signal_init (&gtk_surface->events.destroy);
 
   gtk_surface->gtk_shell->surfaces = g_slist_prepend (gtk_surface->gtk_shell->surfaces,
                                                       gtk_surface);
