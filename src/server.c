@@ -51,6 +51,7 @@ typedef struct _PhocServer {
 
   gboolean             inited;
   gboolean             show_spinner;
+  gboolean             allow_input;
 
   PhocInput           *input;
   PhocConfig          *config;
@@ -239,13 +240,14 @@ on_shell_state_changed (PhocServer *self, GParamSpec *pspec, PhocPhoshPrivate *p
       phoc_output_lower_shield (output, PHOC_EASING_EASE_IN_CUBIC, 0);
     /* don't show session init spinner again */
     self->show_spinner = FALSE;
+    self->allow_input = TRUE;
     break;
   case PHOC_PHOSH_PRIVATE_SHELL_STATE_UNKNOWN:
   default:
     /* Shell is gone, raise shields */
-    /* TODO: prevent input without a shell attached */
     wl_list_for_each (output, &self->desktop->outputs, link)
       phoc_output_raise_shield (output, self->show_spinner);
+    self->allow_input = FALSE;
   }
 }
 
@@ -590,6 +592,8 @@ phoc_server_setup (PhocServer      *self,
                              G_CALLBACK (on_shell_state_changed),
                              self, G_CONNECT_SWAPPED);
     on_shell_state_changed (self, NULL, phoc_desktop_get_phosh_private (self->desktop));
+  } else {
+    self->allow_input = TRUE;
   }
 
   phoc_wayland_init (self);
@@ -879,4 +883,13 @@ phoc_server_set_linux_dmabuf_surface_feedback (PhocServer *self,
   } else {
     wlr_linux_dmabuf_v1_set_surface_feedback (self->linux_dmabuf_v1, view->wlr_surface, NULL);
   }
+}
+
+
+gboolean
+phoc_server_get_allow_input (PhocServer *self)
+{
+  g_assert (PHOC_IS_SERVER (self));
+
+  return self->allow_input;
 }
