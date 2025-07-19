@@ -12,6 +12,8 @@
 #define G_LOG_DOMAIN "phoc-render"
 
 #include "phoc-config.h"
+#include "phoc-tracing.h"
+
 #include "bling.h"
 #include "cursor.h"
 #include "input.h"
@@ -452,6 +454,7 @@ render_damage (PhocRenderer *self, PhocRenderContext *ctx)
 void
 phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderContext *ctx)
 {
+  gint64 begin_time_nsec G_GNUC_UNUSED = PHOC_TRACE_CURRENT_TIME;
   PhocServer *server = phoc_server_get_default ();
   struct wlr_output *wlr_output = output->wlr_output;
   PhocDesktop *desktop = PHOC_DESKTOP (output->desktop);
@@ -523,6 +526,10 @@ phoc_renderer_render_output (PhocRenderer *self, PhocOutput *output, PhocRenderC
   g_signal_emit (self, signals[RENDER_END], 0, ctx);
   if (G_UNLIKELY (phoc_server_check_debug_flags (server, PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING)))
     render_damage (self, ctx);
+
+  phoc_trace_mark (begin_time_nsec, PHOC_TRACE_CURRENT_TIME - begin_time_nsec,
+                   "phoc", __func__,
+                   "Render output %s", output->wlr_output->name);
 }
 
 

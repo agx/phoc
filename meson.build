@@ -89,6 +89,16 @@ if not get_option('dtrace').disabled()
   use_dtrace = has_sdt
 endif
 
+use_sysprof = false
+sysprof_capture = dependency(
+  'sysprof-capture-4',
+  version: '>= 48',
+  required: get_option('sysprof').enabled(),
+)
+if not get_option('sysprof').disabled()
+  use_sysprof = sysprof_capture.found()
+endif
+
 global_c_args = []
 test_c_args = [
   '-Wcast-align',
@@ -152,6 +162,7 @@ config_h.set_quoted('PHOC_APP_ID', 'mobi.phosh.Phoc')
 config_h.set_quoted('PHOC_VERSION', meson.project_version())
 config_h.set('PHOC_XWAYLAND', have_xwayland, description: 'Whether xwayland is enabled')
 config_h.set('PHOC_USE_DTRACE', use_dtrace, description: 'Whether tracing via dtrace/stp is enabled')
+config_h.set('PHOC_USE_SYSPROF', use_sysprof, description: 'Whether tracing via sysprof is enabled')
 
 phoc_config_h = configure_file(output: 'phoc-config.h', configuration: config_h)
 
@@ -176,7 +187,8 @@ summary(
     'Xwayland': have_xwayland,
     'Documentation': get_option('gtk_doc'),
     'Manual pages': get_option('man'),
-    'Tracing': use_dtrace,
+    'Tracing (dtrace)': use_dtrace,
+    'Tracing (sysprof)': use_sysprof,
     'Tests': get_option('tests'),
   },
   bool_yn: true,
