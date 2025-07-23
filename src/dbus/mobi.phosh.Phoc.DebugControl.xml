@@ -23,6 +23,12 @@
     -->
     <property name="DamageTracking" type="b" access="readwrite"/>
     <!--
+        DamageWhole:
+
+        Whether to damage the whole output each frame
+    -->
+    <property name="DamageWhole" type="b" access="readwrite"/>
+    <!--
         LogDomains:
 
         The current log domains

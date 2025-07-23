@@ -114,6 +114,7 @@ phoc_debug_control_set_server (PhocDebugControl *self, PhocServer *server)
   PhocServerDebugFlags exported[] = {
     PHOC_SERVER_DEBUG_FLAG_TOUCH_POINTS,
     PHOC_SERVER_DEBUG_FLAG_DAMAGE_TRACKING,
+    PHOC_SERVER_DEBUG_FLAG_DAMAGE_WHOLE,
   };
 
   eclass = G_FLAGS_CLASS (g_type_class_ref (phoc_server_debug_flags_get_type ()));
